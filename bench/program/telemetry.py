@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import platform
 import random
+import signal
 import secrets
 import socket
 import statistics
@@ -36,18 +37,31 @@ def available_port():
 
 
 @contextmanager
-def process(command, log, env=None):
+def process(command, log, env=None, *, group=False):
     with log.open("w") as output:
-        child = subprocess.Popen(command, env=env, stdout=output, stderr=subprocess.STDOUT)
+        child = subprocess.Popen(command, env=env, stdout=output, stderr=subprocess.STDOUT,
+                                 start_new_session=group)
         try:
             yield child
         finally:
             if child.poll() is None:
-                child.terminate()
+                if group:
+                    try:
+                        os.killpg(child.pid, signal.SIGTERM)
+                    except ProcessLookupError:
+                        pass
+                else:
+                    child.terminate()
                 try:
                     child.wait(timeout=8)
                 except subprocess.TimeoutExpired:
-                    child.kill()
+                    if group:
+                        try:
+                            os.killpg(child.pid, signal.SIGKILL)
+                        except ProcessLookupError:
+                            pass
+                    else:
+                        child.kill()
                     child.wait()
 
 

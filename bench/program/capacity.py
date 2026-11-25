@@ -100,18 +100,77 @@ def state():
     return result
 
 
-def run_cell(binary, root, spec, label, prefix=()):
+def proc_sample(pid):
+    proc = Path("/proc") / str(pid)
+    fields = (proc / "stat").read_text().rsplit(")", 1)[1].split()
+    return {
+        "cpu_ticks": int(fields[11]) + int(fields[12]),
+        "rss_bytes": int(fields[21]) * os.sysconf("SC_PAGE_SIZE"),
+        "time_ns": time.monotonic_ns(),
+    }
+
+
+def measure_process(command, log, path, spec, pid):
+    before, after, peak = None, None, 0
+    limit = time.monotonic() + spec["seconds"] + spec["warmup_seconds"] + 30
+    with subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT) as child:
+        try:
+            next_sample = 0
+            while child.poll() is None:
+                now = time.monotonic()
+                if now >= limit:
+                    raise subprocess.TimeoutExpired(command, limit)
+                if before is None and (path / "warmup.done").exists():
+                    before = proc_sample(pid)
+                    peak = before["rss_bytes"]
+                    (path / "measure.start").touch()
+                if after is None and before is not None:
+                    if (path / "measurement.done").exists():
+                        after = proc_sample(pid)
+                        peak = max(peak, after["rss_bytes"])
+                        (path / "measure.release").touch()
+                    elif now >= next_sample:
+                        peak = max(peak, proc_sample(pid)["rss_bytes"])
+                        next_sample = now + 0.25
+                time.sleep(0.002)
+        finally:
+            if child.poll() is None:
+                child.kill()
+        if child.returncode:
+            raise subprocess.CalledProcessError(child.returncode, command)
+    if before is None or after is None:
+        raise ValueError("generator phase markers missing")
+    return {"before": before, "after": after, "rss_peak_sampled_bytes": peak,
+            "cpu_ticks_per_second": os.sysconf("SC_CLK_TCK")}
+
+
+def run_cell(binary, root, spec, label, prefix=(), sample_pid=None):
     path = root / label
     path.mkdir()
     command = [*prefix, str(binary), str(path / "spec.json"), str(path / "offers.jsonl"), str(path / "summary.json")]
+    if sample_pid is not None:
+        spec = {**spec, **{
+            key: str((path / name).resolve()) for key, name in (
+                ("warmup_done_file", "warmup.done"), ("resume_file", "measure.start"),
+                ("measurement_done_file", "measurement.done"), ("measurement_release_file", "measure.release"),
+            )
+        }}
     write_json(path / "spec.json", spec)
     started = time.monotonic_ns()
     before = state()
     try:
         with (path / "client.log").open("w") as log:
-            subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True,
-                           timeout=spec["seconds"] + spec["warmup_seconds"] + 30)
+            if sample_pid is None:
+                subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True,
+                               timeout=spec["seconds"] + spec["warmup_seconds"] + 30)
+            else:
+                resources = measure_process(command, log, path, spec, sample_pid)
         result = audit(path / "offers.jsonl", json.loads((path / "summary.json").read_text()), spec)
+        if sample_pid is not None:
+            ticks = resources["after"]["cpu_ticks"] - resources["before"]["cpu_ticks"]
+            result["process"] = resources
+            result["cpu_us_per_success"] = (1e6 * ticks / resources["cpu_ticks_per_second"]
+                                            / result["successful"] if result["successful"] else None)
     except (ValueError, TypeError, KeyError, OSError, subprocess.SubprocessError) as error:
         result = {"invalid_reasons": [str(error)]}
     result.update(label=label, rate=spec["rate"], seconds=spec["seconds"],
@@ -133,7 +192,73 @@ def passes(result, p99_ns, p999_ns, min_goodput, max_error):
     )
 
 
+def campaign(run, report, target, control, rates, limits, confirm_seconds,
+             refine_steps=0, stability_seconds=0):
+    """Search an audited bracket and verify the candidate on a longer hold."""
+    best = None
+    upper = None
+    control_ceiling = None
+    contamination = None
+    qualified_control = 0
+    control_limits = (*limits[:3], 0)
+
+    def ramp(rate, label):
+        nonlocal qualified_control, control_ceiling, contamination, best, upper
+        if 2 * rate > qualified_control:
+            before = run({**control, "rate": 2 * rate}, f"control-before-{rate}")
+            if not passes(before, *control_limits):
+                control_ceiling = rate
+                return False
+            qualified_control = 2 * rate
+        result = run({**target, "rate": rate}, label)
+        if result["invalid_reasons"]:
+            contamination = rate
+            return False
+        if passes(result, *limits):
+            best = rate
+            return True
+        upper = rate
+        return False
+
+    for rate in rates:
+        if not ramp(rate, f"ramp-{rate}"):
+            break
+
+    for _ in range(refine_steps):
+        if best is None or upper is None or upper - best <= 1 or contamination is not None:
+            break
+        rate = (best + upper) // 2
+        ramp(rate, f"refine-{rate}")
+
+    report.update(highest_passing_ramp=best, first_failing_rate=upper,
+                  control_limited_rate=control_ceiling, contaminated_rate=contamination)
+    if best is None:
+        return ("REJECTED_PREFLIGHT" if control_ceiling else
+                "CONTAMINATED" if contamination else "NO_QUALIFYING_RAMP")
+
+    # Recheck the highest audited bracket rate even if a lower candidate is
+    # confirmed. A failed postflight invalidates attribution for the bracket.
+    confirm = run({**target, "rate": best, "seconds": confirm_seconds}, f"confirm-{best}")
+    stable = passes(confirm, *limits)
+    if stable and stability_seconds:
+        stability = run({**target, "rate": best, "seconds": stability_seconds}, f"stability-{best}")
+        stable = passes(stability, *limits)
+        report["stability_passed"] = stable
+    after = run({**control, "rate": qualified_control}, "control-after")
+    if not passes(after, *control_limits):
+        return "REJECTED_POSTFLIGHT"
+    if not passes(confirm, *limits):
+        return "CONFIRMATION_FAILED"
+    report["highest_tested_confirmed_rate"] = best
+    report["confirmed_goodput_per_s"] = confirm["goodput_per_s"]
+    if not stable:
+        return "STABILITY_FAILED"
+    report["interpretation"] = ("confirmed_bracket" if upper else "confirmed_lower_bound")
+    return "CONFIRMED"
+
+
 def main():
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("binary", type=Path)
     parser.add_argument("target", type=Path, help="base measurement spec JSON")
@@ -141,12 +266,17 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--rates", type=int, nargs="+", required=True)
     parser.add_argument("--confirm-seconds", type=int, required=True)
+    parser.add_argument("--refine-steps", type=int, default=0)
+    parser.add_argument("--stability-seconds", type=int, default=0)
+    parser.add_argument("--client-cpus", help="Linux taskset CPU list for the generator")
+    parser.add_argument("--sample-pid", type=int, help="sample this Linux proxy during target cells")
     parser.add_argument("--p99-ms", type=float, required=True)
     parser.add_argument("--p999-ms", type=float, required=True)
     parser.add_argument("--min-goodput", type=float, default=.99)
     parser.add_argument("--max-error", type=float, default=0)
     args = parser.parse_args()
     if (args.rates != sorted(set(args.rates)) or args.rates[0] <= 0
+            or not 0 <= args.refine_steps <= 20 or args.stability_seconds < 0
             or not 0 < args.min_goodput <= 1 or not 0 <= args.max_error < 1
             or not 0 < args.p99_ms <= args.p999_ms < float("inf")):
         parser.error("rates must increase and SLO values must be valid")
@@ -158,6 +288,8 @@ def main():
     if any(target.get(key) != control.get(key) for key in
            ("protocol", "request_bytes", "response_bytes", "response_byte")):
         parser.error("the control must preserve protocol and payload")
+    if args.stability_seconds and args.stability_seconds < args.confirm_seconds:
+        parser.error("stability hold must be at least as long as confirmation")
     if not 0 < target["seconds"] < args.confirm_seconds:
         parser.error("confirmation must be longer than each ramp")
     target, control = dict(target), dict(control)
@@ -174,42 +306,18 @@ def main():
     }, "cells": []}
     manifest = args.output / "campaign.json"
 
+    prefix = ["taskset", "-c", args.client_cpus] if args.client_cpus else []
+
     def run(spec, label):
-        result = run_cell(binary, args.output, spec, label)
+        sample_pid = args.sample_pid if not label.startswith("control-") else None
+        result = run_cell(binary, args.output, spec, label, prefix, sample_pid)
         report["cells"].append(result)
         write_json(manifest, report)
         return result
 
-    # This is a combined generator-plus-backend control at twice the largest target rate.
-    preflight = run({**control, "rate": 2 * max(args.rates)}, "control-before")
-    if not passes(preflight, args.p99_ms * 1e6, args.p999_ms * 1e6, args.min_goodput, 0):
-        report["status"] = "REJECTED_PREFLIGHT"
-        write_json(manifest, report)
-        return 2
-
-    report["status"] = "RAMP"
-    best = None
     limits = (args.p99_ms * 1e6, args.p999_ms * 1e6, args.min_goodput, args.max_error)
-    for rate in args.rates:
-        result = run({**target, "rate": rate}, f"ramp-{rate}")
-        if result["invalid_reasons"]:
-            report["status"] = "CONTAMINATED"
-            break
-        if not passes(result, *limits):
-            report["status"] = "SLO_LIMIT"
-            break
-        best = rate
-    if best is not None and report["status"] != "CONTAMINATED":
-        confirm = run({**target, "rate": best, "seconds": args.confirm_seconds}, f"confirm-{best}")
-        after = run({**control, "rate": 2 * max(args.rates)}, "control-after")
-        if not passes(after, args.p99_ms * 1e6, args.p999_ms * 1e6, args.min_goodput, 0):
-            report["status"] = "REJECTED_POSTFLIGHT"
-        elif passes(confirm, *limits):
-            report["status"] = "CONFIRMED"
-            report["highest_tested_confirmed_rate"] = best
-            report["confirmed_goodput_per_s"] = confirm["goodput_per_s"]
-        else:
-            report["status"] = "CONFIRMATION_FAILED"
+    report["status"] = campaign(run, report, target, control, args.rates, limits,
+                                args.confirm_seconds, args.refine_steps, args.stability_seconds)
     write_json(manifest, report)
     return 0 if report["status"] == "CONFIRMED" else 2
 

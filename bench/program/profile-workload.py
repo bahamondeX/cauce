@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import signal
 from pathlib import Path
 import subprocess
 import sys
@@ -11,6 +12,21 @@ import time
 
 from capacity import audit, digest, write_json
 from telemetry import LAB, H2_LAB, available_port, http, native_spec, process, proxy_config, until
+
+
+def measured_process(pid, binary):
+    proc = Path("/proc") / str(pid)
+    try:
+        if (proc / "exe").resolve(strict=True) == binary:
+            return pid
+        children = (proc / "task" / str(pid) / "children").read_text().split()
+    except OSError:
+        return None
+    for child in children:
+        result = measured_process(int(child), binary)
+        if result is not None:
+            return result
+    return None
 
 
 def main():
@@ -22,6 +38,10 @@ def main():
     parser.add_argument("--logs", action="store_true")
     parser.add_argument("--perf", default="perf")
     parser.add_argument("--sudo", action="store_true")
+    parser.add_argument("--frequency", type=int, default=99)
+    parser.add_argument("--events", help="override perf stat event list")
+    parser.add_argument("--profiler-cpu", type=int)
+    parser.add_argument("--heaptrack", help="run the proxy through heaptrack instead of perf")
     parser.add_argument("--mode", choices=("stat", "record", "proc"), default="record")
     parser.add_argument("--flamegraph", type=Path)
     parser.add_argument("--seconds", type=int, default=12)
@@ -32,6 +52,9 @@ def main():
             or not set(args.cpus).issubset(os.sched_getaffinity(0))
             or args.seconds < 3 or args.rate < 1):
         parser.error("requires Linux, three available CPU indices and positive workload settings")
+    if args.profiler_cpu is not None and (
+            args.profiler_cpu in args.cpus or args.profiler_cpu not in os.sched_getaffinity(0)):
+        parser.error("use an available profiler CPU disjoint from the workload")
     args.routes = 1
     args.warmup = 2
     root = args.output.resolve()
@@ -56,8 +79,10 @@ def main():
     proxy_cpu, backend_cpu, client_cpu = (["taskset", "-c", str(cpu)] for cpu in args.cpus)
     with process(backend_cpu + ["node", str(fixture)], root / "backend.log", env) as backend:
         until(backend, lambda: http(stats_port, "/stats"), 5)
-        with process(proxy_cpu + [str(args.proxy), str(config)], root / "proxy.log",
-                     {**os.environ, "TOKIO_WORKER_THREADS": "1"}) as proxy:
+        capture_prefix = [args.heaptrack, "-o", str(root / "heaptrack")] if args.heaptrack else []
+        with process(proxy_cpu + capture_prefix + [str(args.proxy), str(config)], root / "proxy.log",
+                     {**os.environ, "TOKIO_WORKER_THREADS": "1", "CAUCE_TRANSPORT_DIAGNOSTICS": "0"},
+                     group=bool(capture_prefix)) as proxy:
             until(proxy, lambda: http(admin, "/ready"), 5)
             raw, summary = root / "offers.jsonl", root / "offers.summary.json"
             command = client_cpu + [str(args.generator), str(root / "load.json"), str(raw), str(summary)]
@@ -66,23 +91,39 @@ def main():
                 profiler = [
                     sys.executable, str(Path(__file__).with_name("profile-linux.py")), str(proxy.pid),
                     str(root / "profile"), "--mode", args.mode, "--seconds", str(args.seconds),
-                    "--perf", args.perf,
+                    "--perf", args.perf, "--frequency", str(args.frequency),
                 ]
+                if args.events:
+                    profiler.extend(["--events", args.events])
+                if args.profiler_cpu is not None:
+                    profiler[:0] = ["taskset", "-c", str(args.profiler_cpu)]
                 if args.sudo:
                     profiler.append("--sudo")
                 if args.flamegraph:
                     profiler.extend(["--flamegraph", str(args.flamegraph)])
                 resume.touch()
-                time.sleep(0.5)
-                capture = subprocess.run(profiler, check=False, timeout=args.seconds + 35)
+                profile_status = None
+                if not args.heaptrack:
+                    time.sleep(0.5)
+                    capture = subprocess.run(profiler, check=False, timeout=args.seconds + 35)
+                    profile_status = capture.returncode
                 if client.wait(timeout=args.seconds + 10):
                     raise RuntimeError("native load failed")
             results = audit(raw, json.loads(summary.read_text()), spec)
-            results["profile_exit"] = capture.returncode
+            results["profile_exit"] = profile_status
             results["usage"] = "diagnostic samples under profiler overhead"
             write_json(root / "audit.json", results)
-            if capture.returncode or results["successful"] != results["offered"]:
+            if args.heaptrack:
+                pid = measured_process(proxy.pid, args.proxy)
+                if pid is None:
+                    raise RuntimeError("heaptrack's target process disappeared")
+                os.kill(pid, signal.SIGTERM)
+                if proxy.wait(timeout=30):
+                    raise RuntimeError("heaptrack did not finalize its output")
+            if profile_status or results["successful"] != results["offered"]:
                 return 1
+    if args.heaptrack and not any(root.glob("heaptrack.*")):
+        return 1
     return 0
 
 

@@ -16,9 +16,19 @@ printf '\nProcess affinity and cgroup\n'
 taskset -pc "$$"
 cat /proc/self/cgroup
 printf '\nClock source and perf access\n'
-cat /sys/devices/system/clocksource/clocksource0/current_clocksource
-cat /proc/sys/kernel/perf_event_paranoid
-ls /sys/bus/event_source/devices
+for path in /sys/devices/system/clocksource/clocksource0/current_clocksource /proc/sys/kernel/perf_event_paranoid; do
+    if [ -r "$path" ]; then
+        printf '%s ' "$path"
+        cat "$path"
+    else
+        printf '%s unavailable\n' "$path"
+    fi
+done
+if [ -d /sys/bus/event_source/devices ]; then
+    ls /sys/bus/event_source/devices
+else
+    echo 'perf event sources unavailable'
+fi
 printf '\nHost pressure\n'
 for kind in cpu memory io; do
     if [ -r "/proc/pressure/$kind" ]; then

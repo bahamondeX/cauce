@@ -57,21 +57,29 @@ def main():
     parser.add_argument("--seconds", type=int, default=12)
     parser.add_argument("--perf", default="perf")
     parser.add_argument("--sudo", action="store_true")
+    parser.add_argument("--events", default="task-clock,context-switches,cpu-migrations,page-faults,cycles,"
+                        "instructions,branches,branch-misses,L1-dcache-load-misses,LLC-load-misses")
+    parser.add_argument("--frequency", type=int, default=99, help="sampling frequency for perf record")
     parser.add_argument("--mode", choices=("stat", "record", "proc"), default="stat")
     parser.add_argument("--flamegraph", type=Path, help="directory containing stackcollapse-perf.pl and flamegraph.pl")
     args = parser.parse_args()
     proc = Path(f"/proc/{args.pid}")
     if sys.platform != "linux" or not proc.is_dir() or not 1 <= args.seconds <= 3600:
         parser.error("requires a live Linux PID and a bounded sample duration")
+    if not 1 <= args.frequency <= 4000:
+        parser.error("perf sample frequency must be 1 to 4000 Hz")
     args.output.mkdir(parents=True)
+    perf_access = Path("/proc/sys/kernel/perf_event_paranoid")
+    event_sources = Path("/sys/bus/event_source/devices")
     env = {
         "uname": platform.uname()._asdict(),
         "pid": args.pid,
         "affinity": sorted(os.sched_getaffinity(args.pid)),
         "clock": vars(time.get_clock_info("monotonic")),
-        "profiler_mode": args.mode,
-        "perf_event_paranoid": Path("/proc/sys/kernel/perf_event_paranoid").read_text().strip(),
-        "event_sources": sorted(item.name for item in Path("/sys/bus/event_source/devices").iterdir()),
+        "profiler_mode": args.mode, "events": args.events if args.mode == "stat" else None,
+        "frequency": args.frequency if args.mode == "record" else None,
+        "perf_event_paranoid": perf_access.read_text().strip() if perf_access.is_file() else None,
+        "event_sources": sorted(item.name for item in event_sources.iterdir()) if event_sources.is_dir() else None,
     }
     (args.output / "environment.json").write_text(json.dumps(env, indent=2) + "\n")
     prefix = ["sudo", "-n", args.perf] if args.sudo else [args.perf]
@@ -80,15 +88,32 @@ def main():
     if args.mode == "proc":
         time.sleep(args.seconds)
     elif args.mode == "stat":
-        events = "task-clock,context-switches,cpu-migrations,page-faults,cycles,instructions,cache-misses"
+        results = args.output / "perf-stat.csv"
         status["perf_exit"] = run(
-            prefix + ["stat", "-x,", "-e", events, "-p", str(args.pid), "--", "sleep", str(args.seconds)],
-            args.output / "perf-stat.csv",
+            prefix + ["stat", "--no-big-num", "-x,", "-e", args.events, "-p", str(args.pid),
+                      "--", "sleep", str(args.seconds)], results,
         )
+        values = {}
+        for line in results.read_text().splitlines():
+            fields = line.split(",")
+            if len(fields) < 3 or not fields[2]:
+                continue
+            try:
+                number = float(fields[0])
+            except ValueError:
+                if fields[0] in {"<not supported>", "<not counted>"}:
+                    values[fields[2]] = {"availability": fields[0]}
+            else:
+                values[fields[2]] = {"value": number, "unit": fields[1] or None}
+        status["counters"] = {event: values.get(event, {"availability": "missing from perf output"})
+                              for event in args.events.split(",")}
+        if all("value" in values.get(event, {}) for event in ("cycles", "instructions")):
+            cycles = values["cycles"]["value"]
+            status["ipc"] = values["instructions"]["value"] / cycles if cycles > 0 else None
     else:
         data = args.output / "perf.data"
         status["perf_exit"] = run(
-            prefix + ["record", "-e", "cpu-clock:u", "-F", "99", "--call-graph", "dwarf,8192",
+            prefix + ["record", "-e", "cpu-clock:u", "-F", str(args.frequency), "--call-graph", "dwarf,8192",
                       "-p", str(args.pid), "-o", str(data), "--", "sleep", str(args.seconds)],
             args.output / "perf-record.log",
         )

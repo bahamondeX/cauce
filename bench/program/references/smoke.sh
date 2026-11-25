@@ -1,8 +1,13 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -ne 3 ]; then
-    echo 'usage: smoke.sh LOAD_BINARY HAPROXY_BINARY OUTPUT_DIRECTORY' >&2
+if [ "$#" -lt 3 ] || [ "$#" -gt 4 ]; then
+    echo 'usage: smoke.sh LOAD_BINARY HAPROXY_BINARY OUTPUT_DIRECTORY [--admission]' >&2
+    exit 2
+fi
+
+if [ "$#" -eq 4 ] && [ "$4" != --admission ]; then
+    echo 'expected --admission' >&2
     exit 2
 fi
 
@@ -66,5 +71,10 @@ assert not result["invalid_reasons"] and result["successful"] == result["offered
 assert result["warmup_successes"] == result["warmup_offers"]
 print(f"{name}: {result['successful']} successful measured responses")
 PY
+    if [ "${4:-}" = --admission ]; then
+        docker run --rm --pull never --network "$project" --cpuset-cpus 2 --cpus 1 --memory 256m \
+            -v "$here/admission.py:/admission.py:ro" "$client" python /admission.py "$name" \
+            >"$out/$name.admission.json"
+    fi
     docker logs "$project-$name" >"$out/$name.log" 2>&1
 done

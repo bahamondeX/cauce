@@ -21,7 +21,12 @@ def main():
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--proxy-cpus", type=int, nargs="+", default=[0])
     parser.add_argument("--backend-cpu", type=int, default=1)
-    parser.add_argument("--client-cpu", type=int, default=2)
+    parser.add_argument("--client-cpu", type=int, nargs="+", default=[2])
+    parser.add_argument("--sampler-cpu", type=int)
+    parser.add_argument("--concurrency", type=int, default=32)
+    parser.add_argument("--queue", type=int, default=64)
+    parser.add_argument("--refine-steps", type=int, default=0)
+    parser.add_argument("--stability-seconds", type=int, default=0)
     parser.add_argument("--warmup", type=int, default=3)
     parser.add_argument("--seconds", type=int, default=8)
     parser.add_argument("--confirm-seconds", type=int, required=True)
@@ -30,7 +35,9 @@ def main():
     parser.add_argument("--p999-ms", type=float, required=True)
     args = parser.parse_args()
 
-    cpus = [*args.proxy_cpus, args.backend_cpu, args.client_cpu]
+    cpus = [*args.proxy_cpus, args.backend_cpu, *args.client_cpu]
+    if args.sampler_cpu is not None:
+        cpus.append(args.sampler_cpu)
     if (sys.platform != "linux" or len(set(cpus)) != len(cpus)
             or not set(cpus).issubset(os.sched_getaffinity(0))
             or not 1 <= args.workers <= len(args.proxy_cpus)):
@@ -50,10 +57,11 @@ def main():
         "proxy_sha256": digest(args.proxy), "backend_source_sha256": digest(fixture),
         "proxy_cpus": args.proxy_cpus, "backend_cpu": args.backend_cpu, "client_cpu": args.client_cpu,
         "workers": args.workers, "logs": args.logs, "protocol": args.protocol,
+        "sampler_cpu": args.sampler_cpu, "concurrency": args.concurrency, "queue": args.queue,
     })
     target, control = root / "target.json", root / "control.json"
-    write_json(target, native_spec(args, listen))
-    write_json(control, native_spec(args, backend_port))
+    for path, port in [(target, listen), (control, backend_port)]:
+        write_json(path, {**native_spec(args, port), "concurrency": args.concurrency, "queue": args.queue})
     backend_env = {**os.environ, "PORT": str(backend_port), "TLS": "0", "BENCH_H2_TLS": "0",
                    "BENCH_BIND": "127.0.0.1", "BENCH_STATS_PORT": str(stats_port)}
     proxy_env = {**os.environ, "TOKIO_WORKER_THREADS": str(args.workers)}
@@ -64,12 +72,17 @@ def main():
         with process(["taskset", "-c", proxy_cpus, str(args.proxy), str(config)],
                      root / "proxy.log", proxy_env) as proxy:
             until(proxy, lambda: http(admin, "/ready"), 5)
+            sampler = ["--sample-pid", str(proxy.pid)] if args.sampler_cpu is not None else []
             return subprocess.run([
-                "taskset", "-c", str(args.client_cpu), sys.executable,
+                "taskset", "-c", str(args.sampler_cpu if args.sampler_cpu is not None else args.client_cpu[0]),
+                sys.executable,
                 str(Path(__file__).with_name("capacity.py")), str(args.generator),
                 str(target), str(control), str(root / "measurements"),
                 "--confirm-seconds", str(args.confirm_seconds), "--p99-ms", str(args.p99_ms),
                 "--p999-ms", str(args.p999_ms), "--rates", *map(str, args.rates),
+                "--client-cpus", ",".join(map(str, args.client_cpu)),
+                "--refine-steps", str(args.refine_steps), "--stability-seconds", str(args.stability_seconds),
+                *sampler,
             ], check=False).returncode
 
 

@@ -1,0 +1,9 @@
+[package]
+name = "cauce-pool-layout"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+publish = false
+
+[dev-dependencies]
+loom = "=0.7.2"

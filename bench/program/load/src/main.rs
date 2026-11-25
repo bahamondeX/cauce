@@ -54,6 +54,8 @@ struct Config {
     drop_lag_ms: u64,
     #[serde(default = "default_spin_us")]
     spin_us: u64,
+    #[serde(default)]
+    trace_offers: bool,
     warmup_done_file: Option<PathBuf>,
     resume_file: Option<PathBuf>,
     measurement_done_file: Option<PathBuf>,
@@ -120,6 +122,8 @@ struct Row {
     bytes: usize,
     outcome: &'static str,
     error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    request_id: Option<String>,
 }
 
 impl Row {
@@ -134,6 +138,7 @@ impl Row {
             bytes: 0,
             outcome,
             error: None,
+            request_id: None,
         }
     }
 }
@@ -195,9 +200,17 @@ async fn transfer(
     version: Version,
     expected_len: usize,
     expected_byte: u8,
+    trace: bool,
 ) -> Result<()> {
     let mut response = client.execute(request).await?;
     row.status = Some(response.status().as_u16());
+    if trace {
+        row.request_id = response
+            .headers()
+            .get("x-request-id")
+            .and_then(|value| value.to_str().ok())
+            .map(str::to_owned);
+    }
     if !response.status().is_success() {
         row.outcome = "http_error";
         return Ok(());
@@ -226,6 +239,7 @@ async fn phase(
     client: &Client,
     request: &reqwest::Request,
     seconds: u64,
+    warmup: bool,
 ) -> Result<Vec<Row>> {
     let (tx, mut rx) = mpsc::channel(config.queue);
     let origin = Instant::now() + Duration::from_millis(50);
@@ -249,7 +263,12 @@ async fn phase(
                     continue;
                 };
                 let client = client.clone();
-                let req = request.try_clone().context("clone replayable fixture request")?;
+                let mut req = request.try_clone().context("clone replayable fixture request")?;
+                let trace = config.trace_offers;
+                if trace {
+                    let offer_id = if warmup { 1_000_000_000 + offer.n } else { offer.n };
+                    req.headers_mut().insert("x-cauce-bench-offer", offer_id.into());
+                }
                 let timeout = Duration::from_millis(config.timeout_ms);
                 let expected_len = config.response_bytes;
                 let expected_byte = config.response_byte;
@@ -263,7 +282,7 @@ async fn phase(
                     } else {
                         let version = req.version();
                         match tokio::time::timeout_at(
-                            deadline.into(), transfer(&mut row, req, &client, version, expected_len, expected_byte)
+                            deadline.into(), transfer(&mut row, req, &client, version, expected_len, expected_byte, trace)
                         ).await {
                             Ok(Ok(())) => {}
                             Ok(Err(error)) => row.error = Some(format!("{error:#}")),
@@ -402,12 +421,12 @@ async fn main() -> Result<()> {
     }
     let request = request.version(version).build()?;
     let warmup = if config.warmup_seconds > 0 {
-        phase(&config, &client, &request, config.warmup_seconds).await?
+        phase(&config, &client, &request, config.warmup_seconds, true).await?
     } else {
         Vec::new()
     };
     barrier(&config.warmup_done_file, &config.resume_file).await?;
-    let rows = phase(&config, &client, &request, config.seconds).await?;
+    let rows = phase(&config, &client, &request, config.seconds, false).await?;
     barrier(
         &config.measurement_done_file,
         &config.measurement_release_file,

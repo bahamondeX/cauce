@@ -25,3 +25,10 @@ first measured cell.
 
 The fixtures use [Pingora's pinned Apache-2.0 source](https://github.com/cloudflare/pingora/tree/f86ffda5d3ae5c3baf5125682138b33b26c01b08)
 and [HAProxy's upstream source release](https://www.haproxy.org/download/3.4/src/haproxy-3.4.8.tar.gz).
+
+
+Pass `--admission` to `smoke.sh` to hold 32 concurrent backend requests and
+observe the excess request and recovery. The Pingora fixture responds 503
+at its application permit boundary. The HAProxy fixture queues behind its
+32-connection server limit. This characterization records the overload
+policy difference before interpreting any matched-rate measurements.
