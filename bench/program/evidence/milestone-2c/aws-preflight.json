@@ -1,0 +1,65 @@
+{
+  "publication": "\"Publication Date\",\"2026-11-24T23:14:17Z\"",
+  "catalog_sha256": "7543017246f89fa2c4dfc0fc1035c9cd7cf406a11dca52907da01f0ce61c8ef9",
+  "rows": {
+    "NatGateway-Bytes": [
+      "59S5R83GFPUAGVR5",
+      "0.0450000000",
+      "$0.045 per GB Data Processed by NAT Gateways"
+    ],
+    "c7g.4xlarge": [
+      "6MV5UT3JAHP7V3W4",
+      "0.5800000000",
+      "$0.58 per On Demand Linux c7g.4xlarge Instance Hour"
+    ],
+    "c7i.8xlarge": [
+      "7RFUEP9XE7QPFUGE",
+      "1.4280000000",
+      "$1.428 per On Demand Linux c7i.8xlarge Instance Hour"
+    ],
+    "EBS:VolumeUsage.gp3": [
+      "JG3KUJMBRGHV3N8G",
+      "0.0800000000",
+      "$0.08 per GB-month of General Purpose (gp3) provisioned storage - US East (N. Virginia)"
+    ],
+    "NatGateway-Hours": [
+      "M2YSHUBETB3JX4M4",
+      "0.0450000000",
+      "$0.045 per NAT Gateway Hour"
+    ],
+    "c7a.4xlarge": [
+      "ZFCWPMG7FW5WTZP2",
+      "0.8211200000",
+      "$0.82112 per On Demand Linux c7a.4xlarge Instance Hour"
+    ]
+  },
+  "preflight_date": "2026-11-25",
+  "region": "us-east-1",
+  "enabled_regions_checked": 17,
+  "reusable_ec2_hosts": 0,
+  "managed_instances_us_east_1": 0,
+  "standard_on_demand_vcpu_quota": 16,
+  "shared_availability_zones": [
+    "us-east-1a",
+    "us-east-1b",
+    "us-east-1c",
+    "us-east-1d",
+    "us-east-1f"
+  ],
+  "canonical_ssm_parameter_version": 84,
+  "ami_ids": {
+    "arm64": "ami-04512f58a86d569d1",
+    "amd64": "ami-0a951420c495183dc"
+  },
+  "pmu": {
+    "c7g.4xlarge": "unverified",
+    "c7a.4xlarge": "unverified"
+  },
+  "ipv4_per_hour_usd": 0.005,
+  "four_hours_each_usd": {
+    "original_compute_gp3": 8.0675555556,
+    "original_with_ipv4": 8.1075555556,
+    "proposed_with_ipv4": 5.6800355556
+  },
+  "billable_mutations": 0
+}

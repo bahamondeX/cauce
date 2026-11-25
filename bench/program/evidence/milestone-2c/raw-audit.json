@@ -1,0 +1,71 @@
+{
+  "matrix_offers_cross_checked": 13312,
+  "matrix_cells": 24,
+  "allocation_cells": {
+    "base": {
+      "proxy_sha256": "7523cb3df58b234453cd99657c488afe5553f1f834b64d6d506de52a6d2bf135",
+      "generator_sha256": "0505b36562259accce3e2af819a3da315ce40c47ed57110a04f30d254bd40558",
+      "proxy_cpu": 0,
+      "backend_cpu": 1,
+      "client_cpu": 2,
+      "successful_responses": 2100,
+      "unique_access_events": 2100,
+      "allocation_calls": 125451,
+      "allocated_bytes": 43781914,
+      "calls_per_success": 59.738571428571426,
+      "bytes_per_success": 20848.530476190477,
+      "heaptrack_peak_heap": "2.39M",
+      "heaptrack_peak_rss_including_overhead": "13.76M"
+    },
+    "2b": {
+      "proxy_sha256": "c7b25ac0c87b37cf5e035bfc6bce4199411d82626dc44f7865dbcdea8d1edf2e",
+      "generator_sha256": "0505b36562259accce3e2af819a3da315ce40c47ed57110a04f30d254bd40558",
+      "proxy_cpu": 0,
+      "backend_cpu": 1,
+      "client_cpu": 2,
+      "successful_responses": 2100,
+      "unique_access_events": 2100,
+      "allocation_calls": 111402,
+      "allocated_bytes": 41767303,
+      "calls_per_success": 53.04857142857143,
+      "bytes_per_success": 19889.191904761905,
+      "heaptrack_peak_heap": "2.47M",
+      "heaptrack_peak_rss_including_overhead": "10.88M"
+    },
+    "2c": {
+      "proxy_sha256": "4ffd7c44f1de3f304e90c8edadcae20fbcbce4441578d39d0d15afbd0fad7540",
+      "generator_sha256": "0505b36562259accce3e2af819a3da315ce40c47ed57110a04f30d254bd40558",
+      "proxy_cpu": 0,
+      "backend_cpu": 1,
+      "client_cpu": 2,
+      "successful_responses": 2100,
+      "unique_access_events": 2100,
+      "allocation_calls": 73009,
+      "allocated_bytes": 38667555,
+      "calls_per_success": 34.766190476190474,
+      "bytes_per_success": 18413.121428571427,
+      "heaptrack_peak_heap": "2.16M",
+      "heaptrack_peak_rss_including_overhead": "10.49M"
+    }
+  },
+  "incident_replay": {
+    "direct-before": {
+      "measured": 4000,
+      "warmup": 2400,
+      "p99_ns": 1522725,
+      "p999_ns": 2981539
+    },
+    "target": {
+      "measured": 8000,
+      "warmup": 1200,
+      "p99_ns": 5751803,
+      "p999_ns": 64879009
+    },
+    "direct-after": {
+      "measured": 4000,
+      "warmup": 2400,
+      "p99_ns": 686516,
+      "p999_ns": 1053633
+    }
+  }
+}

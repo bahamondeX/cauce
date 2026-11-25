@@ -1,0 +1,148 @@
+{
+  "proxy_sha256": "4bdc8cf8f82de81f1a36602e55e2c603892663f8d571e9ee47e6ad01fc4d6657",
+  "generator_sha256": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+  "results": [
+    {
+      "workers": 2,
+      "affinity": "0,3",
+      "diagnostics": true,
+      "target": {
+        "invalid_reasons": [],
+        "outcomes": {
+          "success": 8000
+        },
+        "offered": 8000,
+        "rate": 400,
+        "successful": 8000,
+        "offer_window_successes": 8000,
+        "goodput_per_s": 400.0,
+        "scheduled_latency_ns": {
+          "p50": 1079908,
+          "p95": 1848887,
+          "p99": 5751803,
+          "p99.9": 64879009
+        },
+        "queue_p99_ns": 161585,
+        "service_p99_ns": 4087284,
+        "scheduler_p99_ns": 1892875,
+        "warmup_successes": 1200,
+        "warmup_offers": 1200,
+        "label": "target",
+        "seconds": 20,
+        "elapsed_ns": 23183568635,
+        "pressure_before": {
+          "cpu": "some avg10=1.19 avg60=1.13 avg300=2.57 total=447168218\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=6562385\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=5801506\n",
+          "io": "some avg10=0.29 avg60=0.20 avg300=0.20 total=31007350\nfull avg10=0.29 avg60=0.16 avg300=0.09 total=17061766\n"
+        },
+        "pressure_after": {
+          "cpu": "some avg10=0.83 avg60=0.98 avg300=2.43 total=447426461\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=6562385\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=5801506\n",
+          "io": "some avg10=0.03 avg60=0.13 avg300=0.18 total=31011864\nfull avg10=0.03 avg60=0.11 avg300=0.08 total=17065470\n"
+        }
+      },
+      "direct_before": {
+        "invalid_reasons": [],
+        "outcomes": {
+          "success": 4000
+        },
+        "offered": 4000,
+        "rate": 800,
+        "successful": 4000,
+        "offer_window_successes": 4000,
+        "goodput_per_s": 800.0,
+        "scheduled_latency_ns": {
+          "p50": 543711,
+          "p95": 834455,
+          "p99": 1522725,
+          "p99.9": 2981539
+        },
+        "queue_p99_ns": 81042,
+        "service_p99_ns": 860923,
+        "scheduler_p99_ns": 596600,
+        "warmup_successes": 2400,
+        "warmup_offers": 2400,
+        "label": "direct-before",
+        "seconds": 5,
+        "elapsed_ns": 8192451544,
+        "pressure_before": {
+          "cpu": "some avg10=0.78 avg60=1.04 avg300=2.60 total=447011998\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.00 avg60=0.00 avg300=0.03 total=6562385\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=5801506\n",
+          "io": "some avg10=0.65 avg60=0.23 avg300=0.20 total=31007350\nfull avg10=0.65 avg60=0.19 avg300=0.09 total=17061766\n"
+        },
+        "pressure_after": {
+          "cpu": "some avg10=1.19 avg60=1.13 avg300=2.57 total=447167787\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=6562385\nfull avg10=0.00 avg60=0.00 avg300=0.01 total=5801506\n",
+          "io": "some avg10=0.29 avg60=0.20 avg300=0.20 total=31007350\nfull avg10=0.29 avg60=0.16 avg300=0.09 total=17061766\n"
+        }
+      },
+      "direct_after": {
+        "invalid_reasons": [],
+        "outcomes": {
+          "success": 4000
+        },
+        "offered": 4000,
+        "rate": 800,
+        "successful": 4000,
+        "offer_window_successes": 4000,
+        "goodput_per_s": 800.0,
+        "scheduled_latency_ns": {
+          "p50": 480476,
+          "p95": 590502,
+          "p99": 686516,
+          "p99.9": 1053633
+        },
+        "queue_p99_ns": 29583,
+        "service_p99_ns": 217336,
+        "scheduler_p99_ns": 565476,
+        "warmup_successes": 2400,
+        "warmup_offers": 2400,
+        "label": "direct-after",
+        "seconds": 5,
+        "elapsed_ns": 8131594269,
+        "pressure_before": {
+          "cpu": "some avg10=0.83 avg60=0.98 avg300=2.43 total=447431951\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=6562385\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=5801506\n",
+          "io": "some avg10=0.03 avg60=0.13 avg300=0.18 total=31011864\nfull avg10=0.03 avg60=0.11 avg300=0.08 total=17065470\n"
+        },
+        "pressure_after": {
+          "cpu": "some avg10=0.59 avg60=0.92 avg300=2.38 total=447492746\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n",
+          "memory": "some avg10=0.00 avg60=0.00 avg300=0.02 total=6562385\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=5801506\n",
+          "io": "some avg10=0.01 avg60=0.12 avg300=0.18 total=31012095\nfull avg10=0.01 avg60=0.09 avg300=0.07 total=17065693\n"
+        }
+      },
+      "event_counts": {
+        "started": 1,
+        "downstream_accept": 58,
+        "socket_read": 18456,
+        "request_started": 9200,
+        "route_selected": 9200,
+        "upstream_acquire_started": 9200,
+        "pool_lock": 18400,
+        "upstream_permits_reserved": 24,
+        "upstream_connect_gate_acquired": 24,
+        "upstream_lease_acquired": 9200,
+        "upstream_sender_wait": 9200,
+        "upstream_sender_ready": 9200,
+        "upstream_request_submitted": 9200,
+        "upstream_upload_handoff": 9200,
+        "socket_write_flushed": 18400,
+        "upstream_response_headers": 9200,
+        "upstream_response_body_end": 9200,
+        "downstream_response_handoff": 9200,
+        "upstream_idle_return": 9200,
+        "transport_task_end": 82,
+        "socket_read_eof": 5,
+        "upstream_permits_released": 24,
+        "transport_diagnostics_end": 1
+      },
+      "truncated": false,
+      "capture": {
+        "attempted": 165873,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    }
+  ]
+}

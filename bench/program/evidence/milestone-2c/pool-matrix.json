@@ -1,0 +1,486 @@
+{
+  "proxy_sha256": "4ffd7c44f1de3f304e90c8edadcae20fbcbce4441578d39d0d15afbd0fad7540",
+  "generator_sha256": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+  "cells": [
+    {
+      "protocol": "http1",
+      "strategy": "compact",
+      "endpoints": 1,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 1,
+      "peak_backend_connections": 2,
+      "lock_wait_p99_ns": 167,
+      "lock_hold_p99_ns": 4083,
+      "diagnostic_capture": {
+        "attempted": 6932,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "compact",
+      "endpoints": 4,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 4,
+      "peak_backend_connections": 6,
+      "lock_wait_p99_ns": 167,
+      "lock_hold_p99_ns": 6000,
+      "diagnostic_capture": {
+        "attempted": 6962,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "compact",
+      "endpoints": 16,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 16,
+      "peak_backend_connections": 19,
+      "lock_wait_p99_ns": 208,
+      "lock_hold_p99_ns": 4959,
+      "diagnostic_capture": {
+        "attempted": 7024,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "compact",
+      "endpoints": 64,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 64,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 167,
+      "lock_hold_p99_ns": 8708,
+      "diagnostic_capture": {
+        "attempted": 7416,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "compact",
+      "endpoints": 256,
+      "workers": 2,
+      "skewed": true,
+      "successes": 512,
+      "offered": 512,
+      "correctness_passed": true,
+      "unique_endpoints": 256,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 167,
+      "lock_hold_p99_ns": 6667,
+      "diagnostic_capture": {
+        "attempted": 10485,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "compact",
+      "endpoints": 1024,
+      "workers": 2,
+      "skewed": true,
+      "successes": 1280,
+      "offered": 1280,
+      "correctness_passed": true,
+      "unique_endpoints": 1024,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 166,
+      "lock_hold_p99_ns": 8501,
+      "diagnostic_capture": {
+        "attempted": 28162,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "sharded",
+      "endpoints": 1,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 1,
+      "peak_backend_connections": 1,
+      "lock_wait_p99_ns": 292,
+      "lock_hold_p99_ns": 4209,
+      "diagnostic_capture": {
+        "attempted": 6927,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "sharded",
+      "endpoints": 4,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 4,
+      "peak_backend_connections": 4,
+      "lock_wait_p99_ns": 375,
+      "lock_hold_p99_ns": 7375,
+      "diagnostic_capture": {
+        "attempted": 6952,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "sharded",
+      "endpoints": 16,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 16,
+      "peak_backend_connections": 16,
+      "lock_wait_p99_ns": 458,
+      "lock_hold_p99_ns": 5667,
+      "diagnostic_capture": {
+        "attempted": 6984,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "sharded",
+      "endpoints": 64,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 64,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 541,
+      "lock_hold_p99_ns": 5625,
+      "diagnostic_capture": {
+        "attempted": 7557,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "sharded",
+      "endpoints": 256,
+      "workers": 2,
+      "skewed": true,
+      "successes": 512,
+      "offered": 512,
+      "correctness_passed": true,
+      "unique_endpoints": 256,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 666,
+      "lock_hold_p99_ns": 5791,
+      "diagnostic_capture": {
+        "attempted": 10503,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http1",
+      "strategy": "sharded",
+      "endpoints": 1024,
+      "workers": 2,
+      "skewed": true,
+      "successes": 1280,
+      "offered": 1280,
+      "correctness_passed": true,
+      "unique_endpoints": 1024,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 583,
+      "lock_hold_p99_ns": 5750,
+      "diagnostic_capture": {
+        "attempted": 28180,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "compact",
+      "endpoints": 1,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 1,
+      "peak_backend_connections": 1,
+      "lock_wait_p99_ns": 250,
+      "lock_hold_p99_ns": 3958,
+      "diagnostic_capture": {
+        "attempted": 6214,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "compact",
+      "endpoints": 4,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 4,
+      "peak_backend_connections": 4,
+      "lock_wait_p99_ns": 292,
+      "lock_hold_p99_ns": 4125,
+      "diagnostic_capture": {
+        "attempted": 6239,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "compact",
+      "endpoints": 16,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 16,
+      "peak_backend_connections": 16,
+      "lock_wait_p99_ns": 208,
+      "lock_hold_p99_ns": 5834,
+      "diagnostic_capture": {
+        "attempted": 6339,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "compact",
+      "endpoints": 64,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 64,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 125,
+      "lock_hold_p99_ns": 3458,
+      "diagnostic_capture": {
+        "attempted": 7086,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "compact",
+      "endpoints": 256,
+      "workers": 2,
+      "skewed": true,
+      "successes": 512,
+      "offered": 512,
+      "correctness_passed": true,
+      "unique_endpoints": 256,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 125,
+      "lock_hold_p99_ns": 2375,
+      "diagnostic_capture": {
+        "attempted": 10639,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "compact",
+      "endpoints": 1024,
+      "workers": 2,
+      "skewed": true,
+      "successes": 1280,
+      "offered": 1280,
+      "correctness_passed": true,
+      "unique_endpoints": 1024,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 166,
+      "lock_hold_p99_ns": 2250,
+      "diagnostic_capture": {
+        "attempted": 30247,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "sharded",
+      "endpoints": 1,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 1,
+      "peak_backend_connections": 1,
+      "lock_wait_p99_ns": 292,
+      "lock_hold_p99_ns": 3750,
+      "diagnostic_capture": {
+        "attempted": 6600,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "sharded",
+      "endpoints": 4,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 4,
+      "peak_backend_connections": 4,
+      "lock_wait_p99_ns": 292,
+      "lock_hold_p99_ns": 2708,
+      "diagnostic_capture": {
+        "attempted": 6626,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "sharded",
+      "endpoints": 16,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 16,
+      "peak_backend_connections": 16,
+      "lock_wait_p99_ns": 417,
+      "lock_hold_p99_ns": 3750,
+      "diagnostic_capture": {
+        "attempted": 6727,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "sharded",
+      "endpoints": 64,
+      "workers": 2,
+      "skewed": true,
+      "successes": 384,
+      "offered": 384,
+      "correctness_passed": true,
+      "unique_endpoints": 64,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 375,
+      "lock_hold_p99_ns": 5083,
+      "diagnostic_capture": {
+        "attempted": 7777,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "sharded",
+      "endpoints": 256,
+      "workers": 2,
+      "skewed": true,
+      "successes": 512,
+      "offered": 512,
+      "correctness_passed": true,
+      "unique_endpoints": 256,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 417,
+      "lock_hold_p99_ns": 3083,
+      "diagnostic_capture": {
+        "attempted": 11154,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    },
+    {
+      "protocol": "http2",
+      "strategy": "sharded",
+      "endpoints": 1024,
+      "workers": 2,
+      "skewed": true,
+      "successes": 1280,
+      "offered": 1280,
+      "correctness_passed": true,
+      "unique_endpoints": 1024,
+      "peak_backend_connections": 33,
+      "lock_wait_p99_ns": 458,
+      "lock_hold_p99_ns": 3167,
+      "diagnostic_capture": {
+        "attempted": 31562,
+        "dropped": 0,
+        "event": "transport_diagnostics_end",
+        "limit": 250000
+      }
+    }
+  ]
+}

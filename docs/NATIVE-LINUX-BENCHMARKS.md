@@ -58,82 +58,86 @@ Use `--frequency` for longer software sampling, `--events` to select a distinct
 tracepoint pass and `--heaptrack` for whole-process allocation traces.
 A heaptrack capture includes startup, warm-up and shutdown.
 
-## AWS estimate and deployment commands
+## AWS preflight and estimate
 
-The AWS connector and CLI required reauthentication during Milestone 2B.
-The identity, instance inventory and effective permissions remain unverified.
-The public N. Virginia price list published on 2026-11-24 supplies the following
-Linux Shared On-Demand rates. [AWS bulk price list](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv)
-[Price rows and calculation](../bench/program/evidence/milestone-2b/aws-price-extract.json).
+Milestone 2C restored the existing AWS CLI session and completed a read-only
+inventory. There were no reusable EC2 hosts or managed instances across the
+17 enabled regions. N. Virginia has a 16-vCPU Standard On-Demand quota.
+`c7i.8xlarge` consumes 32 quota vCPUs even with SMT disabled. The approved
+account's default VPC has an Internet Gateway and public subnets in five AZs
+that offer both proposed types. PMU access is unverified for each exact guest.
+[AWS CPU options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
+[Compute instance specifications](https://docs.aws.amazon.com/ec2/latest/instancetypes/co.html).
 
-| Architecture | Example worker host | CPU budget | Linux hourly |
+| Architecture | Host | Dedicated roles | Linux Shared On-Demand |
 | --- | --- | --- | ---: |
-| ARM64 | `c7g.4xlarge` | 16 vCPUs | $0.580 |
-| AMD64 | `c7i.8xlarge` | 16 physical cores when configured with one thread per core | $1.428 |
+| ARM64 | `c7g.4xlarge` | 16 Graviton3 cores | $0.580/hour |
+| AMD64 | `c7a.4xlarge` | 16 AMD EPYC cores | $0.82112/hour |
+| AMD64, previous plan | `c7i.8xlarge` | 16 Intel cores with SMT disabled | $1.428/hour |
 
-Four hours on each architecture and two 40 GB gp3 root volumes cost about
-**$8.07** at list rates, using a 720-hour month for the storage estimate. Add
-network costs, taxes and any required SSM connectivity. Check PMU and
-CPU placement after boot. The selected instance size gives separate
-roles room for the eight-worker scaling cells.
-[EC2 instance specifications](https://docs.aws.amazon.com/ec2/latest/instancetypes/co.html)
-[Supported CPU options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/cpu-options-supported-instances-values.html).
+Four hours each on the original ARM64 and Intel pair would cost **$8.07**
+for compute and two 40 GiB gp3 roots at $0.08/GiB-month, using a 720-hour
+month. With one ephemeral public IPv4 per host, that estimate is **$8.11**.
+Running the Graviton and AMD pair sequentially totals **$5.68** including
+the same storage and $0.04 for eight public IPv4 hours. TCP loopback benchmark
+traffic stays on each VM. The EC2 estimate excludes evidence egress,
+any charge for exceeding the account's shared transfer allowance, and
+account-specific taxes. One extra hour on the ARM64 host is about $0.59
+and one on AMD64 about $0.83, including the root and IPv4. A persistent NAT
+gateway would add $0.045/hour plus $0.045/GB; the proposed launch uses the
+existing Internet Gateway and one temporary source-restricted SSH rule.
+[AWS EC2 catalog](https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv)
+[AWS VPC pricing](https://aws.amazon.com/vpc/pricing/)
+[AWS public pricing](https://aws.amazon.com/ec2/pricing/on-demand/).
 
-Use an existing private subnet, security group and instance profile with
-Systems Manager access. The operator supplies their approved AWS profile,
-account and region, the architecture-specific Linux AMI, its root device name,
-an existing EC2 key pair for SSH over Session Manager, and a unique run ID.
-Verify subnet reachability to SSM and package or artifact sources. Inspect
-availability, caller identity and the permission dry-run before authorizing
-a launch. The launch is billable.
+## Launch and evidence retrieval
 
-```bash
-aws sts get-caller-identity --profile "$profile" --region "$region"
-aws ec2 describe-instance-type-offerings --profile "$profile" --region "$region" \
-  --filters "Name=instance-type,Values=$instance_type"
-aws ec2 describe-images --profile "$profile" --region "$region" --image-ids "$ami"
-
-# Use cpu_options=() for c7g.4xlarge.
-cpu_options=(--cpu-options CoreCount=16,ThreadsPerCore=1)  # c7i.8xlarge
-launch=(aws ec2 run-instances --profile "$profile" --region "$region" \
-  --image-id "$ami" --instance-type "$instance_type" --count 1 --client-token "$run_id" \
-  --subnet-id "$subnet" --security-group-ids "$security_group" \
-  --no-associate-public-ip-address --key-name "$key_pair" \
-  --iam-instance-profile "Name=$instance_profile" --metadata-options HttpTokens=required \
-  --block-device-mappings "DeviceName=$root_device,Ebs={VolumeType=gp3,VolumeSize=40,Encrypted=true,DeleteOnTermination=true}" \
-  --tag-specifications "ResourceType=instance,Tags=[{Key=CauceBenchmarkRun,Value=$run_id}]" \
-  "${cpu_options[@]}")
-"${launch[@]}" --dry-run
-```
-
-On an explicitly authorized temporary run, the operator removes `--dry-run`
-and captures the instance ID from `--query 'Instances[0].InstanceId'
---output text`. In the same shell, install an exit trap scoped to that instance
-ID and run tag. Recheck the account and tag immediately before termination.
+[Host manifests](../bench/program/native-linux-2c.toml) record the proposed
+environments. Refresh the existing browser session only when STS fails.
+Choose an existing listed subnet with an Internet Gateway route for this
+temporary test. Set `ssh_cidr` to the operator's public IP followed by
+`/32`, and provide the matching SSH key pair's private key path.
 
 ```bash
-current_account=$(aws sts get-caller-identity --profile "$profile" --region "$region" \
-  --query Account --output text) || exit
-[[ "$current_account" == "$authorized_account" ]] || exit 2
-instance=$("${launch[@]}" --query 'Instances[0].InstanceId' --output text) || exit
-cleanup() {
-  current=$(aws sts get-caller-identity --profile "$profile" --region "$region" \
-    --query Account --output text) || return
-  [[ "$current" == "$authorized_account" && "$instance" == i-* ]] || return
-  tag=$(aws ec2 describe-tags --profile "$profile" --region "$region" \
-    --filters "Name=resource-id,Values=$instance" "Name=key,Values=CauceBenchmarkRun" \
-    --query 'Tags[0].Value' --output text) || return
-  [[ "$tag" == "$run_id" ]] || return
-  aws ec2 terminate-instances --profile "$profile" --region "$region" --instance-ids "$instance"
-}
-trap cleanup EXIT
-trap 'exit 130' INT
-trap 'exit 143' TERM
-aws ec2 wait instance-running --profile "$profile" --region "$region" --instance-ids "$instance"
-aws ssm start-session --profile "$profile" --region "$region" --target "$instance"
+aws login --profile default
+aws sts get-caller-identity --profile default --region us-east-1
+aws ec2 describe-subnets --profile default --region us-east-1 \
+  --query 'Subnets[?MapPublicIpOnLaunch].{zone:AvailabilityZone,subnet:SubnetId}'
+aws ec2 describe-instance-type-offerings --profile default --region us-east-1 \
+  --location-type availability-zone --filters Name=instance-type,Values=c7g.4xlarge,c7a.4xlarge
 ```
 
-Transfer a Git bundle and use SSH over Session Manager with the approved key.
-Run the commands above under the installed toolchain, then retrieve the
-result directory and verify `SHA256SUMS` before leaving the shell.
-[SSH through Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started-enable-ssh-connections.html).
+After explicit authorization, run both commands serially from the committed
+candidate checkout. The second host fits the quota after the first is
+terminated. The runner uses the current Canonical 24.04 AMI parameter,
+validates its publisher, and records the resolved AMI in the evidence.
+
+```bash
+bench/program/aws-native-lab.sh arm64 default "$authorized_account" "$subnet" \
+  "$ssh_cidr" "$ssh_key" "$evidence_root" &&
+bench/program/aws-native-lab.sh amd64 default "$authorized_account" "$subnet" \
+  "$ssh_cidr" "$ssh_key" "$evidence_root"
+```
+
+The runner uses a scoped temporary security group and tagged instance and
+volume. It bundles the candidate revision, transfers it over SSH, verifies
+the pinned Node archive checksum, runs locked release builds, and retrieves
+results with checksums. SSH uses a per-run known-hosts file. An exit trap
+verifies the account and instance tag, waits for termination, checks for
+remaining tagged volumes and removes the temporary security group. An
+instance-side shutdown timer requests termination about 225 minutes after
+cloud-init completes if the controller loses contact. If cloud-init fails
+or the controller exits without running its trap, use the saved instance ID
+and tag, verify the account and tag, terminate that instance, and delete the
+tagged temporary group after termination.
+
+The PMU probe records each hardware event separately with `perf stat` and
+a CPU workload. Treat missing files, errors, `<not supported>` and
+`<not counted>` as unavailable. Zero is meaningful only for an event that
+actually counted. Inspect topology and system state before qualifying cells.
+EC2 offers multiple Nitro form factors and guest PMU capability must be
+observed in the running guest.
+[AWS Nitro instance form factors](https://docs.aws.amazon.com/ec2/latest/instancetypes/ec2-nitro-instances.html).
+
+Provisioning and cleanup permissions have not been exercised against live
+resources. This preflight created no resources and left no lab charges.

@@ -96,3 +96,25 @@ resource samples and scaling data. Production-wide capacity and parity gates
 remain open pending qualified ARM64 and AMD64 campaigns. The program stays
 in dataplane performance and concurrency optimization.
 [Milestone 2B evidence and open gates](docs/PERFORMANCE-MILESTONE-2B.md).
+
+## Milestone 2C
+
+Header preprocessing and typed JSONL fields removed request-path allocations.
+In the Colima diagnostic replay, the compact 2C candidate used 34.77 whole-process
+allocations per success compared with 53.05 for 2B. All three Heaptrack inputs
+produced exactly 2,100 complete access events. Peak heap and build differences
+are recorded with the raw data.
+
+Endpoint sharding is available through `CAUCE_POOL_STRATEGY=sharded`.
+Compact remains the default. Both strategies served all 13,312 offers in
+the Linux ARM64 transport matrix at up to 1,024 logical endpoints. The
+two-worker trace completed 9,200 requests without a transport failure.
+The historic pre-headers incidents and tail breach remain unresolved.
+
+AWS authentication and read-only inventory are complete. Native ARM64 and
+AMD64 capacity, CPU profiling, scaling and the competitive campaign remain
+blocked by host authorization. The project remains in the dataplane
+performance milestone.
+[Milestone 2C report](docs/PERFORMANCE-MILESTONE-2C.md)
+[Native lab](docs/NATIVE-LINUX-BENCHMARKS.md)
+[NGINX compatibility backlog](docs/NGINX-COMPATIBILITY-BACKLOG.md).

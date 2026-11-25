@@ -151,3 +151,16 @@ changes synchronize Hyper readiness and return canceled opening reservations
 to waiters. Qualified native throughput, CPU and latency comparisons remain
 open. The platform-specific diagnostics, statistical gates and reproduced
 pool behavior are recorded in the [Milestone 2B report](PERFORMANCE-MILESTONE-2B.md).
+
+## Milestone 2C
+
+The candidate removes allocation from fixed header-name construction and
+typed JSONL fields. Endpoint sharding has a startup-only experimental
+selector. A Linux ARM64 guest matrix verified lease accounting with both
+strategies through real HTTP/1.1 and HTTP/2 sockets. Compact remains the
+default while native comparisons are pending.
+
+The diagnostic allocation replay and correlated transport trace are
+available in the [Milestone 2C report](PERFORMANCE-MILESTONE-2C.md).
+Native capacity and multicore scaling curves, hardware profiles and
+competitive claims remain blocked by host authorization.

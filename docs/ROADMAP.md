@@ -67,7 +67,7 @@ establecen superioridad fuera de sus cargas y límites.
 | Protocols and modules | Validate TLS and listener extensions, stream and mail proxying, file serving and caching, gateways, policies, filters, and programmable extensions against pinned reference fixtures. |
 | Release evidence | Reproduce SLO goodput, resources, recovery and stability with pinned NGINX, HAProxy and Pingora on the same native hosts. |
 
-Milestone 2B is the current gate before functional expansion. Its retained
+Milestone 2B established the diagnostics and benchmarks that Milestone 2C continues. Its retained
 changes fix independently reproduced lease races and eliminate allocations
 from pool bookkeeping and access log serialization. The original two-worker
 transport error still requires attribution. Linux ARM64 and AMD64 capacity,
@@ -77,3 +77,13 @@ before selecting a new pool, timer design or runtime setting.
 [Milestone 2B results and open gates](PERFORMANCE-MILESTONE-2B.md).
 
 Statuses and evidence live in [the compatibility registry](../compatibility/nginx-oss.yaml) and [program status](../STATUS.md).
+
+
+Milestone 2C is the current gate before functional expansion. The compact
+pool remains the default with endpoint sharding available for experiments.
+Native hardware and qualified competitive results remain pending. Resume
+with the ARM64 and AMD64 campaigns, repeat the transport-tail diagnosis,
+and use the native paired pool comparisons to decide whether to automate
+strategy selection.
+[Milestone 2C report](PERFORMANCE-MILESTONE-2C.md)
+[Compatibility backlog ordered by migration impact](NGINX-COMPATIBILITY-BACKLOG.md).
