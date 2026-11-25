@@ -39,6 +39,7 @@ pub struct Completion {
     pub _request_slot: Arc<OwnedSemaphorePermit>,
     pub uploaded: Arc<AtomicBool>,
     pub request_bytes: Arc<AtomicU64>,
+    pub exchange: Option<diagnostics::Exchange>,
 }
 struct GuardBody {
     inner: Incoming,
@@ -48,6 +49,7 @@ struct GuardBody {
     limit: u64,
     count: Arc<AtomicU64>,
     upload_complete: Option<Arc<AtomicBool>>,
+    upload_exchange: Option<diagnostics::Exchange>,
     upload_error: Option<Arc<AtomicU8>>,
     completion: Option<Completion>,
     upload_guard: Option<UploadGuard>,
@@ -58,11 +60,14 @@ struct GuardBody {
     finished: bool,
 }
 impl GuardBody {
-    fn finish(&mut self, outcome: &str) {
+    fn finish(&mut self, outcome: &'static str) {
         if self.finished {
             return;
         }
         self.finished = true;
+        if let Some(exchange) = self.upload_exchange.take() {
+            exchange.stage("upstream_upload_handoff", outcome);
+        }
         self.upload_guard.take();
         self.upload_request_slot.take();
         if let Some(error) = &self.upload_error {
@@ -82,26 +87,30 @@ impl GuardBody {
             }
         }
         if let Some(mut c) = self.completion.take() {
+            if let Some(exchange) = &c.exchange {
+                exchange.stage("upstream_response_body_end", outcome);
+                exchange.stage("downstream_response_handoff", outcome);
+            }
             let response_bytes = self.count.load(Ordering::Relaxed);
             if let Some(event) = &mut c.event {
                 event.duration_ms = ms(c.started);
                 event.transfer_ms = Some(ms(c.headers_at));
                 event.request_bytes = c.request_bytes.load(Ordering::Relaxed);
                 event.response_bytes = response_bytes;
-                event.outcome = outcome.into();
+                event.outcome = outcome;
                 if outcome != "complete" {
                     let (direction, category) = if outcome == "cancelled" {
                         ("downstream", "cancelled")
                     } else {
                         ("upstream_or_downstream", "stream")
                     };
-                    event.error_direction = Some(direction.into());
-                    event.error_category = Some(category.into());
-                    event.error_phase = Some("transfer".into());
-                    event.reason = Some(outcome.into());
+                    event.error_direction = Some(direction);
+                    event.error_category = Some(category);
+                    event.error_phase = Some("transfer");
+                    event.reason = Some(outcome);
                 }
                 if let Some(attempt) = event.attempts.last_mut() {
-                    attempt.outcome = outcome.into();
+                    attempt.outcome = outcome;
                 }
             }
             if outcome != "complete" {
@@ -228,6 +237,7 @@ pub struct UploadState {
     pub error: Arc<AtomicU8>,
     pub upload_guard: Option<UploadGuard>,
     pub request_slot: Arc<OwnedSemaphorePermit>,
+    pub exchange: Option<diagnostics::Exchange>,
 }
 pub fn upload(
     inner: Incoming,
@@ -241,10 +251,15 @@ pub fn upload(
         error,
         upload_guard,
         request_slot,
+        exchange,
     } = state;
     let idle = Duration::from_millis(limits.stream_idle_ms);
-    if inner.is_end_stream() {
+    let already_complete = inner.is_end_stream();
+    if already_complete {
         done.store(true, Ordering::Release);
+        if let Some(exchange) = &exchange {
+            exchange.stage("upstream_upload_handoff", "empty");
+        }
     }
     GuardBody {
         inner,
@@ -254,6 +269,7 @@ pub fn upload(
         limit: limits.max_body_bytes,
         count,
         upload_complete: Some(done),
+        upload_exchange: if already_complete { None } else { exchange },
         upload_error: Some(error),
         completion: None,
         upload_guard,
@@ -282,6 +298,7 @@ pub fn download(
         limit: limits.max_body_bytes,
         count: Arc::new(AtomicU64::new(0)),
         upload_complete: None,
+        upload_exchange: None,
         upload_error: None,
         completion: Some(completion),
         upload_guard: None,

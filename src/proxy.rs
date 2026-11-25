@@ -15,7 +15,6 @@ use hyper::{
 use std::{
     borrow::Cow,
     convert::Infallible,
-    net::SocketAddr,
     sync::{
         atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering},
         Arc, RwLock,
@@ -40,6 +39,21 @@ fn reply(status: StatusCode, reason: &'static str) -> Response<ProxyBody> {
     *r.status_mut() = status;
     r
 }
+const HOP_HEADERS: [HeaderName; 7] = [
+    CONNECTION,
+    HeaderName::from_static("keep-alive"),
+    hyper::header::PROXY_AUTHENTICATE,
+    hyper::header::PROXY_AUTHORIZATION,
+    TRANSFER_ENCODING,
+    hyper::header::UPGRADE,
+    HeaderName::from_static("proxy-connection"),
+];
+const TE: HeaderName = hyper::header::TE;
+const CONTENT_TYPE: HeaderName = hyper::header::CONTENT_TYPE;
+const X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
+const X_FORWARDED_FOR: HeaderName = HeaderName::from_static("x-forwarded-for");
+const X_FORWARDED_PROTO: HeaderName = HeaderName::from_static("x-forwarded-proto");
+
 fn strip_hop(headers: &mut HeaderMap) {
     let named: Vec<_> = headers
         .get_all(CONNECTION)
@@ -51,30 +65,22 @@ fn strip_hop(headers: &mut HeaderMap) {
     for name in named {
         headers.remove(name);
     }
-    for name in [
-        "connection",
-        "keep-alive",
-        "proxy-authenticate",
-        "proxy-authorization",
-        "transfer-encoding",
-        "upgrade",
-        "proxy-connection",
-    ] {
+    for name in &HOP_HEADERS {
         headers.remove(name);
     }
     // TE is the sole connection-specific field permitted by HTTP/2, and only
     // with the trailers value. Retain it for gRPC and HTTP/1 trailer forwarding.
-    if headers.get_all("te").iter().count() != 1
+    if headers.get_all(&TE).iter().count() != 1
         || !headers
-            .get("te")
+            .get(&TE)
             .is_some_and(|v| v.as_bytes().eq_ignore_ascii_case(b"trailers"))
     {
-        headers.remove("te");
+        headers.remove(&TE);
     }
 }
 fn grpc_request(headers: &HeaderMap) -> bool {
     headers
-        .get("content-type")
+        .get(&CONTENT_TYPE)
         .and_then(|h| h.to_str().ok())
         .is_some_and(|s| {
             let s = s.split(';').next().unwrap_or("").trim();
@@ -164,29 +170,23 @@ fn record_error(
     if let Some(mut event) = event {
         event.status = status.as_u16();
         event.duration_ms = ms(started);
-        event.outcome = "rejected".into();
-        event.error_direction = Some(
-            if reason == "headers_timeout" {
-                "upstream_or_downstream"
-            } else if reason.starts_with("request_body_") {
-                "downstream"
-            } else if status == StatusCode::BAD_GATEWAY || status == StatusCode::GATEWAY_TIMEOUT {
-                "upstream"
-            } else {
-                "proxy"
-            }
-            .into(),
-        );
-        event.error_category = Some(
-            if status == StatusCode::SERVICE_UNAVAILABLE {
-                "capacity"
-            } else {
-                "request_or_transport"
-            }
-            .into(),
-        );
-        event.error_phase = Some(reason.into());
-        event.reason = Some(reason.into());
+        event.outcome = "rejected";
+        event.error_direction = Some(if reason == "headers_timeout" {
+            "upstream_or_downstream"
+        } else if reason.starts_with("request_body_") {
+            "downstream"
+        } else if status == StatusCode::BAD_GATEWAY || status == StatusCode::GATEWAY_TIMEOUT {
+            "upstream"
+        } else {
+            "proxy"
+        });
+        event.error_category = Some(if status == StatusCode::SERVICE_UNAVAILABLE {
+            "capacity"
+        } else {
+            "request_or_transport"
+        });
+        event.error_phase = Some(reason);
+        event.reason = Some(reason);
         state.logger.emit(event);
     }
     reply(status, reason)
@@ -215,7 +215,7 @@ fn record_grpc_deadline(
 }
 pub async fn handle(
     mut req: Request<Incoming>,
-    peer: SocketAddr,
+    peer: HeaderValue,
     state: Arc<State>,
     secure: bool,
     client_slot: Arc<OwnedSemaphorePermit>,
@@ -247,10 +247,8 @@ pub async fn handle(
         .cloned();
     let mut event = state.logger.enabled().then(|| Event {
         schema_version: "1.1",
-        event_id: uuid::Uuid::new_v4().to_string(),
-        timestamp: time::OffsetDateTime::now_utc()
-            .format(&time::format_description::well_known::Rfc3339)
-            .unwrap(),
+        event_id: uuid::Uuid::new_v4(),
+        timestamp: time::OffsetDateTime::now_utc(),
         instance_id: state.instance_id.clone(),
         config_version: generation.version,
         request_id: id.clone(),
@@ -260,11 +258,15 @@ pub async fn handle(
             .map(str::to_owned),
         route_id: None,
         upstream_id: None,
-        method: match req.method().as_str() {
-            "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" => {
-                req.method().to_string()
-            }
-            _ => "OTHER".into(),
+        method: match *req.method() {
+            hyper::Method::GET => "GET",
+            hyper::Method::POST => "POST",
+            hyper::Method::PUT => "PUT",
+            hyper::Method::DELETE => "DELETE",
+            hyper::Method::PATCH => "PATCH",
+            hyper::Method::HEAD => "HEAD",
+            hyper::Method::OPTIONS => "OPTIONS",
+            _ => "OTHER",
         },
         path: None,
         protocol: if is_h2 { "HTTP/2" } else { "HTTP/1.1" },
@@ -273,7 +275,7 @@ pub async fn handle(
         transfer_ms: None,
         request_bytes: 0,
         response_bytes: 0,
-        outcome: "pending".into(),
+        outcome: "pending",
         error_direction: None,
         error_category: None,
         error_phase: None,
@@ -439,6 +441,12 @@ pub async fn handle(
             reject!(SERVICE_UNAVAILABLE, "no_healthy_upstream");
         }
     };
+    diagnostics::emit("route_selected", || {
+        serde_json::json!({
+            "request_id": id, "route": route.id, "endpoint": endpoint.config.id,
+            "downstream": downstream,
+        })
+    });
     if let Some(event) = &mut event {
         event.upstream_id = Some(endpoint.config.id.clone());
     }
@@ -494,7 +502,7 @@ pub async fn handle(
             if let Some(event) = &mut event {
                 event.attempts.push(Attempt {
                     number: 1,
-                    outcome: reason.into(),
+                    outcome: reason,
                     connection_id: None,
                     reused: None,
                     pool_wait_ms: None,
@@ -578,18 +586,15 @@ pub async fn handle(
     if let Some(t) = trace {
         req.headers_mut().insert("traceparent", t);
     }
-    req.headers_mut()
-        .insert(HOST, HeaderValue::from_str(&endpoint.config.host).unwrap());
+    req.headers_mut().insert(HOST, endpoint.host.clone());
+    req.headers_mut().insert(X_FORWARDED_FOR, peer);
     req.headers_mut().insert(
-        "x-forwarded-for",
-        HeaderValue::from_str(&peer.ip().to_string()).unwrap(),
-    );
-    req.headers_mut().insert(
-        "x-forwarded-proto",
+        X_FORWARDED_PROTO,
         HeaderValue::from_static(if secure { "https" } else { "http" }),
     );
+    let request_id_header = HeaderValue::from_str(&id).unwrap();
     req.headers_mut()
-        .insert("x-request-id", HeaderValue::from_str(&id).unwrap());
+        .insert(X_REQUEST_ID, request_id_header.clone());
     if grpc {
         let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
         if remaining.is_zero() {
@@ -605,10 +610,18 @@ pub async fn handle(
     let uploaded = Arc::new(AtomicBool::new(false));
     let upload_error = Arc::new(AtomicU8::new(0));
     let request_bytes = Arc::new(AtomicU64::new(0));
+    let exchange = diagnostics::enabled().then(|| diagnostics::Exchange {
+        request_id: Arc::from(id.as_str()),
+        downstream,
+        upstream: lease.connection_id(),
+    });
     let upload_guard = lease.upload_guard();
     let upstream_req = req.map(|b| {
         if websocket.is_some() || (upstream_h2 && b.is_end_stream()) {
             uploaded.store(true, Ordering::Release);
+            if let Some(exchange) = &exchange {
+                exchange.stage("upstream_upload_handoff", "empty");
+            }
             return body::full("");
         }
         body::upload(
@@ -621,13 +634,18 @@ pub async fn handle(
                 error: upload_error.clone(),
                 upload_guard,
                 request_slot: slot.clone(),
+                exchange: exchange.clone(),
             },
         )
     });
     let headers_at = Instant::now();
     let header_start = tokio::time::Instant::now();
     let header_deadline = (header_start + Duration::from_millis(limits.headers_ms)).min(deadline);
-    let response = tokio::time::timeout_at(header_deadline, lease.send_request(upstream_req)).await;
+    let response = tokio::time::timeout_at(
+        header_deadline,
+        lease.send_request(upstream_req, exchange.as_ref()),
+    )
+    .await;
     let mut response = match response {
         Ok(Ok(r)) => r,
         other => {
@@ -648,7 +666,7 @@ pub async fn handle(
             }
             if grpc && (tokio::time::Instant::now() >= deadline || client_error == 2) {
                 if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
-                    attempt.outcome = "request_deadline".into();
+                    attempt.outcome = "request_deadline";
                 }
                 return Ok(record_grpc_deadline(&state, event, started));
             }
@@ -659,7 +677,7 @@ pub async fn handle(
                     _ => (StatusCode::BAD_REQUEST, "request_body_error"),
                 };
                 if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
-                    attempt.outcome = reason.into();
+                    attempt.outcome = reason;
                 }
                 return Ok(record_error(&state, event, started, status, reason));
             }
@@ -667,7 +685,7 @@ pub async fn handle(
                 state.pool.mark_failed(&endpoint);
             }
             if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
-                attempt.outcome = "headers_failed".into();
+                attempt.outcome = "headers_failed";
             }
             let timed_out = other.is_err();
             return Ok(record_error(
@@ -687,6 +705,9 @@ pub async fn handle(
             ));
         }
     };
+    if let Some(exchange) = &exchange {
+        exchange.stage("upstream_response_headers", "parsed");
+    }
     if let Some(event) = &mut event {
         if let Some(attempt) = event.attempts.last_mut() {
             attempt.headers_ms = Some(ms(headers_at));
@@ -721,7 +742,7 @@ pub async fn handle(
             .insert("upgrade", HeaderValue::from_static("websocket"));
         response
             .headers_mut()
-            .insert("x-request-id", HeaderValue::from_str(&id).unwrap());
+            .insert(X_REQUEST_ID, request_id_header);
         let tunnel = crate::websocket::Tunnel {
             downstream: downstream_upgrade.unwrap(),
             upstream: upstream_upgrade,
@@ -734,6 +755,7 @@ pub async fn handle(
                 _request_slot: slot,
                 uploaded,
                 request_bytes,
+                exchange,
             },
             client_slot,
             handshake_deadline: header_deadline,
@@ -749,7 +771,7 @@ pub async fn handle(
     *response.version_mut() = inbound_version;
     response
         .headers_mut()
-        .insert("x-request-id", HeaderValue::from_str(&id).unwrap());
+        .insert(X_REQUEST_ID, request_id_header);
     let completion = Completion {
         event,
         started,
@@ -759,6 +781,7 @@ pub async fn handle(
         _request_slot: slot,
         uploaded,
         request_bytes,
+        exchange,
     };
     Ok(response.map(|b| body::download(b, limits, deadline, completion, grpc)))
 }
@@ -815,8 +838,12 @@ mod tests {
     #[test]
     fn framing_and_hop_headers() {
         let mut h = HeaderMap::new();
-        h.insert(CONNECTION, HeaderValue::from_static("x-secret"));
+        h.append(CONNECTION, HeaderValue::from_static("X-Secret, TE"));
+        h.append(CONNECTION, HeaderValue::from_static("x-other"));
         h.insert("x-secret", HeaderValue::from_static("value"));
+        h.insert("x-other", HeaderValue::from_static("value"));
+        h.insert(TE, HeaderValue::from_static("trailers"));
+        h.insert("keep-alive", HeaderValue::from_static("timeout=1"));
         strip_hop(&mut h);
         assert!(h.is_empty());
         h.insert(CONTENT_LENGTH, HeaderValue::from_static("2"));

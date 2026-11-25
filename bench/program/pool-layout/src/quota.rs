@@ -30,7 +30,45 @@ impl Quota {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use loom::{sync::Arc, thread};
+    use loom::{
+        sync::{Arc, Mutex},
+        thread,
+    };
+
+    #[test]
+    fn last_stream_admission_and_eviction_transfer_one_idle_credit() {
+        loom::model(|| {
+            const ACTIVE: usize = 1;
+            const IDLE: usize = 2;
+            const RETIRED: usize = 3;
+            let entry = Arc::new(Mutex::new(ACTIVE));
+            let idle = Arc::new(Quota::new(1));
+            let spawn = |from, to| {
+                let (entry, idle) = (entry.clone(), idle.clone());
+                thread::spawn(move || {
+                    let mut state = entry.lock().unwrap();
+                    if *state == from {
+                        if from == IDLE {
+                            idle.release();
+                        } else {
+                            assert!(idle.try_take());
+                        }
+                        *state = to;
+                    }
+                })
+            };
+            let release = spawn(ACTIVE, IDLE);
+            let admission = spawn(IDLE, ACTIVE);
+            let eviction = spawn(IDLE, RETIRED);
+            for worker in [release, admission, eviction] {
+                worker.join().unwrap();
+            }
+            assert_eq!(
+                idle.remaining.load(Ordering::Relaxed),
+                usize::from(*entry.lock().unwrap() != IDLE)
+            );
+        });
+    }
 
     #[test]
     fn cancelling_reservation_and_concurrent_returns_preserve_both_budgets() {

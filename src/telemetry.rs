@@ -1,5 +1,5 @@
 use crate::config::Logs;
-use serde::Serialize;
+use serde::{ser::Error as _, Serialize, Serializer};
 use std::{
     fs::{self, File, OpenOptions},
     io::{BufWriter, Read, Seek, SeekFrom, Write},
@@ -71,7 +71,7 @@ pub struct Logger {
 #[derive(Serialize, Clone)]
 pub struct Attempt {
     pub number: u32,
-    pub outcome: String,
+    pub outcome: &'static str,
     pub connection_id: Option<String>,
     pub reused: Option<bool>,
     pub pool_wait_ms: Option<f64>,
@@ -84,15 +84,17 @@ pub struct Attempt {
 #[derive(Serialize, Clone)]
 pub struct Event {
     pub schema_version: &'static str,
-    pub event_id: String,
-    pub timestamp: String,
+    #[serde(serialize_with = "serialize_event_id")]
+    pub event_id: uuid::Uuid,
+    #[serde(serialize_with = "serialize_timestamp")]
+    pub timestamp: time::OffsetDateTime,
     pub instance_id: String,
     pub config_version: u64,
     pub request_id: String,
     pub traceparent: Option<String>,
     pub route_id: Option<String>,
     pub upstream_id: Option<String>,
-    pub method: String,
+    pub method: &'static str,
     pub path: Option<String>,
     pub protocol: &'static str,
     pub status: u16,
@@ -100,14 +102,33 @@ pub struct Event {
     pub transfer_ms: Option<f64>,
     pub request_bytes: u64,
     pub response_bytes: u64,
-    pub outcome: String,
-    pub error_direction: Option<String>,
-    pub error_category: Option<String>,
-    pub error_phase: Option<String>,
-    pub reason: Option<String>,
+    pub outcome: &'static str,
+    pub error_direction: Option<&'static str>,
+    pub error_category: Option<&'static str>,
+    pub error_phase: Option<&'static str>,
+    pub reason: Option<&'static str>,
     pub backpressure_observations: Option<u64>,
     pub attempts: Vec<Attempt>,
 }
+fn serialize_event_id<S: Serializer>(id: &uuid::Uuid, serializer: S) -> Result<S::Ok, S::Error> {
+    let mut bytes = uuid::Uuid::encode_buffer();
+    serializer.serialize_str(id.hyphenated().encode_lower(&mut bytes))
+}
+
+fn serialize_timestamp<S: Serializer>(
+    timestamp: &time::OffsetDateTime,
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let mut bytes = [0; 40];
+    let length = timestamp
+        .format_into(
+            &mut bytes.as_mut_slice(),
+            &time::format_description::well_known::Rfc3339,
+        )
+        .map_err(S::Error::custom)?;
+    serializer.serialize_str(std::str::from_utf8(&bytes[..length]).map_err(S::Error::custom)?)
+}
+
 // The access log has one exclusive writer. Preserve every newline-terminated
 // record, but discard an interrupted final record before appending or rotating.
 fn open(config: &Logs, rotation_pending: &mut bool) -> std::io::Result<BufWriter<File>> {
@@ -300,6 +321,31 @@ pub fn traceparent(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use std::io::{BufWriter, Write};
+
+    #[test]
+    fn typed_log_fields_keep_the_wire_encoding() {
+        #[derive(serde::Serialize)]
+        struct Fields {
+            #[serde(serialize_with = "super::serialize_event_id")]
+            id: uuid::Uuid,
+            #[serde(serialize_with = "super::serialize_timestamp")]
+            time: time::OffsetDateTime,
+        }
+        let timestamp = "2026-11-25T22:20:11.000123456Z";
+        let id = "f1194740-69ed-42ec-8736-f2d3157e0263";
+        let fields = Fields {
+            id: uuid::Uuid::parse_str(id).unwrap(),
+            time: time::OffsetDateTime::parse(
+                timestamp,
+                &time::format_description::well_known::Rfc3339,
+            )
+            .unwrap(),
+        };
+        assert_eq!(
+            serde_json::to_value(fields).unwrap(),
+            serde_json::json!({"id": id, "time": timestamp})
+        );
+    }
 
     #[test]
     fn reopen_preserves_complete_records_and_removes_only_unterminated_tail() {

@@ -14,7 +14,7 @@ use anyhow::{Context, Result};
 use config::Config;
 use hyper::{server::conn::http1, service::service_fn};
 use hyper_util::{rt::TokioIo, server::conn::auto};
-use pool::{Generation, Pool};
+use pool::{Generation, Pool, PoolStrategy};
 use proxy::State;
 use std::{
     collections::HashMap,
@@ -45,6 +45,7 @@ fn main() -> Result<()> {
     let result = runtime.block_on(run());
     // The OS DNS resolver may outlive a cancelled lookup. Do not let it hold shutdown.
     runtime.shutdown_timeout(Duration::from_millis(500));
+    diagnostics::flush();
     result
 }
 async fn run() -> Result<()> {
@@ -55,6 +56,7 @@ async fn run() -> Result<()> {
             .map(String::as_str)
             .unwrap_or("examples/cauce.yaml"),
     );
+    let strategy = PoolStrategy::from_environment()?;
     let config = Arc::new(Config::load(&path).await?);
     let tls_clients = prepare_tls_clients(&config).await?;
     let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
@@ -70,10 +72,20 @@ async fn run() -> Result<()> {
         .context("admin listener")?;
     let metrics = Arc::new(Metrics::default());
     let (logger, log_thread) = Logger::start(config.logs.clone(), metrics.clone());
-    let pool = Pool::new(config.limits.clone(), config.http2.clone(), metrics);
+    let pool = Pool::with_strategy(
+        config.limits.clone(),
+        config.http2.clone(),
+        metrics,
+        strategy,
+    );
     let clients = Arc::new(Semaphore::new(config.limits.clients));
     let state = Arc::new(State {
-        generation: RwLock::new(Generation::new((*config).clone(), 1, &tls_clients)),
+        generation: RwLock::new(Generation::with_strategy(
+            (*config).clone(),
+            1,
+            &tls_clients,
+            strategy,
+        )),
         pool,
         logger,
         requests: Arc::new(Semaphore::new(config.limits.requests)),
@@ -106,7 +118,7 @@ async fn run() -> Result<()> {
             _ = tasks.join_next(), if !tasks.is_empty() => {},
             _ = hup.recv(), if reload.is_empty() => {
                 let version = state.generation.read().unwrap().version + 1;
-                reload.spawn(prepare_reload(path.clone(), config.clone(), version));
+                reload.spawn(prepare_reload(path.clone(), config.clone(), version, strategy));
             },
             prepared = reload.join_next(), if !reload.is_empty() => {
                 match prepared {
@@ -130,7 +142,7 @@ async fn run() -> Result<()> {
                 let (socket, peer) = accepted?;
                 let downstream = diagnostics::downstream_id();
                 diagnostics::emit("downstream_accept", || serde_json::json!({
-                    "connection": downstream, "tasks": tasks.len(),
+                    "connection": downstream, "peer_port": peer.port(), "tasks": tasks.len(),
                     "client_permits_available": clients.available_permits(),
                 }));
                 if tasks.len() >= config.limits.clients + 16 {
@@ -180,8 +192,9 @@ async fn run() -> Result<()> {
                     } else { Box::new(transport::WriteTimeout::new(socket, Duration::from_millis(l.stream_idle_ms))) };
                     let metrics = state.logger.metrics.clone();
                     let service_slot = _slot.clone();
-                    let service = service_fn(move |req| proxy::handle(req, peer, state.clone(), secure, service_slot.clone(), downstream));
-                    let (socket, mut headers) = transport::PrefaceTimeout::new(socket, Duration::from_millis(l.client_headers_ms));
+                    let forwarded_for = hyper::header::HeaderValue::from_str(&peer.ip().to_string()).unwrap();
+                    let service = service_fn(move |req| proxy::handle(req, forwarded_for.clone(), state.clone(), secure, service_slot.clone(), downstream));
+                    let (socket, mut headers) = transport::PrefaceTimeout::new(diagnostics::Io::new(socket, "downstream", downstream), Duration::from_millis(l.client_headers_ms));
                     let (executor, _stream_guard) = transport::StreamExecutor::new(Duration::from_millis(l.request_ms));
                     let mut builder = auto::Builder::new(executor.with_active_counter(metrics.http2_tasks_active.clone()));
                     builder.http1().timer(hyper_util::rt::TokioTimer::new()).header_read_timeout(Duration::from_millis(l.client_headers_ms))
@@ -304,13 +317,16 @@ async fn prepare_reload(
     path: PathBuf,
     baseline: Arc<Config>,
     version: u64,
+    strategy: PoolStrategy,
 ) -> Result<(Arc<Generation>, Option<tokio_rustls::TlsAcceptor>)> {
     let candidate = Config::load(&path).await?;
     baseline.reload_compatible(&candidate)?;
     let clients = prepare_tls_clients(&candidate).await?;
     let server = prepare_server_tls(candidate.tls.clone(), candidate.http2.enabled).await?;
-    let generation =
-        tokio::task::spawn_blocking(move || Generation::new(candidate, version, &clients)).await?;
+    let generation = tokio::task::spawn_blocking(move || {
+        Generation::with_strategy(candidate, version, &clients, strategy)
+    })
+    .await?;
     Ok((generation, server))
 }
 

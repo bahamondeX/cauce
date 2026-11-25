@@ -5,6 +5,8 @@ use yaml_serde::Value as YamlValue;
 
 const MAX_CONFIG_BYTES: usize = 1_048_576;
 
+pub const MAX_UPSTREAMS: usize = 1024;
+
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
@@ -381,7 +383,7 @@ impl Config {
         ensure!(!self.logs.path.is_empty(), "missing log path");
         ensure!(
             !self.upstreams.is_empty()
-                && self.upstreams.len() <= 1024
+                && self.upstreams.len() <= MAX_UPSTREAMS
                 && !self.routes.is_empty()
                 && self.routes.len() <= 1024,
             "invalid routing size"

@@ -2,7 +2,9 @@
 //! until both the upload and downstream response have finished.
 use crate::{
     body::ProxyBody,
-    config::{Balance, Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol},
+    config::{
+        Balance, Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol, MAX_UPSTREAMS,
+    },
     diagnostics,
     routing::Routes,
     telemetry::{Attempt, Metrics},
@@ -23,7 +25,7 @@ use std::{
     net::SocketAddr,
     sync::{
         atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
-        Arc, Mutex, Weak,
+        Arc, Mutex, MutexGuard, Weak,
     },
     time::{Duration, Instant},
 };
@@ -42,7 +44,7 @@ pub fn ms(t: Instant) -> f64 {
 fn empty_attempt() -> Attempt {
     Attempt {
         number: 1,
-        outcome: "acquired".into(),
+        outcome: "acquired",
         connection_id: None,
         reused: None,
         pool_wait_ms: None,
@@ -56,7 +58,10 @@ fn empty_attempt() -> Attempt {
 pub struct Endpoint {
     pool_index: usize,
     pub config: Upstream,
+    pub host: hyper::header::HeaderValue,
     pub slots: Arc<Semaphore>,
+    idle_slots: Option<Arc<Semaphore>>,
+    h1_opening: Option<Arc<Semaphore>>,
     pub inflight: AtomicUsize,
     pub active_healthy: AtomicBool,
     pub failed_until: Mutex<Option<Instant>>,
@@ -78,10 +83,20 @@ pub struct Generation {
     cursor: AtomicUsize,
 }
 impl Generation {
+    #[cfg(test)]
     pub fn new(
         config: Config,
         version: u64,
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
+    ) -> Arc<Self> {
+        Self::with_strategy(config, version, tls_clients, PoolStrategy::Compact)
+    }
+
+    pub fn with_strategy(
+        config: Config,
+        version: u64,
+        tls_clients: &HashMap<String, Arc<ClientConfig>>,
+        strategy: PoolStrategy,
     ) -> Arc<Self> {
         let endpoints = config
             .upstreams
@@ -93,7 +108,13 @@ impl Generation {
                     Arc::new(Endpoint {
                         pool_index,
                         config: u.clone(),
+                        host: hyper::header::HeaderValue::from_str(&u.host)
+                            .expect("validated upstream authority"),
                         slots: Arc::new(Semaphore::new(u.connections)),
+                        idle_slots: (strategy == PoolStrategy::Sharded)
+                            .then(|| Arc::new(Semaphore::new(u.idle_connections))),
+                        h1_opening: (strategy == PoolStrategy::Sharded)
+                            .then(|| Arc::new(Semaphore::new(1))),
                         inflight: AtomicUsize::new(0),
                         active_healthy: AtomicBool::new(u.health_check.is_none()),
                         failed_until: Mutex::new(None),
@@ -142,12 +163,13 @@ pub struct Connection {
     idle_since: Instant,
     pub driver: AbortHandle,
     _capacity: Arc<DriverCapacity>,
+    idle_credit: Option<IdleCredit>,
 }
 struct H2Connection {
     sender: H2SendRequest<ProxyBody>,
     id: u64,
     born: Instant,
-    idle_since: Mutex<Instant>,
+    idle: Mutex<H2Idle>,
     streams: Arc<Semaphore>,
     capacity: usize,
     idle_limit: usize,
@@ -157,6 +179,16 @@ struct H2Connection {
     driver: AbortHandle,
     executor: H2TaskExecutor,
 }
+struct IdleCredit {
+    _global: OwnedSemaphorePermit,
+    _endpoint: OwnedSemaphorePermit,
+}
+
+struct H2Idle {
+    since: Instant,
+    credit: Option<IdleCredit>,
+}
+
 impl Drop for H2Connection {
     fn drop(&mut self) {
         self.executor.abort_all();
@@ -175,6 +207,7 @@ struct Key {
     // logical upstreams that happen to share a network address or TLS policy.
     upstream: usize,
 }
+#[derive(Default)]
 struct Idle {
     connections: HashMap<Key, Vec<Connection>>,
     h1_count: usize,
@@ -197,7 +230,8 @@ impl Idle {
             return false;
         };
         let sockets = self.h2.get_mut(&key).unwrap();
-        sockets.remove(index);
+        let removed = sockets.remove(index);
+        removed.idle.lock().unwrap().credit.take();
         if sockets.is_empty() {
             self.h2.remove(&key);
         }
@@ -205,8 +239,81 @@ impl Idle {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PoolStrategy {
+    Compact,
+    Sharded,
+}
+
+impl PoolStrategy {
+    pub fn from_environment() -> Result<Self> {
+        match std::env::var("CAUCE_POOL_STRATEGY") {
+            Err(std::env::VarError::NotPresent) => Ok(Self::Compact),
+            Ok(value) if value == "compact" => Ok(Self::Compact),
+            Ok(value) if value == "sharded" => Ok(Self::Sharded),
+            _ => Err(anyhow!("CAUCE_POOL_STRATEGY must be compact or sharded")),
+        }
+    }
+}
+
+struct ShardedIdle {
+    buckets: Box<[Mutex<Idle>]>,
+    budget: Arc<Semaphore>,
+    next_victim: AtomicUsize,
+    used_buckets: AtomicUsize,
+}
+
+struct IdleGuard<'a> {
+    guard: Option<MutexGuard<'a, Idle>>,
+    times: Option<(Instant, Instant)>,
+    key: Key,
+    operation: &'static str,
+}
+
+impl std::ops::Deref for IdleGuard<'_> {
+    type Target = Idle;
+    fn deref(&self) -> &Idle {
+        self.guard.as_deref().unwrap()
+    }
+}
+
+impl std::ops::DerefMut for IdleGuard<'_> {
+    fn deref_mut(&mut self) -> &mut Idle {
+        self.guard.as_deref_mut().unwrap()
+    }
+}
+
+impl Drop for IdleGuard<'_> {
+    fn drop(&mut self) {
+        self.guard.take();
+        if let Some((start, acquired)) = self.times {
+            let hold = acquired.elapsed().as_nanos() as u64;
+            diagnostics::emit("pool_lock", || {
+                serde_json::json!({
+                    "generation": self.key.generation, "endpoint_index": self.key.upstream,
+                    "operation": self.operation, "wait_ns": (acquired-start).as_nanos() as u64,
+                    "hold_ns": hold,
+                })
+            });
+        }
+    }
+}
+
+struct Opening<'a> {
+    guard: Option<OwnedSemaphorePermit>,
+    notify: &'a Notify,
+}
+
+impl Drop for Opening<'_> {
+    fn drop(&mut self) {
+        self.guard.take();
+        self.notify.notify_waiters();
+    }
+}
+
 pub struct Pool {
     idle: Mutex<Idle>,
+    sharded: Option<ShardedIdle>,
     global: Arc<Semaphore>,
     connecting: Arc<Semaphore>,
     notify: Arc<Notify>,
@@ -319,7 +426,7 @@ impl StreamHold {
     fn expire(&self) {
         self.connection.draining.store(true, Ordering::Release);
         if let Some(pool) = self.pool.upgrade() {
-            let mut idle = pool.idle.lock().unwrap();
+            let mut idle = pool.lock_idle(self.connection.key, "retire");
             if let Some(list) = idle.h2.get_mut(&self.connection.key) {
                 list.retain(|candidate| !Arc::ptr_eq(candidate, &self.connection));
                 if list.is_empty() {
@@ -344,10 +451,16 @@ impl Drop for StreamHold {
         if let Some(handle) = self.watchdog.get_mut().unwrap().take() {
             handle.abort();
         }
+        if let Some(pool) = self.pool.upgrade().filter(|pool| pool.sharded.is_some()) {
+            pool.release_sharded_stream(&self.connection, &self.endpoint, &mut self.permit);
+            self.endpoint.inflight.fetch_sub(1, Ordering::Relaxed);
+            self.notify.notify_waiters();
+            return;
+        }
         self.permit.take();
         self.endpoint.inflight.fetch_sub(1, Ordering::Relaxed);
         if !self.connection.draining.load(Ordering::Acquire) {
-            *self.connection.idle_since.lock().unwrap() = Instant::now();
+            self.connection.idle.lock().unwrap().since = Instant::now();
         }
         let global_idle_disabled = self
             .pool
@@ -357,7 +470,7 @@ impl Drop for StreamHold {
             && (self.connection.idle_limit == 0 || global_idle_disabled)
         {
             if let Some(pool) = self.pool.upgrade() {
-                let mut idle = pool.idle.lock().unwrap();
+                let mut idle = pool.lock_idle(self.connection.key, "release");
                 if let Some(list) = idle.h2.get_mut(&self.connection.key).filter(|_| {
                     self.connection.streams.available_permits() == self.connection.capacity
                 }) {
@@ -425,16 +538,28 @@ impl Lease {
     pub async fn send_request(
         &mut self,
         req: Request<ProxyBody>,
+        exchange: Option<&diagnostics::Exchange>,
     ) -> hyper::Result<Response<Incoming>> {
+        if let Some(exchange) = exchange {
+            exchange.stage("upstream_sender_wait", "started");
+        }
         if let Some(h2) = &self.h2 {
             let mut sender = h2.connection.sender.clone();
             sender.ready().await?;
+            if let Some(exchange) = exchange {
+                exchange.stage("upstream_sender_ready", "ready");
+                exchange.stage("upstream_request_submitted", "hyper_dispatch");
+            }
             sender.send_request(req).await
         } else {
             let sender = &mut self.connection.as_mut().expect("HTTP/1 lease").sender;
             // Receiving the last body frame does not synchronize with the
             // driver returning to its keep-alive state on another worker.
             sender.ready().await?;
+            if let Some(exchange) = exchange {
+                exchange.stage("upstream_sender_ready", "ready");
+                exchange.stage("upstream_request_submitted", "hyper_dispatch");
+            }
             sender.send_request(req).await
         }
     }
@@ -451,7 +576,11 @@ impl Lease {
                 return;
             }
             c.idle_since = Instant::now();
-            let mut idle = self.pool.idle.lock().unwrap();
+            let key = Key {
+                generation: self.generation.version,
+                upstream: self.endpoint.pool_index,
+            };
+            let mut idle = self.pool.lock_idle(key, "return_http1");
             // A sweep may have already removed this generation while the
             // response was finishing. Never publish an idle socket after it.
             if self.generation.draining.load(Ordering::Acquire) {
@@ -462,17 +591,17 @@ impl Lease {
                 );
                 return;
             }
-            let count = idle.h1_count;
-            let key = Key {
-                generation: self.generation.version,
-                upstream: self.endpoint.pool_index,
+            let retain = if self.pool.sharded.is_some() {
+                c.idle_credit = self.pool.try_idle_credit(&self.endpoint);
+                c.idle_credit.is_some()
+            } else {
+                idle.h1_count < self.pool.limits.idle_connections
+                    && idle.connections.get(&key).map_or(0, Vec::len)
+                        < self.endpoint.config.idle_connections
             };
-            let list = idle.connections.entry(key).or_default();
-            if count < self.pool.limits.idle_connections
-                && list.len() < self.endpoint.config.idle_connections
-            {
+            if retain {
                 let connection = c.id;
-                list.push(c);
+                idle.connections.entry(key).or_default().push(c);
                 idle.h1_count += 1;
                 drop(idle);
                 self.pool.notify.notify_waiters();
@@ -481,6 +610,7 @@ impl Lease {
                     || serde_json::json!({"connection": connection}),
                 );
             } else {
+                drop(idle);
                 diagnostics::emit(
                     "upstream_lease_discarded",
                     || serde_json::json!({"connection": c.id, "reason": "idle_limit"}),
@@ -490,12 +620,24 @@ impl Lease {
     }
 }
 impl Pool {
-    pub fn new(limits: Limits, http2: Http2Config, metrics: Arc<Metrics>) -> Arc<Self> {
+    #[cfg(test)]
+    fn new(limits: Limits, http2: Http2Config, metrics: Arc<Metrics>) -> Arc<Self> {
+        Self::with_strategy(limits, http2, metrics, PoolStrategy::Compact)
+    }
+
+    pub fn with_strategy(
+        limits: Limits,
+        http2: Http2Config,
+        metrics: Arc<Metrics>,
+        strategy: PoolStrategy,
+    ) -> Arc<Self> {
         Arc::new(Self {
-            idle: Mutex::new(Idle {
-                connections: HashMap::new(),
-                h1_count: 0,
-                h2: HashMap::new(),
+            idle: Mutex::default(),
+            sharded: (strategy == PoolStrategy::Sharded).then(|| ShardedIdle {
+                buckets: (0..MAX_UPSTREAMS).map(|_| Mutex::default()).collect(),
+                budget: Arc::new(Semaphore::new(limits.idle_connections)),
+                next_victim: AtomicUsize::new(0),
+                used_buckets: AtomicUsize::new(0),
             }),
             global: Arc::new(Semaphore::new(limits.connections)),
             connecting: Arc::new(Semaphore::new(limits.connecting)),
@@ -506,6 +648,80 @@ impl Pool {
             next_id: AtomicU64::new(1),
         })
     }
+    fn lock_idle(&self, key: Key, operation: &'static str) -> IdleGuard<'_> {
+        let lock = self.sharded.as_ref().map_or(&self.idle, |shards| {
+            if shards.used_buckets.load(Ordering::Relaxed) <= key.upstream {
+                shards
+                    .used_buckets
+                    .fetch_max(key.upstream + 1, Ordering::Release);
+            }
+            &shards.buckets[key.upstream]
+        });
+        let start = diagnostics::enabled().then(Instant::now);
+        let guard = lock.lock().unwrap();
+        IdleGuard {
+            guard: Some(guard),
+            times: start.map(|begin| (begin, Instant::now())),
+            key,
+            operation,
+        }
+    }
+
+    fn try_idle_credit(&self, endpoint: &Endpoint) -> Option<IdleCredit> {
+        let ep = endpoint
+            .idle_slots
+            .as_ref()?
+            .clone()
+            .try_acquire_owned()
+            .ok()?;
+        let global = self
+            .sharded
+            .as_ref()?
+            .budget
+            .clone()
+            .try_acquire_owned()
+            .ok()?;
+        Some(IdleCredit {
+            _global: global,
+            _endpoint: ep,
+        })
+    }
+
+    fn release_sharded_stream(
+        &self,
+        connection: &Arc<H2Connection>,
+        endpoint: &Endpoint,
+        permit: &mut Option<OwnedSemaphorePermit>,
+    ) {
+        let mut bucket = self.lock_idle(connection.key, "return_http2");
+        // Serialize the final permit return and idle credit publication with admission.
+        permit.take();
+        if connection.streams.available_permits() != connection.capacity {
+            return;
+        }
+        let Some(list) = bucket.h2.get_mut(&connection.key) else {
+            return;
+        };
+        let Some(index) = list
+            .iter()
+            .position(|member| Arc::ptr_eq(member, connection))
+        else {
+            return;
+        };
+        if !connection.draining.load(Ordering::Acquire) && !connection.sender.is_closed() {
+            if let Some(credit) = self.try_idle_credit(endpoint) {
+                let mut idle = connection.idle.lock().unwrap();
+                idle.since = Instant::now();
+                idle.credit = Some(credit);
+                return;
+            }
+        }
+        list.swap_remove(index);
+        if list.is_empty() {
+            bucket.h2.remove(&connection.key);
+        }
+    }
+
     fn reserve(
         &self,
         endpoint: &Endpoint,
@@ -529,7 +745,17 @@ impl Pool {
     }
 
     pub fn sweep(&self, oldest_generation: u64) {
-        let mut idle = self.idle.lock().unwrap();
+        if let Some(shards) = &self.sharded {
+            for bucket in &shards.buckets[..shards.used_buckets.load(Ordering::Acquire)] {
+                self.sweep_bucket(&mut bucket.lock().unwrap(), oldest_generation);
+            }
+        } else {
+            self.sweep_bucket(&mut self.idle.lock().unwrap(), oldest_generation);
+        }
+        self.notify.notify_waiters();
+    }
+
+    fn sweep_bucket(&self, idle: &mut Idle, oldest_generation: u64) {
         // A sweep scheduled before reload can finish after publication. It may
         // retire older generations, while new sockets keep their own lifetime.
         idle.connections.retain(|k, list| {
@@ -552,11 +778,14 @@ impl Pool {
                 !c.sender.is_closed()
                     && c.born.elapsed().as_millis() < self.limits.max_connection_age_ms as u128
                     && (c.streams.available_permits() < c.capacity
-                        || (c.idle_since.lock().unwrap().elapsed().as_millis()
+                        || (c.idle.lock().unwrap().since.elapsed().as_millis()
                             < self.limits.idle_connection_ms as u128))
             });
+            if self.sharded.is_some() {
+                return !list.is_empty();
+            }
             let endpoint_idle_limit = list.first().map_or(0, |c| c.idle_limit);
-            list.sort_by_key(|c| c.idle_since.lock().unwrap().elapsed());
+            list.sort_by_key(|c| c.idle.lock().unwrap().since.elapsed());
             let mut idle_kept = 0usize;
             list.retain(|c| {
                 if c.streams.available_permits() < c.capacity {
@@ -570,6 +799,9 @@ impl Pool {
             });
             !list.is_empty()
         });
+        if self.sharded.is_some() {
+            return;
+        }
         let mut idle_total = idle.h1_count;
         idle_total += idle
             .h2
@@ -586,12 +818,14 @@ impl Pool {
             }
             idle_total -= 1;
         }
-        self.notify.notify_waiters();
     }
     pub fn available(&self) -> usize {
         self.global.available_permits()
     }
     pub fn idle_count(&self) -> usize {
+        if let Some(shards) = &self.sharded {
+            return self.limits.idle_connections - shards.budget.available_permits();
+        }
         let idle = self.idle.lock().unwrap();
         idle.h1_count
             + idle
@@ -626,15 +860,16 @@ impl Pool {
                 tokio::pin!(notified);
                 notified.as_mut().enable();
                 {
-                    let mut idle = self.idle.lock().unwrap();
+                    let mut idle = self.lock_idle(key, "acquire_http1");
                     let Idle {
                         connections,
                         h1_count,
                         ..
                     } = &mut *idle;
                     if let Some(list) = connections.get_mut(&key) {
-                        while let Some(c) = list.pop() {
+                        while let Some(mut c) = list.pop() {
                             *h1_count -= 1;
+                            c.idle_credit.take();
                             if !c.sender.is_closed()
                                 && c.idle_since.elapsed().as_millis()
                                     < self.limits.idle_connection_ms as u128
@@ -645,13 +880,26 @@ impl Pool {
                             }
                         }
                     }
-                    if let Ok(ep) = endpoint.slots.clone().try_acquire_owned() {
-                        // Reclaim idle capacity from other keys rather than waiting forever behind it.
-                        if self.global.available_permits() == 0 && idle.pop_any_h1().is_none() {
-                            idle.reclaim_h2();
-                        }
-                        if let Ok(global) = self.global.clone().try_acquire_owned() {
-                            return (None, Some((global, ep)));
+                    let opening = match &endpoint.h1_opening {
+                        Some(gate) => gate.clone().try_acquire_owned().ok(),
+                        None => None,
+                    };
+                    if endpoint.h1_opening.is_none() || opening.is_some() {
+                        if let Ok(ep) = endpoint.slots.clone().try_acquire_owned() {
+                            if self.sharded.is_none()
+                                && self.global.available_permits() == 0
+                                && idle.pop_any_h1().is_none()
+                            {
+                                idle.reclaim_h2();
+                            }
+                            if let Ok(global) = self.global.clone().try_acquire_owned() {
+                                return (None, Some((global, ep, opening)));
+                            }
+                            drop(ep);
+                            drop(idle);
+                            if self.sharded.is_some() && self.global.available_permits() == 0 {
+                                self.reclaim_idle_connection();
+                            }
                         }
                     }
                 }
@@ -673,7 +921,11 @@ impl Pool {
             self.metrics.reused.fetch_add(1, Ordering::Relaxed);
             c
         } else {
-            let (global, ep) = acquired.1.unwrap();
+            let (global, ep, opening) = acquired.1.unwrap();
+            let _opening = opening.map(|guard| Opening {
+                guard: Some(guard),
+                notify: &self.notify,
+            });
             let capacity = self.reserve(&endpoint, global, ep);
             let gate_started = log_attempt.then(Instant::now);
             let _gate = timeout(
@@ -731,7 +983,7 @@ impl Pool {
             notified.as_mut().enable();
             let mut selected = None;
             {
-                let mut idle = self.idle.lock().unwrap();
+                let mut idle = self.lock_idle(key, "acquire_http2");
                 if let Some(list) = idle.h2.get_mut(&key) {
                     list.retain(|c| {
                         !c.draining.load(Ordering::Acquire)
@@ -739,7 +991,7 @@ impl Pool {
                             && c.born.elapsed().as_millis()
                                 < self.limits.max_connection_age_ms as u128
                             && (c.streams.available_permits() < c.capacity
-                                || c.idle_since.lock().unwrap().elapsed().as_millis()
+                                || c.idle.lock().unwrap().since.elapsed().as_millis()
                                     < self.limits.idle_connection_ms as u128)
                     });
                     for c in list.iter() {
@@ -748,6 +1000,9 @@ impl Pool {
                             continue;
                         }
                         if let Ok(p) = c.streams.clone().try_acquire_owned() {
+                            if self.sharded.is_some() {
+                                c.idle.lock().unwrap().credit.take();
+                            }
                             c.live.fetch_add(1, Ordering::AcqRel);
                             selected = Some((c.clone(), p));
                             break;
@@ -759,12 +1014,20 @@ impl Pool {
                 break (c, p, false);
             }
             if reserved.is_none() {
-                if let Ok(ep) = endpoint.slots.clone().try_acquire_owned() {
-                    if let Ok(global) = self.global.clone().try_acquire_owned() {
-                        reserved = Some(self.reserve(&endpoint, global, ep));
-                    }
-                }
-                if reserved.is_none() && self.global.available_permits() == 0 {
+                let blocked_by_global = match endpoint.slots.clone().try_acquire_owned() {
+                    Ok(ep) => match self.global.clone().try_acquire_owned() {
+                        Ok(global) => {
+                            reserved = Some(self.reserve(&endpoint, global, ep));
+                            false
+                        }
+                        Err(_) => true,
+                    },
+                    Err(_) => false,
+                };
+                if (blocked_by_global || self.sharded.is_none())
+                    && reserved.is_none()
+                    && self.global.available_permits() == 0
+                {
                     self.reclaim_idle_connection();
                 }
             }
@@ -799,7 +1062,7 @@ impl Pool {
                 }
                 // A concurrent opener may have created a usable socket while we waited.
                 let existing = {
-                    let idle = self.idle.lock().unwrap();
+                    let idle = self.lock_idle(key, "recheck_http2");
                     idle.h2.get(&key).and_then(|xs| {
                         xs.iter()
                             .filter(|c| {
@@ -810,6 +1073,9 @@ impl Pool {
                             })
                             .find_map(|c| {
                                 c.streams.clone().try_acquire_owned().ok().map(|p| {
+                                    if self.sharded.is_some() {
+                                        c.idle.lock().unwrap().credit.take();
+                                    }
                                     c.live.fetch_add(1, Ordering::AcqRel);
                                     (c.clone(), p)
                                 })
@@ -834,7 +1100,7 @@ impl Pool {
                             .map_err(|_| anyhow!("h2_stream_capacity_race"))?;
                         c.live.fetch_add(1, Ordering::AcqRel);
                         {
-                            let mut idle = self.idle.lock().unwrap();
+                            let mut idle = self.lock_idle(key, "publish_http2");
                             if !generation.draining.load(Ordering::Acquire) {
                                 idle.h2.entry(key).or_default().push(c.clone());
                             }
@@ -997,7 +1263,11 @@ impl Pool {
             .max_local_error_reset_streams(Some(self.http2.max_local_error_reset_streams));
         let (sender, conn) = timeout(
             duration,
-            builder.handshake::<_, ProxyBody>(TokioIo::new(io)),
+            builder.handshake::<_, ProxyBody>(TokioIo::new(diagnostics::Io::new(
+                io,
+                "upstream",
+                Some(capacity.id),
+            ))),
         )
         .await
         .map_err(|_| anyhow!("http2_handshake_timeout"))??;
@@ -1008,7 +1278,10 @@ impl Pool {
             sender,
             id,
             born: Instant::now(),
-            idle_since: Mutex::new(Instant::now()),
+            idle: Mutex::new(H2Idle {
+                since: Instant::now(),
+                credit: None,
+            }),
             streams: Arc::new(Semaphore::new(e.config.streams_per_connection)),
             capacity: e.config.streams_per_connection,
             idle_limit: e.config.idle_connections,
@@ -1020,6 +1293,18 @@ impl Pool {
         }))
     }
     fn reclaim_idle_connection(&self) {
+        if let Some(shards) = &self.sharded {
+            let first = shards.next_victim.fetch_add(1, Ordering::Relaxed);
+            let used = shards.used_buckets.load(Ordering::Acquire);
+            for offset in 0..used {
+                let index = first.wrapping_add(offset) % used;
+                let mut bucket = shards.buckets[index].lock().unwrap();
+                if bucket.pop_any_h1().is_some() || bucket.reclaim_h2() {
+                    break;
+                }
+            }
+            return;
+        }
         let mut idle = self.idle.lock().unwrap();
         if !idle.reclaim_h2() {
             idle.pop_any_h1();
@@ -1040,7 +1325,7 @@ impl Pool {
             let socket = timeout(duration, UnixStream::connect(path))
                 .await
                 .map_err(|_| anyhow!("unix_connect_timeout"))??;
-            let io = TokioIo::new(socket);
+            let io = TokioIo::new(diagnostics::Io::new(socket, "upstream", Some(capacity.id)));
             let (sender, conn) = timeout(duration, http.handshake(io)).await??;
             (
                 sender,
@@ -1111,7 +1396,15 @@ impl Pool {
             } else {
                 Box::new(socket)
             };
-            let (sender, conn) = timeout(duration, http.handshake(TokioIo::new(io))).await??;
+            let (sender, conn) = timeout(
+                duration,
+                http.handshake(TokioIo::new(diagnostics::Io::new(
+                    io,
+                    "upstream",
+                    Some(capacity.id),
+                ))),
+            )
+            .await??;
             (
                 sender,
                 spawn_driver(conn.with_upgrades(), capacity.clone(), "upstream_http1"),
@@ -1125,6 +1418,7 @@ impl Pool {
             born: Instant::now(),
             idle_since: Instant::now(),
             _capacity: capacity,
+            idle_credit: None,
         })
     }
     pub fn mark_failed(&self, e: &Endpoint) {
@@ -1245,37 +1539,139 @@ mod pool_tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn cancelled_opening_wakes_capacity_waiters() {
+        for strategy in [PoolStrategy::Compact, PoolStrategy::Sharded] {
+            for protocol in [UpstreamProtocol::Http1, UpstreamProtocol::Http2] {
+                let mut cfg = config("127.0.0.1:1".into());
+                cfg.limits.connections = 1;
+                cfg.limits.connecting = 1;
+                cfg.upstreams[0].connections = 1;
+                cfg.upstreams[0].protocol = protocol;
+                let generation = Generation::with_strategy(cfg, 1, &HashMap::new(), strategy);
+                let pool = Pool::with_strategy(
+                    generation.config.limits.clone(),
+                    generation.config.http2.clone(),
+                    Arc::new(Metrics::default()),
+                    strategy,
+                );
+                let endpoint = generation.endpoints["backend"].clone();
+                let _gate = pool.connecting.acquire().await.unwrap();
+                let mut opening = Box::pin(pool.acquire(generation, endpoint.clone(), false));
+                std::future::poll_fn(|cx| {
+                    assert!(opening.as_mut().poll(cx).is_pending());
+                    Poll::Ready(())
+                })
+                .await;
+                assert_eq!(pool.available(), 0);
+                assert_eq!(endpoint.slots.available_permits(), 0);
+
+                let notified = pool.notify.notified();
+                tokio::pin!(notified);
+                notified.as_mut().enable();
+                drop(opening);
+                timeout(Duration::from_millis(200), notified).await.unwrap();
+                assert_eq!(pool.available(), 1);
+                assert_eq!(endpoint.slots.available_permits(), 1);
+                if let Some(opening) = &endpoint.h1_opening {
+                    assert_eq!(opening.available_permits(), 1);
+                }
+            }
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn sharded_eviction_preserves_a_live_lease_and_endpoint_identity() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = tokio::spawn(async move {
+            while let Ok((socket, _)) = listener.accept().await {
+                tokio::spawn(async move {
+                    let service = service_fn(|req: Request<Incoming>| async move {
+                        let host = req.headers().get("host").unwrap().as_bytes();
+                        Ok::<_, Infallible>(Response::new(Full::new(Bytes::copy_from_slice(host))))
+                    });
+                    let _ = hyper_util::server::conn::auto::Builder::new(TokioExecutor::new())
+                        .serve_connection(TokioIo::new(socket), service)
+                        .await;
+                });
+            }
+        });
         for protocol in [UpstreamProtocol::Http1, UpstreamProtocol::Http2] {
-            let mut cfg = config("127.0.0.1:1".into());
+            let mut cfg = config(address.to_string());
             cfg.limits.connections = 1;
-            cfg.limits.connecting = 1;
-            cfg.upstreams[0].connections = 1;
+            cfg.limits.idle_connections = 1;
             cfg.upstreams[0].protocol = protocol;
-            let generation = Generation::new(cfg, 1, &HashMap::new());
-            let pool = Pool::new(
-                generation.config.limits.clone(),
-                generation.config.http2.clone(),
+            cfg.upstreams[0].connections = 1;
+            cfg.upstreams[0].idle_connections = 1;
+            let mut second = cfg.upstreams[0].clone();
+            second.id = "second".into();
+            second.host = "second.test".into();
+            cfg.upstreams.push(second);
+
+            let pool = Pool::with_strategy(
+                cfg.limits.clone(),
+                cfg.http2.clone(),
                 Arc::new(Metrics::default()),
+                PoolStrategy::Sharded,
             );
-            let endpoint = generation.endpoints["backend"].clone();
-            let _gate = pool.connecting.acquire().await.unwrap();
-            let mut opening = Box::pin(pool.acquire(generation, endpoint.clone(), false));
+            let generation =
+                Generation::with_strategy(cfg, 1, &HashMap::new(), PoolStrategy::Sharded);
+            let a = generation.endpoints["backend"].clone();
+            let b = generation.endpoints["second"].clone();
+            let (mut first, _) = pool
+                .acquire(generation.clone(), a.clone(), false)
+                .await
+                .unwrap();
+            let id = first.connection_id();
+            assert_eq!(pool.available(), 0);
+            assert_eq!(pool.idle_count(), 0);
+            let mut pending = Box::pin(pool.acquire(generation.clone(), b.clone(), false));
             std::future::poll_fn(|cx| {
-                assert!(opening.as_mut().poll(cx).is_pending());
+                assert!(pending.as_mut().poll(cx).is_pending());
                 Poll::Ready(())
             })
             .await;
-            assert_eq!(pool.available(), 0);
-            assert_eq!(endpoint.slots.available_permits(), 0);
-
-            let notified = pool.notify.notified();
-            tokio::pin!(notified);
-            notified.as_mut().enable();
-            drop(opening);
-            timeout(Duration::from_millis(200), notified).await.unwrap();
-            assert_eq!(pool.available(), 1);
-            assert_eq!(endpoint.slots.available_permits(), 1);
+            let request = Request::builder()
+                .uri("http://backend.test/")
+                .header("host", "backend.test")
+                .body(crate::body::full(""))
+                .unwrap();
+            let response = first.send_request(request, None).await.unwrap();
+            assert_eq!(
+                response.into_body().collect().await.unwrap().to_bytes(),
+                "backend.test"
+            );
+            first.complete(true);
+            drop(first);
+            assert_eq!(pool.idle_count(), 1);
+            let (mut replacement, _) = timeout(Duration::from_secs(2), pending)
+                .await
+                .unwrap()
+                .unwrap();
+            assert_ne!(id, replacement.connection_id());
+            assert_eq!(pool.idle_count(), 0);
+            let request = Request::builder()
+                .uri("http://second.test/")
+                .header("host", "second.test")
+                .body(crate::body::full(""))
+                .unwrap();
+            let response = replacement.send_request(request, None).await.unwrap();
+            assert_eq!(
+                response.into_body().collect().await.unwrap().to_bytes(),
+                "second.test"
+            );
+            replacement.complete(true);
+            drop(replacement);
+            assert_eq!(pool.idle_count(), 1);
+            pool.sweep(2);
+            assert_eq!(pool.idle_count(), 0);
+            drop(
+                timeout(Duration::from_secs(2), pool.global.acquire())
+                    .await
+                    .unwrap()
+                    .unwrap(),
+            );
         }
+        server.abort();
     }
 
     struct ParkAfterReply {
@@ -1367,6 +1763,7 @@ mod pool_tests {
                 idle_since: Instant::now(),
                 driver: spawn_driver(driver, capacity.clone(), "upstream_http1"),
                 _capacity: capacity,
+                idle_credit: None,
             }),
             pool,
             generation,
@@ -1395,7 +1792,7 @@ mod pool_tests {
                 .body(crate::body::full(""))
                 .unwrap()
         };
-        let first = lease.send_request(request()).await.unwrap();
+        let first = lease.send_request(request(), None).await.unwrap();
         assert!(first
             .into_body()
             .collect()
@@ -1417,7 +1814,7 @@ mod pool_tests {
             .unwrap();
         assert_eq!(attempt.unwrap().reused, Some(true));
         assert_eq!(lease.pool.idle_count(), 0);
-        let mut second = Box::pin(lease.send_request(request()));
+        let mut second = Box::pin(lease.send_request(request(), None));
         let second_state = std::future::poll_fn(|cx| Poll::Ready(second.as_mut().poll(cx))).await;
         resume_driver.send(()).unwrap();
         assert!(
@@ -1508,7 +1905,7 @@ mod pool_tests {
                     .header("host", "backend.test")
                     .body(crate::body::full(Bytes::new()))
                     .unwrap();
-                let response = lease.send_request(request).await.unwrap();
+                let response = lease.send_request(request, None).await.unwrap();
                 assert_eq!(response.status(), hyper::StatusCode::OK);
                 assert_eq!(
                     response.into_body().collect().await.unwrap().to_bytes(),
@@ -1597,8 +1994,8 @@ mod pool_tests {
                 .unwrap()
         };
         let (a, b) = tokio::join!(
-            first.send_request(request()),
-            second.send_request(request())
+            first.send_request(request(), None),
+            second.send_request(request(), None)
         );
         a.unwrap().into_body().collect().await.unwrap();
         b.unwrap().into_body().collect().await.unwrap();
@@ -1688,8 +2085,8 @@ mod pool_tests {
             .body(crate::body::full(Bytes::new()))
             .unwrap();
         let (response, sibling_response) = tokio::join!(
-            lease.send_request(request),
-            sibling.send_request(sibling_request)
+            lease.send_request(request, None),
+            sibling.send_request(sibling_request, None)
         );
         let sibling_response = sibling_response.unwrap();
         assert_eq!(sibling_response.status(), hyper::StatusCode::OK);

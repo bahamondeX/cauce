@@ -203,15 +203,15 @@ impl Drop for TunnelLog {
             event.transfer_ms = Some(ms(c.headers_at));
             event.request_bytes = self.up.load(Ordering::Relaxed);
             event.response_bytes = response_bytes;
-            event.outcome = self.outcome.into();
+            event.outcome = self.outcome;
             if let Some(attempt) = event.attempts.last_mut() {
-                attempt.outcome = self.outcome.into();
+                attempt.outcome = self.outcome;
             }
             if self.outcome != "complete" {
-                event.error_direction = Some("upstream_or_downstream".into());
-                event.error_category = Some("websocket".into());
-                event.error_phase = Some("tunnel".into());
-                event.reason = self.reason.map(str::to_owned);
+                event.error_direction = Some("upstream_or_downstream");
+                event.error_category = Some("websocket");
+                event.error_phase = Some("tunnel");
+                event.reason = self.reason;
             }
         }
         if self.outcome != "complete" {
