@@ -1,0 +1,348 @@
+{
+  "schema": "cauce.increment7.comparison.v1",
+  "campaign": "20261125T162736Z-e1546e",
+  "runs": 12,
+  "percentile_aggregation": "median of per-run nearest-rank percentiles; not a pooled percentile",
+  "groups": [
+    {
+      "scenario": "normal",
+      "logs": "off",
+      "stack": "cauce",
+      "repetitions": 3,
+      "offered_rate": 500.0,
+      "generator_limited_runs": [],
+      "goodput_rps": {
+        "median": 499.93476844892064,
+        "min": 499.9002713955571,
+        "max": 499.96766396637423
+      },
+      "offer_window_goodput_rps": {
+        "median": 500.0,
+        "min": 499.875,
+        "max": 500.0
+      },
+      "successes_per_offer_duration": {
+        "median": 500.0,
+        "min": 500.0,
+        "max": 500.0
+      },
+      "p50_ms": {
+        "median": 1.5602700000272307,
+        "min": 1.5139209999972536,
+        "max": 1.6024759999879734
+      },
+      "p95_ms": {
+        "median": 2.8952190000097744,
+        "min": 2.88084399999633,
+        "max": 2.9746810000119694
+      },
+      "p99_ms": {
+        "median": 4.607336000020723,
+        "min": 4.564795999982607,
+        "max": 4.954842000003623
+      },
+      "p999_ms": {
+        "median": 9.771741999998085,
+        "min": 9.253565000022945,
+        "max": 15.930369999999527
+      },
+      "proxy_cpu_pct": {
+        "median": 7.4956585002009035,
+        "min": 7.205018126854338,
+        "max": 7.57451690607405
+      },
+      "proxy_cpu_us_per_success": {
+        "median": 151.72075,
+        "min": 148.51075,
+        "max": 157.883
+      },
+      "rss_peak_mib": {
+        "median": 5.75,
+        "min": 5.625,
+        "max": 5.75
+      },
+      "cgroup_peak_mib": {
+        "median": 2.52734375,
+        "min": 2.5234375,
+        "max": 8.078125
+      },
+      "client_cpu_pct": {
+        "median": 20.509512599841514,
+        "min": 19.347052725566733,
+        "max": 20.525551432438444
+      },
+      "backend_cpu_pct": {
+        "median": 12.486085983732252,
+        "min": 12.254915565155295,
+        "max": 13.335904700058366
+      },
+      "scheduler_p99_ms": {
+        "median": 2.1476250000205255,
+        "min": 2.13683999999148,
+        "max": 2.1561479999832045
+      },
+      "offered": 12000,
+      "success": 12000,
+      "http_errors": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "drops": 0,
+      "queue_rejections": 0
+    },
+    {
+      "scenario": "normal",
+      "logs": "off",
+      "stack": "nginx",
+      "repetitions": 3,
+      "offered_rate": 500.0,
+      "generator_limited_runs": [],
+      "goodput_rps": {
+        "median": 499.94597227612,
+        "min": 499.8935649741534,
+        "max": 499.94824348302916
+      },
+      "offer_window_goodput_rps": {
+        "median": 500.0,
+        "min": 500.0,
+        "max": 500.0
+      },
+      "successes_per_offer_duration": {
+        "median": 500.0,
+        "min": 500.0,
+        "max": 500.0
+      },
+      "p50_ms": {
+        "median": 1.5927399999924319,
+        "min": 1.5624870000152669,
+        "max": 1.6000889999929768
+      },
+      "p95_ms": {
+        "median": 2.910161999992056,
+        "min": 2.9078700000297886,
+        "max": 2.912331000032964
+      },
+      "p99_ms": {
+        "median": 5.265471999990723,
+        "min": 4.683190999998033,
+        "max": 6.7697500000036825
+      },
+      "p999_ms": {
+        "median": 10.568693000010398,
+        "min": 10.297506000014778,
+        "max": 12.398262999994358
+      },
+      "proxy_cpu_pct": {
+        "median": 6.0221763714934635,
+        "min": 5.91114079959543,
+        "max": 6.167676351012246
+      },
+      "proxy_cpu_us_per_success": {
+        "median": 123.4535,
+        "min": 121.519,
+        "max": 126.84625
+      },
+      "rss_peak_mib": {
+        "median": 12.30859375,
+        "min": 12.30859375,
+        "max": 12.30859375
+      },
+      "cgroup_peak_mib": {
+        "median": 3.3984375,
+        "min": 3.171875,
+        "max": 10.3828125
+      },
+      "client_cpu_pct": {
+        "median": 21.52555034086362,
+        "min": 21.323865293399784,
+        "max": 21.566768931228488
+      },
+      "backend_cpu_pct": {
+        "median": 12.79533554001914,
+        "min": 12.7806818401812,
+        "max": 13.294049942597228
+      },
+      "scheduler_p99_ms": {
+        "median": 2.1523580000177844,
+        "min": 2.1321020000044655,
+        "max": 2.2198919999851796
+      },
+      "offered": 12000,
+      "success": 12000,
+      "http_errors": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "drops": 0,
+      "queue_rejections": 0
+    },
+    {
+      "scenario": "normal",
+      "logs": "on",
+      "stack": "cauce",
+      "repetitions": 3,
+      "offered_rate": 500.0,
+      "generator_limited_runs": [],
+      "goodput_rps": {
+        "median": 499.94084862359813,
+        "min": 499.91716859935536,
+        "max": 499.9457530735964
+      },
+      "offer_window_goodput_rps": {
+        "median": 500.0,
+        "min": 499.875,
+        "max": 500.0
+      },
+      "successes_per_offer_duration": {
+        "median": 500.0,
+        "min": 500.0,
+        "max": 500.0
+      },
+      "p50_ms": {
+        "median": 1.58576000001176,
+        "min": 1.577857000000904,
+        "max": 1.6144439999976612
+      },
+      "p95_ms": {
+        "median": 2.86472199999821,
+        "min": 2.838008999987096,
+        "max": 2.9954090000217093
+      },
+      "p99_ms": {
+        "median": 4.448315999994179,
+        "min": 3.760604000007106,
+        "max": 7.2284190000004855
+      },
+      "p999_ms": {
+        "median": 10.831287000002021,
+        "min": 6.696692000019766,
+        "max": 15.420308000017258
+      },
+      "proxy_cpu_pct": {
+        "median": 8.691801682294754,
+        "min": 8.616495123363487,
+        "max": 8.97422440085387
+      },
+      "proxy_cpu_us_per_success": {
+        "median": 180.4865,
+        "min": 175.452,
+        "max": 183.6595
+      },
+      "rss_peak_mib": {
+        "median": 7.625,
+        "min": 7.625,
+        "max": 7.75
+      },
+      "cgroup_peak_mib": {
+        "median": 8.0859375,
+        "min": 8.05078125,
+        "max": 8.41015625
+      },
+      "client_cpu_pct": {
+        "median": 20.177427555784842,
+        "min": 19.450164155540158,
+        "max": 20.819672169912046
+      },
+      "backend_cpu_pct": {
+        "median": 12.250510235124153,
+        "min": 12.09380374716526,
+        "max": 12.2904464693776
+      },
+      "scheduler_p99_ms": {
+        "median": 2.150881000005711,
+        "min": 2.125583000008646,
+        "max": 2.6210649999995894
+      },
+      "offered": 12000,
+      "success": 12000,
+      "http_errors": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "drops": 0,
+      "queue_rejections": 0
+    },
+    {
+      "scenario": "normal",
+      "logs": "on",
+      "stack": "nginx",
+      "repetitions": 3,
+      "offered_rate": 500.0,
+      "generator_limited_runs": [],
+      "goodput_rps": {
+        "median": 499.9402623880168,
+        "min": 499.88068004380074,
+        "max": 499.94123746938214
+      },
+      "offer_window_goodput_rps": {
+        "median": 500.0,
+        "min": 499.875,
+        "max": 500.0
+      },
+      "successes_per_offer_duration": {
+        "median": 500.0,
+        "min": 500.0,
+        "max": 500.0
+      },
+      "p50_ms": {
+        "median": 1.5957140000040226,
+        "min": 1.498994999963088,
+        "max": 1.602256000012403
+      },
+      "p95_ms": {
+        "median": 2.8095160000134456,
+        "min": 2.7706690000002254,
+        "max": 2.8978170000044656
+      },
+      "p99_ms": {
+        "median": 4.7943389999858255,
+        "min": 3.7266989999977795,
+        "max": 5.238458999968998
+      },
+      "p999_ms": {
+        "median": 9.106985999991934,
+        "min": 7.183047000012266,
+        "max": 11.632455999972535
+      },
+      "proxy_cpu_pct": {
+        "median": 6.795027205784129,
+        "min": 6.1895187443293,
+        "max": 6.87836660600786
+      },
+      "proxy_cpu_us_per_success": {
+        "median": 139.16525,
+        "min": 125.818,
+        "max": 140.64
+      },
+      "rss_peak_mib": {
+        "median": 13.30859375,
+        "min": 13.30859375,
+        "max": 13.3125
+      },
+      "cgroup_peak_mib": {
+        "median": 4.68359375,
+        "min": 4.68359375,
+        "max": 4.69140625
+      },
+      "client_cpu_pct": {
+        "median": 21.20168881406782,
+        "min": 19.472885976654982,
+        "max": 21.431234210826037
+      },
+      "backend_cpu_pct": {
+        "median": 12.733747336143093,
+        "min": 11.837412028186241,
+        "max": 13.010123902012328
+      },
+      "scheduler_p99_ms": {
+        "median": 2.1467919999906826,
+        "min": 2.124258000037571,
+        "max": 2.1720320000042648
+      },
+      "offered": 12000,
+      "success": 12000,
+      "http_errors": 0,
+      "errors": 0,
+      "timeouts": 0,
+      "drops": 0,
+      "queue_rejections": 0
+    }
+  ]
+}

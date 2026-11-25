@@ -1,6 +1,9 @@
 use anyhow::{bail, ensure, Context, Result};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashSet, net::SocketAddr, path::Path};
+use yaml_serde::Value as YamlValue;
+
+const MAX_CONFIG_BYTES: usize = 1_048_576;
 
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(deny_unknown_fields)]
@@ -16,6 +19,113 @@ pub struct Config {
     pub http2: Http2Config,
     pub upstreams: Vec<Upstream>,
     pub routes: Vec<Route>,
+}
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct YamlConfig {
+    version: u32,
+    proxy: Config,
+}
+
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum DurationInput {
+    Number(u64),
+    Unit(String),
+}
+
+fn duration<'de, D: Deserializer<'de>>(input: D, ms_per_unit: u64) -> Result<u64, D::Error> {
+    use serde::de::Error;
+    let value = match DurationInput::deserialize(input)? {
+        DurationInput::Number(value) => return Ok(value),
+        DurationInput::Unit(value) => value,
+    };
+    let unit_start = value.bytes().take_while(u8::is_ascii_digit).count();
+    let (number, suffix) = value.split_at(unit_start);
+    let factor = match suffix {
+        "ms" => 1,
+        "s" => 1000,
+        "m" => 60_000,
+        "h" => 3_600_000,
+        _ => return Err(D::Error::custom("duration must use ms, s, m or h")),
+    };
+    let ms = number
+        .parse::<u64>()
+        .ok()
+        .and_then(|number| number.checked_mul(factor))
+        .ok_or_else(|| D::Error::custom("invalid duration magnitude"))?;
+    if ms % ms_per_unit != 0 {
+        return Err(D::Error::custom("duration must represent whole seconds"));
+    }
+    Ok(ms / ms_per_unit)
+}
+
+fn milliseconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
+    duration(input, 1)
+}
+
+fn seconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
+    duration(input, 1000)
+}
+
+fn expand_env(
+    value: &mut YamlValue,
+    env: &impl Fn(&str) -> Option<String>,
+    remaining: &mut usize,
+) -> Result<()> {
+    match value {
+        YamlValue::String(text) => {
+            if let Some(name) = text.strip_prefix("${").and_then(|s| s.strip_suffix('}')) {
+                ensure!(
+                    name.starts_with(|c: char| c == '_' || c.is_ascii_alphabetic())
+                        && name.bytes().all(|b| b == b'_' || b.is_ascii_alphanumeric()),
+                    "invalid environment reference"
+                );
+                let resolved = env(name).context("referenced environment variable unavailable")?;
+                *remaining = remaining
+                    .checked_sub(resolved.len())
+                    .context("environment expansion exceeds 1 MiB")?;
+                *text = resolved;
+            }
+        }
+        YamlValue::Sequence(items) => {
+            for item in items {
+                expand_env(item, env, remaining)?;
+            }
+        }
+        YamlValue::Mapping(map) => {
+            for (key, item) in map {
+                ensure!(key.is_string(), "YAML configuration keys must be strings");
+                expand_env(item, env, remaining)?;
+            }
+        }
+        YamlValue::Tagged(_) => bail!("YAML configuration does not accept custom tags"),
+        _ => {}
+    }
+    Ok(())
+}
+
+fn deserialize_yaml(data: &str, env: impl Fn(&str) -> Option<String>) -> Result<Config> {
+    let mut doc: YamlValue = yaml_serde::from_str(data).map_err(|error| {
+        if let Some(location) = error.location() {
+            anyhow::anyhow!(
+                "invalid YAML at line {}, column {}",
+                location.line(),
+                location.column()
+            )
+        } else {
+            anyhow::anyhow!("invalid YAML document")
+        }
+    })?;
+    let mut expansion_budget = MAX_CONFIG_BYTES;
+    expand_env(&mut doc, &env, &mut expansion_budget)?;
+    let config: YamlConfig = yaml_serde::from_value(doc)
+        .map_err(|_| anyhow::anyhow!("invalid YAML configuration field, type or duration"))?;
+    ensure!(
+        config.version == 1,
+        "unsupported YAML configuration version"
+    );
+    Ok(config.proxy)
 }
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(deny_unknown_fields)]
@@ -55,23 +165,36 @@ pub struct Limits {
     pub connections: usize,
     pub idle_connections: usize,
     pub connecting: usize,
+    #[serde(deserialize_with = "milliseconds")]
     pub acquire_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub connect_ms: u64,
     #[serde(default = "default_tls_handshake_ms")]
+    #[serde(deserialize_with = "milliseconds")]
     pub tls_handshake_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub headers_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub stream_idle_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub request_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub client_headers_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub idle_connection_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub max_connection_age_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub dns_cache_ms: u64,
+    #[serde(deserialize_with = "seconds")]
     pub tcp_keepalive_secs: u64,
     pub max_header_bytes: usize,
     pub max_headers: usize,
     pub max_body_bytes: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub shutdown_ms: u64,
     #[serde(default = "default_websocket_max_ms")]
+    #[serde(deserialize_with = "milliseconds")]
     pub websocket_max_ms: u64,
 }
 fn default_websocket_max_ms() -> u64 {
@@ -99,6 +222,7 @@ pub struct Upstream {
     pub isolation: String,
     pub connections: usize,
     pub idle_connections: usize,
+    #[serde(deserialize_with = "milliseconds")]
     pub failure_backoff_ms: u64,
     #[serde(default)]
     pub health_check: Option<HealthCheck>,
@@ -113,7 +237,9 @@ pub struct Upstream {
 #[serde(deny_unknown_fields)]
 pub struct HealthCheck {
     pub path: String,
+    #[serde(deserialize_with = "milliseconds")]
     pub interval_ms: u64,
+    #[serde(deserialize_with = "milliseconds")]
     pub timeout_ms: u64,
     pub rise: u32,
     pub fall: u32,
@@ -162,10 +288,23 @@ impl Config {
             .await
             .context("read configuration")?;
         let mut data = Vec::new();
-        file.take(1_048_577).read_to_end(&mut data).await?;
-        ensure!(data.len() <= 1_048_576, "configuration exceeds 1 MiB");
+        file.take((MAX_CONFIG_BYTES + 1) as u64)
+            .read_to_end(&mut data)
+            .await?;
+        ensure!(
+            data.len() <= MAX_CONFIG_BYTES,
+            "configuration exceeds 1 MiB"
+        );
+        let yaml = path
+            .extension()
+            .is_some_and(|ext| ext == "yaml" || ext == "yml");
         tokio::task::spawn_blocking(move || {
-            let config: Self = toml::from_str(std::str::from_utf8(&data)?)?;
+            let text = std::str::from_utf8(&data)?;
+            let config: Self = if yaml {
+                deserialize_yaml(text, |name| std::env::var(name).ok())?
+            } else {
+                toml::from_str(text)?
+            };
             config.validate()?;
             Ok(config)
         })
@@ -389,6 +528,57 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn yaml_and_toml_compile_to_the_same_configuration() {
+        let yaml = include_str!("../examples/cauce.yaml");
+        let toml = include_str!("../examples/cauce.toml");
+        let yaml = deserialize_yaml(yaml, |_| None).unwrap();
+        let toml = toml::from_str::<Config>(toml).unwrap();
+        assert_eq!(yaml, toml);
+        yaml.validate().unwrap();
+    }
+
+    #[test]
+    fn yaml_rejects_invalid_fields_versions_and_durations() {
+        let example = include_str!("../examples/cauce.yaml");
+        for (old, new) in [
+            ("version: 1", "version: 2"),
+            ("version: 1", "version: 1\nversion: 1"),
+            ("version: 1", "version: 1\nunexpected: true"),
+            ("    clients: 1024", "    clients: 1024\n    typo: 2"),
+            ("    clients: 1024", "    clients: 1024\n    clients: 2"),
+            ("    clients: 1024", "    clients: !custom 1024"),
+            ("250ms", "250us"),
+            ("250ms", "18446744073709551615s"),
+            ("30s", "1ms"),
+        ] {
+            assert!(
+                deserialize_yaml(&example.replace(old, new), |_| None).is_err(),
+                "{new}"
+            );
+        }
+    }
+
+    #[test]
+    fn yaml_expands_whole_values_and_redacts_failed_substitutions() {
+        let example = include_str!("../examples/cauce.yaml")
+            .replace("logs/access.jsonl", "${CAUCE_LOG}")
+            .replace("250ms", "${CAUCE_WAIT}");
+        let valid = deserialize_yaml(&example, |name| match name {
+            "CAUCE_LOG" => Some("test: value # remains a scalar".into()),
+            "CAUCE_WAIT" => Some("2s".into()),
+            _ => None,
+        })
+        .unwrap();
+        assert_eq!(valid.logs.path, "test: value # remains a scalar");
+        assert_eq!(valid.limits.acquire_ms, 2000);
+        for env in [Some("operator-secret-value"), None] {
+            let result = deserialize_yaml(&example, |_| env.map(str::to_owned));
+            let diagnostic = format!("{:#}", result.unwrap_err());
+            assert!(!diagnostic.contains("operator-secret-value"));
+        }
+    }
     #[test]
     fn example_and_fail_closed() {
         let c: Config = toml::from_str(include_str!("../examples/cauce.toml")).unwrap();

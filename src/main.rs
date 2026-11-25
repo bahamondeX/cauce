@@ -3,6 +3,7 @@ mod config;
 mod health;
 mod pool;
 mod proxy;
+mod routing;
 mod telemetry;
 mod tls;
 mod transport;
@@ -50,9 +51,9 @@ async fn run() -> Result<()> {
     let path = PathBuf::from(
         args.get(if check { 2 } else { 1 })
             .map(String::as_str)
-            .unwrap_or("examples/cauce.toml"),
+            .unwrap_or("examples/cauce.yaml"),
     );
-    let config = Config::load(&path).await?;
+    let config = Arc::new(Config::load(&path).await?);
     let tls_clients = prepare_tls_clients(&config).await?;
     let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
     if check {
@@ -70,7 +71,7 @@ async fn run() -> Result<()> {
     let pool = Pool::new(config.limits.clone(), config.http2.clone(), metrics);
     let clients = Arc::new(Semaphore::new(config.limits.clients));
     let state = Arc::new(State {
-        generation: RwLock::new(Generation::new(config.clone(), 1, &tls_clients)),
+        generation: RwLock::new(Generation::new((*config).clone(), 1, &tls_clients)),
         pool,
         logger,
         requests: Arc::new(Semaphore::new(config.limits.requests)),
@@ -88,8 +89,10 @@ async fn run() -> Result<()> {
     let mut term = signal(SignalKind::terminate())?;
     let mut interrupt = signal(SignalKind::interrupt())?;
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
+    let (generation_tx, generation_rx) = watch::channel(1);
+    let maintenance = tokio::spawn(maintain_pool(state.pool.clone(), generation_rx));
     let mut tasks = JoinSet::new();
-    let mut sweep = tokio::time::interval(Duration::from_millis(250));
+    let mut reload = JoinSet::new();
     eprintln!(
         "{{\"event\":\"started\",\"data\":\"{}\",\"admin\":\"{}\"}}",
         config.listen, config.admin
@@ -98,33 +101,27 @@ async fn run() -> Result<()> {
         tokio::select! {
             _ = term.recv() => break,
             _ = interrupt.recv() => break,
-            _ = sweep.tick() => {
-                let version = state.generation.read().unwrap().version;
-                state.pool.sweep(version);
-            },
             _ = tasks.join_next(), if !tasks.is_empty() => {},
-            _ = hup.recv() => {
-                match async {
-                    let next = Config::load(&path).await?;
-                    config.reload_compatible(&next)?;
-                    let clients = prepare_tls_clients(&next).await?;
-                    let server = prepare_server_tls(next.tls.clone(), next.http2.enabled).await?;
-                    Ok::<_, anyhow::Error>((next, clients, server))
-                }.await {
-                    Ok((next, clients, server)) => {
-                        let version = {
+            _ = hup.recv(), if reload.is_empty() => {
+                let version = state.generation.read().unwrap().version + 1;
+                reload.spawn(prepare_reload(path.clone(), config.clone(), version));
+            },
+            prepared = reload.join_next(), if !reload.is_empty() => {
+                match prepared {
+                    Some(Ok(Ok((next, server)))) => {
+                        let version = next.version;
+                        {
                             let mut current = state.generation.write().unwrap();
-                            let version = current.version + 1;
                             current.draining.store(true, Ordering::Release);
-                            *current = Generation::new(next.clone(), version, &clients); version
-                        };
+                            *current = next;
+                        }
                         health.abort();
                         health = health::start(&state.generation.read().unwrap());
                         server_tls = server;
-                        state.pool.sweep(version);
+                        generation_tx.send_replace(version);
                         eprintln!("{{\"event\":\"reloaded\",\"config_version\":{version}}}");
                     },
-                    Err(_) => eprintln!("{{\"event\":\"reload_rejected\",\"reason\":\"invalid_or_restart_required\"}}"),
+                    _ => eprintln!("{{\"event\":\"reload_rejected\",\"reason\":\"invalid_or_restart_required\"}}"),
                 }
             },
             accepted = listener.accept() => {
@@ -208,6 +205,8 @@ async fn run() -> Result<()> {
             }
         }
     }
+    reload.abort_all();
+    maintenance.abort();
     state.ready.store(false, Ordering::Release);
     state
         .generation
@@ -239,6 +238,43 @@ async fn run() -> Result<()> {
         }
     }
     Ok(())
+}
+
+async fn maintain_pool(pool: Arc<Pool>, mut generations: watch::Receiver<u64>) {
+    let mut interval = tokio::time::interval(Duration::from_millis(250));
+    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    loop {
+        tokio::select! {
+            _ = interval.tick() => {},
+            changed = generations.changed() => {
+                if changed.is_err() {
+                    break;
+                }
+            }
+        }
+        let generation = *generations.borrow_and_update();
+        let pool = pool.clone();
+        if tokio::task::spawn_blocking(move || pool.sweep(generation))
+            .await
+            .is_err()
+        {
+            break;
+        }
+    }
+}
+
+async fn prepare_reload(
+    path: PathBuf,
+    baseline: Arc<Config>,
+    version: u64,
+) -> Result<(Arc<Generation>, Option<tokio_rustls::TlsAcceptor>)> {
+    let candidate = Config::load(&path).await?;
+    baseline.reload_compatible(&candidate)?;
+    let clients = prepare_tls_clients(&candidate).await?;
+    let server = prepare_server_tls(candidate.tls.clone(), candidate.http2.enabled).await?;
+    let generation =
+        tokio::task::spawn_blocking(move || Generation::new(candidate, version, &clients)).await?;
+    Ok((generation, server))
 }
 
 async fn prepare_tls_clients(

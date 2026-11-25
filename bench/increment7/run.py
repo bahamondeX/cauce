@@ -8,6 +8,7 @@ sidecar records proxy RSS/threads/FDs without running probes inside the proxy.
 from __future__ import annotations
 import argparse, datetime as dt, http.client, json, os, pathlib, platform, random, re, shlex
 import shutil, socket, subprocess, sys, time, urllib.parse, uuid
+from summarize import verify_image_architectures
 
 HERE=pathlib.Path(__file__).resolve().parent
 ROOT=HERE.parents[1]
@@ -233,16 +234,11 @@ def main():
         if not a.skip_build:
             dc_run(['--profile','client','build','backend','client'],timeout=900)
         image_lock={}
-        for name,ref in [('cauce',a.image),('nginx',a.nginx_image),('backend','cauce-increment7-backend:local'),('client','cauce-increment7-client:local')]:
+        for name,ref in [('cauce',a.image),('nginx',a.nginx_image),('backend','cauce-increment7-backend:local'),('client','cauce-increment7-client:local'),('sampler',sampler_image)]:
             info=json.loads(run(['docker','image','inspect',ref],env=env).stdout)[0]
             image_lock[name]={'reference':ref,'id':info.get('Id'),'architecture':info.get('Architecture'),'os':info.get('Os'),
                               'repo_digests':info.get('RepoDigests',[])}
-        if docker_context.split()[-1] not in ('arm64','aarch64'):
-            raise RuntimeError(f'benchmark requires a native ARM64 Docker Engine: {docker_context}')
-        if image_lock['cauce']['architecture'] not in ('arm64','aarch64'):
-            raise RuntimeError(f'benchmark requires native ARM64 Cauce image; found {image_lock["cauce"]["architecture"]}')
-        if image_lock['nginx']['architecture'] not in ('arm64','aarch64'):
-            raise RuntimeError(f'NGINX image is not native ARM64: {image_lock["nginx"]["architecture"]}')
+        verify_image_architectures(docker_context.split()[-1], image_lock)
         (outdir/'images.lock.json').write_text(json.dumps(image_lock,indent=2)+'\n')
         manifest['images']=image_lock
         manifest['method_notes'].append('images.lock.json records the immutable image IDs and repository digests used by this run.')
@@ -250,7 +246,7 @@ def main():
         manifest['host_resources']={'docker_cpus':int(host_info[0]),'docker_memory_bytes':int(host_info[1]),
           'cpu_pinning':{'proxy':baseenv.get('CPUSET_PROXY','0'),'backend':baseenv.get('CPUSET_BACKEND','1'),
                          'client':baseenv.get('CPUSET_CLIENT','2'),'sampler':baseenv.get('CPUSET_SAMPLER','3')},
-          'runtime_versions':{'nginx':run(['docker','run','--rm','--entrypoint','nginx',a.nginx_image,'-v'],env=env,check=False).stdout.strip(),
+          'runtime_versions':{'nginx':run(['docker','run','--rm','--entrypoint','nginx',a.nginx_image,'-V'],env=env).stdout.strip(),
             'node':run(['docker','run','--rm','cauce-increment7-backend:local','node','--version'],env=env,check=False).stdout.strip(),
             'python':run(['docker','run','--rm','--entrypoint','python','cauce-increment7-client:local','--version'],env=env,check=False).stdout.strip()}}
         manifest['cert_fingerprints']={name:run(['openssl','x509','-in',str(certdir/f'{name}.crt'),'-noout','-fingerprint','-sha256'],env=env).stdout.strip() for name in ('ca','proxy','backend')}

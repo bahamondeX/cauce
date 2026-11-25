@@ -32,6 +32,7 @@ tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "net", "tim
 tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
 toml = "0.8"
 uuid = { version = "=1.18.1", features = ["v4"] }
+yaml_serde = "=0.10.7"
 
 [dev-dependencies]
 tempfile = "3"

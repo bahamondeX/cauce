@@ -12,6 +12,7 @@ use hyper::{
     Request, Response, StatusCode,
 };
 use std::{
+    borrow::Cow,
     convert::Infallible,
     net::SocketAddr,
     sync::{
@@ -131,12 +132,6 @@ fn invalid_framing(headers: &HeaderMap) -> bool {
                 })
         })
 }
-fn path_matches(prefix: &str, path: &str) -> bool {
-    path.starts_with(prefix)
-        && (prefix.ends_with('/')
-            || path.len() == prefix.len()
-            || path.as_bytes().get(prefix.len()) == Some(&b'/'))
-}
 fn normal_path(path: &str) -> bool {
     // Routing rejects ambiguous encodings rather than guessing backend normalization.
     if path.contains(['\\', '#']) || path.contains("//") {
@@ -155,45 +150,51 @@ fn normal_path(path: &str) -> bool {
 }
 fn record_error(
     state: &State,
-    mut event: Event,
+    event: Option<Event>,
     started: Instant,
     status: StatusCode,
     reason: &'static str,
 ) -> Response<ProxyBody> {
-    event.status = status.as_u16();
-    event.duration_ms = ms(started);
-    event.outcome = "rejected".into();
-    event.error_direction = Some(
-        if reason == "headers_timeout" {
-            "upstream_or_downstream"
-        } else if reason.starts_with("request_body_") {
-            "downstream"
-        } else if status == StatusCode::BAD_GATEWAY || status == StatusCode::GATEWAY_TIMEOUT {
-            "upstream"
-        } else {
-            "proxy"
-        }
-        .into(),
-    );
-    event.error_category = Some(
-        if status == StatusCode::SERVICE_UNAVAILABLE {
-            "capacity"
-        } else {
-            "request_or_transport"
-        }
-        .into(),
-    );
-    event.error_phase = Some(reason.into());
-    event.reason = Some(reason.into());
     state
         .logger
         .metrics
         .rejected
         .fetch_add(1, Ordering::Relaxed);
-    state.logger.emit(event);
+    if let Some(mut event) = event {
+        event.status = status.as_u16();
+        event.duration_ms = ms(started);
+        event.outcome = "rejected".into();
+        event.error_direction = Some(
+            if reason == "headers_timeout" {
+                "upstream_or_downstream"
+            } else if reason.starts_with("request_body_") {
+                "downstream"
+            } else if status == StatusCode::BAD_GATEWAY || status == StatusCode::GATEWAY_TIMEOUT {
+                "upstream"
+            } else {
+                "proxy"
+            }
+            .into(),
+        );
+        event.error_category = Some(
+            if status == StatusCode::SERVICE_UNAVAILABLE {
+                "capacity"
+            } else {
+                "request_or_transport"
+            }
+            .into(),
+        );
+        event.error_phase = Some(reason.into());
+        event.reason = Some(reason.into());
+        state.logger.emit(event);
+    }
     reply(status, reason)
 }
-fn record_grpc_deadline(state: &State, event: Event, started: Instant) -> Response<ProxyBody> {
+fn record_grpc_deadline(
+    state: &State,
+    event: Option<Event>,
+    started: Instant,
+) -> Response<ProxyBody> {
     // A trailers-only gRPC response carries status in the initial HEADERS with
     // END_STREAM, and must use HTTP 200 rather than an HTTP gateway error.
     let mut response = record_error(state, event, started, StatusCode::OK, "request_deadline");
@@ -229,10 +230,9 @@ pub async fn handle(
     let trace = req
         .headers()
         .get("traceparent")
-        .and_then(|h| h.to_str().ok())
-        .filter(|s| telemetry::traceparent(s))
-        .map(str::to_owned);
-    let mut event = Event {
+        .filter(|h| h.to_str().is_ok_and(telemetry::traceparent))
+        .cloned();
+    let mut event = state.logger.enabled().then(|| Event {
         schema_version: "1.1",
         event_id: uuid::Uuid::new_v4().to_string(),
         timestamp: time::OffsetDateTime::now_utc()
@@ -241,7 +241,10 @@ pub async fn handle(
         instance_id: state.instance_id.clone(),
         config_version: generation.version,
         request_id: id.clone(),
-        traceparent: trace.clone(),
+        traceparent: trace
+            .as_ref()
+            .and_then(|h| h.to_str().ok())
+            .map(str::to_owned),
         route_id: None,
         upstream_id: None,
         method: match req.method().as_str() {
@@ -264,7 +267,7 @@ pub async fn handle(
         reason: None,
         backpressure_observations: None,
         attempts: vec![],
-    };
+    });
     state
         .logger
         .metrics
@@ -369,10 +372,15 @@ pub async fn handle(
     {
         reject!(BAD_REQUEST, "conflicting_authority");
     }
-    let host = authority.or(header_host).unwrap_or("").to_ascii_lowercase();
+    let host = authority.or(header_host).unwrap_or("");
     if host.is_empty() || host.contains('@') {
         reject!(BAD_REQUEST, "single_host_required");
     }
+    let host = if host.bytes().any(|byte| byte.is_ascii_uppercase()) {
+        Cow::Owned(host.to_ascii_lowercase())
+    } else {
+        Cow::Borrowed(host)
+    };
     let websocket = match crate::websocket::request(&req) {
         Ok(h) => h,
         Err(reason) => {
@@ -389,24 +397,20 @@ pub async fn handle(
             ))
         }
     };
-    let downstream_upgrade = websocket.as_ref().map(|_| hyper::upgrade::on(&mut req));
     if !normal_path(req.uri().path()) {
         reject!(BAD_REQUEST, "ambiguous_path");
     }
-    let route = match generation
-        .config
-        .routes
-        .iter()
-        .filter(|r| r.host == host && path_matches(&r.path_prefix, req.uri().path()))
-        .max_by_key(|r| r.path_prefix.len())
-    {
-        Some(r) => r.clone(),
+    let route = match generation.route(&host, req.uri().path()) {
+        Some(route) => route,
         None => {
             reject!(NOT_FOUND, "route_not_found");
         }
     };
-    event.route_id = Some(route.id.clone());
-    event.path = Some(route.path_prefix.clone());
+    if let Some(event) = &mut event {
+        event.route_id = Some(route.id.clone());
+        event.path = Some(route.path_prefix.clone());
+    }
+    let downstream_upgrade = websocket.as_ref().map(|_| hyper::upgrade::on(&mut req));
     if req
         .headers()
         .get(CONTENT_LENGTH)
@@ -416,13 +420,15 @@ pub async fn handle(
     {
         reject!(PAYLOAD_TOO_LARGE, "body_limit");
     }
-    let endpoint = match generation.select(&route) {
+    let endpoint = match generation.select(route) {
         Some(e) => e,
         None => {
             reject!(SERVICE_UNAVAILABLE, "no_healthy_upstream");
         }
     };
-    event.upstream_id = Some(endpoint.config.id.clone());
+    if let Some(event) = &mut event {
+        event.upstream_id = Some(endpoint.config.id.clone());
+    }
     let upstream_h2 = endpoint.config.protocol == UpstreamProtocol::Http2;
     if grpc && !upstream_h2 {
         reject!(BAD_GATEWAY, "grpc_upstream_requires_http2");
@@ -432,7 +438,9 @@ pub async fn handle(
     }
     let acquired = tokio::time::timeout_at(
         deadline,
-        state.pool.acquire(generation.clone(), endpoint.clone()),
+        state
+            .pool
+            .acquire(generation.clone(), endpoint.clone(), event.is_some()),
     )
     .await;
     let (mut lease, attempt) = match acquired {
@@ -453,18 +461,20 @@ pub async fn handle(
                 },
                 _ => unreachable!(),
             };
-            event.attempts.push(Attempt {
-                number: 1,
-                outcome: reason.into(),
-                connection_id: None,
-                reused: None,
-                pool_wait_ms: None,
-                connect_gate_ms: None,
-                dns_ms: None,
-                tcp_ms: None,
-                tls_ms: None,
-                headers_ms: None,
-            });
+            if let Some(event) = &mut event {
+                event.attempts.push(Attempt {
+                    number: 1,
+                    outcome: reason.into(),
+                    connection_id: None,
+                    reused: None,
+                    pool_wait_ms: None,
+                    connect_gate_ms: None,
+                    dns_ms: None,
+                    tcp_ms: None,
+                    tls_ms: None,
+                    headers_ms: None,
+                });
+            }
             let status = if ["pool_capacity_timeout", "connect_capacity_timeout"].contains(&reason)
             {
                 StatusCode::SERVICE_UNAVAILABLE
@@ -480,7 +490,9 @@ pub async fn handle(
         }
     };
     lease.arm_deadline(hard_deadline);
-    event.attempts.push(attempt);
+    if let Some(event) = &mut event {
+        event.attempts.extend(attempt);
+    }
     let path = req
         .uri()
         .path_and_query()
@@ -529,8 +541,7 @@ pub async fn handle(
     req.headers_mut().remove("traceparent");
     req.headers_mut().remove("tracestate");
     if let Some(t) = trace {
-        req.headers_mut()
-            .insert("traceparent", HeaderValue::from_str(&t).unwrap());
+        req.headers_mut().insert("traceparent", t);
     }
     req.headers_mut()
         .insert(HOST, HeaderValue::from_str(&endpoint.config.host).unwrap());
@@ -586,9 +597,13 @@ pub async fn handle(
         Ok(Ok(r)) => r,
         other => {
             let client_error = upload_error.load(Ordering::Acquire);
-            event.request_bytes = request_bytes.load(Ordering::Relaxed);
+            if let Some(event) = &mut event {
+                event.request_bytes = request_bytes.load(Ordering::Relaxed);
+            }
             if grpc && (tokio::time::Instant::now() >= deadline || client_error == 2) {
-                event.attempts.last_mut().unwrap().outcome = "request_deadline".into();
+                if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
+                    attempt.outcome = "request_deadline".into();
+                }
                 return Ok(record_grpc_deadline(&state, event, started));
             }
             if client_error != 0 {
@@ -597,14 +612,17 @@ pub async fn handle(
                     3 => (StatusCode::PAYLOAD_TOO_LARGE, "request_body_limit"),
                     _ => (StatusCode::BAD_REQUEST, "request_body_error"),
                 };
-                event.attempts.last_mut().unwrap().outcome = reason.into();
+                if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
+                    attempt.outcome = reason.into();
+                }
                 return Ok(record_error(&state, event, started, status, reason));
             }
             if uploaded.load(Ordering::Acquire) && !upstream_h2 {
                 state.pool.mark_failed(&endpoint);
             }
-            event.attempts.last_mut().unwrap().outcome = "headers_failed".into();
-            event.request_bytes = request_bytes.load(Ordering::Relaxed);
+            if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
+                attempt.outcome = "headers_failed".into();
+            }
             let timed_out = other.is_err();
             return Ok(record_error(
                 &state,
@@ -623,8 +641,12 @@ pub async fn handle(
             ));
         }
     };
-    event.attempts.last_mut().unwrap().headers_ms = Some(ms(headers_at));
-    event.status = response.status().as_u16();
+    if let Some(event) = &mut event {
+        if let Some(attempt) = event.attempts.last_mut() {
+            attempt.headers_ms = Some(ms(headers_at));
+        }
+        event.status = response.status().as_u16();
+    }
     if invalid_framing(response.headers())
         || response.headers().len() > limits.max_headers
         || response
@@ -740,9 +762,7 @@ pub fn admin(req: Request<Incoming>, state: &State) -> Response<ProxyBody> {
 mod tests {
     use super::*;
     #[test]
-    fn routing_boundaries() {
-        assert!(path_matches("/api", "/api/v1"));
-        assert!(!path_matches("/api", "/apix"));
+    fn rejects_ambiguous_paths() {
         assert!(!normal_path("/api/%2fsecret"));
         assert!(!normal_path("/a/../b"));
     }

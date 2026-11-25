@@ -1,0 +1,14 @@
+Preflight gate still exercises saturation for each stack/log configuration.
+[1] cauce logs=off normal offered=2000 goodput_with_drain=249.93/s p95=4.694926000070154
+[2] cauce logs=on normal offered=2000 goodput_with_drain=249.93/s p95=4.572474999918086
+[3] nginx logs=off normal offered=2000 goodput_with_drain=249.97/s p95=3.5286400001268703
+[4] nginx logs=on normal offered=2000 goodput_with_drain=249.97/s p95=3.8920009999401373
+[5] nginx logs=off normal offered=2000 goodput_with_drain=249.98/s p95=3.0816189999995913
+[6] nginx logs=on normal offered=2000 goodput_with_drain=249.98/s p95=3.0265439999084265
+[7] cauce logs=off normal offered=2000 goodput_with_drain=249.95/s p95=3.0464059999530946
+[8] cauce logs=on normal offered=2000 goodput_with_drain=249.97/s p95=3.1882160000122894
+[9] cauce logs=off normal offered=2000 goodput_with_drain=249.97/s p95=3.2950010000831753
+[10] cauce logs=on normal offered=2000 goodput_with_drain=249.96/s p95=3.655392000041502
+[11] nginx logs=off normal offered=2000 goodput_with_drain=249.97/s p95=3.438346999928399
+[12] nginx logs=on normal offered=2000 goodput_with_drain=249.97/s p95=2.9263129999890225
+Results: /home/oscarbahamonde.linux/cauce-program-ba6f952/nginx-alpine-isolated/increment7-20261125T174840Z-eff3a5

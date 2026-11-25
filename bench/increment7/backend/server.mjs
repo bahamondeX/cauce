@@ -79,16 +79,17 @@ function opened(s) { s.__identity=nextConnection++;openConnections.add(s.__ident
 server.on('connection',opened);
 server.on('upgrade',(req,socket)=>websocket(req,socket));
 const port=Number(process.env.PORT||8000);
+const bind=process.env.BENCH_BIND || '0.0.0.0';
 if (process.env.TLS==='1') {
-  server.listen(port,'0.0.0.0');
+  server.listen(port,bind);
   const tlsServer=https.createServer({key:fs.readFileSync('/certs/backend.key'),cert:fs.readFileSync('/certs/backend.crt'),
     minVersion:'TLSv1.2',maxVersion:'TLSv1.2',secureOptions:crypto.constants.SSL_OP_NO_TICKET},handler);
   tlsServer.keepAliveTimeout=15000; tlsServer.headersTimeout=16000;
   tlsServer.on('resumeSession',(_id,cb)=>cb(null,null));
   tlsServer.on('secureConnection',s=>{state.tls_handshakes++;if(s.isSessionReused())state.tls_resumed_handshakes++;else state.tls_full_handshakes++;opened(s);});
   tlsServer.on('upgrade',(req,socket)=>websocket(req,socket));
-  tlsServer.listen(8443,'0.0.0.0');
-} else server.listen(port,'0.0.0.0');
+  tlsServer.listen(8443,bind);
+} else server.listen(port,bind);
 const statsServer=http.createServer((req,res)=>{
   if(req.url.startsWith('/reset')) {
     if(state.active!==0){res.writeHead(409);res.end('cannot reset counters while requests are active');return;}
@@ -99,5 +100,5 @@ const statsServer=http.createServer((req,res)=>{
   }
   res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify(state));
 });
-statsServer.listen(9000,'0.0.0.0');
+statsServer.listen(Number(process.env.BENCH_STATS_PORT || 9000),bind);
 process.on('SIGTERM',()=>{server.close(()=>process.exit(0));});

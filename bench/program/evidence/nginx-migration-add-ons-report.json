@@ -1,0 +1,231 @@
+{
+  "nginx_reference": "1.30.8",
+  "directives": [
+    {
+      "directive": "events",
+      "line": 1,
+      "context": [],
+      "status": "structure",
+      "reference_variants": [
+        {
+          "module": "ngx_events_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "http",
+      "line": 2,
+      "context": [],
+      "status": "structure",
+      "reference_variants": [
+        {
+          "module": "ngx_http_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "acme_issuer",
+      "line": 3,
+      "context": [
+        "http"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_acme_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "uri",
+      "line": 3,
+      "context": [
+        "http",
+        "acme_issuer"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_acme_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "state_path",
+      "line": 3,
+      "context": [
+        "http",
+        "acme_issuer"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_acme_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "js_import",
+      "line": 4,
+      "context": [
+        "http"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_js_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_stream_js_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "server",
+      "line": 5,
+      "context": [
+        "http"
+      ],
+      "status": "structure",
+      "reference_variants": [
+        {
+          "module": "ngx_http_core_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_http_upstream_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_mail_core_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_stream_core_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_stream_upstream_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "acme_certificate",
+      "line": 5,
+      "context": [
+        "http",
+        "server"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_acme_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "location",
+      "line": 5,
+      "context": [
+        "http",
+        "server"
+      ],
+      "status": "manual_review",
+      "reference_variants": [
+        {
+          "module": "ngx_http_core_module",
+          "status": "partial",
+          "notes": "Longest segment-aware prefix. Regex, named locations, internal redirects and modifiers are unavailable."
+        }
+      ]
+    },
+    {
+      "directive": "js_content",
+      "line": 5,
+      "context": [
+        "http",
+        "server",
+        "location"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_js_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "stream",
+      "line": 7,
+      "context": [],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_stream_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "server",
+      "line": 7,
+      "context": [
+        "stream"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_http_core_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_http_upstream_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_mail_core_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_stream_core_module",
+          "status": "unsupported"
+        },
+        {
+          "module": "ngx_stream_upstream_module",
+          "status": "unsupported"
+        }
+      ]
+    },
+    {
+      "directive": "js_filter",
+      "line": 7,
+      "context": [
+        "stream",
+        "server"
+      ],
+      "status": "unsupported",
+      "reference_variants": [
+        {
+          "module": "ngx_stream_js_module",
+          "status": "unsupported"
+        }
+      ]
+    }
+  ],
+  "semantic_differences": [
+    "Cauce matches exact authorities and segment-bounded prefixes. NGINX has server defaults and other location matching modes.",
+    "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
+    "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
+    "Review socket exposure and the loopback admin listener before deployment."
+  ]
+}

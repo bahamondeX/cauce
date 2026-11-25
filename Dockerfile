@@ -16,7 +16,7 @@ WORKDIR /src
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY schemas ./schemas
-COPY examples/cauce.toml ./examples/cauce.toml
+COPY examples/cauce.toml examples/cauce.yaml ./examples/
 RUN --mount=type=cache,id=cauce-registry,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=cauce-target-${TARGETARCH},target=/src/target,sharing=locked \
     case "$TARGETARCH" in \

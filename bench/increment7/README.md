@@ -7,7 +7,7 @@ máquina, esta carga y estas versiones; no estiman capacidad de producción.
 
 ## Reproducir
 
-Requiere Docker Engine ARM64 nativo, Compose v2 (se usó 2.32.4), Python 3.10+, OpenSSL y una VM
+Requiere Docker Engine Linux ARM64 o AMD64, Compose v2 (se usó 2.32.4), Python 3.10+, OpenSSL y un entorno
 con al menos cuatro CPU y 2 GiB libres en el filesystem de resultados. La campaña publicada usa Colima con cuatro CPU y
 aproximadamente 6 GiB. Mantenga libres los CPU de la VM de otros trabajos de carga.
 Desde la raíz del proyecto:
@@ -18,6 +18,11 @@ export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
 docker build --platform linux/arm64 -t cauce:0.7-final-arm64 .
 python3 bench/increment7/run.py --image cauce:0.7-final-arm64
 ```
+
+En AMD64, construya una imagen Cauce para `linux/amd64` y pase su nombre a
+`--image`. El runner y el auditor comprueban que las imágenes sean de la
+misma arquitectura que el Engine. Registre por separado el hardware y la
+virtualización del host para calificar el alcance de la medición.
 
 En Linux ARM64 se usa `/var/run/docker.sock` por defecto. El acceso al socket
 Unix es necesario para leer contadores del Engine. El runner construye las

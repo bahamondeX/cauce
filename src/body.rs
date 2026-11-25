@@ -30,7 +30,7 @@ pub fn full(text: impl Into<Bytes>) -> ProxyBody {
         .boxed_unsync()
 }
 pub struct Completion {
-    pub event: Event,
+    pub event: Option<Event>,
     pub started: Instant,
     pub headers_at: Instant,
     pub logger: Logger,
@@ -81,30 +81,29 @@ impl GuardBody {
             }
         }
         if let Some(mut c) = self.completion.take() {
-            c.event.duration_ms = ms(c.started);
-            c.event.transfer_ms = Some(ms(c.headers_at));
-            c.event.request_bytes = c.request_bytes.load(Ordering::Relaxed);
-            c.event.response_bytes = self.count.load(Ordering::Relaxed);
-            c.event.outcome = outcome.into();
+            let response_bytes = self.count.load(Ordering::Relaxed);
+            if let Some(event) = &mut c.event {
+                event.duration_ms = ms(c.started);
+                event.transfer_ms = Some(ms(c.headers_at));
+                event.request_bytes = c.request_bytes.load(Ordering::Relaxed);
+                event.response_bytes = response_bytes;
+                event.outcome = outcome.into();
+                if outcome != "complete" {
+                    let (direction, category) = if outcome == "cancelled" {
+                        ("downstream", "cancelled")
+                    } else {
+                        ("upstream_or_downstream", "stream")
+                    };
+                    event.error_direction = Some(direction.into());
+                    event.error_category = Some(category.into());
+                    event.error_phase = Some("transfer".into());
+                    event.reason = Some(outcome.into());
+                }
+                if let Some(attempt) = event.attempts.last_mut() {
+                    attempt.outcome = outcome.into();
+                }
+            }
             if outcome != "complete" {
-                c.event.error_direction = Some(
-                    if outcome == "cancelled" {
-                        "downstream"
-                    } else {
-                        "upstream_or_downstream"
-                    }
-                    .into(),
-                );
-                c.event.error_category = Some(
-                    if outcome == "cancelled" {
-                        "cancelled"
-                    } else {
-                        "stream"
-                    }
-                    .into(),
-                );
-                c.event.error_phase = Some("transfer".into());
-                c.event.reason = Some(outcome.into());
                 c.logger.metrics.body_errors.fetch_add(1, Ordering::Relaxed);
             }
             if outcome == "cancelled" {
@@ -113,9 +112,6 @@ impl GuardBody {
                     .cancellations
                     .fetch_add(1, Ordering::Relaxed);
             }
-            if let Some(a) = c.event.attempts.last_mut() {
-                a.outcome = outcome.into();
-            }
             if outcome == "complete" {
                 c.lease.complete(c.uploaded.load(Ordering::Acquire));
                 c.logger.metrics.responses.fetch_add(1, Ordering::Relaxed);
@@ -123,8 +119,10 @@ impl GuardBody {
             c.logger
                 .metrics
                 .response_bytes
-                .fetch_add(c.event.response_bytes, Ordering::Relaxed);
-            c.logger.emit(c.event);
+                .fetch_add(response_bytes, Ordering::Relaxed);
+            if let Some(event) = c.event {
+                c.logger.emit(event);
+            }
         }
     }
 }

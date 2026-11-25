@@ -1,0 +1,68 @@
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.09s
+     Running unittests src/bin/cauce-collector.rs (target/debug/deps/cauce_collector-aad2f940c955468c)
+
+running 14 tests
+test collector::tests::invalid_ack_error_does_not_echo_untrusted_field_names ... ok
+test collector::tests::export_retains_queued_batches_and_lock_is_exclusive ... ok
+test collector::tests::observed_frontier_shrink_after_resume_is_rejected ... ok
+test collector::tests::checkpoint_and_spool_commit_together_then_resume ... ok
+test collector::tests::observed_frontier_shrink_while_full_is_rejected ... ok
+test collector::tests::schema_rejects_unknown_missing_and_bad_values ... ok
+test collector::tests::partial_line_is_not_checkpointed_until_complete ... ok
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... FAILED
+test collector::tests::lost_unread_log_fails_even_when_spool_is_full ... ok
+test collector::tests::a_present_inode_resets_missing_debounce_before_early_return ... ok
+test collector::tests::same_inode_same_size_rewrite_is_rejected ... ok
+test collector::tests::spool_quota_pauses_at_a_durable_checkpoint ... ok
+test collector::tests::rename_rotation_follows_inode_and_truncation_stops ... ok
+test collector::tests::rotated_tail_repair_accepts_only_a_scanned_fragment ... ok
+
+failures:
+
+---- collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation stdout ----
+
+thread 'collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation' panicked at src/bin/../collector.rs:1790:43:
+called `Result::unwrap()` on an `Err` value: rotated log disappeared before it was fully checkpointed: /var/folders/lh/9w687w054yl9fws37m39t28m0000gn/T/.tmpucQA5N/access.jsonl
+
+Stack backtrace:
+   0: std::backtrace::Backtrace::create
+   1: anyhow::error::<impl anyhow::Error>::msg
+             at /Users/oscarbahamonde/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/backtrace.rs:10:14
+   2: anyhow::__private::format_err
+             at /Users/oscarbahamonde/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/lib.rs:690:13
+   3: cauce_collector::collector::State::scan_one
+             at ./src/bin/../collector.rs:570:29
+   4: cauce_collector::collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation
+             at ./src/bin/../collector.rs:1790:22
+   5: cauce_collector::collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation::{{closure}}
+             at ./src/bin/../collector.rs:1761:71
+   6: core::ops::function::FnOnce::call_once
+             at /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/core/src/ops/function.rs:250:5
+   7: test::__rust_begin_short_backtrace
+   8: test::run_test_in_process
+   9: std::sys::backtrace::__rust_begin_short_backtrace
+  10: core::ops::function::FnOnce::call_once{{vtable.shim}}
+  11: std::sys::pal::unix::thread::Thread::new::thread_start
+  12: __pthread_cond_wait
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+   1: core::panicking::panic_fmt
+   2: core::result::unwrap_failed
+   3: core::result::Result<T,E>::unwrap
+             at /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/core/src/result.rs:1137:23
+   4: cauce_collector::collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation
+             at ./src/bin/../collector.rs:1790:22
+   5: cauce_collector::collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation::{{closure}}
+             at ./src/bin/../collector.rs:1761:71
+   6: core::ops::function::FnOnce::call_once
+             at /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/core/src/ops/function.rs:250:5
+note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+
+
+failures:
+    collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation
+
+test result: FAILED. 13 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.45s
+
+error: test failed, to rerun pass `--bin cauce-collector`

@@ -8,13 +8,10 @@ use std::{
 };
 
 fn pem(path: &str) -> Result<Vec<u8>> {
-    if !std::fs::metadata(path)
-        .with_context(|| format!("stat TLS PEM {path}"))?
-        .is_file()
-    {
+    if !std::fs::metadata(path).context("stat TLS PEM")?.is_file() {
         bail!("TLS PEM path is not a regular file")
     }
-    let file = File::open(path).with_context(|| format!("open TLS PEM {path}"))?;
+    let file = File::open(path).context("open TLS PEM")?;
     if !file.metadata()?.is_file() {
         bail!("TLS PEM path is not a regular file")
     }

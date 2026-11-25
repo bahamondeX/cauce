@@ -1,0 +1,12 @@
+nginx:1.30.6
+sha256:ad89dd605752159fd852de0a3aba245fd27fea42ab318a1a220471c1585cccad arm64 ["nginx@sha256:42c68eab6f7e22611786a9fe1d1c019e275c50185bd54b8f75dc2b9184322703"]
+aarch64
+0000000 7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+0000020 03 00 b7 00 01 00 00 00 40 4a 03 00 00 00 00 00
+0000040
+nginx version: nginx/1.30.6
+nginx:1.30.8
+sha256:bf39b7f1563696c015b37c33ae7a255e9a50f18af9b0dae0e1fdd6d21521dfbf arm64 ["nginx@sha256:755983e0e0e568e4c86297cc91485d7a6f9fb73e42d8a19cdba3eac9e8b8cfc9"]
+exec /bin/uname: exec format error
+exec /usr/bin/od: exec format error
+exec /usr/sbin/nginx: exec format error

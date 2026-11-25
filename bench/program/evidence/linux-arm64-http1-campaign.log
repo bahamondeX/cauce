@@ -1,0 +1,28 @@
+Preflight gate still exercises saturation for each stack/log configuration.
+[1] cauce logs=off normal offered=4000 goodput_with_drain=499.93/s p95=2.88084399999633
+[2] cauce logs=on normal offered=4000 goodput_with_drain=499.95/s p95=2.86472199999821
+[3] nginx logs=off normal offered=4000 goodput_with_drain=499.89/s p95=2.910161999992056
+[4] nginx logs=on normal offered=4000 goodput_with_drain=499.88/s p95=2.8978170000044656
+[5] nginx logs=off normal offered=4000 goodput_with_drain=499.95/s p95=2.912331000032964
+[6] nginx logs=on normal offered=4000 goodput_with_drain=499.94/s p95=2.7706690000002254
+[7] cauce logs=off normal offered=4000 goodput_with_drain=499.97/s p95=2.8952190000097744
+[8] cauce logs=on normal offered=4000 goodput_with_drain=499.92/s p95=2.9954090000217093
+[9] cauce logs=off normal offered=4000 goodput_with_drain=499.90/s p95=2.9746810000119694
+[10] cauce logs=on normal offered=4000 goodput_with_drain=499.94/s p95=2.838008999987096
+[11] nginx logs=off normal offered=4000 goodput_with_drain=499.95/s p95=2.9078700000297886
+[12] nginx logs=on normal offered=4000 goodput_with_drain=499.94/s p95=2.8095160000134456
+Results: /home/oscarbahamonde.linux/cauce-program-ba6f952/historical/increment7-20261125T162736Z-e1546e
+Preflight gate still exercises saturation for each stack/log configuration.
+Results: /home/oscarbahamonde.linux/cauce-program-ba6f952/baseline/increment7-20261125T163056Z-94e310
+Traceback (most recent call last):
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 462, in <module>
+    try: raise SystemExit(main())
+                          ^^^^^^
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 229, in main
+    run(['docker','pull',a.nginx_image],env=env,timeout=900)
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 23, in run
+    raise RuntimeError(f"command failed ({p.returncode}): {' '.join(map(str,cmd))}\n{p.stdout or ''}")
+RuntimeError: command failed (1): docker pull nginx:1.30.8@sha256:755983e0e568e4c86297cc91485d7a6f9fb73e42d8a19cdba3eac9e8b8cfc9
+invalid checksum digest length
+
+time="2026-11-25T11:30:56-05:00" level=fatal msg="exit status 1"

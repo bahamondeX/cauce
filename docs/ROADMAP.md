@@ -55,3 +55,22 @@ establecen superioridad fuera de sus cargas y límites.
 **Parche 0.9.1 de contrato:** ACK HTTP 200 exacto y errores sin contenido del receptor; ejemplo de configuración offline con límites del adaptador local. Ver [CONNECTIVITY.md](CONNECTIVITY.md) y la [auditoría del pedido original](REQUIREMENTS-AUDIT.md). Las pruebas cliente con fixtures no sustituyen los gates de despliegue/servidor.
 
 10. **Promoción local validada:** health checks HTTP/1 opt-in y protección del frontier observado del colector; 39 tests Rust y ocho casos locales de integración. Ver COMBINED-VALIDATION.
+
+## Programa de paridad NGINX OSS
+
+| Milestone | Gate |
+| --- | --- |
+| Reference inventory and baseline | Generate the pinned module/directive registry, execute the existing test suites, and retain raw historical reproductions plus native results for both Linux architectures. |
+| Routing and request-path cost | Compare the compiled matcher, event construction, config snapshots and maintenance scheduling independently. Preserve reload, path behavior, protocol limits and backpressure. |
+| Versioned configuration | Validate YAML and TOML through the same configuration model. Publish editor schema and run SIGHUP rejection and rollback checks. Inventory unsupported NGINX migration semantics before emitting an equivalent config. |
+| Endpoint pooling and balancing | Attribute contention with Linux runtime data, then compare sharding and group state while tracking global and endpoint capacity. |
+| Protocols and modules | Validate TLS and listener extensions, stream and mail proxying, file serving and caching, gateways, policies, filters, and programmable extensions against pinned reference fixtures. |
+| Release evidence | Reproduce SLO goodput, resources, recovery and stability with pinned NGINX, HAProxy and Pingora on the same native hosts. |
+
+The current profile attributes access-event overhead. The request-path benchmark
+needs isolated CPU resources before it can qualify a latency or CPU result.
+Pool sharding, ArcSwap, timer consolidation and I/O backend changes remain
+separate experiments. Start those with lock wait, scheduler and epoll measurements
+from HTTP/1 and HTTP/2 workloads that exercise more than one endpoint and worker.
+
+Statuses and evidence live in [the compatibility registry](../compatibility/nginx-oss.yaml) and [program status](../STATUS.md).

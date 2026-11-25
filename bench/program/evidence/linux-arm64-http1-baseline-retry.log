@@ -1,0 +1,43 @@
+/: 0 B (0 bytes) trimmed
+Preflight gate still exercises saturation for each stack/log configuration.
+[1] cauce logs=off normal offered=4000 goodput_with_drain=499.97/s p95=2.953002000026572
+[2] cauce logs=on normal offered=4000 goodput_with_drain=499.92/s p95=2.947279000011349
+Results: /home/oscarbahamonde.linux/cauce-program-ba6f952/baseline-retry/increment7-20261125T163157Z-d3612f
+Traceback (most recent call last):
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 462, in <module>
+    try: raise SystemExit(main())
+                          ^^^^^^
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 273, in main
+    dc_run(['-p',project,'--profile',f'sampler-{stack}','up','-d','--no-build','backend',service,sampler],env=envg,timeout=90)
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 205, in dc_run
+    def dc_run(args, **kwargs): return run(compose+['-f',str(HERE/'compose.yaml')]+list(args),env=kwargs.pop('env',baseenv),**kwargs)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/run.py", line 23, in run
+    raise RuntimeError(f"command failed ({p.returncode}): {' '.join(map(str,cmd))}\n{p.stdout or ''}")
+RuntimeError: command failed (1): docker compose -f /home/oscarbahamonde.linux/cauce-program-ba6f952/source/bench/increment7/compose.yaml -p i7-d3612f-0-nginx-off --profile sampler-nginx up -d --no-build backend nginx sampler-nginx
+ Network i7-d3612f-0-nginx-off_default  Creating
+ Network i7-d3612f-0-nginx-off_default  Created
+ Volume "i7-d3612f-0-nginx-off-proxylogs"  Creating
+ Volume "i7-d3612f-0-nginx-off-proxylogs"  Created
+ Container i7-d3612f-0-nginx-off-log-init-1  Creating
+ Container i7-d3612f-0-nginx-off-backend-1  Creating
+ Container i7-d3612f-0-nginx-off-log-init-1  Created
+ Container i7-d3612f-0-nginx-off-backend-1  Created
+ Container i7-d3612f-0-nginx-off-nginx-1  Creating
+ Container i7-d3612f-0-nginx-off-nginx-1  Created
+ Container i7-d3612f-0-nginx-off-sampler-nginx-1  Creating
+ Container i7-d3612f-0-nginx-off-sampler-nginx-1  Created
+ Container i7-d3612f-0-nginx-off-backend-1  Starting
+ Container i7-d3612f-0-nginx-off-log-init-1  Starting
+ Container i7-d3612f-0-nginx-off-backend-1  Started
+ Container i7-d3612f-0-nginx-off-log-init-1  Started
+ Container i7-d3612f-0-nginx-off-backend-1  Waiting
+ Container i7-d3612f-0-nginx-off-log-init-1  Waiting
+ Container i7-d3612f-0-nginx-off-log-init-1  Exited
+ Container i7-d3612f-0-nginx-off-backend-1  Healthy
+ Container i7-d3612f-0-nginx-off-nginx-1  Starting
+ Container i7-d3612f-0-nginx-off-nginx-1  Started
+ Container i7-d3612f-0-nginx-off-sampler-nginx-1  Starting
+Error response from daemon: cannot join network of a non running container: 5241558c61c64bdf9769a03bdc5198ec10825f4b7549d4d764f4b38bf6d432a1
+
+time="2026-11-25T11:32:34-05:00" level=fatal msg="exit status 1"

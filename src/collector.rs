@@ -233,6 +233,24 @@ pub struct State {
     source_path: PathBuf,
 }
 
+struct CheckpointFrontier {
+    offset: u64,
+    size: u64,
+    anchor: Vec<u8>,
+    modified_ns: i64,
+    changed_ns: i64,
+    partial_at_eof: bool,
+}
+
+impl CheckpointFrontier {
+    fn only_partial_tail_removed(&self, size: u64) -> bool {
+        self.partial_at_eof
+            && size == self.offset
+            && size < self.size
+            && (self.offset == 0 || !self.anchor.is_empty())
+    }
+}
+
 impl State {
     pub fn open(cfg: &CollectorConfig) -> Result<Self> {
         let parent = cfg
@@ -310,7 +328,8 @@ impl State {
                 offset INTEGER NOT NULL CHECK(offset >= 0), observed_size INTEGER NOT NULL CHECK(observed_size >= 0),
                 anchor BLOB NOT NULL DEFAULT X'', missing_scans INTEGER NOT NULL DEFAULT 0 CHECK(missing_scans >= 0),
                 missing_since_ms INTEGER NOT NULL DEFAULT 0,
-                mtime_ns INTEGER NOT NULL DEFAULT 0, ctime_ns INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(dev,ino));
+                mtime_ns INTEGER NOT NULL DEFAULT 0, ctime_ns INTEGER NOT NULL DEFAULT 0,
+                partial_at_eof INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(dev,ino));
              CREATE TABLE IF NOT EXISTS spool(
                 seq INTEGER PRIMARY KEY AUTOINCREMENT, batch_id TEXT NOT NULL UNIQUE,
                 body BLOB NOT NULL, event_count INTEGER NOT NULL CHECK(event_count > 0));
@@ -353,6 +372,7 @@ impl State {
         for (name, definition) in [
             ("mtime_ns", "INTEGER NOT NULL DEFAULT 0"),
             ("ctime_ns", "INTEGER NOT NULL DEFAULT 0"),
+            ("partial_at_eof", "INTEGER NOT NULL DEFAULT 0"),
         ] {
             let columns: Vec<String> = db
                 .prepare("PRAGMA table_info(checkpoints)")?
@@ -491,6 +511,23 @@ impl State {
         Ok(())
     }
 
+    fn checkpoint_frontier(&self, candidate: &Candidate) -> Result<Option<CheckpointFrontier>> {
+        Ok(self.db
+            .query_row(
+                "SELECT offset,observed_size,anchor,mtime_ns,ctime_ns,partial_at_eof FROM checkpoints WHERE dev=?1 AND ino=?2",
+                params![candidate.dev, candidate.ino],
+                |row| Ok(CheckpointFrontier {
+                    offset: row.get(0)?,
+                    size: row.get(1)?,
+                    anchor: row.get(2)?,
+                    modified_ns: row.get(3)?,
+                    changed_ns: row.get(4)?,
+                    partial_at_eof: row.get(5)?,
+                }),
+            )
+            .optional()?)
+    }
+
     pub fn scan_one(&mut self, cfg: &CollectorConfig) -> Result<bool> {
         ensure!(
             self.db_path != cfg.access_log,
@@ -587,21 +624,22 @@ impl State {
             }
             let current_size = metadata.len();
             let (mtime_ns, ctime_ns) = metadata_stamps(&metadata);
-            let old: Option<(u64, u64, Vec<u8>, i64, i64)> = self
-                .db
-                .query_row(
-                    "SELECT offset,observed_size,anchor,mtime_ns,ctime_ns FROM checkpoints WHERE dev=?1 AND ino=?2",
-                    params![candidate.dev, candidate.ino],
-                    |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?)),
-                )
-                .optional()?;
-            let offset = old.as_ref().map(|p| p.0).unwrap_or(0);
-            if let Some((_, observed_size, anchor, old_mtime, old_ctime)) = &old {
-                ensure!(current_size >= *observed_size,
-                    "observed unread log bytes disappeared (truncation/inode reuse); stopping to avoid silent loss");
-                if current_size == *observed_size && *old_mtime != 0 && *old_ctime != 0 {
-                    ensure!(mtime_ns==*old_mtime,"log metadata changed without an append (copytruncate/rewrite detected); stopping to avoid silent loss");
+            let old = self.checkpoint_frontier(candidate)?;
+            let offset = old.as_ref().map_or(0, |frontier| frontier.offset);
+            if let Some(frontier) = &old {
+                let repaired = frontier.only_partial_tail_removed(current_size);
+                if repaired && !candidate.rotated && recent_tail_repair(mtime_ns) {
+                    return Ok(false);
                 }
+                ensure!(current_size >= frontier.size || (candidate.rotated && repaired),
+                    "observed unread log bytes disappeared (truncation/inode reuse); stopping to avoid silent loss");
+                if current_size == frontier.size
+                    && frontier.modified_ns != 0
+                    && frontier.changed_ns != 0
+                {
+                    ensure!(mtime_ns == frontier.modified_ns, "log metadata changed without an append (copytruncate/rewrite detected); stopping to avoid silent loss");
+                }
+                let anchor = &frontier.anchor;
                 if !anchor.is_empty() {
                     let actual = read_anchor(&file, offset, candidate.dev, candidate.ino)?;
                     let matches = if anchor.len() <= 64 {
@@ -620,6 +658,7 @@ impl State {
             let mut events: Vec<(Value, u64, u64)> = Vec::new();
             let mut total_event_bytes = 0u64;
             let mut cursor_offset = offset;
+            let mut partial_at_eof = false;
             while events.len() < cfg.batch_max_events {
                 let Some((line, next_offset, complete)) =
                     read_bounded_line(&mut reader, cfg.max_line_bytes)?
@@ -632,6 +671,8 @@ impl State {
                         "rotated log ends with an incomplete JSONL line: {}",
                         candidate.path.display()
                     );
+                    // Only mark bytes scanned through the recorded frontier.
+                    partial_at_eof = cursor_offset.saturating_add(next_offset) == current_size;
                     break;
                 }
                 let event = validate_event(&line).with_context(|| {
@@ -660,8 +701,8 @@ impl State {
             }
             if events.is_empty() {
                 self.db.execute(
-                    "INSERT INTO checkpoints(dev,ino,path,offset,observed_size,anchor,missing_scans,mtime_ns,ctime_ns) VALUES(?1,?2,?3,?4,?5,X'',0,?6,?7) ON CONFLICT(dev,ino) DO UPDATE SET path=excluded.path, observed_size=excluded.observed_size, missing_scans=0,missing_since_ms=0,mtime_ns=excluded.mtime_ns,ctime_ns=excluded.ctime_ns",
-                    params![candidate.dev,candidate.ino,candidate.path.to_string_lossy(),offset,current_size,mtime_ns,ctime_ns],
+                    "INSERT INTO checkpoints(dev,ino,path,offset,observed_size,anchor,missing_scans,mtime_ns,ctime_ns,partial_at_eof) VALUES(?1,?2,?3,?4,?5,X'',0,?6,?7,?8) ON CONFLICT(dev,ino) DO UPDATE SET path=excluded.path, observed_size=excluded.observed_size, missing_scans=0,missing_since_ms=0,mtime_ns=excluded.mtime_ns,ctime_ns=excluded.ctime_ns,partial_at_eof=excluded.partial_at_eof",
+                    params![candidate.dev,candidate.ino,candidate.path.to_string_lossy(),offset,current_size,mtime_ns,ctime_ns,partial_at_eof],
                 )?;
                 continue;
             }
@@ -683,6 +724,14 @@ impl State {
                 );
                 events.pop();
             };
+            let partial_at_eof = !candidate.rotated
+                && ((partial_at_eof && new_offset == cursor_offset)
+                    || only_incomplete_tail(
+                        &anchor_file,
+                        new_offset,
+                        current_size,
+                        cfg.max_line_bytes,
+                    )?);
             let anchor = read_anchor(&anchor_file, new_offset, candidate.dev, candidate.ino)?;
             let current_spool = spool_bytes(&self.db)?;
             if current_spool.saturating_add(body.len() as u64) > cfg.spool_max_bytes {
@@ -708,8 +757,8 @@ impl State {
                 params![batch_id, body, event_count],
             )?;
             tx.execute(
-                "INSERT INTO checkpoints(dev,ino,path,offset,observed_size,anchor,missing_scans,mtime_ns,ctime_ns) VALUES(?1,?2,?3,?4,?5,?6,0,?7,?8) ON CONFLICT(dev,ino) DO UPDATE SET path=excluded.path,offset=excluded.offset,observed_size=excluded.observed_size,anchor=excluded.anchor,missing_scans=0,missing_since_ms=0,mtime_ns=excluded.mtime_ns,ctime_ns=excluded.ctime_ns",
-                params![candidate.dev,candidate.ino,candidate.path.to_string_lossy(),new_offset,current_size,anchor,mtime_ns,ctime_ns],
+                "INSERT INTO checkpoints(dev,ino,path,offset,observed_size,anchor,missing_scans,mtime_ns,ctime_ns,partial_at_eof) VALUES(?1,?2,?3,?4,?5,?6,0,?7,?8,?9) ON CONFLICT(dev,ino) DO UPDATE SET path=excluded.path,offset=excluded.offset,observed_size=excluded.observed_size,anchor=excluded.anchor,missing_scans=0,missing_since_ms=0,mtime_ns=excluded.mtime_ns,ctime_ns=excluded.ctime_ns,partial_at_eof=excluded.partial_at_eof",
+                params![candidate.dev,candidate.ino,candidate.path.to_string_lossy(),new_offset,current_size,anchor,mtime_ns,ctime_ns,partial_at_eof],
             )?;
             tx.commit()
                 .context("could not durably commit spool batch and source checkpoint")?;
@@ -735,28 +784,30 @@ impl State {
                 return Ok(());
             }
             let (mtime_ns, ctime_ns) = metadata_stamps(&metadata);
-            let old: Option<(u64, Vec<u8>, u64, i64, i64)> = self
-                .db
-                .query_row(
-                    "SELECT offset,anchor,observed_size,mtime_ns,ctime_ns FROM checkpoints WHERE dev=?1 AND ino=?2",
-                    params![candidate.dev, candidate.ino],
-                    |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?)),
-                )
-                .optional()?;
-            let offset = old.as_ref().map(|row| row.0).unwrap_or(0);
+            let old = self.checkpoint_frontier(candidate)?;
+            let offset = old.as_ref().map_or(0, |frontier| frontier.offset);
+            let size = metadata.len();
             ensure!(
-                metadata.len() >= offset,
+                size >= offset,
                 "copytruncate/truncation detected while spool is full"
             );
-            if let Some((_, anchor, observed_size, old_mtime, old_ctime)) = old.as_ref() {
-                ensure!(metadata.len() >= *observed_size,
+            let mut same_partial = false;
+            if let Some(frontier) = &old {
+                let repaired = frontier.only_partial_tail_removed(size);
+                if repaired && !candidate.rotated && recent_tail_repair(mtime_ns) {
+                    return Ok(());
+                }
+                ensure!(size >= frontier.size || (candidate.rotated && repaired),
                     "observed unread log bytes disappeared while spool is full (truncation/inode reuse)");
-                if metadata.len() == *observed_size && *old_mtime != 0 && *old_ctime != 0 {
+                same_partial =
+                    !candidate.rotated && frontier.partial_at_eof && size == frontier.size;
+                if size == frontier.size && frontier.modified_ns != 0 && frontier.changed_ns != 0 {
                     ensure!(
-                        mtime_ns == *old_mtime,
+                        mtime_ns == frontier.modified_ns,
                         "log modification time changed without an append while spool is full"
                     );
                 }
+                let anchor = &frontier.anchor;
                 if !anchor.is_empty() {
                     let actual = read_anchor(&file, offset, candidate.dev, candidate.ino)?;
                     ensure!(
@@ -773,13 +824,14 @@ impl State {
                 metadata.len(),
                 mtime_ns,
                 ctime_ns,
+                same_partial,
             ));
         }
         let tx = self.db.unchecked_transaction()?;
-        for (dev, ino, path, offset, size, mtime_ns, ctime_ns) in observations {
+        for (dev, ino, path, offset, size, mtime_ns, ctime_ns, partial_at_eof) in observations {
             tx.execute(
-                "INSERT INTO checkpoints(dev,ino,path,offset,observed_size,anchor,missing_scans,mtime_ns,ctime_ns) VALUES(?1,?2,?3,?4,?5,X'',0,?6,?7) ON CONFLICT(dev,ino) DO UPDATE SET path=excluded.path,observed_size=excluded.observed_size,missing_scans=0,missing_since_ms=0,mtime_ns=excluded.mtime_ns,ctime_ns=excluded.ctime_ns",
-                params![dev,ino,path,offset,size,mtime_ns,ctime_ns],
+                "INSERT INTO checkpoints(dev,ino,path,offset,observed_size,anchor,missing_scans,mtime_ns,ctime_ns,partial_at_eof) VALUES(?1,?2,?3,?4,?5,X'',0,?6,?7,?8) ON CONFLICT(dev,ino) DO UPDATE SET path=excluded.path,observed_size=excluded.observed_size,missing_scans=0,missing_since_ms=0,mtime_ns=excluded.mtime_ns,ctime_ns=excluded.ctime_ns,partial_at_eof=excluded.partial_at_eof",
+                params![dev,ino,path,offset,size,mtime_ns,ctime_ns,partial_at_eof],
             )?;
         }
         tx.commit()?;
@@ -988,6 +1040,13 @@ fn metadata_stamps(metadata: &Metadata) -> (i64, i64) {
     )
 }
 
+// The writer truncates a known partial tail before renaming its inode. Give
+// that narrow transition the same confirmation window as a disappearing name.
+fn recent_tail_repair(modified_ns: i64) -> bool {
+    let age = system_time_ms().saturating_sub(modified_ns / 1_000_000);
+    (0..MISSING_CONFIRMATION_MS).contains(&age)
+}
+
 fn system_time_ms() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -1177,6 +1236,20 @@ fn read_bounded_line<R: Read>(
             return Ok(Some((line, consumed, true)));
         }
     }
+}
+
+// A batch can reach its event or byte limit at the last complete line.
+// Inspect a bounded remainder so one-shot scans can still prove a partial tail.
+fn only_incomplete_tail(file: &File, offset: u64, size: u64, max_line: u64) -> Result<bool> {
+    let tail = size.saturating_sub(offset);
+    if tail == 0 || tail > max_line + 1 {
+        return Ok(false);
+    }
+    let mut file = file.try_clone()?;
+    file.seek(SeekFrom::Start(offset))?;
+    let mut reader = BufReader::with_capacity(8192, file.take(tail));
+    Ok(read_bounded_line(&mut reader, max_line)?
+        .is_some_and(|(_, consumed, complete)| !complete && consumed == tail))
 }
 
 #[allow(dead_code)]
@@ -1420,6 +1493,67 @@ mod tests {
             .unwrap();
         writeln!(f, "{data}").unwrap();
         f.sync_all().unwrap();
+    }
+
+    #[test]
+    fn rotated_tail_repair_accepts_only_a_scanned_fragment() {
+        for full in [false, true] {
+            let dir = tempdir().unwrap();
+            let mut cfg = config(dir.path());
+            cfg.batch_max_events = 1;
+            append(
+                &cfg.access_log,
+                &fixture("00000000-0000-4000-8000-000000000003"),
+            );
+            let committed = fs::metadata(&cfg.access_log).unwrap().len();
+            let mut log = OpenOptions::new()
+                .append(true)
+                .open(&cfg.access_log)
+                .unwrap();
+            log.write_all(b"{\"event_id\":").unwrap();
+            let observed = log.metadata().unwrap().len();
+            let mut state = State::open(&cfg).unwrap();
+            assert!(state.scan_one(&cfg).unwrap());
+            if full {
+                cfg.spool_max_bytes = state.status(&cfg).unwrap().pending_bytes;
+            }
+            drop(state);
+
+            log.set_len(committed).unwrap();
+            log.set_modified(std::time::UNIX_EPOCH + Duration::from_secs(1))
+                .unwrap();
+            drop(log);
+            let mut state = State::open(&cfg).unwrap();
+            assert!(state.scan_one(&cfg).is_err());
+            let frontier = |state: &State| {
+                state
+                    .db
+                    .query_row(
+                        "SELECT offset,observed_size,partial_at_eof FROM checkpoints",
+                        [],
+                        |row| {
+                            Ok((
+                                row.get::<_, u64>(0)?,
+                                row.get::<_, u64>(1)?,
+                                row.get::<_, bool>(2)?,
+                            ))
+                        },
+                    )
+                    .unwrap()
+            };
+            assert_eq!(frontier(&state), (committed, observed, true));
+            fs::rename(&cfg.access_log, dir.path().join("access.jsonl.1")).unwrap();
+            assert!(!state.scan_one(&cfg).unwrap());
+            assert_eq!(frontier(&state), (committed, committed, false));
+
+            cfg.spool_max_bytes = 32768;
+            append(
+                &cfg.access_log,
+                &fixture("00000000-0000-4000-8000-000000000004"),
+            );
+            assert!(state.scan_one(&cfg).unwrap());
+            assert_eq!(state.status(&cfg).unwrap().pending_events, 2);
+        }
     }
 
     #[test]

@@ -1,0 +1,27 @@
+WARN Ignoring project discovery error due to `--no-project`: Workspace member `/Users/oscarbahamonde/Desktop/portfolio` is missing a `pyproject.toml` (matches: `Desktop/portfolio`)
+test_accepts_clients_while_reload_reads_candidate (__main__.ProxyTests) ... ok
+test_atomic_reload_and_invalid_reload_preserves_generation (__main__.ProxyTests) ... ok
+test_backend_unexpected_close_no_retry (__main__.ProxyTests) ... ok
+test_bad_upload_does_not_withdraw_healthy_backend (__main__.ProxyTests) ... ok
+test_body_limit_early (__main__.ProxyTests) ... ok
+test_cancel_and_stream_timeout_discard_upstream (__main__.ProxyTests) ... ok
+test_idle_and_max_age_retirement (__main__.ProxyTests) ... ok
+test_log_io_failure_keeps_serving (__main__.ProxyTests) ... ok
+test_log_rotation_and_retention (__main__.ProxyTests) ... ok
+test_overload_and_shutdown_deadline (__main__.ProxyTests) ... ok
+test_pool_capacity_wait_is_bounded (__main__.ProxyTests) ... ok
+test_pool_reuse_across_new_client_connections_and_logs (__main__.ProxyTests) ... ok
+test_request_smuggling_rejected_or_canonicalized (__main__.ProxyTests) ... ok
+test_round_robin_and_least_inflight (__main__.ProxyTests) ... ok
+test_routing_framing_hops_and_forwarded (__main__.ProxyTests) ... ok
+test_schema_and_admin_auth (__main__.ProxyTests) ... ok
+test_slowloris_and_header_limits (__main__.ProxyTests) ... ok
+test_unix_backend (__main__.ProxyTests) ... ok
+test_upload_and_sse_without_event_buffering (__main__.ProxyTests) ... ok
+test_upload_backpressure_and_early_response_discard (__main__.ProxyTests) ... ok
+test_yaml_reload_routes_and_rollback (__main__.ProxyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 21 tests in 23.805s
+
+OK

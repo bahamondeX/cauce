@@ -5,7 +5,7 @@ Cauce is a self-contained Rust reverse proxy for HTTP/1.1, HTTP/2, gRPC, WebSock
 - **Routing and load balancing:** exact host and longest path-prefix matching, round-robin or least-inflight balancing, and pooled connections to HTTP backends over TCP or Unix sockets.
 - **Streaming:** bidirectional gRPC, WebSocket upgrades, SSE and streamed bodies without buffering the entire response.
 - **TLS:** HTTPS on the inbound listener and optional TLS to upstreams with certificate and hostname verification.
-- **Operations:** validated configuration, atomic reload of routes and TLS material, graceful draining, opt-in active HTTP/1 health checks, and passive failure backoff.
+- **Operations:** validated versioned YAML and legacy TOML, atomic reload of routes and TLS material, graceful draining, opt-in active HTTP/1 health checks, and passive failure backoff.
 - **Observability:** local health endpoints, Prometheus metrics, structured JSONL access logs with rotation, and a separate optional log collector.
 
 ## Quick start
@@ -24,10 +24,10 @@ The example binds to loopback and includes sample backends. For native builds us
 ```sh
 cargo test --locked
 cargo build --release --locked
-cargo run --locked -- check examples/cauce.toml
+cargo run --locked -- check examples/cauce.yaml
 ```
 
-See [configuration examples](examples/), [architecture](docs/ARCHITECTURE.md), [HTTP/2 and gRPC](docs/HTTP2.md), [active health checks](docs/ACTIVE-HEALTH.md), and [logging](docs/LOGGING.md). This source release includes test and benchmark runners; generated run artifacts are not bundled.
+See [configuration and reload](docs/CONFIGURATION.md), [architecture](docs/ARCHITECTURE.md), [HTTP/2 and gRPC](docs/HTTP2.md), [active health checks](docs/ACTIVE-HEALTH.md), and [logging](docs/LOGGING.md). The engineering program tracks compatibility and measured results in [STATUS.md](STATUS.md).
 
 ## Scope
 

@@ -84,7 +84,13 @@ volumen y reserve espacio para ambos; consulte los valores en
 `examples/collector.toml`. No se ejecuta `VACUUM` automáticamente.
 
 Se leen solamente líneas terminadas en newline. Un fragmento al final espera
-hasta completarse. Una línea inválida o mayor que el límite detiene el avance en
+hasta completarse. El colector guarda si ya examinó todo el tramo después del
+offset confirmado y encontró únicamente un fragmento. Tras una reparación y
+rotación, acepta el mismo inode recortado al offset confirmado si conserva el
+contenido de la muestra guardada. Una ventana de 50 ms permite observar el
+rename. Las bases de datos existentes conservan sus offsets y, cuando carecen de
+esa observación del fragmento, mantienen la detección conservadora de recortes.
+Una línea inválida o mayor que el límite detiene el avance en
 ese archivo y el proceso termina con error; no se la omite silenciosamente. El operador debe
 corregir o archivar el origen con un procedimiento explícito si desea avanzar.
 No hay una cola de errores ilimitada ni captura de tokens/cuerpos HTTP.

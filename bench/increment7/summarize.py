@@ -6,6 +6,7 @@ from collections import Counter, defaultdict
 import csv
 import datetime as dt
 import json
+import math
 from pathlib import Path
 import statistics
 
@@ -22,12 +23,22 @@ def cpu_percent(before, after):
     return 100 * delta / (elapsed * 1e9)
 
 
+def verify_image_architectures(engine_arch, images):
+    aliases = {'aarch64': 'arm64', 'x86_64': 'amd64'}
+    native = aliases.get(engine_arch, engine_arch)
+    if native not in ('arm64', 'amd64'):
+        raise ValueError(f'Unsupported Docker Engine architecture: {engine_arch}')
+    for name, image in images.items():
+        arch = image['architecture']
+        if image['os'] != 'linux' or aliases.get(arch, arch) != native:
+            raise ValueError(f'{name} uses {image["os"]}/{arch}; Docker Engine requires linux/{native}')
+
+
 def summarize(directory):
     manifest = json.loads((directory / 'manifest.json').read_text())
     if manifest['status'] != 'COMPLETE' or manifest.get('errors'):
         raise ValueError('only COMPLETE campaigns without errors can be summarized')
-    assert all(image['architecture'] in ('arm64', 'aarch64') and image['os'] == 'linux'
-               for image in manifest['images'].values()), 'non-native fixture image'
+    verify_image_architectures(manifest['docker_context'].split()[-1], manifest['images'])
     expected_groups = manifest['workload']['repetitions'] * 2 * 2
     assert len(manifest['capacity_gates']) == expected_groups, 'missing capacity gates'
     assert len(manifest['runs']) == expected_groups * len(manifest['workload']['scenarios']), 'incomplete matrix'
@@ -70,7 +81,6 @@ def summarize(directory):
         latencies = sorted(r['scheduled_latency_ms'] for r in raw if r['outcome'] == 'success')
         quantiles = gen['percentiles_ms']['scheduled_latency']['success']
         for q in (50, 95, 99):
-            import math
             expected = latencies[math.ceil(q / 100 * len(latencies)) - 1] if latencies else None
             assert expected == quantiles[f'p{q}'], (ident, 'raw percentile differs from summary')
         respath = directory / run['resource_file']
@@ -104,6 +114,7 @@ def summarize(directory):
                    http_errors=gen['http_errors'], errors=gen['errors'], timeouts=gen['timeouts'],
                    drops=gen['drops'], queue_rejections=gen['rejections'],
                    p50_ms=quantiles['p50'], p95_ms=quantiles['p95'], p99_ms=quantiles['p99'],
+                   p999_ms=latencies[math.ceil(.999 * len(latencies)) - 1] if latencies else None,
                    scheduler_p99_ms=gen['percentiles_ms']['scheduler_lag']['all']['p99'],
                    generator_comparison_limited=resources['generator_comparison_limited'],
                    rss_peak_mib=max(x['rss_bytes'] for x in proc) / 1048576,
@@ -115,6 +126,8 @@ def summarize(directory):
             row[f'{name}_cpu_interval_s'] = timestamp(resources['final'][name]['timestamp']) - timestamp(resources['baseline'][name]['timestamp'])
             b = resources['baseline'][name]['throttling']; a = resources['final'][name]['throttling']
             row[f'{name}_throttled_ns'] = a.get('throttled_time', 0) - b.get('throttled_time', 0)
+        cpu_ns = resources['final']['proxy']['cpu_total_ns'] - resources['baseline']['proxy']['cpu_total_ns']
+        row['proxy_cpu_us_per_success'] = cpu_ns / (1000 * row['success']) if row['success'] else None
         rows.append(row)
     if not rows:
         raise ValueError('no measured runs')
@@ -123,8 +136,9 @@ def summarize(directory):
     groups = defaultdict(list)
     for row in rows:
         groups[(row['scenario'], row['logs'], row['stack'])].append(row)
-    metrics = ('goodput_rps','offer_window_goodput_rps','successes_per_offer_duration','p50_ms','p95_ms','p99_ms','proxy_cpu_pct','rss_peak_mib','cgroup_peak_mib',
-               'client_cpu_pct','backend_cpu_pct','scheduler_p99_ms')
+    metrics = ('goodput_rps','offer_window_goodput_rps','successes_per_offer_duration',
+               'p50_ms','p95_ms','p99_ms','p999_ms','proxy_cpu_pct','proxy_cpu_us_per_success',
+               'rss_peak_mib','cgroup_peak_mib','client_cpu_pct','backend_cpu_pct','scheduler_p99_ms')
     aggregate = []
     for (scenario, logs, stack), values in sorted(groups.items()):
         item = dict(scenario=scenario, logs=logs, stack=stack, repetitions=len(values), offered_rate=values[0]['offered_rate'])

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Black-box HTTP tests, real sockets and subprocesses; no mock proxy transport."""
 import concurrent.futures
+import errno
 import http.client
 import http.server
 import json
@@ -155,7 +156,18 @@ class ProxyTests(unittest.TestCase):
             config = config.replace('idle_connection_ms = 10000', 'idle_connection_ms = 100').replace('max_connection_age_ms = 60000', 'max_connection_age_ms = 250')
         if self._testMethodName == 'test_log_rotation_and_retention':
             config = config.replace('rotate_bytes = 16777216', 'rotate_bytes = 4096').replace('retained_files = 3', 'retained_files = 2')
-        self.path = self.base / 'config.toml' 
+        if self._testMethodName == 'test_disabled_access_log_preserves_metrics_and_request_identity':
+            config = config.replace('enabled = true', 'enabled = false')
+        self.path = self.base / 'config.toml'
+        if self._testMethodName == 'test_yaml_reload_routes_and_rollback':
+            self.path = self.base / 'config.yaml'
+            config = (ROOT / 'examples/cauce.yaml').read_text()
+            config = config.replace('127.0.0.1:8080', f'127.0.0.1:{self.listen}')
+            config = config.replace('localhost:8080', f'localhost:{self.listen}')
+            config = config.replace('127.0.0.1:9090', f'127.0.0.1:{self.admin}')
+            for old, backend in zip([8000, 8001], self.backends):
+                config = config.replace(f'127.0.0.1:{old}', f'127.0.0.1:{backend.server_port}')
+            config = config.replace('upstreams: [python, node]', 'upstreams: [python]')
         self.path.write_text(config)
         self.stderr = open(self.base / 'stderr.jsonl', 'w')
         self.proc = subprocess.Popen([str(BIN), str(self.path)], cwd=self.base, env={**os.environ, "CAUCE_ADMIN_TOKEN": "test-only-admin-token-at-least-32-bytes"}, stderr=self.stderr, stdout=subprocess.DEVNULL)
@@ -224,6 +236,26 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(logs[0]['outcome'], 'complete')
         metrics = self.request('/metrics', admin=True)[1].decode()
         self.assertIn('cauce_upstream_reused_total 1', metrics)
+
+    def test_disabled_access_log_preserves_metrics_and_request_identity(self):
+        import uuid
+
+        trace = '00-0123456789abcdef0123456789abcdef-0123456789abcdef-01'
+        status, body, headers = self.request('/', headers={'traceparent': trace})
+        self.assertEqual(status, 200)
+        self.assertEqual(uuid.UUID(headers['x-request-id']).version, 4)
+        self.assertEqual(json.loads(body)['traceparent'], trace)
+        second = self.request('/')
+        self.assertEqual(second[0], 200)
+        self.assertNotEqual(headers['x-request-id'], second[2]['x-request-id'])
+        self.assertEqual(self.request('/', headers={'Host': 'missing.test'})[0], 404)
+        metrics = self.request('/metrics', admin=True)[1].decode().splitlines()
+        for name, value in {
+            'requests': 3, 'responses': 2, 'rejected': 1, 'upstream_reused': 1,
+            'response_bytes': len(body) + len(second[1]), 'log_dropped': 0, 'log_io_errors': 0,
+        }.items():
+            self.assertIn(f'cauce_{name}_total {value}', metrics)
+        self.assertFalse((self.base / 'logs/access.jsonl').exists())
 
     def test_routing_framing_hops_and_forwarded(self):
         self.assertEqual(self.request('/', headers={'Host': 'attacker.test'})[0], 404)
@@ -321,6 +353,74 @@ class ProxyTests(unittest.TestCase):
         time.sleep(.1)
         self.assertEqual(json.loads(self.request('/')[1])['backend'], 'b')
         self.assertEqual(self.logs()[-1]['config_version'], 2)
+
+    def test_yaml_reload_routes_and_rollback(self):
+        original = self.path.read_text()
+        candidate = original + f'''
+    - id: specific
+      host: "localhost:{self.listen}"
+      path_prefix: /api
+      balance: round_robin
+      upstreams: [node]
+'''
+        def publish(contents, event):
+            log = self.base / 'stderr.jsonl'
+            previous = log.read_text().count(event)
+            pending = self.path.with_suffix('.next')
+            pending.write_text(contents)
+            pending.replace(self.path)
+            self.proc.send_signal(signal.SIGHUP)
+            for _ in range(100):
+                if log.read_text().count(event) > previous:
+                    return
+                time.sleep(.02)
+            self.fail(f'expected {event} in stderr')
+
+        def backend(path):
+            status, response, _ = self.request(path, headers={'Host': f'LOCALHOST:{self.listen}'})
+            self.assertEqual(status, 200)
+            return json.loads(response)['backend']
+
+        self.assertEqual(backend('/api/items'), 'a')
+        publish(candidate, '"reloaded"')
+        self.assertEqual(backend('/api/items'), 'b')
+        self.assertEqual(backend('/apix'), 'a')
+        publish(candidate.replace('version: 1', 'version: 2'), '"reload_rejected"')
+        self.assertEqual(backend('/api/items'), 'b')
+        publish(original, '"reloaded"')
+        self.assertEqual(backend('/api/items'), 'a')
+
+    def test_accepts_clients_while_reload_reads_candidate(self):
+        config = self.path.read_bytes()
+        pending = self.path.with_suffix('.pending')
+        os.mkfifo(pending)
+        pending.replace(self.path)
+        self.proc.send_signal(signal.SIGHUP)
+        # The pipe pauses the config read at a deterministic point. Opening the
+        # writer confirms the reader has started before testing fresh sockets.
+        for _ in range(100):
+            try:
+                writer = os.open(self.path, os.O_WRONLY | os.O_NONBLOCK)
+                break
+            except OSError as error:
+                if error.errno != errno.ENXIO:
+                    raise
+                time.sleep(.02)
+        else:
+            self.fail('reload did not open the candidate')
+        with os.fdopen(writer, 'wb') as stream:
+            try:
+                self.assertEqual(self.request('/ready', admin=True)[0], 200)
+                self.assertEqual(self.request('/')[0], 200)
+            finally:
+                stream.write(config)
+        self.path.unlink()
+        self.path.write_bytes(config)
+        for _ in range(100):
+            if '"reloaded"' in (self.base / 'stderr.jsonl').read_text():
+                return
+            time.sleep(.02)
+        self.fail('released candidate was not published')
 
     def test_round_robin_and_least_inflight(self):
         config = self.path.read_text().replace('upstreams = ["python"]', 'upstreams = ["python", "node"]')

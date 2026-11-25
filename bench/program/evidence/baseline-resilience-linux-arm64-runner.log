@@ -1,0 +1,5 @@
+RUN proxy_failures
+RUN log_disk
+RUN collector_storage
+{"status": "FAIL", "report_dir": "/tmp/cauce-program/evidence/resilience-baseline", "errors": ["AssertionError('collector_storage failed; inspect collector_storage.stdout.log and report')"]}
+time="2026-11-25T11:00:49-05:00" level=fatal msg="exit status 1"

@@ -1,0 +1,1315 @@
+Analysis of sampling cauce-before (pid 23199) every 1 millisecond
+Process:         cauce-before [23199]
+Path:            /Users/USER/Desktop/*/cauce-before
+Load Address:    0x1041dc000
+Identifier:      cauce-before
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  zsh [23190]
+Target Type:     live task
+
+Date/Time:       2026-11-25 12:16:56.145 -0500
+Launch Time:     2026-11-25 12:16:52.551 -0500
+OS Version:      macOS 15.8.1 (24H32)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         3761K
+Physical footprint (peak):  3761K
+Idle exit:                  untracked
+----
+
+Call graph:
+    6459 Thread_78731   DispatchQueue_1: com.apple.main-thread  (serial)
+    + 6459 start  (in dyld) + 6076  [0x1863e6b98]
+    +   6459 main  (in cauce-before) + 52  [0x104322d5c]
+    +     6459 std::rt::lang_start_internal::h51422f8feb889936  (in cauce-before) + 152  [0x104436140]
+    +       6459 std::rt::lang_start::_$u7b$$u7b$closure$u7d$$u7d$::he8b1d710b6cc5b65  (in cauce-before) + 24  [0x10422a7b8]  rt.rs:199
+    +         6459 std::sys::backtrace::__rust_begin_short_backtrace::h73c28b5fd0f387ef  (in cauce-before) + 12  [0x10422aa1c]  backtrace.rs:152
+    +           6459 cauce::main::hfade3f2dfab67b21  (in cauce-before) + 2984  [0x10430ca4c]  main.rs:43
+    +             6459 tokio::runtime::park::Inner::park::ha56548b069259c08  (in cauce-before) + 192  [0x104452714]
+    +               6459 _pthread_cond_wait  (in libsystem_pthread.dylib) + 984  [0x18678809c]
+    +                 6459 __psynch_cvwait  (in libsystem_kernel.dylib) + 8  [0x1867493cc]
+    6459 Thread_78877: tokio-rt-worker
+    + 6444 thread_start  (in libsystem_pthread.dylib) + 8  [0x186782b80]
+    + ! 6444 _pthread_start  (in libsystem_pthread.dylib) + 136  [0x186787bc8]
+    + !   6444 std::sys::pal::unix::thread::Thread::new::thread_start::hd6d146aed00830bd  (in cauce-before) + 52  [0x104417a54]
+    + !     6444 core::ops::function::FnOnce::call_once$u7b$$u7b$vtable.shim$u7d$$u7d$::hce7688a0e82ee409  (in cauce-before) + 392  [0x104448678]  function.rs:250
+    + !       6444 std::sys::backtrace::__rust_begin_short_backtrace::hf9041553b2d16ec1  (in cauce-before) + 1064  [0x104446a88]  backtrace.rs:152
+    + !         5458 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 5120  [0x10445cb2c]  raw.rs:337
+    + !         : 5458 tokio::runtime::scheduler::multi_thread::worker::Context::park_internal::hef49bb929cff096a  (in cauce-before) + 232  [0x1044569d8]  worker.rs:903
+    + !         :   5444 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 732  [0x104459358]  mod.rs:0
+    + !         :   | 5427 tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before) + 496  [0x104457b44]  driver.rs:199
+    + !         :   | + 5427 kevent  (in libsystem_kernel.dylib) + 8,0  [0x18674bd04,0x18674bcfc]
+    + !         :   | 12 tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before) + 792  [0x104457c6c]  driver.rs:226
+    + !         :   | + 6 tokio::runtime::io::scheduled_io::ScheduledIo::wake::h69d994ad12f30ac0  (in cauce-before) + 688  [0x1044588b4]  scheduled_io.rs:300
+    + !         :   | + ! 4 tokio::runtime::task::waker::wake_by_val::hde0ba4fd9ca9be9c  (in cauce-before) + 156  [0x10445eed0]  waker.rs:102
+    + !         :   | + ! : 2 tokio::runtime::scheduler::multi_thread::worker::_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$::schedule_task::h66bedc88f205b8e3  (in cauce-before) + 0,152  [0x10445732c,0x1044573c4]
+    + !         :   | + ! : 1 tokio::runtime::scheduler::multi_thread::worker::_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$::schedule_task::h66bedc88f205b8e3  (in cauce-before) + 48  [0x10445735c]
+    + !         :   | + ! : | 1 _tlv_get_addr  (in libdyld.dylib) + 0  [0x1867910f8]
+    + !         :   | + ! : 1 tokio::runtime::scheduler::multi_thread::worker::_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$::schedule_task::h66bedc88f205b8e3  (in cauce-before) + 216  [0x104457404]
+    + !         :   | + ! :   1 _tlv_get_addr  (in libdyld.dylib) + 0  [0x1867910f8]
+    + !         :   | + ! 1 tokio::runtime::task::waker::wake_by_val::hde0ba4fd9ca9be9c  (in cauce-before) + 12  [0x10445ee40]  waker.rs:102
+    + !         :   | + ! 1 tokio::runtime::task::waker::wake_by_val::hde0ba4fd9ca9be9c  (in cauce-before) + 0  [0x10445ee34]  waker.rs:93
+    + !         :   | + 2 tokio::runtime::io::scheduled_io::ScheduledIo::wake::h69d994ad12f30ac0  (in cauce-before) + 52  [0x104458638]  scheduled_io.rs:254
+    + !         :   | + ! 2 pthread_mutex_lock  (in libsystem_pthread.dylib) + 32,132  [0x186782378,0x1867823dc]
+    + !         :   | + 1 tokio::runtime::io::scheduled_io::ScheduledIo::wake::h69d994ad12f30ac0  (in cauce-before) + 0  [0x104458604]  scheduled_io.rs:251
+    + !         :   | + 1 tokio::runtime::io::scheduled_io::ScheduledIo::wake::h69d994ad12f30ac0  (in cauce-before) + 96  [0x104458664]  scheduled_io.rs:258
+    + !         :   | + 1 tokio::runtime::io::scheduled_io::ScheduledIo::wake::h69d994ad12f30ac0  (in cauce-before) + 636  [0x104458880]  scheduled_io.rs:298
+    + !         :   | + ! 1 pthread_mutex_unlock  (in libsystem_pthread.dylib) + 0  [0x1867828a4]
+    + !         :   | + 1 tokio::runtime::io::scheduled_io::ScheduledIo::wake::h69d994ad12f30ac0  (in cauce-before) + 144  [0x104458694]  wake_list.rs:0
+    + !         :   | 3 tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before) + 740,744,...  [0x104457c38,0x104457c3c,...]  driver.rs:226
+    + !         :   | 1 tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before) + 600  [0x104457bac]  driver.rs:212
+    + !         :   | 1 tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before) + 628  [0x104457bc8]  driver.rs:215
+    + !         :   5 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 756  [0x104459370]  mod.rs:255
+    + !         :   | 5 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         :   |   5 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         :   |     3 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+    + !         :   |     + 3 DYLD-STUB$$mach_timebase_info  (in libsystem_c.dylib) + 8  [0x186691dd0]
+    + !         :   |     2 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         :   |       2 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         :   3 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 740  [0x104459360]  mod.rs:0
+    + !         :   | 3 tokio::runtime::signal::Driver::process::h4aa72a374e98e92f  (in cauce-before) + 0  [0x10445a110]  mod.rs:105
+    + !         :   2 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 248  [0x104459174]  mod.rs:219
+    + !         :   2 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 388  [0x104459200]  mod.rs:227
+    + !         :   | 2 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         :   |   2 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         :   |     2 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         :   |       2 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         :   1 tokio::runtime::driver::Driver::park::h622d56a25b12cccb  (in cauce-before) + 0  [0x104453448]  driver.rs:68
+    + !         :   1 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 548  [0x1044592a0]  mod.rs:0
+    + !         935 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 3656  [0x10445c574]  raw.rs:337
+    + !         : 498 tokio::runtime::scheduler::multi_thread::worker::Context::run_task::hf8abb18756bc53e3  (in cauce-before) + 332  [0x1044565c8]  worker.rs:696
+    + !         : | 332 tokio::runtime::task::raw::poll::hc603070cff436cce  (in cauce-before) + 472  [0x10429538c]  raw.rs:337
+    + !         : | + 120 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7476  [0x10431e880]  main.rs:176
+    + !         : | + ! 53 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+    + !         : | + ! : 53 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+    + !         : | + ! :   5 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 3884  [0x1042f9420]  proxy.rs:223
+    + !         : | + ! :   | 5 getentropy  (in libsystem_kernel.dylib) + 8  [0x186746128]
+    + !         : | + ! :   4 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 18784  [0x1042fce54]  proxy.rs:533
+    + !         : | + ! :   | 4 _$LT$core..net..ip_addr..Ipv4Addr$u20$as$u20$core..fmt..Display$GT$::fmt::hc66edbc06960500a  (in cauce-before) + 252  [0x1041ee310]
+    + !         : | + ! :   |   3 core::fmt::write::ha49b2d873e2aa5a7  (in cauce-before) + 0  [0x1041e20d8]
+    + !         : | + ! :   |   1 core::fmt::write::ha49b2d873e2aa5a7  (in cauce-before) + 372  [0x1041e224c]
+    + !         : | + ! :   |     1 core::fmt::num::imp::_$LT$impl$u20$core..fmt..Display$u20$for$u20$u8$GT$::fmt::h5b7c6a9bd2c9a1be  (in cauce-before) + 84  [0x1041e5f48]
+    + !         : | + ! :   3 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 624  [0x1042f8764]  proxy.rs:219
+    + !         : | + ! :   | 3 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   3 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     3 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   |       3 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   3 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 5348  [0x1042f99d8]  proxy.rs:232
+    + !         : | + ! :   | 3 getentropy  (in libsystem_kernel.dylib) + 8  [0x186746128]
+    + !         : | + ! :   3 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 22344  [0x1042fdc3c]  proxy.rs:557
+    + !         : | + ! :   | 3 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   3 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     3 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 600  [0x18658977c]
+    + !         : | + ! :   |       3 _tiny_check_and_zero_inline_meta_from_freelist  (in libsystem_malloc.dylib) + 80  [0x1865bf658]
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 12740  [0x1042fb6b8]  proxy.rs:233
+    + !         : | + ! :   | 2 alloc::raw_vec::RawVecInner$LT$A$GT$::reserve::do_reserve_and_handle::h03cf3208586368d7  (in cauce-before) + 172  [0x1044b2cac]  mod.rs:557
+    + !         : | + ! :   |   1 alloc::raw_vec::finish_grow::hc2be700b10b85c1d  (in cauce-before) + 216  [0x1044b2bc8]  mod.rs:781
+    + !         : | + ! :   |   + 1 _realloc  (in libsystem_malloc.dylib) + 452  [0x1865b9dac]
+    + !         : | + ! :   |   +   1 szone_realloc  (in libsystem_malloc.dylib) + 236  [0x18658ac3c]
+    + !         : | + ! :   |   1 alloc::raw_vec::finish_grow::hc2be700b10b85c1d  (in cauce-before) + 204  [0x1044b2bbc]  mod.rs:781
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16372  [0x1042fc4e8]  proxy.rs:497
+    + !         : | + ! :   | 1 bytes::bytes_mut::shared_v_drop::he48f122b3e0c9692  (in cauce-before) + 0  [0x1041e140c]  bytes_mut.rs:1961
+    + !         : | + ! :   | 1 core::ptr::drop_in_place$LT$http..uri..Uri$GT$::h3af42553290cb6ca  (in cauce-before) + 0  [0x1042437f0]  mod.rs:524
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16432  [0x1042fc524]  proxy.rs:503
+    + !         : | + ! :   | 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 816  [0x1042f6a44]  proxy.rs:62
+    + !         : | + ! :   | + 1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! :   | +   1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 136  [0x1042a9de0]  map.rs:3971
+    + !         : | + ! :   | +     1 http::header::map::hash_elem_using::h11ea23937a635d0d  (in cauce-before) + 432  [0x104261874]  map.rs:3746
+    + !         : | + ! :   | 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 920  [0x1042f6aac]  proxy.rs:62
+    + !         : | + ! :   |   1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! :   |     1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+    + !         : | + ! :   |       1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 160  [0x104350478]  name.rs:1084
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 18320,18360  [0x1042fcc84,0x1042fccac]  proxy.rs:530
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 22504  [0x1042fdcdc]  proxy.rs:557
+    + !         : | + ! :   | 2 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   2 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     2 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 188,628  [0x1865895e0,0x186589798]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 400  [0x1042f8684]  proxy.rs:216
+    + !         : | + ! :   | 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+    + !         : | + ! :   |       1 mach_timebase_info  (in libsystem_kernel.dylib) + 76  [0x186746000]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 3988  [0x1042f9488]  proxy.rs:223
+    + !         : | + ! :   | 1 alloc::raw_vec::RawVecInner$LT$A$GT$::reserve::do_reserve_and_handle::h03cf3208586368d7  (in cauce-before) + 172  [0x1044b2cac]  mod.rs:557
+    + !         : | + ! :   |   1 alloc::raw_vec::finish_grow::hc2be700b10b85c1d  (in cauce-before) + 228  [0x1044b2bd4]  mod.rs:0
+    + !         : | + ! :   |     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |       1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 52  [0x186588ce8]
+    + !         : | + ! :   |         1 rack_get_thread_index  (in libsystem_malloc.dylib) + 0  [0x1865a271c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 9224  [0x1042fa8fc]  proxy.rs:233
+    + !         : | + ! :   | 1 alloc::string::String::from_utf8_lossy::hdab0a2d3e83fd119  (in cauce-before) + 52  [0x1041dccc8]
+    + !         : | + ! :   |   1 _$LT$core..str..lossy..Utf8Chunks$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h6fbde04d207d27f7  (in cauce-before) + 48  [0x1041ea3cc]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 11960  [0x1042fb3ac]  proxy.rs:233
+    + !         : | + ! :   | 1 time::formatting::format_number_pad_zero::h10cafbe8f98b4928  (in cauce-before) + 68  [0x104264e8c]  uint_macros.rs:0
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 7168  [0x1042fa0f4]  proxy.rs:233
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 10632  [0x1042fae7c]  proxy.rs:283
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 104  [0x186588d1c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 34220  [0x104300aa0]  proxy.rs:376
+    + !         : | + ! :   | 1 cauce::websocket::request::hb91d74e5004e254d  (in cauce-before) + 1044  [0x104309c8c]  websocket.rs:44
+    + !         : | + ! :   |   1 cauce::websocket::token::hbdd79f0c8de7021f  (in cauce-before) + 76  [0x10430934c]  websocket.rs:36
+    + !         : | + ! :   |     1 cauce::websocket::token::hbdd79f0c8de7021f  (in cauce-before) + 1084  [0x10430973c]  websocket.rs:36
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 34432  [0x104300b74]  proxy.rs:392
+    + !         : | + ! :   | 1 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 692  [0x1042f7b38]  proxy.rs:141
+    + !         : | + ! :   |   1 core::str::pattern::StrSearcher::new::h7d667c25c20908b5  (in cauce-before) + 2120  [0x1041ebe00]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 35256  [0x104300eac]  proxy.rs:413
+    + !         : | + ! :   | 1 cauce::pool::Generation::select::h70725ef2d83064e4  (in cauce-before) + 144  [0x1042de064]  pool.rs:129
+    + !         : | + ! :   |   1 cauce::pool::Generation::select::_$u7b$$u7b$closure$u7d$$u7d$::haf9e578a72dc933d  (in cauce-before) + 204  [0x1042de230]  pool.rs:120
+    + !         : | + ! :   |     1 _platform_memcmp  (in libsystem_platform.dylib) + 192  [0x1867bef50]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36356  [0x1043012f8]  proxy.rs:427
+    + !         : | + ! :   | 1 tokio::time::timeout::timeout_at::h82474ddc7aaae5b4  (in cauce-before) + 60  [0x104283fac]  timeout.rs:170
+    + !         : | + ! :   |   1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36392  [0x10430131c]  proxy.rs:427
+    + !         : | + ! :   | 1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 248  [0x1042f85ec]  proxy.rs:431
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 19268  [0x1042e6db8]  pool.rs:517
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36376  [0x10430130c]  proxy.rs:431
+    + !         : | + ! :   | 1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16148  [0x1042fc408]  proxy.rs:495
+    + !         : | + ! :   | 1 _platform_memmove  (in libsystem_platform.dylib) + 460  [0x1867c148c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16180  [0x1042fc428]  proxy.rs:497
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 52  [0x186588ce8]
+    + !         : | + ! :   |     1 rack_get_thread_index  (in libsystem_malloc.dylib) + 40  [0x1865a2744]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16832  [0x1042fc6b4]  proxy.rs:514
+    + !         : | + ! :   | 1 _$LT$core..iter..adapters..cloned..Cloned$LT$I$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::ha234e4ab6b7bae1c  (in cauce-before) + 152  [0x1041f6028]  cloned.rs:41
+    + !         : | + ! :   |   1 http::header::name::HeaderName::as_str::h9935f0d41c6dd261  (in cauce-before) + 28  [0x1042645a8]  name.rs:1268
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 18604  [0x1042fcda0]  proxy.rs:529
+    + !         : | + ! :   | 1 http::header::map::HeaderMap$LT$T$GT$::insert::h6bd71faa15bb7174  (in cauce-before) + 728  [0x10426307c]  map.rs:1289
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 18496  [0x1042fcd34]  proxy.rs:530
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 28  [0x186589540]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 19352  [0x1042fd08c]  proxy.rs:531
+    + !         : | + ! :   | 1 http::header::map::HeaderMap$LT$T$GT$::insert::hbf65f01dd688b258  (in cauce-before) + 840  [0x1042636d0]  map.rs:1289
+    + !         : | + ! :   |   1 _$LT$http..header..name..HeaderName$u20$as$u20$core..convert..From$LT$http..header..name..HdrName$GT$$GT$::from::h0be342f304a33428  (in cauce-before) + 92  [0x104350dd0]  name.rs:1536
+    + !         : | + ! :   |     1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 12  [0x1865b8f4c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 19960  [0x1042fd2ec]  proxy.rs:540
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 248  [0x18658961c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 21796  [0x1042fda18]  proxy.rs:553
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 112  [0x186589594]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 21872  [0x1042fda64]  proxy.rs:555
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1588  [0x186589b58]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 24096  [0x1042fe314]  proxy.rs:578
+    + !         : | + ! :   | 1 hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::_$u7b$$u7b$closure$u7d$$u7d$::h927f28749eb6c840  (in cauce-before) + 92  [0x10427dca0]  http1.rs:238
+    + !         : | + ! :   |   1 _$LT$tokio..sync..oneshot..Receiver$LT$T$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h07b1239f43e8e04a  (in cauce-before) + 216  [0x1042bcfc0]  oneshot.rs:1287
+    + !         : | + ! :   |     1 _tlv_get_addr  (in libdyld.dylib) + 20  [0x18679110c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 25820  [0x1042fe9d0]  proxy.rs:578
+    + !         : | + ! :   | 1 _$LT$tokio..time..sleep..Sleep$u20$as$u20$core..future..future..Future$GT$::poll::h02cb19c8b5888335  (in cauce-before) + 556  [0x104468db0]  sleep.rs:457
+    + !         : | + ! :   |   1 tokio::runtime::time::_$LT$impl$u20$tokio..runtime..time..handle..Handle$GT$::reregister::h478f2ab3ae218855  (in cauce-before) + 52  [0x104459e18]  mod.rs:407
+    + !         : | + ! :   |     1 pthread_mutex_lock  (in libsystem_pthread.dylib) + 112  [0x1867823c8]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 25800  [0x1042fe9bc]  proxy.rs:578
+    + !         : | + ! 39 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 6392  [0x104206fa4]  mod.rs:701
+    + !         : | + ! : 38 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 180  [0x1042adec8]  tokio.rs:173
+    + !         : | + ! : | 38 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 184  [0x104451964]
+    + !         : | + ! : |   38 __recvfrom  (in libsystem_kernel.dylib) + 8  [0x18674a158]
+    + !         : | + ! : 1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 1556  [0x1042ae428]  tokio.rs:173
+    + !         : | + ! 12 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5960  [0x104206df4]  mod.rs:701
+    + !         : | + ! : 5 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 324  [0x10436b1c8]  role.rs:176
+    + !         : | + ! : | 4 httparse::Request::parse_with_config_and_uninit_headers::h2767c1324e8d3205  (in cauce-before) + 1424  [0x104357c90]
+    + !         : | + ! : | + 4 httparse::parse_headers_iter_uninit::h57d827e3b14adcf2  (in cauce-before) + 752  [0x104358898]
+    + !         : | + ! : | 1 httparse::Request::parse_with_config_and_uninit_headers::h2767c1324e8d3205  (in cauce-before) + 1120  [0x104357b60]
+    + !         : | + ! : |   1 core::str::converts::from_utf8::h385ffc0545d97750  (in cauce-before) + 512  [0x1041e9d10]
+    + !         : | + ! : 2 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 1084  [0x10436b4c0]  role.rs:225
+    + !         : | + ! : | 2 bytes::bytes_mut::BytesMut::split_to::he510f98154c58bfb  (in cauce-before) + 112  [0x1041e0bb4]  bytes_mut.rs:420
+    + !         : | + ! : |   2 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 76  [0x1865b8f8c]
+    + !         : | + ! : 2 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 1444  [0x10436b628]  role.rs:227
+    + !         : | + ! : | 1 bytes::bytes::Bytes::slice_ref::ha58828b542c8b7f7  (in cauce-before) + 108  [0x1041df904]  bytes.rs:443
+    + !         : | + ! : | + 1 bytes::bytes_mut::shared_v_clone::h61f0b13c4e104a1f  (in cauce-before) + 0  [0x1041e116c]  bytes_mut.rs:1896
+    + !         : | + ! : | 1 bytes::bytes::Bytes::slice_ref::ha58828b542c8b7f7  (in cauce-before) + 96  [0x1041df8f8]  bytes.rs:443
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 2988  [0x10436bc30]  role.rs:0
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 2668  [0x10436baf0]  role.rs:351
+    + !         : | + ! : | 1 http::header::map::HeaderMap$LT$T$GT$::try_append2::h1c06294bfc5d2cbd  (in cauce-before) + 532  [0x10435f0d0]  map.rs:0
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 1988  [0x10436b848]  role.rs:39
+    + !         : | + ! :   1 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 400  [0x104350748]  name.rs:1118
+    + !         : | + ! :     1 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 600  [0x104353d78]  name.rs:98
+    + !         : | + ! 6 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 8868  [0x104207950]  mod.rs:701
+    + !         : | + ! : 3 _szone_free  (in libsystem_malloc.dylib) + 92  [0x18659f0d4]
+    + !         : | + ! : 2 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | 1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+    + !         : | + ! : | + 1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 128  [0x18658c3bc]
+    + !         : | + ! : | 1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 164  [0x18658bbc0]
+    + !         : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : | + ! :   1 _platform_memset  (in libsystem_platform.dylib) + 160  [0x1867c1090]
+    + !         : | + ! 4 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5024,5884,...  [0x104206a4c,0x104206da8,...]  mod.rs:701
+    + !         : | + ! 3 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11612  [0x104208408]  mod.rs:701
+    + !         : | + ! : 3 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::hb7eff28925e24969  (in cauce-before) + 28  [0x104279a98]  dispatch.rs:451
+    + !         : | + ! :   3 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0939fe2860081266  (in cauce-before) + 204  [0x10426cc04]  io.rs:0
+    + !         : | + ! :     3 _$LT$cauce..transport..WriteTimeout$LT$T$GT$$u20$as$u20$tokio..io..async_write..AsyncWrite$GT$::poll_flush::h36242356c4f1f18c  (in cauce-before) + 0  [0x104308d2c]  transport.rs:510
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4488  [0x104206834]  mod.rs:676
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 8680  [0x104207894]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..dispatch..Server$LT$S$C$hyper..body..incoming..Incoming$GT$$u20$as$u20$hyper..proto..h1..dispatch..Dispatch$GT$::recv_msg::h80148485e451462d  (in cauce-before) + 260  [0x10420e58c]  dispatch.rs:629
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 10916  [0x104208150]  mod.rs:701
+    + !         : | + !   1 hyper::headers::te_is_trailers::h4a6ade0ed926b8f9  (in cauce-before) + 60  [0x1043666c4]  headers.rs:47
+    + !         : | + !     1 http::header::map::HeaderMap$LT$T$GT$::get_all::h1922930ea7187f00  (in cauce-before) + 12  [0x104360c30]  map.rs:882
+    + !         : | + 105 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7600  [0x10431e8fc]  main.rs:176
+    + !         : | + ! 56 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+    + !         : | + ! : 56 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+    + !         : | + ! :   11 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 5348  [0x1042f99d8]  proxy.rs:232
+    + !         : | + ! :   | 11 getentropy  (in libsystem_kernel.dylib) + 8  [0x186746128]
+    + !         : | + ! :   6 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 3884  [0x1042f9420]  proxy.rs:223
+    + !         : | + ! :   | 6 getentropy  (in libsystem_kernel.dylib) + 8  [0x186746128]
+    + !         : | + ! :   6 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 34432  [0x104300b74]  proxy.rs:392
+    + !         : | + ! :   | 2 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 228  [0x1042f7968]  proxy.rs:137
+    + !         : | + ! :   | + 1 _$LT$$RF$str$u20$as$u20$core..str..pattern..Pattern$GT$::is_contained_in::h4390a67c9873dfef  (in cauce-before) + 56  [0x104265ae0]  pattern.rs:1006
+    + !         : | + ! :   | + ! 1 core::str::pattern::StrSearcher::new::h7d667c25c20908b5  (in cauce-before) + 408  [0x1041eb750]
+    + !         : | + ! :   | + !   1 _platform_memcmp  (in libsystem_platform.dylib) + 168  [0x1867bef38]
+    + !         : | + ! :   | + 1 _$LT$$RF$str$u20$as$u20$core..str..pattern..Pattern$GT$::is_contained_in::h4390a67c9873dfef  (in cauce-before) + 988  [0x104265e84]  pattern.rs:1010
+    + !         : | + ! :   | 2 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 636  [0x1042f7b00]  proxy.rs:141
+    + !         : | + ! :   | + 2 _$LT$$RF$str$u20$as$u20$core..str..pattern..Pattern$GT$::is_contained_in::h4390a67c9873dfef  (in cauce-before) + 584  [0x104265cf0]  pattern.rs:1006
+    + !         : | + ! :   | 1 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 664  [0x1042f7b1c]  proxy.rs:141
+    + !         : | + ! :   | + 1 _$LT$$RF$str$u20$as$u20$core..str..pattern..Pattern$GT$::is_contained_in::h4390a67c9873dfef  (in cauce-before) + 56  [0x104265ae0]  pattern.rs:1006
+    + !         : | + ! :   | +   1 core::str::pattern::StrSearcher::new::h7d667c25c20908b5  (in cauce-before) + 144  [0x1041eb648]
+    + !         : | + ! :   | 1 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 1044  [0x1042f7c98]  proxy.rs:150
+    + !         : | + ! :   |   1 free_tiny  (in libsystem_malloc.dylib) + 288  [0x18658b8f0]
+    + !         : | + ! :   4 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 248  [0x1042f85ec]  proxy.rs:431
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 248  [0x1042e236c]  pool.rs:509
+    + !         : | + ! :   | + 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   | +   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   | +     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   | +       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 17264  [0x1042e65e4]  pool.rs:563
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 10276  [0x1042e4a98]  pool.rs:604
+    + !         : | + ! :   | + 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   | +   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   | +     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1372  [0x186589a80]
+    + !         : | + ! :   | +       1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 92  [0x18658c398]
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 10548  [0x1042e4ba8]  pool.rs:616
+    + !         : | + ! :   |   1 DYLD-STUB$$free  (in cauce-before) + 0  [0x1044c5a90]
+    + !         : | + ! :   3 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36356  [0x1043012f8]  proxy.rs:427
+    + !         : | + ! :   | 2 tokio::time::timeout::timeout_at::h82474ddc7aaae5b4  (in cauce-before) + 60  [0x104283fac]  timeout.rs:170
+    + !         : | + ! :   | + 2 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   | 1 tokio::time::timeout::timeout_at::h82474ddc7aaae5b4  (in cauce-before) + 88  [0x104283fc8]  timeout.rs:171
+    + !         : | + ! :   |   1 tokio::time::sleep::Sleep::new_timeout::hd04528f9f974d7fc  (in cauce-before) + 136  [0x10446876c]  sleep.rs:250
+    + !         : | + ! :   3 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16432  [0x1042fc524]  proxy.rs:503
+    + !         : | + ! :   | 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 204  [0x1042f67e0]  proxy.rs:43
+    + !         : | + ! :   | + 1 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 96  [0x104204f38]  filter_map.rs:64
+    + !         : | + ! :   | +   1 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 972  [0x1042052a4]  filter_map.rs:64
+    + !         : | + ! :   | 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 920  [0x1042f6aac]  proxy.rs:62
+    + !         : | + ! :   | + 1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! :   | +   1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 676  [0x1042a9ffc]  iterator.rs:0
+    + !         : | + ! :   | 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 972  [0x1042f6ae0]  proxy.rs:62
+    + !         : | + ! :   |   1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! :   |     1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+    + !         : | + ! :   |       1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 128  [0x104350458]  name.rs:1084
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 3988  [0x1042f9488]  proxy.rs:223
+    + !         : | + ! :   | 1 alloc::raw_vec::RawVecInner$LT$A$GT$::reserve::do_reserve_and_handle::h03cf3208586368d7  (in cauce-before) + 0  [0x1044b2c00]  mod.rs:551
+    + !         : | + ! :   | 1 alloc::raw_vec::RawVecInner$LT$A$GT$::reserve::do_reserve_and_handle::h03cf3208586368d7  (in cauce-before) + 172  [0x1044b2cac]  mod.rs:557
+    + !         : | + ! :   |   1 alloc::raw_vec::finish_grow::hc2be700b10b85c1d  (in cauce-before) + 228  [0x1044b2bd4]  mod.rs:0
+    + !         : | + ! :   |     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 280  [0x186587cac]
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36392  [0x10430131c]  proxy.rs:427
+    + !         : | + ! :   | 2 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36376  [0x10430130c]  proxy.rs:431
+    + !         : | + ! :   | 2 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 19352  [0x1042fd08c]  proxy.rs:531
+    + !         : | + ! :   | 1 http::header::map::HeaderMap$LT$T$GT$::insert::hbf65f01dd688b258  (in cauce-before) + 88  [0x1042633e0]  map.rs:1289
+    + !         : | + ! :   | + 1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 260  [0x1043504dc]  name.rs:1090
+    + !         : | + ! :   | 1 http::header::map::HeaderMap$LT$T$GT$::insert::hbf65f01dd688b258  (in cauce-before) + 840  [0x1042636d0]  map.rs:1289
+    + !         : | + ! :   |   1 _$LT$http..header..name..HeaderName$u20$as$u20$core..convert..From$LT$http..header..name..HdrName$GT$$GT$::from::h0be342f304a33428  (in cauce-before) + 92  [0x104350dd0]  name.rs:1536
+    + !         : | + ! :   |     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |       1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 292  [0x186588dd8]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 624  [0x1042f8764]  proxy.rs:219
+    + !         : | + ! :   | 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   |       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 6760  [0x1042f9f5c]  proxy.rs:233
+    + !         : | + ! :   | 1 time::formatting::format_number_pad_zero::hebce0f41b708f90f  (in cauce-before) + 468  [0x10426592c]  mod.rs:182
+    + !         : | + ! :   |   1 alloc::raw_vec::RawVecInner$LT$A$GT$::reserve::do_reserve_and_handle::h03cf3208586368d7  (in cauce-before) + 172  [0x1044b2cac]  mod.rs:557
+    + !         : | + ! :   |     1 alloc::raw_vec::finish_grow::hc2be700b10b85c1d  (in cauce-before) + 228  [0x1044b2bd4]  mod.rs:0
+    + !         : | + ! :   |       1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |         1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |           1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 128  [0x1865895a4]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 9340  [0x1042fa970]  proxy.rs:233
+    + !         : | + ! :   | 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! :   |   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+    + !         : | + ! :   |     1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 484  [0x18658c520]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 7944  [0x1042fa3fc]  proxy.rs:233
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 33036  [0x104300600]  proxy.rs:331
+    + !         : | + ! :   | 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 0  [0x1042f6e54]  proxy.rs:120
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 33152  [0x104300674]  proxy.rs:334
+    + !         : | + ! :   | 1 _$LT$tokio..time..instant..Instant$u20$as$u20$core..ops..arith..Add$LT$core..time..Duration$GT$$GT$::add::h5dea80baa8d64cad  (in cauce-before) + 64  [0x104468284]  instant.rs:162
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 33804  [0x104300900]  proxy.rs:355
+    + !         : | + ! :   | 1 core::option::Option$LT$T$GT$::and_then::h038bf60ac79fd617  (in cauce-before) + 0  [0x10426042c]  option.rs:1476
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 34220  [0x104300aa0]  proxy.rs:376
+    + !         : | + ! :   | 1 cauce::websocket::request::hb91d74e5004e254d  (in cauce-before) + 1044  [0x104309c8c]  websocket.rs:44
+    + !         : | + ! :   |   1 cauce::websocket::token::hbdd79f0c8de7021f  (in cauce-before) + 76  [0x10430934c]  websocket.rs:36
+    + !         : | + ! :   |     1 cauce::websocket::token::hbdd79f0c8de7021f  (in cauce-before) + 140  [0x10430938c]  websocket.rs:36
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16832  [0x1042fc6b4]  proxy.rs:514
+    + !         : | + ! :   | 1 _$LT$core..iter..adapters..cloned..Cloned$LT$I$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::ha234e4ab6b7bae1c  (in cauce-before) + 0  [0x1041f5f90]  cloned.rs:40
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 19960  [0x1042fd2ec]  proxy.rs:540
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1528  [0x186589b1c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 22184  [0x1042fdb9c]  proxy.rs:557
+    + !         : | + ! :   | 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   |       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 22764  [0x1042fdde0]  proxy.rs:575
+    + !         : | + ! :   | 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+    + !         : | + ! :   |       1 mach_timebase_info  (in libsystem_kernel.dylib) + 0  [0x186745fb4]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 22780  [0x1042fddf0]  proxy.rs:577
+    + !         : | + ! :   | 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   |       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 23228  [0x1042fdfb0]  proxy.rs:578
+    + !         : | + ! :   | 1 _platform_memmove  (in libsystem_platform.dylib) + 204  [0x1867c138c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 23908  [0x1042fe258]  proxy.rs:578
+    + !         : | + ! :     1 hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::hf70bfad2eb1ba8c3  (in cauce-before) + 360  [0x10427d930]  http1.rs:234
+    + !         : | + ! :       1 tokio::sync::mpsc::unbounded::UnboundedSender$LT$T$GT$::send::h6a5e79dfa8dc4090  (in cauce-before) + 212  [0x1042808f0]  unbounded.rs:564
+    + !         : | + ! :         1 tokio::runtime::task::waker::wake_by_val::hde0ba4fd9ca9be9c  (in cauce-before) + 156  [0x10445eed0]  waker.rs:102
+    + !         : | + ! :           1 tokio::runtime::scheduler::multi_thread::worker::_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$::schedule_task::h66bedc88f205b8e3  (in cauce-before) + 152  [0x1044573c4]
+    + !         : | + ! 29 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 6392  [0x104206fa4]  mod.rs:701
+    + !         : | + ! : 25 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 180  [0x1042adec8]  tokio.rs:173
+    + !         : | + ! : | 25 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 184  [0x104451964]
+    + !         : | + ! : |   25 __recvfrom  (in libsystem_kernel.dylib) + 8  [0x18674a158]
+    + !         : | + ! : 3 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 88  [0x1042ade6c]  tokio.rs:173
+    + !         : | + ! : | 3 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! : |   3 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! : |     3 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+    + !         : | + ! : |       3 mach_timebase_info  (in libsystem_kernel.dylib) + 68  [0x186745ff8]
+    + !         : | + ! : 1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 1412  [0x1042ae398]  tokio.rs:173
+    + !         : | + ! 7 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5960  [0x104206df4]  mod.rs:701
+    + !         : | + ! : 3 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 2044  [0x10436b880]  role.rs:272
+    + !         : | + ! : | 3 bytes::bytes::Bytes::slice::h2fcdbb3e96728548  (in cauce-before) + 32  [0x104362208]  bytes.rs:374
+    + !         : | + ! : 3 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 1988  [0x10436b848]  role.rs:39
+    + !         : | + ! : | 3 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 400  [0x104350748]  name.rs:1118
+    + !         : | + ! : |   2 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 6832  [0x1043555d0]  name.rs:98
+    + !         : | + ! : |   1 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 0  [0x104353b20]  name.rs:167
+    + !         : | + ! : 1 http::header::map::HeaderMap$LT$T$GT$::try_reserve::he8505a5ce8bb572b  (in cauce-before) + 152  [0x104360080]  map.rs:784
+    + !         : | + ! 4 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 8852  [0x104207940]  mod.rs:701
+    + !         : | + ! : 4 core::ptr::drop_in_place$LT$core..option..Option$LT$tokio..runtime..Timer$GT$$GT$::h13bf4847915e24a0  (in cauce-before) + 32  [0x104372d50]  mod.rs:524
+    + !         : | + ! :   3 tokio::runtime::task::waker::drop_waker::h72bb8d79e9282f37  (in cauce-before) + 40  [0x10445ee10]  waker.rs:91
+    + !         : | + ! :   1 tokio::runtime::time::entry::_::_$LT$impl$u20$core..ops..drop..Drop$u20$for$u20$tokio..runtime..time..entry..TimerEntry$GT$::drop::h6502b2ae4dab6007  (in cauce-before) + 140  [0x104469374]  lib.rs:1374
+    + !         : | + ! :     1 tokio::runtime::time::wheel::Wheel::remove::hae9addcc2c427f7b  (in cauce-before) + 168  [0x104458f8c]
+    + !         : | + ! 3 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 8432,9460,...  [0x10420779c,0x104207ba0,...]  mod.rs:701
+    + !         : | + ! 2 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4728  [0x104206924]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 96  [0x10436ec0c]  role.rs:518
+    + !         : | + ! : | 1 _tlv_get_addr  (in libdyld.dylib) + 0  [0x1867910f8]
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 112  [0x10436ec1c]  role.rs:518
+    + !         : | + ! :   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :     1 clock_gettime  (in libsystem_c.dylib) + 256  [0x186626854]
+    + !         : | + ! :       1 gettimeofday  (in libsystem_c.dylib) + 56  [0x18661eb34]
+    + !         : | + ! :         1 __commpage_gettimeofday_internal  (in libsystem_kernel.dylib) + 44  [0x186747ae4]
+    + !         : | + ! :           1 mach_absolute_time  (in libsystem_kernel.dylib) + 112  [0x1867460f4]
+    + !         : | + ! 2 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 8868  [0x104207950]  mod.rs:701
+    + !         : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | 1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 80  [0x18658bb6c]
+    + !         : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 632  [0x18658ba48]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4488  [0x104206834]  mod.rs:676
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11396  [0x104208330]  mod.rs:701
+    + !         : | + !   1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::he2b48391cb5bbe95  (in cauce-before) + 88  [0x10426e64c]  io.rs:242
+    + !         : | + !     1 bytes::bytes_mut::BytesMut::reserve_inner::hc3a621077aef0e68  (in cauce-before) + 372  [0x1041e0df4]  bytes_mut.rs:790
+    + !         : | + !       1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 76  [0x1865b8f8c]
+    + !         : | + 103 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7756  [0x10431e998]  main.rs:176
+    + !         : | + ! 56 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+    + !         : | + ! : 56 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+    + !         : | + ! :   13 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 3884  [0x1042f9420]  proxy.rs:223
+    + !         : | + ! :   | 13 getentropy  (in libsystem_kernel.dylib) + 8  [0x186746128]
+    + !         : | + ! :   6 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 248  [0x1042f85ec]  proxy.rs:431
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 248  [0x1042e236c]  pool.rs:509
+    + !         : | + ! :   | + 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   | +   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   | +     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   | +       1 mach_absolute_time  (in libsystem_kernel.dylib) + 112  [0x1867460f4]
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 308  [0x1042e23a8]  pool.rs:512
+    + !         : | + ! :   | + 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   | +   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   | +     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1212  [0x1865899e0]
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 19420  [0x1042e6e50]  pool.rs:517
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 17284  [0x1042e65f8]  pool.rs:563
+    + !         : | + ! :   | + 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   | +   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   | +     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+    + !         : | + ! :   | +       1 mach_timebase_info  (in libsystem_kernel.dylib) + 68  [0x186745ff8]
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 17404  [0x1042e6670]  pool.rs:563
+    + !         : | + ! :   | + 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   | +   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   | +     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   | +       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   | 1 cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h2aa1f3ad9c12cf7d  (in cauce-before) + 16852  [0x1042e6448]  pool.rs:563
+    + !         : | + ! :   5 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 3964  [0x1042f9470]  proxy.rs:223
+    + !         : | + ! :   | 5 uuid::fmt::format_hyphenated::hdc4473143e1edaaf  (in cauce-before) + 0  [0x10448586c]
+    + !         : | + ! :   4 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 34432  [0x104300b74]  proxy.rs:392
+    + !         : | + ! :   | 3 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 608  [0x1042f7ae4]  proxy.rs:141
+    + !         : | + ! :   | + 3 _$LT$$RF$str$u20$as$u20$core..str..pattern..Pattern$GT$::is_contained_in::h4390a67c9873dfef  (in cauce-before) + 56  [0x104265ae0]  pattern.rs:1006
+    + !         : | + ! :   | +   3 core::str::pattern::StrSearcher::new::h7d667c25c20908b5  (in cauce-before) + 220  [0x1041eb694]
+    + !         : | + ! :   | 1 cauce::proxy::normal_path::h794727aca9bc488d  (in cauce-before) + 228  [0x1042f7968]  proxy.rs:137
+    + !         : | + ! :   |   1 _$LT$$RF$str$u20$as$u20$core..str..pattern..Pattern$GT$::is_contained_in::h4390a67c9873dfef  (in cauce-before) + 56  [0x104265ae0]  pattern.rs:1006
+    + !         : | + ! :   |     1 core::str::pattern::StrSearcher::new::h7d667c25c20908b5  (in cauce-before) + 724  [0x1041eb88c]
+    + !         : | + ! :   4 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 23496,23244  [0x1042fe0bc,0x1042fdfc0]  proxy.rs:578
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 4072  [0x1042f94dc]  proxy.rs:224
+    + !         : | + ! :   | 1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+    + !         : | + ! :   | + 1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 460  [0x1043505a4]  name.rs:0
+    + !         : | + ! :   | 1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 136  [0x1042a9de0]  map.rs:3971
+    + !         : | + ! :   |   1 http::header::map::hash_elem_using::h11ea23937a635d0d  (in cauce-before) + 496  [0x1042618b4]  map.rs:3741
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 35256  [0x104300eac]  proxy.rs:413
+    + !         : | + ! :   | 2 cauce::pool::Generation::select::h70725ef2d83064e4  (in cauce-before) + 144  [0x1042de064]  pool.rs:129
+    + !         : | + ! :   |   2 cauce::pool::Generation::select::_$u7b$$u7b$closure$u7d$$u7d$::haf9e578a72dc933d  (in cauce-before) + 0  [0x1042de164]  pool.rs:119
+    + !         : | + ! :   2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 22764  [0x1042fdde0]  proxy.rs:575
+    + !         : | + ! :   | 2 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   |   2 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :   |     2 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :   |       2 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 10456  [0x1042fadcc]  proxy.rs:230
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 5348  [0x1042f99d8]  proxy.rs:232
+    + !         : | + ! :   | 1 getentropy  (in libsystem_kernel.dylib) + 8  [0x186746128]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 6760  [0x1042f9f5c]  proxy.rs:233
+    + !         : | + ! :   | 1 time::formatting::format_number_pad_zero::hebce0f41b708f90f  (in cauce-before) + 0  [0x104265758]  mod.rs:174
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 9224  [0x1042fa8fc]  proxy.rs:233
+    + !         : | + ! :   | 1 alloc::string::String::from_utf8_lossy::hdab0a2d3e83fd119  (in cauce-before) + 52  [0x1041dccc8]
+    + !         : | + ! :   |   1 _$LT$core..str..lossy..Utf8Chunks$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h6fbde04d207d27f7  (in cauce-before) + 60  [0x1041ea3d8]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 9316  [0x1042fa958]  proxy.rs:233
+    + !         : | + ! :   | 1 _platform_memmove  (in libsystem_platform.dylib) + 0  [0x1867c12c0]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 9388  [0x1042fa9a0]  proxy.rs:236
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 52  [0x186588ce8]
+    + !         : | + ! :   |     1 rack_get_thread_index  (in libsystem_malloc.dylib) + 40  [0x1865a2744]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 11448  [0x1042fb1ac]  proxy.rs:255
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 128  [0x186588d34]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 11964  [0x1042fb3b0]  proxy.rs:293
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 33036  [0x104300600]  proxy.rs:331
+    + !         : | + ! :   | 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 60  [0x1042f6e90]  proxy.rs:121
+    + !         : | + ! :   |   1 http::header::map::HeaderMap$LT$T$GT$::contains_key::hff7f47b9e85272bf  (in cauce-before) + 0  [0x104262060]  map.rs:905
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 34588  [0x104300c10]  proxy.rs:402
+    + !         : | + ! :   | 1 _$LT$alloc..string..String$u20$as$u20$core..clone..Clone$GT$::clone::h924ff4e284d63cd7  (in cauce-before) + 56  [0x1041dcf34]
+    + !         : | + ! :   |   1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |     1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |       1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 140  [0x1865895b0]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 36392  [0x10430131c]  proxy.rs:427
+    + !         : | + ! :   | 1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16180  [0x1042fc428]  proxy.rs:497
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 52  [0x186588ce8]
+    + !         : | + ! :   |     1 rack_get_thread_index  (in libsystem_malloc.dylib) + 16  [0x1865a272c]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 16300  [0x1042fc4a0]  proxy.rs:497
+    + !         : | + ! :   | 1 http::uri::Uri::from_shared::h4105f13d08e16b9b  (in cauce-before) + 232  [0x104352d24]  mod.rs:336
+    + !         : | + ! :   |   1 http::uri::path::PathAndQuery::from_shared::hddc51efa8f42eb3e  (in cauce-before) + 240  [0x104352604]  path.rs:26
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 18784  [0x1042fce54]  proxy.rs:533
+    + !         : | + ! :   | 1 _$LT$core..net..ip_addr..Ipv4Addr$u20$as$u20$core..fmt..Display$GT$::fmt::hc66edbc06960500a  (in cauce-before) + 252  [0x1041ee310]
+    + !         : | + ! :   |   1 core::fmt::write::ha49b2d873e2aa5a7  (in cauce-before) + 372  [0x1041e224c]
+    + !         : | + ! :   |     1 core::fmt::num::imp::_$LT$impl$u20$core..fmt..Display$u20$for$u20$u8$GT$::fmt::h5b7c6a9bd2c9a1be  (in cauce-before) + 84  [0x1041e5f48]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 21836  [0x1042fda40]  proxy.rs:554
+    + !         : | + ! :   | 1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 108  [0x1865b8fac]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 21872  [0x1042fda64]  proxy.rs:555
+    + !         : | + ! :   | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :   |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :   |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 600  [0x18658977c]
+    + !         : | + ! :   |       1 _tiny_check_and_zero_inline_meta_from_freelist  (in libsystem_malloc.dylib) + 92  [0x1865bf664]
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 23908  [0x1042fe258]  proxy.rs:578
+    + !         : | + ! :   | 1 hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::hf70bfad2eb1ba8c3  (in cauce-before) + 940  [0x10427db74]  http1.rs:236
+    + !         : | + ! :   1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 25820  [0x1042fe9d0]  proxy.rs:578
+    + !         : | + ! :     1 _$LT$tokio..time..sleep..Sleep$u20$as$u20$core..future..future..Future$GT$::poll::h02cb19c8b5888335  (in cauce-before) + 360  [0x104468cec]  sleep.rs:457
+    + !         : | + ! 28 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 6392  [0x104206fa4]  mod.rs:701
+    + !         : | + ! : 22 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 180  [0x1042adec8]  tokio.rs:173
+    + !         : | + ! : | 22 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 184  [0x104451964]
+    + !         : | + ! : |   22 __recvfrom  (in libsystem_kernel.dylib) + 8  [0x18674a158]
+    + !         : | + ! : 5 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 1368,1704  [0x1042ae36c,0x1042ae4bc]  tokio.rs:173
+    + !         : | + ! : 1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 216  [0x1042adeec]  tokio.rs:173
+    + !         : | + ! :   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :     1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :       1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+    + !         : | + ! :         1 mach_timebase_info  (in libsystem_kernel.dylib) + 0  [0x186745fb4]
+    + !         : | + ! 8 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5960  [0x104206df4]  mod.rs:701
+    + !         : | + ! : 4 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 324  [0x10436b1c8]  role.rs:176
+    + !         : | + ! : | 3 httparse::Request::parse_with_config_and_uninit_headers::h2767c1324e8d3205  (in cauce-before) + 1424  [0x104357c90]
+    + !         : | + ! : | + 3 httparse::parse_headers_iter_uninit::h57d827e3b14adcf2  (in cauce-before) + 1076,928  [0x1043589dc,0x104358948]
+    + !         : | + ! : | 1 httparse::Request::parse_with_config_and_uninit_headers::h2767c1324e8d3205  (in cauce-before) + 468  [0x1043578d4]
+    + !         : | + ! : 2 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 3372,3448  [0x10436bdb0,0x10436bdfc]  role.rs:0
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 1084  [0x10436b4c0]  role.rs:225
+    + !         : | + ! : | 1 bytes::bytes_mut::BytesMut::split_to::he510f98154c58bfb  (in cauce-before) + 112  [0x1041e0bb4]  bytes_mut.rs:420
+    + !         : | + ! : |   1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : |     1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : |       1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1500  [0x186589b00]
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h2521a6d2f5e9706d  (in cauce-before) + 1988  [0x10436b848]  role.rs:39
+    + !         : | + ! :   1 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 400  [0x104350748]  name.rs:1118
+    + !         : | + ! :     1 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 600  [0x104353d78]  name.rs:98
+    + !         : | + ! 4 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5884,5036  [0x104206da8,0x104206a58]  mod.rs:701
+    + !         : | + ! 3 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 8868  [0x104207950]  mod.rs:701
+    + !         : | + ! : 3 free_tiny  (in libsystem_malloc.dylib) + 204  [0x18658b89c]
+    + !         : | + ! 2 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11396  [0x104208330]  mod.rs:701
+    + !         : | + ! : 2 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::he2b48391cb5bbe95  (in cauce-before) + 88  [0x10426e64c]  io.rs:242
+    + !         : | + ! :   2 bytes::bytes_mut::BytesMut::reserve_inner::hc3a621077aef0e68  (in cauce-before) + 372  [0x1041e0df4]  bytes_mut.rs:790
+    + !         : | + ! :     2 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 120  [0x186587c0c]
+    + !         : | + ! :       2 small_malloc_should_clear  (in libsystem_malloc.dylib) + 176  [0x186587dc8]
+    + !         : | + ! :         1 small_malloc_from_free_list  (in libsystem_malloc.dylib) + 544  [0x186588610]
+    + !         : | + ! :         | 1 small_free_list_add_ptr  (in libsystem_malloc.dylib) + 476  [0x18658c964]
+    + !         : | + ! :         1 small_malloc_from_free_list  (in libsystem_malloc.dylib) + 0  [0x1865883f0]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4728  [0x104206924]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 112  [0x10436ec1c]  role.rs:518
+    + !         : | + ! :   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :     1 clock_gettime  (in libsystem_c.dylib) + 256  [0x186626854]
+    + !         : | + ! :       1 gettimeofday  (in libsystem_c.dylib) + 56  [0x18661eb34]
+    + !         : | + ! :         1 __commpage_gettimeofday_internal  (in libsystem_kernel.dylib) + 44  [0x186747ae4]
+    + !         : | + ! :           1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11612  [0x104208408]  mod.rs:701
+    + !         : | + !   1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::hb7eff28925e24969  (in cauce-before) + 28  [0x104279a98]  dispatch.rs:451
+    + !         : | + !     1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0939fe2860081266  (in cauce-before) + 192  [0x10426cbf8]  io.rs:0
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 424  [0x10431ccf4]  main.rs:139
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7636  [0x10431e920]  main.rs:176
+    + !         : | + ! 1 tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::heb59cc2719b870d8  (in cauce-before) + 732  [0x104281130]  watch.rs:837
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7708  [0x10431e968]  main.rs:176
+    + !         : | + ! 1 cauce::transport::HeaderWatch::expired::_$u7b$$u7b$closure$u7d$$u7d$::h77e995d71401136c  (in cauce-before) + 376  [0x10430847c]  transport.rs:375
+    + !         : | + !   1 tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::hf257e9467539110b  (in cauce-before) + 772  [0x104281648]  watch.rs:837
+    + !         : | + !     1 tokio::sync::notify::NotifiedProject::poll_notified::hf12a4243d7792b82  (in cauce-before) + 360  [0x104466188]
+    + !         : | + !       1 pthread_mutex_lock  (in libsystem_pthread.dylib) + 32  [0x186782378]
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7804  [0x10431e9c8]  main.rs:176
+    + !         : | +   1 tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::heb59cc2719b870d8  (in cauce-before) + 36  [0x104280e78]  watch.rs:836
+    + !         : | 161 tokio::runtime::task::raw::poll::heecfc12285856564  (in cauce-before) + 464  [0x104296d4c]  raw.rs:337
+    + !         : | + 95 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 2616  [0x1042f45b0]  pool.rs:1040
+    + !         : | + ! 94 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 164  [0x10426e4bc]  io.rs:249
+    + !         : | + ! : 93 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 184  [0x104451964]
+    + !         : | + ! : | 93 __recvfrom  (in libsystem_kernel.dylib) + 8  [0x18674a158]
+    + !         : | + ! : 1 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+    + !         : | + ! :   1 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 584  [0x104458060]  registration.rs:165
+    + !         : | + ! 1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 224  [0x10426e4f8]  io.rs:259
+    + !         : | + 29 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 2456  [0x1042f4510]  pool.rs:1040
+    + !         : | + ! 9 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 4620  [0x104370344]  role.rs:1189
+    + !         : | + ! : 9 hyper::headers::content_length_parse_all::h78703607c8044a85  (in cauce-before) + 60  [0x104366c74]  headers.rs:72
+    + !         : | + ! :   9 http::header::map::HeaderMap$LT$T$GT$::get_all::h1922930ea7187f00  (in cauce-before) + 0  [0x104360c24]  map.rs:882
+    + !         : | + ! 5 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 2592  [0x10436fb58]  role.rs:1162
+    + !         : | + ! : 2 http::header::map::HeaderMap$LT$T$GT$::try_append2::h1c06294bfc5d2cbd  (in cauce-before) + 104  [0x10435ef24]  map.rs:434
+    + !         : | + ! : | 2 http::header::map::hash_elem_using::he058d9e0da4b2283  (in cauce-before) + 228,444  [0x10435eb6c,0x10435ec44]  map.rs:3741
+    + !         : | + ! : 1 http::header::map::HeaderMap$LT$T$GT$::try_append2::h1c06294bfc5d2cbd  (in cauce-before) + 48  [0x10435eeec]  map.rs:1479
+    + !         : | + ! : | 1 http::header::map::HeaderMap$LT$T$GT$::try_reserve_one::h5693d16da05415ea  (in cauce-before) + 752  [0x104360910]  map.rs:1790
+    + !         : | + ! : 1 http::header::map::HeaderMap$LT$T$GT$::try_append2::h1c06294bfc5d2cbd  (in cauce-before) + 200  [0x10435ef84]  map.rs:441
+    + !         : | + ! : 1 http::header::map::hash_elem_using::he058d9e0da4b2283  (in cauce-before) + 464  [0x10435ec58]  map.rs:3747
+    + !         : | + ! 3 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 2264  [0x10436fa10]  role.rs:39
+    + !         : | + ! : 2 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 400  [0x104350748]  name.rs:1118
+    + !         : | + ! : | 2 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 2328,5000  [0x104354438,0x104354ea8]  name.rs:98
+    + !         : | + ! : 1 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 788  [0x1043508cc]  name.rs:1121
+    + !         : | + ! :   1 _platform_memmove  (in libsystem_platform.dylib) + 436  [0x1867c1474]
+    + !         : | + ! 2 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 440  [0x10436f2f0]  role.rs:1057
+    + !         : | + ! : 2 httparse::Response::parse_with_config_and_uninit_headers::haadb8ec44338fcb0  (in cauce-before) + 960  [0x1043580cc]
+    + !         : | + ! :   2 httparse::parse_headers_iter_uninit::h57d827e3b14adcf2  (in cauce-before) + 1264,2244  [0x104358a98,0x104358e6c]
+    + !         : | + ! 2 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 588  [0x10436f384]  role.rs:1074
+    + !         : | + ! : 2 http::status::StatusCode::canonical_reason::h3fd59623073d2e20  (in cauce-before) + 668  [0x104351e5c]  status.rs:0
+    + !         : | + ! 2 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 896  [0x10436f4b8]  role.rs:1086
+    + !         : | + ! 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 588  [0x10436f384]  role.rs:1074
+    + !         : | + ! 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 984  [0x10436f510]  role.rs:1100
+    + !         : | + ! : 1 bytes::bytes_mut::BytesMut::split_to::he510f98154c58bfb  (in cauce-before) + 112  [0x1041e0bb4]  bytes_mut.rs:420
+    + !         : | + ! :   1 _malloc_zone_malloc  (in libsystem_malloc.dylib) + 64  [0x1865b8f80]
+    + !         : | + ! 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 2016  [0x10436f918]  role.rs:1115
+    + !         : | + ! 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 2176  [0x10436f9b8]  role.rs:1133
+    + !         : | + ! : 1 http::header::map::HeaderMap$LT$T$GT$::try_reserve::he8505a5ce8bb572b  (in cauce-before) + 128  [0x104360068]  map.rs:0
+    + !         : | + ! 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 2312  [0x10436fa40]  role.rs:1138
+    + !         : | + ! : 1 bytes::bytes::Bytes::slice::h2fcdbb3e96728548  (in cauce-before) + 12  [0x1043621f4]  bytes.rs:373
+    + !         : | + ! 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::parse::h5b8d7eef6c0b00b8  (in cauce-before) + 4432  [0x104370288]  role.rs:1189
+    + !         : | + !   1 http::header::map::HeaderMap$LT$T$GT$::contains_key::h82234dc66b4b6f23  (in cauce-before) + 0  [0x104360228]  map.rs:905
+    + !         : | + 9 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 560  [0x1042f3da8]  pool.rs:1040
+    + !         : | + ! 6 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::poll_read_body::h990dec8080e5b1bc  (in cauce-before) + 4084  [0x1042760bc]  conn.rs:427
+    + !         : | + ! : 5 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::maybe_notify::h6843c3857f7ac842  (in cauce-before) + 104  [0x1042712e8]  conn.rs:543
+    + !         : | + ! : | 3 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 92  [0x10426e474]  io.rs:242
+    + !         : | + ! : | + 3 bytes::bytes_mut::BytesMut::reserve_inner::hc3a621077aef0e68  (in cauce-before) + 372  [0x1041e0df4]  bytes_mut.rs:790
+    + !         : | + ! : | +   3 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 120  [0x186587c0c]
+    + !         : | + ! : | +     3 small_malloc_should_clear  (in libsystem_malloc.dylib) + 176  [0x186587dc8]
+    + !         : | + ! : | +       2 small_malloc_from_free_list  (in libsystem_malloc.dylib) + 512  [0x1865885f0]
+    + !         : | + ! : | +       ! 2 small_free_list_remove_ptr_no_clear  (in libsystem_malloc.dylib) + 452  [0x18658cff8]
+    + !         : | + ! : | +       1 small_malloc_from_free_list  (in libsystem_malloc.dylib) + 544  [0x186588610]
+    + !         : | + ! : | +         1 small_free_list_add_ptr  (in libsystem_malloc.dylib) + 252  [0x18658c884]
+    + !         : | + ! : | 2 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 164  [0x10426e4bc]  io.rs:249
+    + !         : | + ! : |   2 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+    + !         : | + ! : |     2 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 252,384  [0x104457f14,0x104457f98]  registration.rs:163
+    + !         : | + ! : 1 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::maybe_notify::h6843c3857f7ac842  (in cauce-before) + 104  [0x1042712e8]  conn.rs:543
+    + !         : | + ! 3 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::poll_read_body::h990dec8080e5b1bc  (in cauce-before) + 4020,4208  [0x10427607c,0x104276138]  conn.rs:427
+    + !         : | + 7 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 216,2288,...  [0x1042f3c50,0x1042f4468,...]  pool.rs:1040
+    + !         : | + 5 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 4172  [0x1042f4bc4]  pool.rs:1040
+    + !         : | + ! 4 _$LT$hyper..body..chan..Sender$u20$as$u20$core..ops..drop..Drop$GT$::drop::hcc7ceccb22ff6463  (in cauce-before) + 152  [0x10436388c]  chan.rs:213
+    + !         : | + ! 1 _$LT$hyper..body..chan..Sender$u20$as$u20$core..ops..drop..Drop$GT$::drop::hcc7ceccb22ff6463  (in cauce-before) + 0  [0x1043637f4]  chan.rs:207
+    + !         : | + 5 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6708  [0x1042f55ac]  pool.rs:1040
+    + !         : | + ! 3 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 1020  [0x10427b3dc]  dispatch.rs:364
+    + !         : | + ! : 3 _$LT$hyper..proto..h1..dispatch..Client$LT$B$GT$$u20$as$u20$hyper..proto..h1..dispatch..Dispatch$GT$::poll_msg::h586af45dfdb2ae64  (in cauce-before) + 68  [0x1041ef500]  dispatch.rs:678
+    + !         : | + ! :   3 hyper::client::dispatch::Receiver$LT$T$C$U$GT$::poll_recv::h70e72ada9ef2cf6b  (in cauce-before) + 48  [0x10427e53c]  dispatch.rs:183
+    + !         : | + ! :     2 tokio::sync::mpsc::chan::Rx$LT$T$C$S$GT$::recv::h43b671e16b3d7971  (in cauce-before) + 248  [0x1042802d4]  chan.rs:313
+    + !         : | + ! :     | 1 tokio::sync::mpsc::list::Rx$LT$T$GT$::pop::h2b8a1147ee84bec5  (in cauce-before) + 108  [0x1042804b4]  list.rs:332
+    + !         : | + ! :     | 1 tokio::sync::mpsc::list::Rx$LT$T$GT$::pop::h2b8a1147ee84bec5  (in cauce-before) + 544  [0x104280668]  list.rs:345
+    + !         : | + ! :     1 tokio::sync::mpsc::chan::Rx$LT$T$C$S$GT$::recv::h43b671e16b3d7971  (in cauce-before) + 196  [0x1042802a0]  chan.rs:313
+    + !         : | + ! :       1 tokio::sync::mpsc::list::Rx$LT$T$GT$::pop::h2b8a1147ee84bec5  (in cauce-before) + 96  [0x1042804a8]  list.rs:332
+    + !         : | + ! 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 132  [0x10427b064]  dispatch.rs:360
+    + !         : | + ! 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 988  [0x10427b3bc]  dispatch.rs:361
+    + !         : | + !   1 _$LT$alloc..collections..vec_deque..iter..Iter$LT$T$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::fold::ha038af3d8498a17c  (in cauce-before) + 380  [0x1041f6778]  iter.rs:130
+    + !         : | + 4 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 288  [0x1042f3c98]  pool.rs:1040
+    + !         : | + ! 2 hyper::body::chan::Sender::poll_ready::h9a3856a2c023d5fc  (in cauce-before) + 444  [0x10436300c]  chan.rs:68
+    + !         : | + ! : 1 std::sys::sync::once_box::OnceBox$LT$T$GT$::initialize::ha40f09677547daf9  (in cauce-before) + 80  [0x1044bbf70]
+    + !         : | + ! : | 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : |   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : |     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 236  [0x186589610]
+    + !         : | + ! : 1 std::sys::sync::once_box::OnceBox$LT$T$GT$::initialize::ha40f09677547daf9  (in cauce-before) + 108  [0x1044bbf8c]
+    + !         : | + ! :   1 std::sys::pal::unix::sync::mutex::Mutex::init::h3ab428d29fc9c59a  (in cauce-before) + 60  [0x10443fb78]
+    + !         : | + ! :     1 pthread_mutex_init  (in libsystem_pthread.dylib) + 60  [0x1867833bc]
+    + !         : | + ! 1 hyper::body::chan::Sender::poll_ready::h9a3856a2c023d5fc  (in cauce-before) + 144  [0x104362ee0]  chan.rs:67
+    + !         : | + ! : 1 tokio::runtime::task::waker::clone_waker::h05ea4e25071db323  (in cauce-before) + 0  [0x10445edc0]  waker.rs:70
+    + !         : | + ! 1 hyper::body::chan::Sender::poll_ready::h9a3856a2c023d5fc  (in cauce-before) + 48  [0x104362e80]  chan.rs:67
+    + !         : | + 2 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 5544  [0x1042f5120]  pool.rs:1040
+    + !         : | + ! 2 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + !   2 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + !     2 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 140,1500  [0x1865895b0,0x186589b00]
+    + !         : | + 2 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 5920  [0x1042f5298]  pool.rs:1040
+    + !         : | + ! 2 _$LT$hyper..proto..h1..dispatch..Client$LT$B$GT$$u20$as$u20$hyper..proto..h1..dispatch..Dispatch$GT$::recv_msg::he0ab7dbc14073372  (in cauce-before) + 572  [0x1041ef980]  dispatch.rs:714
+    + !         : | + !   1 hyper::client::dispatch::Callback$LT$T$C$U$GT$::send::h5096827e739f25f9  (in cauce-before) + 436  [0x10427e450]  dispatch.rs:299
+    + !         : | + !   : 1 tokio::sync::oneshot::Sender$LT$T$GT$::send::h2c588fdfc0119f04  (in cauce-before) + 168  [0x104281ea4]  oneshot.rs:636
+    + !         : | + !   :   1 tokio::runtime::task::waker::wake_by_ref::hee2fc9d155c3ac33  (in cauce-before) + 12  [0x10445ef7c]  waker.rs:115
+    + !         : | + !   1 hyper::client::dispatch::Callback$LT$T$C$U$GT$::send::h5096827e739f25f9  (in cauce-before) + 464  [0x10427e46c]  dispatch.rs:305
+    + !         : | + !     1 core::ptr::drop_in_place$LT$hyper..client..dispatch..Callback$LT$http..request..Request$LT$http_body_util..combinators..box_body..UnsyncBoxBody$LT$bytes..bytes..Bytes$C$alloc..boxed..Box$LT$dyn$u20$core..error..Error$u2b$core..marker..Send$u2b$core..marker..Sync$GT$$GT$$GT$$C$http..response..Response$LT$hyper..body..incoming..Incoming$GT$$GT$$GT$::hb90eb52df5d44082  (in cauce-before) + 0  [0x1042431b4]  mod.rs:524
+    + !         : | + 1 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 936  [0x1042f3f20]  pool.rs:1040
+    + !         : | + ! 1 hyper::body::chan::Sender::try_send_data::h86d9615cfa05212e  (in cauce-before) + 76  [0x104363128]  chan.rs:92
+    + !         : | + 1 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6292  [0x1042f540c]  pool.rs:1040
+    + !         : | + ! 1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 164  [0x10426e4bc]  io.rs:249
+    + !         : | + !   1 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+    + !         : | + !     1 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 136  [0x104457ea0]  registration.rs:162
+    + !         : | + !       1 _tlv_get_addr  (in libdyld.dylib) + 12  [0x186791104]
+    + !         : | + 1 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6760  [0x1042f55e0]  pool.rs:1040
+    + !         : | +   1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::h02d55f5290fda455  (in cauce-before) + 40  [0x1042795ac]  dispatch.rs:451
+    + !         : | 3 tokio::runtime::task::raw::poll::h58184b71a653e3fd  (in cauce-before) + 460  [0x1042909fc]  raw.rs:337
+    + !         : | + 2 cauce::maintain_pool::_$u7b$$u7b$closure$u7d$$u7d$::hccdd8e06f3610d37  (in cauce-before) + 3852  [0x104315f58]  main.rs:257
+    + !         : | + ! 2 tokio::runtime::blocking::pool::Spawner::spawn_task::hf31f00e97bfaa2dd  (in cauce-before) + 376  [0x104460290]  pool.rs:466
+    + !         : | + !   2 pthread_cond_signal  (in libsystem_pthread.dylib) + 720  [0x186786ef8]
+    + !         : | + !     2 __psynch_cvsignal  (in libsystem_kernel.dylib) + 8  [0x18674a820]
+    + !         : | + 1 cauce::maintain_pool::_$u7b$$u7b$closure$u7d$$u7d$::hccdd8e06f3610d37  (in cauce-before) + 2556  [0x104315a48]  main.rs:247
+    + !         : | +   1 tokio::sync::notify::NotifiedProject::poll_notified::hf12a4243d7792b82  (in cauce-before) + 572  [0x10446625c]
+    + !         : | +     1 std::sys::sync::once_box::OnceBox$LT$T$GT$::initialize::h9a22f2707890e564  (in cauce-before) + 0  [0x1044c34c4]
+    + !         : | 1 tokio::runtime::task::raw::poll::hc603070cff436cce  (in cauce-before) + 0  [0x1042951b4]  raw.rs:335
+    + !         : | 1 tokio::runtime::task::raw::poll::heecfc12285856564  (in cauce-before) + 624  [0x104296dec]  raw.rs:337
+    + !         : 431 tokio::runtime::scheduler::multi_thread::worker::Context::run_task::hf8abb18756bc53e3  (in cauce-before) + 552  [0x1044566a4]  worker.rs:696
+    + !         : | 247 tokio::runtime::task::raw::poll::hc603070cff436cce  (in cauce-before) + 472  [0x10429538c]  raw.rs:337
+    + !         : | + 89 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7756  [0x10431e998]  main.rs:176
+    + !         : | + ! 47 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+    + !         : | + ! : 15 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+    + !         : | + ! : | 6 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29700  [0x1042ff8f8]  proxy.rs:674
+    + !         : | + ! : | + 2 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 204  [0x1042f67e0]  proxy.rs:43
+    + !         : | + ! : | + ! 1 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 96  [0x104204f38]  filter_map.rs:64
+    + !         : | + ! : | + ! : 1 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 656  [0x104205168]  filter_map.rs:64
+    + !         : | + ! : | + ! 1 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 928  [0x104205278]  filter_map.rs:64
+    + !         : | + ! : | + !   1 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 768  [0x1043508b8]  name.rs:1121
+    + !         : | + ! : | + !     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | + !       1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 128  [0x186588d34]
+    + !         : | + ! : | + 2 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 792  [0x1042f6a2c]  proxy.rs:52
+    + !         : | + ! : | + ! 1 _free  (in libsystem_malloc.dylib) + 24  [0x1865b9b80]
+    + !         : | + ! : | + ! 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + !   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 344  [0x18658bc74]
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 696  [0x1042f69cc]  proxy.rs:51
+    + !         : | + ! : | + ! 1 http::header::map::HeaderMap$LT$T$GT$::remove::h321545a24fbd83eb  (in cauce-before) + 400  [0x104263d04]  map.rs:1598
+    + !         : | + ! : | + !   1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : | + ! : | + !     1 _platform_memset  (in libsystem_platform.dylib) + 188  [0x1867c10ac]
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 816  [0x1042f6a44]  proxy.rs:62
+    + !         : | + ! : | +   1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! : | +     1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 240  [0x1042a9e48]  map.rs:3971
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 24096  [0x1042fe314]  proxy.rs:578
+    + !         : | + ! : | + 2 hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::_$u7b$$u7b$closure$u7d$$u7d$::h927f28749eb6c840  (in cauce-before) + 92  [0x10427dca0]  http1.rs:238
+    + !         : | + ! : | +   1 _$LT$tokio..sync..oneshot..Receiver$LT$T$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h07b1239f43e8e04a  (in cauce-before) + 724  [0x1042bd1bc]  oneshot.rs:1287
+    + !         : | + ! : | +   1 _$LT$tokio..sync..oneshot..Receiver$LT$T$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h07b1239f43e8e04a  (in cauce-before) + 800  [0x1042bd208]  oneshot.rs:1294
+    + !         : | + ! : | +     1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | +       1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 80  [0x18658bb6c]
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 26780  [0x1042fed90]  proxy.rs:622
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 104  [0x1042f6ebc]  proxy.rs:122
+    + !         : | + ! : | + ! 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 236  [0x1042f6f40]  proxy.rs:123
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 2012  [0x1042f7630]  proxy.rs:127
+    + !         : | + ! : | +   1 core::str::_$LT$impl$u20$str$GT$::trim::h49e4c2116dbca54f  (in cauce-before) + 308  [0x10425a1b4]  mod.rs:2120
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 30200  [0x1042ffaec]  proxy.rs:689
+    + !         : | + ! : | + 1 http::response::Response$LT$T$GT$::map::h04fdab26edf5a940  (in cauce-before) + 364  [0x104264a28]  response.rs:471
+    + !         : | + ! : | + ! 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | + !   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : | + !     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 396  [0x1865896b0]
+    + !         : | + ! : | + 1 http::response::Response$LT$T$GT$::map::h04fdab26edf5a940  (in cauce-before) + 452  [0x104264a80]  response.rs:471
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 23272  [0x1042fdfdc]  proxy.rs:578
+    + !         : | + ! : | + 1 _tlv_get_addr  (in libdyld.dylib) + 0  [0x1867910f8]
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29580  [0x1042ff880]  proxy.rs:633
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29880  [0x1042ff9ac]  proxy.rs:682
+    + !         : | + ! : |   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! : |     1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! : |       1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! : |         1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! : 15 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 800  [0x104279e5c]  dispatch.rs:417
+    + !         : | + ! : | 15 hyper::proto::h1::encode::Encoder::encode_and_end::ha948897700fa1074  (in cauce-before) + 852  [0x10427809c]  encode.rs:246
+    + !         : | + ! : |   15 bytes::bytes_mut::shared_v_drop::he48f122b3e0c9692  (in cauce-before) + 60  [0x1041e1448]  bytes_mut.rs:1961
+    + !         : | + ! : |     15 free_small  (in libsystem_malloc.dylib) + 124,1068  [0x18658a4a0,0x18658a850]
+    + !         : | + ! : 11 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 328  [0x104279c84]  dispatch.rs:401
+    + !         : | + ! : | 9 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::poll_frame::hafd5575202a6e720  (in cauce-before) + 1204  [0x1042d3744]  body.rs:206
+    + !         : | + ! : | + 4 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2224  [0x1042d2ae4]  body.rs:127
+    + !         : | + ! : | + ! 2 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 196  [0x1042484c8]  mod.rs:524
+    + !         : | + ! : | + ! : 1 _free  (in libsystem_malloc.dylib) + 56  [0x1865b9ba0]
+    + !         : | + ! : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + ! :   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 68  [0x18658bb60]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 40  [0x10424842c]  mod.rs:524
+    + !         : | + ! : | + ! : 1 _szone_free  (in libsystem_malloc.dylib) + 20  [0x18659f08c]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 516  [0x104248608]  mod.rs:524
+    + !         : | + ! : | + !   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + !     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 792  [0x18658be34]
+    + !         : | + ! : | + !       1 tiny_free_list_remove_ptr  (in libsystem_malloc.dylib) + 176  [0x18658c640]
+    + !         : | + ! : | + 3 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2320  [0x1042d2b44]  body.rs:128
+    + !         : | + ! : | + ! 2 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + ! : 1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 792  [0x18658be34]
+    + !         : | + ! : | + ! : | 1 tiny_free_list_remove_ptr  (in libsystem_malloc.dylib) + 260  [0x18658c694]
+    + !         : | + ! : | + ! : 1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 1012  [0x18658bf10]
+    + !         : | + ! : | + ! :   1 tiny_free_list_remove_ptr  (in libsystem_malloc.dylib) + 104  [0x18658c5f8]
+    + !         : | + ! : | + ! 1 alloc::sync::Arc$LT$T$C$A$GT$::drop_slow::h76c8b4aa54c2dfae  (in cauce-before) + 100  [0x10426ab60]  sync.rs:1943
+    + !         : | + ! : | + !   1 tokio::sync::batch_semaphore::Semaphore::add_permits_locked::h3b4d29e7608fbaf5  (in cauce-before) + 388  [0x104466e6c]
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2288  [0x1042d2b24]  body.rs:128
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..pool..Lease$GT$::h788011e22a086bb9  (in cauce-before) + 124  [0x104244b7c]  mod.rs:524
+    + !         : | + ! : | + !   1 pthread_mutex_lock  (in libsystem_pthread.dylib) + 0  [0x186782358]
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 764  [0x1042d2530]  body.rs:85
+    + !         : | + ! : | +   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! : | +     1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! : | +       1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! : | +         1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! : | 2 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::poll_frame::hafd5575202a6e720  (in cauce-before) + 64  [0x1042d32d0]  body.rs:146
+    + !         : | + ! : |   1 _$LT$tokio..time..sleep..Sleep$u20$as$u20$core..future..future..Future$GT$::poll::h02cb19c8b5888335  (in cauce-before) + 0  [0x104468b84]  sleep.rs:456
+    + !         : | + ! : |   1 _$LT$tokio..time..sleep..Sleep$u20$as$u20$core..future..future..Future$GT$::poll::h02cb19c8b5888335  (in cauce-before) + 480  [0x104468d64]  sleep.rs:457
+    + !         : | + ! : |     1 core::ptr::drop_in_place$LT$core..option..Option$LT$tokio..runtime..Timer$GT$$GT$::ha33a60b4ecf5a68c  (in cauce-before) + 132  [0x10444cf18]
+    + !         : | + ! : 3 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1472  [0x10427a0fc]  dispatch.rs:379
+    + !         : | + ! : | 2 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::write_head::hbf7d772c0f9d10aa  (in cauce-before) + 1196  [0x104270b24]  conn.rs:603
+    + !         : | + ! : | + 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::hd094e1e63315f049  (in cauce-before) + 2784  [0x10436ccd0]  role.rs:487
+    + !         : | + ! : | + ! 1 _platform_memmove  (in libsystem_platform.dylib) + 420  [0x1867c1464]
+    + !         : | + ! : | + 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::hd094e1e63315f049  (in cauce-before) + 2852  [0x10436cd14]  role.rs:487
+    + !         : | + ! : | +   1 free_tiny  (in libsystem_malloc.dylib) + 176  [0x18658b880]
+    + !         : | + ! : | 1 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::write_head::hbf7d772c0f9d10aa  (in cauce-before) + 1136  [0x104270ae8]  conn.rs:603
+    + !         : | + ! : 2 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1556  [0x10427a150]  dispatch.rs:446
+    + !         : | + ! : | 2 core::ptr::drop_in_place$LT$cauce..body..GuardBody$GT$::h054bbf99d55921f3  (in cauce-before) + 40  [0x104246de8]  mod.rs:524
+    + !         : | + ! : |   1 alloc::sync::Arc$LT$T$C$A$GT$::drop_slow::ha9da4b85293fae80  (in cauce-before) + 24  [0x104361e5c]  sync.rs:1943
+    + !         : | + ! : |   + 1 core::ptr::drop_in_place$LT$hyper..body..chan..Shared$GT$::h492b0f088452a7c3  (in cauce-before) + 228  [0x10435cef8]
+    + !         : | + ! : |   +   1 pthread_mutex_destroy  (in libsystem_pthread.dylib) + 64  [0x18678312c]
+    + !         : | + ! : |   1 core::ptr::drop_in_place$LT$hyper..body..incoming..Incoming$GT$::h20cb2715a1462df4  (in cauce-before) + 20  [0x10424c1ec]  mod.rs:524
+    + !         : | + ! : 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 744  [0x104279e24]  dispatch.rs:410
+    + !         : | + ! :   1 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::is_end_stream::hdc0d2867f409dc90  (in cauce-before) + 0  [0x1042d3810]  body.rs:213
+    + !         : | + ! 38 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11612  [0x104208408]  mod.rs:701
+    + !         : | + ! : 38 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::hb7eff28925e24969  (in cauce-before) + 28  [0x104279a98]  dispatch.rs:451
+    + !         : | + ! :   37 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0939fe2860081266  (in cauce-before) + 924  [0x10426ced4]  io.rs:285
+    + !         : | + ! :   | 37 _$LT$cauce..transport..WriteTimeout$LT$T$GT$$u20$as$u20$tokio..io..async_write..AsyncWrite$GT$::poll_write::ha5b513a7e8ddb7d8  (in cauce-before) + 28  [0x104308c44]  transport.rs:499
+    + !         : | + ! :   |   37 tokio::net::tcp::stream::TcpStream::poll_write_priv::hdb9e0301b56899d7  (in cauce-before) + 172  [0x104451c1c]
+    + !         : | + ! :   |     37 __sendto  (in libsystem_kernel.dylib) + 8  [0x18674a12c]
+    + !         : | + ! :   1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0939fe2860081266  (in cauce-before) + 204  [0x10426cc04]  io.rs:0
+    + !         : | + ! :     1 _$LT$cauce..transport..WriteTimeout$LT$T$GT$$u20$as$u20$tokio..io..async_write..AsyncWrite$GT$::poll_flush::h36242356c4f1f18c  (in cauce-before) + 0  [0x104308d2c]  transport.rs:510
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4728  [0x104206924]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 112  [0x10436ec1c]  role.rs:518
+    + !         : | + ! :   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :     1 DYLD-STUB$$clock_gettime  (in cauce-before) + 0  [0x1044c5a0c]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5704  [0x104206cf4]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper_util..rt..tokio..TokioTimer$u20$as$u20$hyper..rt..timer..Timer$GT$::sleep_until::hf81b955dd987abeb  (in cauce-before) + 60  [0x104372fac]  tokio.rs:300
+    + !         : | + ! :   1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! :     1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! :       1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 600  [0x18658977c]
+    + !         : | + ! :         1 _tiny_check_and_zero_inline_meta_from_freelist  (in libsystem_malloc.dylib) + 92  [0x1865bf664]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 6788  [0x104207130]  mod.rs:701
+    + !         : | + ! : 1 _$LT$tokio..time..sleep..Sleep$u20$as$u20$core..future..future..Future$GT$::poll::h02cb19c8b5888335  (in cauce-before) + 312  [0x104468cbc]  sleep.rs:457
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11396  [0x104208330]  mod.rs:701
+    + !         : | + !   1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::he2b48391cb5bbe95  (in cauce-before) + 156  [0x10426e690]  io.rs:249
+    + !         : | + !     1 _$LT$hyper_util..common..rewind..Rewind$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h503dfccbccd4767c  (in cauce-before) + 204  [0x1042b0424]  rewind.rs:51
+    + !         : | + !       1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 180  [0x1042adec8]  tokio.rs:173
+    + !         : | + !         1 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+    + !         : | + !           1 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 564  [0x10445804c]  registration.rs:163
+    + !         : | + !             1 pthread_mutex_unlock  (in libsystem_pthread.dylib) + 116  [0x186782918]
+    + !         : | + 87 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7476  [0x10431e880]  main.rs:176
+    + !         : | + ! 44 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+    + !         : | + ! : 20 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+    + !         : | + ! : | 7 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 30200  [0x1042ffaec]  proxy.rs:689
+    + !         : | + ! : | + 6 http::response::Response$LT$T$GT$::map::h04fdab26edf5a940  (in cauce-before) + 364  [0x104264a28]  response.rs:471
+    + !         : | + ! : | + ! 6 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | + !   5 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : | + !   : 5 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1096  [0x18658996c]
+    + !         : | + ! : | + !   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 80  [0x186588d04]
+    + !         : | + ! : | + 1 http::response::Response$LT$T$GT$::map::h04fdab26edf5a940  (in cauce-before) + 432  [0x104264a6c]  response.rs:471
+    + !         : | + ! : | +   1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | +     1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : | +       1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 128  [0x1865895a4]
+    + !         : | + ! : | 4 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 26780  [0x1042fed90]  proxy.rs:622
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 60  [0x1042f6e90]  proxy.rs:121
+    + !         : | + ! : | + ! 1 http::header::map::HeaderMap$LT$T$GT$::contains_key::hff7f47b9e85272bf  (in cauce-before) + 56  [0x104262098]  map.rs:909
+    + !         : | + ! : | + !   1 http::header::map::hash_elem_using::h025033fca43da73b  (in cauce-before) + 460  [0x1042616b4]  map.rs:3747
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 256  [0x1042f6f54]  proxy.rs:123
+    + !         : | + ! : | + ! 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 396  [0x1042f6fe0]  proxy.rs:124
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 496  [0x1042f7044]  proxy.rs:127
+    + !         : | + ! : | + ! 1 http::header::map::HeaderMap$LT$T$GT$::get_all::hf08352d2c80ca9c8  (in cauce-before) + 176  [0x104263e7c]  map.rs:888
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 1680  [0x1042f74e4]  proxy.rs:127
+    + !         : | + ! : | +   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | +     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 56  [0x18658bb54]
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 24096  [0x1042fe314]  proxy.rs:578
+    + !         : | + ! : | + 2 hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::_$u7b$$u7b$closure$u7d$$u7d$::h927f28749eb6c840  (in cauce-before) + 92  [0x10427dca0]  http1.rs:238
+    + !         : | + ! : | +   2 _$LT$tokio..sync..oneshot..Receiver$LT$T$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h07b1239f43e8e04a  (in cauce-before) + 800  [0x1042bd208]  oneshot.rs:1294
+    + !         : | + ! : | +     1 alloc::sync::Arc$LT$T$C$A$GT$::drop_slow::h1d0a3dd7a603d05d  (in cauce-before) + 52  [0x10426a4a4]  sync.rs:1943
+    + !         : | + ! : | +     ! 1 tokio::runtime::task::waker::drop_waker::h72bb8d79e9282f37  (in cauce-before) + 0  [0x10445ede8]  waker.rs:81
+    + !         : | + ! : | +     1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | +       1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 772  [0x18658be20]
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29700  [0x1042ff8f8]  proxy.rs:674
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 328  [0x1042f685c]  proxy.rs:43
+    + !         : | + ! : | + ! 1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | + !   1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : | + !     1 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1372  [0x186589a80]
+    + !         : | + ! : | + !       1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 156  [0x18658c3d8]
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 792  [0x1042f6a2c]  proxy.rs:52
+    + !         : | + ! : | +   1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : | + ! : | +     1 _platform_memset  (in libsystem_platform.dylib) + 160  [0x1867c1090]
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 31596  [0x104300060]  proxy.rs:690
+    + !         : | + ! : | + 2 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | +   2 tiny_free_no_lock  (in libsystem_malloc.dylib) + 140  [0x18658bba8]
+    + !         : | + ! : | +     2 get_tiny_previous_free_msize  (in libsystem_malloc.dylib) + 92  [0x186597d78]
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 26652  [0x1042fed10]  proxy.rs:620
+    + !         : | + ! : | + 1 std::sys::pal::unix::time::Timespec::sub_timespec::h5c3d270d640aae16  (in cauce-before) + 0  [0x104417bf4]
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29728  [0x1042ff914]  proxy.rs:678
+    + !         : | + ! : | + 1 http::header::value::HeaderValue::from_str::hcbcd9f0de4b1f38f  (in cauce-before) + 428  [0x1042647fc]  value.rs:106
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 30328  [0x1042ffb6c]  proxy.rs:690
+    + !         : | + ! : |   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : |     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+    + !         : | + ! : |       1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 260  [0x18658c440]
+    + !         : | + ! : 14 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 328  [0x104279c84]  dispatch.rs:401
+    + !         : | + ! : | 13 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::poll_frame::hafd5575202a6e720  (in cauce-before) + 1204  [0x1042d3744]  body.rs:206
+    + !         : | + ! : | + 4 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2224  [0x1042d2ae4]  body.rs:127
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 72  [0x10424844c]  mod.rs:524
+    + !         : | + ! : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + ! :   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 308  [0x18658bc50]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 304  [0x104248534]  mod.rs:524
+    + !         : | + ! : | + ! : 1 _free  (in libsystem_malloc.dylib) + 56  [0x1865b9ba0]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 332  [0x104248550]  mod.rs:524
+    + !         : | + ! : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + ! :   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+    + !         : | + ! : | + ! :     1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 116  [0x18658c3b0]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 516  [0x104248608]  mod.rs:524
+    + !         : | + ! : | + !   1 free_tiny  (in libsystem_malloc.dylib) + 756  [0x18658bac4]
+    + !         : | + ! : | + 3 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 764  [0x1042d2530]  body.rs:85
+    + !         : | + ! : | + ! 3 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 96  [0x104417b40]
+    + !         : | + ! : | + 2 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 1820,2716  [0x1042d2950,0x1042d2cd0]  body.rs:120
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 420  [0x1042d23d8]  body.rs:0
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2732  [0x1042d2ce0]  body.rs:120
+    + !         : | + ! : | + ! 1 _szone_free  (in libsystem_malloc.dylib) + 8  [0x18659f080]
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2384  [0x1042d2b84]  body.rs:128
+    + !         : | + ! : | + ! 1 free_tiny  (in libsystem_malloc.dylib) + 36  [0x18658b7f4]
+    + !         : | + ! : | + 1 free_tiny  (in libsystem_malloc.dylib) + 504  [0x18658b9c8]
+    + !         : | + ! : | 1 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::poll_frame::hafd5575202a6e720  (in cauce-before) + 84  [0x1042d32e4]  body.rs:153
+    + !         : | + ! : |   1 _$LT$hyper..body..incoming..Incoming$u20$as$u20$http_body..Body$GT$::poll_frame::h2442fc4bd6ef7cb0  (in cauce-before) + 1632  [0x104364164]  incoming.rs:232
+    + !         : | + ! : 6 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1556  [0x10427a150]  dispatch.rs:446
+    + !         : | + ! : | 3 core::ptr::drop_in_place$LT$cauce..body..GuardBody$GT$::h054bbf99d55921f3  (in cauce-before) + 40  [0x104246de8]  mod.rs:524
+    + !         : | + ! : | + 1 _szone_free  (in libsystem_malloc.dylib) + 84  [0x18659f0cc]
+    + !         : | + ! : | + 1 alloc::sync::Arc$LT$T$C$A$GT$::drop_slow::ha9da4b85293fae80  (in cauce-before) + 24  [0x104361e5c]  sync.rs:1943
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$hyper..body..chan..Shared$GT$::h492b0f088452a7c3  (in cauce-before) + 236  [0x10435cf00]
+    + !         : | + ! : | + !   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + !     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 472  [0x18658bcf4]
+    + !         : | + ! : | + 1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : | + ! : | +   1 _platform_memset  (in libsystem_platform.dylib) + 28  [0x1867c100c]
+    + !         : | + ! : | 3 core::ptr::drop_in_place$LT$cauce..body..GuardBody$GT$::h054bbf99d55921f3  (in cauce-before) + 48  [0x104246df0]  mod.rs:524
+    + !         : | + ! : |   3 core::ptr::drop_in_place$LT$core..pin..Pin$LT$alloc..boxed..Box$LT$tokio..time..sleep..Sleep$GT$$GT$$GT$::h1e9acff609989f5f  (in cauce-before) + 92  [0x104259378]  mod.rs:524
+    + !         : | + ! : |     3 core::ptr::drop_in_place$LT$core..option..Option$LT$tokio..runtime..Timer$GT$$GT$::h14970f6217d5eea6  (in cauce-before) + 32  [0x104251dfc]  mod.rs:524
+    + !         : | + ! : |       3 tokio::runtime::time::entry::_::_$LT$impl$u20$core..ops..drop..Drop$u20$for$u20$tokio..runtime..time..entry..TimerEntry$GT$::drop::h6502b2ae4dab6007  (in cauce-before) + 84  [0x10446933c]  lib.rs:1374
+    + !         : | + ! : |         3 pthread_mutex_lock  (in libsystem_pthread.dylib) + 0  [0x186782358]
+    + !         : | + ! : 2 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 800  [0x104279e5c]  dispatch.rs:417
+    + !         : | + ! : | 2 hyper::proto::h1::encode::Encoder::encode_and_end::ha948897700fa1074  (in cauce-before) + 852  [0x10427809c]  encode.rs:246
+    + !         : | + ! : |   2 bytes::bytes_mut::shared_v_drop::he48f122b3e0c9692  (in cauce-before) + 60  [0x1041e1448]  bytes_mut.rs:1961
+    + !         : | + ! : |     1 free_small  (in libsystem_malloc.dylib) + 816  [0x18658a754]
+    + !         : | + ! : |     + 1 small_free_list_add_ptr  (in libsystem_malloc.dylib) + 300  [0x18658c8b4]
+    + !         : | + ! : |     1 free_small  (in libsystem_malloc.dylib) + 232  [0x18658a50c]
+    + !         : | + ! : 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1056  [0x104279f5c]  dispatch.rs:367
+    + !         : | + ! : | 1 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::is_end_stream::hdc0d2867f409dc90  (in cauce-before) + 0  [0x1042d3810]  body.rs:213
+    + !         : | + ! : 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1472  [0x10427a0fc]  dispatch.rs:379
+    + !         : | + ! :   1 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::write_head::hbf7d772c0f9d10aa  (in cauce-before) + 1196  [0x104270b24]  conn.rs:603
+    + !         : | + ! :     1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::hd094e1e63315f049  (in cauce-before) + 556  [0x10436c41c]  role.rs:435
+    + !         : | + ! 36 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11612  [0x104208408]  mod.rs:701
+    + !         : | + ! : 36 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::hb7eff28925e24969  (in cauce-before) + 28  [0x104279a98]  dispatch.rs:451
+    + !         : | + ! :   36 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0939fe2860081266  (in cauce-before) + 924  [0x10426ced4]  io.rs:285
+    + !         : | + ! :     36 _$LT$cauce..transport..WriteTimeout$LT$T$GT$$u20$as$u20$tokio..io..async_write..AsyncWrite$GT$::poll_write::ha5b513a7e8ddb7d8  (in cauce-before) + 28  [0x104308c44]  transport.rs:499
+    + !         : | + ! :       36 tokio::net::tcp::stream::TcpStream::poll_write_priv::hdb9e0301b56899d7  (in cauce-before) + 172  [0x104451c1c]
+    + !         : | + ! :         36 __sendto  (in libsystem_kernel.dylib) + 8  [0x18674a12c]
+    + !         : | + ! 2 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11396  [0x104208330]  mod.rs:701
+    + !         : | + ! : 2 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::he2b48391cb5bbe95  (in cauce-before) + 156  [0x10426e690]  io.rs:249
+    + !         : | + ! :   2 _$LT$hyper_util..common..rewind..Rewind$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h503dfccbccd4767c  (in cauce-before) + 204  [0x1042b0424]  rewind.rs:51
+    + !         : | + ! :     1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 52  [0x1042ade48]  tokio.rs:172
+    + !         : | + ! :     1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 88  [0x1042ade6c]  tokio.rs:173
+    + !         : | + ! :       1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :         1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :           1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :             1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4728  [0x104206924]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 112  [0x10436ec1c]  role.rs:518
+    + !         : | + ! :   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :     1 clock_gettime  (in libsystem_c.dylib) + 120  [0x1866267cc]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5108  [0x104206aa0]  mod.rs:701
+    + !         : | + ! : 1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :   1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! :     1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! :       1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5704  [0x104206cf4]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper_util..rt..tokio..TokioTimer$u20$as$u20$hyper..rt..timer..Timer$GT$::sleep_until::hf81b955dd987abeb  (in cauce-before) + 40  [0x104372f98]  tokio.rs:301
+    + !         : | + ! :   1 tokio::time::sleep::Sleep::new_timeout::hd04528f9f974d7fc  (in cauce-before) + 136  [0x10446876c]  sleep.rs:250
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 6392  [0x104206fa4]  mod.rs:701
+    + !         : | + ! : 1 _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 180  [0x1042adec8]  tokio.rs:173
+    + !         : | + ! :   1 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+    + !         : | + ! :     1 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 256  [0x104457f18]  registration.rs:163
+    + !         : | + ! :       1 DYLD-STUB$$pthread_mutex_lock  (in cauce-before) + 0  [0x1044c5c88]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 5712  [0x104206cfc]  mod.rs:701
+    + !         : | + 65 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7600  [0x10431e8fc]  main.rs:176
+    + !         : | + ! 35 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+    + !         : | + ! : 21 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+    + !         : | + ! : | 14 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29700  [0x1042ff8f8]  proxy.rs:674
+    + !         : | + ! : | + 4 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 328  [0x1042f685c]  proxy.rs:43
+    + !         : | + ! : | + ! 4 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | + !   4 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+    + !         : | + ! : | + !     4 tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 1588  [0x186589b58]
+    + !         : | + ! : | + 3 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 1076  [0x1042f6b48]  proxy.rs:62
+    + !         : | + ! : | + ! 3 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 0  [0x104263a9c]  map.rs:1585
+    + !         : | + ! : | + 2 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 204  [0x1042f67e0]  proxy.rs:43
+    + !         : | + ! : | + ! 2 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 928  [0x104205278]  filter_map.rs:64
+    + !         : | + ! : | + !   1 _$LT$core..iter..adapters..filter_map..FilterMap$LT$I$C$F$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::next::h0b5510c58eac0345  (in cauce-before) + 1400  [0x104205450]  filter_map.rs:64
+    + !         : | + ! : | + !   1 http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 400  [0x104350748]  name.rs:1118
+    + !         : | + ! : | + !     1 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 5000  [0x104354ea8]  name.rs:98
+    + !         : | + ! : | + 2 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 1180  [0x1042f6bb0]  proxy.rs:66
+    + !         : | + ! : | + ! 1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+    + !         : | + ! : | + ! : 1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 184  [0x104350490]  name.rs:1084
+    + !         : | + ! : | + ! 1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 164  [0x1042a9dfc]  map.rs:3971
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 792  [0x1042f6a2c]  proxy.rs:52
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$alloc..vec..into_iter..IntoIter$LT$http..header..name..HeaderName$GT$$GT$::h0a516d57f4787535  (in cauce-before) + 100  [0x10425845c]  mod.rs:524
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 816  [0x1042f6a44]  proxy.rs:62
+    + !         : | + ! : | + ! 1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! : | + !   1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+    + !         : | + ! : | + !     1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 460  [0x1043505a4]  name.rs:0
+    + !         : | + ! : | + 1 cauce::proxy::strip_hop::h7410fa8f7ba3a5bb  (in cauce-before) + 972  [0x1042f6ae0]  proxy.rs:62
+    + !         : | + ! : | +   1 http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+    + !         : | + ! : | +     1 _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+    + !         : | + ! : | +       1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 0  [0x1043503d8]  name.rs:1078
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 26208  [0x1042feb54]  proxy.rs:578
+    + !         : | + ! : | + 1 core::ptr::drop_in_place$LT$tokio..time..timeout..Timeout$LT$cauce..pool..Lease..send_request..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::h32a561a5a44e1d21  (in cauce-before) + 24  [0x104237b50]  mod.rs:524
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..pool..Lease..send_request..$u7b$$u7b$closure$u7d$$u7d$$GT$::h54b70024f7b46a95  (in cauce-before) + 20  [0x104255e60]  mod.rs:360
+    + !         : | + ! : | + 1 core::ptr::drop_in_place$LT$tokio..time..timeout..Timeout$LT$cauce..pool..Lease..send_request..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::h32a561a5a44e1d21  (in cauce-before) + 0  [0x104237b38]  mod.rs:524
+    + !         : | + ! : | 2 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 30200  [0x1042ffaec]  proxy.rs:689
+    + !         : | + ! : | + 1 http::response::Response$LT$T$GT$::map::h04fdab26edf5a940  (in cauce-before) + 96  [0x10426491c]  response.rs:471
+    + !         : | + ! : | + ! 1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! : | + 1 http::response::Response$LT$T$GT$::map::h04fdab26edf5a940  (in cauce-before) + 472  [0x104264a94]  response.rs:471
+    + !         : | + ! : | +   1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x1867c1374]
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 26780  [0x1042fed90]  proxy.rs:622
+    + !         : | + ! : | + 1 cauce::proxy::invalid_framing::hf86871b3caa4f821  (in cauce-before) + 496  [0x1042f7044]  proxy.rs:127
+    + !         : | + ! : | +   1 http::header::map::HeaderMap$LT$T$GT$::get_all::hf08352d2c80ca9c8  (in cauce-before) + 124  [0x104263e48]  map.rs:888
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29800  [0x1042ff95c]  proxy.rs:676
+    + !         : | + ! : | + 1 http::header::map::HeaderMap$LT$T$GT$::insert::hbf65f01dd688b258  (in cauce-before) + 840  [0x1042636d0]  map.rs:1289
+    + !         : | + ! : | +   1 _$LT$http..header..name..HeaderName$u20$as$u20$core..convert..From$LT$http..header..name..HdrName$GT$$GT$::from::h0be342f304a33428  (in cauce-before) + 92  [0x104350dd0]  name.rs:1536
+    + !         : | + ! : | +     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : | +       1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 128  [0x186588d34]
+    + !         : | + ! : | 1 cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before) + 29728  [0x1042ff914]  proxy.rs:678
+    + !         : | + ! : |   1 http::header::value::HeaderValue::from_str::hcbcd9f0de4b1f38f  (in cauce-before) + 480  [0x104264830]  value.rs:106
+    + !         : | + ! : |     1 szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+    + !         : | + ! : |       1 tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 324  [0x186588df8]
+    + !         : | + ! : 9 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 328  [0x104279c84]  dispatch.rs:401
+    + !         : | + ! : | 8 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::poll_frame::hafd5575202a6e720  (in cauce-before) + 1204  [0x1042d3744]  body.rs:206
+    + !         : | + ! : | + 4 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2224  [0x1042d2ae4]  body.rs:127
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 40  [0x10424842c]  mod.rs:524
+    + !         : | + ! : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + ! :   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 192  [0x18658bbdc]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 332  [0x104248550]  mod.rs:524
+    + !         : | + ! : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : | + ! : | + ! :   1 _platform_memset  (in libsystem_platform.dylib) + 188  [0x1867c10ac]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 352  [0x104248564]  mod.rs:524
+    + !         : | + ! : | + ! : 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + ! :   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 1012  [0x18658bf10]
+    + !         : | + ! : | + ! :     1 tiny_free_list_remove_ptr  (in libsystem_malloc.dylib) + 76  [0x18658c5dc]
+    + !         : | + ! : | + ! 1 core::ptr::drop_in_place$LT$cauce..telemetry..Event$GT$::h91a6e32546c08b35  (in cauce-before) + 516  [0x104248608]  mod.rs:524
+    + !         : | + ! : | + !   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | + !     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+    + !         : | + ! : | + !       1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 156  [0x18658c3d8]
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 1920  [0x1042d29b4]  body.rs:120
+    + !         : | + ! : | + ! 1 std::time::Instant::elapsed::hdccd971e20b30f6c  (in cauce-before) + 28  [0x10443380c]
+    + !         : | + ! : | + !   1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! : | + !     1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         : | + ! : | + !       1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         : | + ! : | + !         1 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2508  [0x1042d2c00]  body.rs:120
+    + !         : | + ! : | + ! 1 core::hash::BuildHasher::hash_one::h7abf3f502ff879dc  (in cauce-before) + 272  [0x10425a870]  mod.rs:701
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2320  [0x1042d2b44]  body.rs:128
+    + !         : | + ! : | + ! 1 alloc::sync::Arc$LT$T$C$A$GT$::drop_slow::h76c8b4aa54c2dfae  (in cauce-before) + 132  [0x10426ab80]  sync.rs:1944
+    + !         : | + ! : | + 1 cauce::body::GuardBody::finish::h8d95ed10ae05039c  (in cauce-before) + 2384  [0x1042d2b84]  body.rs:128
+    + !         : | + ! : | +   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : | + ! : | +     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 868  [0x18658be80]
+    + !         : | + ! : | 1 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::poll_frame::hafd5575202a6e720  (in cauce-before) + 84  [0x1042d32e4]  body.rs:153
+    + !         : | + ! : |   1 _$LT$hyper..body..incoming..Incoming$u20$as$u20$http_body..Body$GT$::poll_frame::h2442fc4bd6ef7cb0  (in cauce-before) + 1152  [0x104363f84]  incoming.rs:172
+    + !         : | + ! : 3 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1472  [0x10427a0fc]  dispatch.rs:379
+    + !         : | + ! : | 3 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::write_head::hbf7d772c0f9d10aa  (in cauce-before) + 1196  [0x104270b24]  conn.rs:603
+    + !         : | + ! : |   2 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::hd094e1e63315f049  (in cauce-before) + 1996,2652  [0x10436c9bc,0x10436cc4c]  role.rs:487
+    + !         : | + ! : |   1 _szone_free  (in libsystem_malloc.dylib) + 604  [0x18659f2d4]
+    + !         : | + ! : 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 620  [0x104279da8]  dispatch.rs:440
+    + !         : | + ! : 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 1556  [0x10427a150]  dispatch.rs:446
+    + !         : | + ! :   1 core::ptr::drop_in_place$LT$cauce..body..GuardBody$GT$::h054bbf99d55921f3  (in cauce-before) + 48  [0x104246df0]  mod.rs:524
+    + !         : | + ! :     1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : | + ! :       1 _platform_memset  (in libsystem_platform.dylib) + 160  [0x1867c1090]
+    + !         : | + ! 25 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11612  [0x104208408]  mod.rs:701
+    + !         : | + ! : 25 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::hb7eff28925e24969  (in cauce-before) + 28  [0x104279a98]  dispatch.rs:451
+    + !         : | + ! :   25 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0939fe2860081266  (in cauce-before) + 924  [0x10426ced4]  io.rs:285
+    + !         : | + ! :     25 _$LT$cauce..transport..WriteTimeout$LT$T$GT$$u20$as$u20$tokio..io..async_write..AsyncWrite$GT$::poll_write::ha5b513a7e8ddb7d8  (in cauce-before) + 28  [0x104308c44]  transport.rs:499
+    + !         : | + ! :       25 tokio::net::tcp::stream::TcpStream::poll_write_priv::hdb9e0301b56899d7  (in cauce-before) + 172  [0x104451c1c]
+    + !         : | + ! :         25 __sendto  (in libsystem_kernel.dylib) + 8  [0x18674a12c]
+    + !         : | + ! 3 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4728  [0x104206924]  mod.rs:701
+    + !         : | + ! : 3 _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 112  [0x10436ec1c]  role.rs:518
+    + !         : | + ! :   3 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         : | + ! :     3 clock_gettime  (in libsystem_c.dylib) + 256  [0x186626854]
+    + !         : | + ! :       3 gettimeofday  (in libsystem_c.dylib) + 56  [0x18661eb34]
+    + !         : | + ! :         3 __commpage_gettimeofday_internal  (in libsystem_kernel.dylib) + 44  [0x186747ae4]
+    + !         : | + ! :           3 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 6788  [0x104207130]  mod.rs:701
+    + !         : | + ! : 1 _$LT$tokio..time..sleep..Sleep$u20$as$u20$core..future..future..Future$GT$::poll::h02cb19c8b5888335  (in cauce-before) + 556  [0x104468db0]  sleep.rs:457
+    + !         : | + ! :   1 tokio::runtime::time::_$LT$impl$u20$tokio..runtime..time..handle..Handle$GT$::reregister::h478f2ab3ae218855  (in cauce-before) + 48  [0x104459e14]  mod.rs:407
+    + !         : | + ! 1 _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4816  [0x10420697c]  mod.rs:701
+    + !         : | + 2 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7804  [0x10431e9c8]  main.rs:176
+    + !         : | + ! 2 tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::heb59cc2719b870d8  (in cauce-before) + 736  [0x104281134]  watch.rs:837
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 0  [0x10431cb4c]  main.rs:139
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7224  [0x10431e784]  main.rs:176
+    + !         : | + ! 1 _tlv_get_addr  (in libdyld.dylib) + 12  [0x186791104]
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7424  [0x10431e84c]  main.rs:176
+    + !         : | + ! 1 tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::heb59cc2719b870d8  (in cauce-before) + 36  [0x104280e78]  watch.rs:836
+    + !         : | + 1 cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h170ac3d9c655a066  (in cauce-before) + 7708  [0x10431e968]  main.rs:176
+    + !         : | +   1 cauce::transport::HeaderWatch::expired::_$u7b$$u7b$closure$u7d$$u7d$::h77e995d71401136c  (in cauce-before) + 376  [0x10430847c]  transport.rs:375
+    + !         : | +     1 tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::hf257e9467539110b  (in cauce-before) + 308  [0x104281478]  watch.rs:837
+    + !         : | 184 tokio::runtime::task::raw::poll::heecfc12285856564  (in cauce-before) + 464  [0x104296d4c]  raw.rs:337
+    + !         : |   131 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6760  [0x1042f55e0]  pool.rs:1040
+    + !         : |   ! 131 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::h02d55f5290fda455  (in cauce-before) + 28  [0x1042795a0]  dispatch.rs:451
+    + !         : |   !   129 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_flush::h0f398b3f137364cf  (in cauce-before) + 696  [0x10426d5ec]  io.rs:293
+    + !         : |   !   : 125 tokio::net::tcp::stream::TcpStream::poll_write_vectored_priv::haa07dcfd66a0ebf3  (in cauce-before) + 180  [0x104451e14]
+    + !         : |   !   : | 125 writev  (in libsystem_kernel.dylib) + 8  [0x186749a4c]
+    + !         : |   !   : 4 tokio::net::tcp::stream::TcpStream::poll_write_vectored_priv::haa07dcfd66a0ebf3  (in cauce-before) + 148  [0x104451df4]
+    + !         : |   !   2 tokio::net::tcp::stream::TcpStream::poll_write_vectored_priv::haa07dcfd66a0ebf3  (in cauce-before) + 352,360  [0x104451ec0,0x104451ec8]
+    + !         : |   42 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6708  [0x1042f55ac]  pool.rs:1040
+    + !         : |   ! 30 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 1476  [0x10427b5a4]  dispatch.rs:379
+    + !         : |   ! : 29 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::write_head::h01d73b9a0bd5c47d  (in cauce-before) + 1252  [0x10426f6ec]  conn.rs:603
+    + !         : |   ! : | 14 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::h10a15e17136de104  (in cauce-before) + 3732  [0x10437190c]  role.rs:1260
+    + !         : |   ! : | + 12 core::ptr::drop_in_place$LT$$u5b$http..header..map..Bucket$LT$http..header..value..HeaderValue$GT$$u5d$$GT$::h495dd4e967c1f7d6  (in cauce-before) + 52  [0x10435ddb8]  mod.rs:524
+    + !         : |   ! : | + ! 6 bytes::bytes::static_drop::hadde1a1d0cee789b  (in cauce-before) + 0  [0x10426c00c]  bytes.rs:1094
+    + !         : |   ! : | + ! 4 bytes::bytes_mut::shared_v_drop::he48f122b3e0c9692  (in cauce-before) + 60  [0x1041e1448]  bytes_mut.rs:1961
+    + !         : |   ! : | + ! : 2 _szone_free  (in libsystem_malloc.dylib) + 140,304  [0x18659f104,0x18659f1a8]
+    + !         : |   ! : | + ! : 2 free_small  (in libsystem_malloc.dylib) + 104,896  [0x18658a48c,0x18658a7a4]
+    + !         : |   ! : | + ! 1 bytes::bytes_mut::shared_v_drop::he48f122b3e0c9692  (in cauce-before) + 0  [0x1041e140c]  bytes_mut.rs:1961
+    + !         : |   ! : | + ! 1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : |   ! : | + !   1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+    + !         : |   ! : | + !     1 tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 104  [0x18658c3a4]
+    + !         : |   ! : | + 2 core::ptr::drop_in_place$LT$$u5b$http..header..map..Bucket$LT$http..header..value..HeaderValue$GT$$u5d$$GT$::h495dd4e967c1f7d6  (in cauce-before) + 28,52  [0x10435dda0,0x10435ddb8]  mod.rs:524
+    + !         : |   ! : | 7 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::h10a15e17136de104  (in cauce-before) + 3680  [0x1043718d8]  role.rs:1256
+    + !         : |   ! : | + 3 hyper::proto::h1::role::write_headers::hb72ee383f6120dcb  (in cauce-before) + 252  [0x1043726c0]  role.rs:1631
+    + !         : |   ! : | + 2 hyper::proto::h1::role::write_headers::hb72ee383f6120dcb  (in cauce-before) + 272  [0x1043726d4]  role.rs:1631
+    + !         : |   ! : | + ! 2 _platform_memmove  (in libsystem_platform.dylib) + 436,444  [0x1867c1474,0x1867c147c]
+    + !         : |   ! : | + 1 hyper::proto::h1::role::write_headers::hb72ee383f6120dcb  (in cauce-before) + 212  [0x104372698]  name.rs:0
+    + !         : |   ! : | + 1 hyper::proto::h1::role::write_headers::hb72ee383f6120dcb  (in cauce-before) + 308  [0x1043726f8]  role.rs:1633
+    + !         : |   ! : | 4 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::h10a15e17136de104  (in cauce-before) + 264  [0x104370b80]  role.rs:1224
+    + !         : |   ! : | + 3 http::header::map::HeaderMap$LT$T$GT$::try_entry2::h1656155319fe4d26  (in cauce-before) + 228  [0x10435ed48]
+    + !         : |   ! : | + 1 http::header::map::HeaderMap$LT$T$GT$::try_entry2::h1656155319fe4d26  (in cauce-before) + 52  [0x10435ec98]
+    + !         : |   ! : | +   1 http::header::map::HeaderMap$LT$T$GT$::try_reserve_one::h5693d16da05415ea  (in cauce-before) + 0  [0x104360620]  map.rs:1751
+    + !         : |   ! : | 2 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::h10a15e17136de104  (in cauce-before) + 3220  [0x10437170c]  role.rs:1232
+    + !         : |   ! : | + 2 core::fmt::write::ha49b2d873e2aa5a7  (in cauce-before) + 372  [0x1041e224c]
+    + !         : |   ! : | +   2 _$LT$http..uri..Uri$u20$as$u20$core..fmt..Display$GT$::fmt::h758d397803dd9335  (in cauce-before) + 380  [0x1043537dc]  mod.rs:1043
+    + !         : |   ! : | +     1 _$LT$hyper..proto..h1..role..FastWrite$u20$as$u20$core..fmt..Write$GT$::write_str::h3defe2aaa3fb9143  (in cauce-before) + 60  [0x10437288c]  role.rs:1682
+    + !         : |   ! : | +     ! 1 _platform_memmove  (in libsystem_platform.dylib) + 452  [0x1867c1484]
+    + !         : |   ! : | +     1 _$LT$hyper..proto..h1..role..FastWrite$u20$as$u20$core..fmt..Write$GT$::write_str::h3defe2aaa3fb9143  (in cauce-before) + 28  [0x10437286c]  role.rs:1682
+    + !         : |   ! : | 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::h10a15e17136de104  (in cauce-before) + 100  [0x104370adc]  mod.rs:0
+    + !         : |   ! : | 1 _$LT$hyper..proto..h1..role..Client$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::encode::h10a15e17136de104  (in cauce-before) + 2820  [0x10437157c]  role.rs:1229
+    + !         : |   ! : 1 hyper::proto::h1::conn::Conn$LT$I$C$B$C$T$GT$::write_head::h01d73b9a0bd5c47d  (in cauce-before) + 1632  [0x10426f868]  conn.rs:603
+    + !         : |   ! :   1 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : |   ! :     1 tiny_free_no_lock  (in libsystem_malloc.dylib) + 1656  [0x18658c194]
+    + !         : |   ! 5 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 804  [0x10427b304]  dispatch.rs:446
+    + !         : |   ! : 4 free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+    + !         : |   ! : | 4 tiny_free_no_lock  (in libsystem_malloc.dylib) + 0  [0x18658bb1c]
+    + !         : |   ! : 1 free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+    + !         : |   ! :   1 _platform_memset  (in libsystem_platform.dylib) + 160  [0x1867c1090]
+    + !         : |   ! 4 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 1020  [0x10427b3dc]  dispatch.rs:364
+    + !         : |   ! : 4 _$LT$hyper..proto..h1..dispatch..Client$LT$B$GT$$u20$as$u20$hyper..proto..h1..dispatch..Dispatch$GT$::poll_msg::h586af45dfdb2ae64  (in cauce-before) + 68  [0x1041ef500]  dispatch.rs:678
+    + !         : |   ! :   3 hyper::client::dispatch::Receiver$LT$T$C$U$GT$::poll_recv::h70e72ada9ef2cf6b  (in cauce-before) + 48  [0x10427e53c]  dispatch.rs:183
+    + !         : |   ! :   | 2 tokio::sync::mpsc::chan::Rx$LT$T$C$S$GT$::recv::h43b671e16b3d7971  (in cauce-before) + 196  [0x1042802a0]  chan.rs:313
+    + !         : |   ! :   | + 1 tokio::sync::mpsc::list::Rx$LT$T$GT$::pop::h2b8a1147ee84bec5  (in cauce-before) + 444  [0x104280604]  list.rs:337
+    + !         : |   ! :   | + 1 tokio::sync::mpsc::list::Rx$LT$T$GT$::pop::h2b8a1147ee84bec5  (in cauce-before) + 456  [0x104280610]  list.rs:343
+    + !         : |   ! :   | 1 tokio::sync::mpsc::chan::Rx$LT$T$C$S$GT$::recv::h43b671e16b3d7971  (in cauce-before) + 212  [0x1042802b0]  chan.rs:313
+    + !         : |   ! :   1 hyper::client::dispatch::Receiver$LT$T$C$U$GT$::poll_recv::h70e72ada9ef2cf6b  (in cauce-before) + 168  [0x10427e5b4]  lib.rs:0
+    + !         : |   ! 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 1132  [0x10427b44c]  dispatch.rs:367
+    + !         : |   ! : 1 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::is_end_stream::hdc0d2867f409dc90  (in cauce-before) + 0  [0x1042d3810]  body.rs:213
+    + !         : |   ! 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 1324  [0x10427b50c]  dispatch.rs:371
+    + !         : |   ! : 1 _$LT$cauce..body..GuardBody$u20$as$u20$http_body..Body$GT$::size_hint::hf54d37ec7c61c720  (in cauce-before) + 0  [0x1042d3818]  body.rs:216
+    + !         : |   ! 1 hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::hb251df509ff94fa3  (in cauce-before) + 180  [0x10427b094]  dispatch.rs:384
+    + !         : |   !   1 hyper::proto::h1::io::WriteBuf$LT$B$GT$::can_buffer::hbf0b9123f779df64  (in cauce-before) + 160  [0x10426c550]  io.rs:0
+    + !         : |   !     1 _$LT$alloc..collections..vec_deque..iter..Iter$LT$T$GT$$u20$as$u20$core..iter..traits..iterator..Iterator$GT$::fold::ha038af3d8498a17c  (in cauce-before) + 192  [0x1041f66bc]  encode.rs:0
+    + !         : |   7 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6292  [0x1042f540c]  pool.rs:1040
+    + !         : |   ! 6 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 164  [0x10426e4bc]  io.rs:249
+    + !         : |   ! : 6 tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+    + !         : |   ! :   5 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 176  [0x104457ec8]  registration.rs:162
+    + !         : |   ! :   | 5 _tlv_get_addr  (in libdyld.dylib) + 20  [0x18679110c]
+    + !         : |   ! :   1 tokio::runtime::io::registration::Registration::poll_ready::h02bf46d34044866e  (in cauce-before) + 488  [0x104458000]  registration.rs:163
+    + !         : |   ! 1 hyper::proto::h1::io::Buffered$LT$T$C$B$GT$::poll_read_from_io::hc0ac6b9e0ba538e3  (in cauce-before) + 124  [0x10426e494]  io.rs:247
+    + !         : |   3 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 6036,6280,...  [0x1042f530c,0x1042f5400,...]  pool.rs:1040
+    + !         : |   1 cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before) + 0  [0x1042f3b78]  pool.rs:1038
+    + !         : 3 tokio::runtime::scheduler::multi_thread::worker::Context::run_task::hf8abb18756bc53e3  (in cauce-before) + 380,288  [0x1044565f8,0x10445659c]  worker.rs:696
+    + !         : 2 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 3436  [0x10445c498]  raw.rs:337
+    + !         : | 2 tokio::runtime::scheduler::multi_thread::worker::_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$::next_remote_task::h4c4d9ae0d64bcb2a  (in cauce-before) + 0  [0x10445771c]  worker.rs:1420
+    + !         : 1 tokio::runtime::scheduler::multi_thread::worker::Context::run_task::hf8abb18756bc53e3  (in cauce-before) + 228  [0x104456560]  worker.rs:696
+    + !         :   1 _tlv_get_addr  (in libdyld.dylib) + 0  [0x1867910f8]
+    + !         43 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 2792  [0x10445c214]  raw.rs:337
+    + !         : 43 tokio::runtime::scheduler::multi_thread::worker::Context::park_internal::hef49bb929cff096a  (in cauce-before) + 588  [0x104456b3c]  worker.rs:901
+    + !         :   43 tokio::runtime::time::Driver::park_internal::h225db21a88bd53f1  (in cauce-before) + 732  [0x104459358]  mod.rs:0
+    + !         :     43 tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before) + 496  [0x104457b44]  driver.rs:199
+    + !         :       43 kevent  (in libsystem_kernel.dylib) + 8  [0x18674bd04]
+    + !         2 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 3716  [0x10445c5b0]  raw.rs:337
+    + !         : 2 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !         :   2 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !         :     2 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !         :       2 mach_absolute_time  (in libsystem_kernel.dylib) + 108  [0x1867460f0]
+    + !         2 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 3656,4568  [0x10445c574,0x10445c904]  raw.rs:337
+    + !         1 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 3748  [0x10445c5d0]  raw.rs:337
+    + !         : 1 std::sys::pal::unix::time::Timespec::sub_timespec::h5c3d270d640aae16  (in cauce-before) + 60  [0x104417c30]
+    + !         1 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 3860  [0x10445c640]  raw.rs:337
+    + !         : 1 std::sys::pal::unix::time::Timespec::sub_timespec::h5c3d270d640aae16  (in cauce-before) + 96  [0x104417c54]
+    + !         1 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 5560  [0x10445cce4]  raw.rs:337
+    + !         : 1 std::sys::pal::unix::sync::mutex::Mutex::lock::hcb729b2bff518500  (in cauce-before) + 12  [0x10443fcb4]
+    + !         :   1 pthread_mutex_lock  (in libsystem_pthread.dylib) + 112  [0x1867823c8]
+    + !         1 tokio::runtime::task::raw::poll::h04e21f3255a330fc  (in cauce-before) + 5780  [0x10445cdc0]  raw.rs:337
+    + !           1 std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+    + !             1 clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+    + !               1 clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+    + !                 1 mach_absolute_time  (in libsystem_kernel.dylib) + 112  [0x1867460f4]
+    + 9 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 220  [0x1043504b4]  name.rs:1087
+    + ! 9 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 6640,4228,...  [0x104355510,0x104354ba4,...]  name.rs:98
+    + 2 hyper::common::date::CACHED::_$u7b$$u7b$constant$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::VAL::h0ce7bcd76573ea55  (in cauce-before) + 112  [0x1045eec58]
+    + ! 2 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 220  [0x1043504b4]  name.rs:1087
+    + !   2 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 4860  [0x104354e1c]  name.rs:98
+    + 2 hyper::proto::h1::io::WriteBuf$LT$B$GT$::buffer::hb6f6193d2a156b30  (in cauce-before) + 320  [0x10426ca84]  io.rs:569
+    + ! 2 _platform_memmove  (in libsystem_platform.dylib) + 200,204  [0x1867c1388,0x1867c138c]
+    + 1 ???  (in <unknown binary>)  [0x10475c080]
+    + ! 1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 220  [0x1043504b4]  name.rs:1087
+    + !   1 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 5408  [0x104355040]  name.rs:98
+    + 1 ???  (in <unknown binary>)  [0x16be21a48]
+    +   1 http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before) + 220  [0x1043504b4]  name.rs:1087
+    +     1 http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 4248  [0x104354bb8]  name.rs:98
+    6459 Thread_78878: tokio-rt-worker
+      6459 thread_start  (in libsystem_pthread.dylib) + 8  [0x186782b80]
+        6459 _pthread_start  (in libsystem_pthread.dylib) + 136  [0x186787bc8]
+          6459 std::sys::pal::unix::thread::Thread::new::thread_start::hd6d146aed00830bd  (in cauce-before) + 52  [0x104417a54]
+            6459 core::ops::function::FnOnce::call_once$u7b$$u7b$vtable.shim$u7d$$u7d$::hce7688a0e82ee409  (in cauce-before) + 392  [0x104448678]  function.rs:250
+              6459 std::sys::backtrace::__rust_begin_short_backtrace::hf9041553b2d16ec1  (in cauce-before) + 884  [0x1044469d4]  backtrace.rs:152
+                6459 std::sys::sync::condvar::pthread::Condvar::wait_timeout::h6dd5d0d9aabffae1  (in cauce-before) + 268  [0x104427c68]
+                  6459 _pthread_cond_wait  (in libsystem_pthread.dylib) + 984  [0x18678809c]
+                    6459 __psynch_cvwait  (in libsystem_kernel.dylib) + 8  [0x1867493cc]
+
+Total number in stack (recursive counted multiple, when >=5):
+        31       szone_malloc_should_clear  (in libsystem_malloc.dylib) + 84  [0x186587be8]
+        27       std::sys::pal::unix::time::Timespec::now::h388c9a003b971b6c  (in cauce-before) + 24  [0x104417af8]
+        22       clock_gettime  (in libsystem_c.dylib) + 60  [0x186626790]
+        22       free_tiny  (in libsystem_malloc.dylib) + 460  [0x18658b99c]
+        21       tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 272  [0x186588dc4]
+        20       mach_absolute_time  (in libsystem_kernel.dylib) + 0  [0x186746084]
+        17       _platform_memmove  (in libsystem_platform.dylib) + 0  [0x1867c12c0]
+        17       clock_gettime_nsec_np  (in libsystem_c.dylib) + 384  [0x186619168]
+        16       tiny_malloc_from_free_list  (in libsystem_malloc.dylib) + 0  [0x186589524]
+        13       tiny_free_no_lock  (in libsystem_malloc.dylib) + 0  [0x18658bb1c]
+        9       _tlv_get_addr  (in libdyld.dylib) + 0  [0x1867910f8]
+        9       http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before) + 0  [0x104353b20]  name.rs:98
+        8       tiny_free_list_add_ptr  (in libsystem_malloc.dylib) + 0  [0x18658c33c]
+        7       _platform_memset  (in libsystem_platform.dylib) + 0  [0x1867c0ff0]
+        7       free_tiny  (in libsystem_malloc.dylib) + 0  [0x18658b7d0]
+        7       free_tiny  (in libsystem_malloc.dylib) + 136  [0x18658b858]
+        7       http::header::map::HeaderMap$LT$T$GT$::remove::h1ca62901dc61f48a  (in cauce-before) + 48  [0x104263acc]  map.rs:1589
+        7       tiny_malloc_should_clear  (in libsystem_malloc.dylib) + 0  [0x186588cb4]
+        6       _$LT$$RF$str$u20$as$u20$http..header..map..as_header_name..Sealed$GT$::find::hf5587af6071c3ac9  (in cauce-before) + 76  [0x1042a9da4]  map.rs:3971
+        6       _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11560  [0x1042083d4]  mod.rs:701
+        6       _szone_free  (in libsystem_malloc.dylib) + 0  [0x18659f078]
+        6       clock_gettime_nsec_np  (in libsystem_c.dylib) + 240  [0x1866190d8]
+        6       getentropy  (in libsystem_kernel.dylib) + 0  [0x186746120]
+        6       hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_write::h165aa2d0e8dbd0e2  (in cauce-before) + 876  [0x104279ea8]  dispatch.rs:364
+        6       pthread_mutex_lock  (in libsystem_pthread.dylib) + 0  [0x186782358]
+        6       tiny_free_no_lock  (in libsystem_malloc.dylib) + 416  [0x18658bcbc]
+        6       tokio::net::tcp::stream::TcpStream::poll_read_priv::hd7216435de233bc5  (in cauce-before) + 64  [0x1044518ec]
+        5       _$LT$hyper..proto..h1..role..Server$u20$as$u20$hyper..proto..h1..Http1Transaction$GT$::update_date::hf78d6fad29a7a838  (in cauce-before) + 112  [0x10436ec1c]  role.rs:518
+        5       _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before) + 180  [0x1042adec8]  tokio.rs:173
+        5       _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 0  [0x1042056ac]  mod.rs:701
+        5       _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 11612  [0x104208408]  mod.rs:701
+        5       _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before) + 4728  [0x104206924]  mod.rs:701
+        5       _malloc_zone_malloc  (in libsystem_malloc.dylib) + 0  [0x1865b8f40]
+        5       http::header::name::HeaderName::from_bytes::h81b77c91a1af7601  (in cauce-before) + 400  [0x104350748]  name.rs:1118
+        5       hyper::proto::h1::dispatch::Dispatcher$LT$D$C$Bs$C$I$C$T$GT$::poll_flush::hb7eff28925e24969  (in cauce-before) + 28  [0x104279a98]  dispatch.rs:451
+        5       mach_timebase_info  (in libsystem_kernel.dylib) + 0  [0x186745fb4]
+
+Sort by top of stack, same collapsed (when >= 5):
+        __psynch_cvwait  (in libsystem_kernel.dylib)        12918
+        kevent  (in libsystem_kernel.dylib)        5470
+        __recvfrom  (in libsystem_kernel.dylib)        178
+        writev  (in libsystem_kernel.dylib)        125
+        __sendto  (in libsystem_kernel.dylib)        98
+        getentropy  (in libsystem_kernel.dylib)        39
+        mach_absolute_time  (in libsystem_kernel.dylib)        28
+        tiny_malloc_from_free_list  (in libsystem_malloc.dylib)        25
+        _platform_memmove  (in libsystem_platform.dylib)        22
+        http::header::name::StandardHeader::from_bytes::h9a6e15750badbffb  (in cauce-before)        21
+        free_small  (in libsystem_malloc.dylib)        18
+        tiny_free_no_lock  (in libsystem_malloc.dylib)        16
+        _$LT$hyper_util..server..conn..auto..UpgradeableConnection$LT$I$C$S$C$E$GT$$u20$as$u20$core..future..future..Future$GT$::poll::h4cad54040c4c8717  (in cauce-before)        15
+        _tlv_get_addr  (in libdyld.dylib)        13
+        cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h3837eb697a0c0ec0  (in cauce-before)        12
+        cauce::pool::Pool::connect::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h8569a22646d34f0a  (in cauce-before)        11
+        http::header::map::HeaderMap$LT$T$GT$::get_all::h1922930ea7187f00  (in cauce-before)        10
+        _szone_free  (in libsystem_malloc.dylib)        9
+        free_tiny  (in libsystem_malloc.dylib)        9
+        httparse::parse_headers_iter_uninit::h57d827e3b14adcf2  (in cauce-before)        9
+        pthread_mutex_lock  (in libsystem_pthread.dylib)        9
+        _$LT$hyper_util..rt..tokio..TokioIo$LT$T$GT$$u20$as$u20$hyper..rt..io..Read$GT$::poll_read::h03b707e1332da541  (in cauce-before)        8
+        tiny_free_list_add_ptr  (in libsystem_malloc.dylib)        8
+        _platform_memset  (in libsystem_platform.dylib)        7
+        http::header::name::parse_hdr::h52c3a9bbc628e0d6  (in cauce-before)        7
+        mach_timebase_info  (in libsystem_kernel.dylib)        7
+        tiny_malloc_should_clear  (in libsystem_malloc.dylib)        7
+        _malloc_zone_malloc  (in libsystem_malloc.dylib)        6
+        bytes::bytes::static_drop::hadde1a1d0cee789b  (in cauce-before)        6
+        core::str::pattern::StrSearcher::new::h7d667c25c20908b5  (in cauce-before)        6
+        tokio::net::tcp::stream::TcpStream::poll_write_vectored_priv::haa07dcfd66a0ebf3  (in cauce-before)        6
+        _$LT$hyper..body..chan..Sender$u20$as$u20$core..ops..drop..Drop$GT$::drop::hcc7ceccb22ff6463  (in cauce-before)        5
+        _tiny_check_and_zero_inline_meta_from_freelist  (in libsystem_malloc.dylib)        5
+        hyper::proto::h1::role::write_headers::hb72ee383f6120dcb  (in cauce-before)        5
+        tokio::runtime::io::driver::Driver::turn::h22c76a2db833a646  (in cauce-before)        5
+        tokio::sync::mpsc::list::Rx$LT$T$GT$::pop::h2b8a1147ee84bec5  (in cauce-before)        5
+        tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::heb59cc2719b870d8  (in cauce-before)        5
+        uuid::fmt::format_hyphenated::hdc4473143e1edaaf  (in cauce-before)        5
+
+Binary Images:
+       0x1041dc000 -        0x1045c0797 +cauce-before (0) <90E1189A-A61C-3E60-A592-1E57256599ED> /Users/*/Desktop/*/cauce-before
+       0x18638c000 -        0x1863df8c3  libobjc.A.dylib (940.4) <B2301EC8-BFAE-329D-889D-3A3C247A3C34> /usr/lib/libobjc.A.dylib
+       0x1863e0000 -        0x18647b577  dyld (1.0.0 - 1286.10) <E0A6EB9F-57DC-344C-B22F-5C8176284B0A> /usr/lib/dyld
+       0x18647c000 -        0x18647f168  libsystem_blocks.dylib (96) <FFD241C6-CD72-374B-85DB-641978DE5EDA> /usr/lib/system/libsystem_blocks.dylib
+       0x186480000 -        0x1864ca97f  libxpc.dylib (2894.140.12.705.2) <43A78CA2-7FF2-30F2-947B-B032ED42E9D9> /usr/lib/system/libxpc.dylib
+       0x1864cb000 -        0x1864e687f  libsystem_trace.dylib (1643.120.5) <464A597C-198A-3079-8DBF-B73462BF4538> /usr/lib/system/libsystem_trace.dylib
+       0x1864e7000 -        0x1865853b7  libcorecrypto.dylib (1736.140.2) <731C1CED-5F52-3583-8A8D-EDFF604BC2D3> /usr/lib/system/libcorecrypto.dylib
+       0x186586000 -        0x1865cd06f  libsystem_malloc.dylib (715.140.5) <1CAA25D3-6AE9-39FC-8A75-0450353D3AB9> /usr/lib/system/libsystem_malloc.dylib
+       0x1865ce000 -        0x18661475f  libdispatch.dylib (1521.140.2) <DB1D6C51-05ED-35AB-A8B5-4132A24E9753> /usr/lib/system/libdispatch.dylib
+       0x186615000 -        0x186617d1b  libsystem_featureflags.dylib (97) <868DC641-E42E-34C0-A0B5-0DFE2055F362> /usr/lib/system/libsystem_featureflags.dylib
+       0x186618000 -        0x18669934b  libsystem_c.dylib (1698.140.3.705.1) <06B987DD-B857-3BE0-BC83-A5C72AA292B2> /usr/lib/system/libsystem_c.dylib
+       0x18669a000 -        0x186726ff7  libc++.1.dylib (1900.181) <2189A7FF-48C7-3886-B9E4-4F57DEC923C5> /usr/lib/libc++.1.dylib
+       0x186727000 -        0x186744fff  libc++abi.dylib (1900.181) <0490774F-1932-3DE2-8375-5FEA7F2DC595> /usr/lib/libc++abi.dylib
+       0x186745000 -        0x1867805f3  libsystem_kernel.dylib (11417.140.69.712.69) <3E3A27A5-F53C-3C0A-A583-FC0CC0E78BDB> /usr/lib/system/libsystem_kernel.dylib
+       0x186781000 -        0x18678da77  libsystem_pthread.dylib (536.0.0.702.1) <7DA8FCD5-D60E-32F7-B055-6CE3F1615B9E> /usr/lib/system/libsystem_pthread.dylib
+       0x18678e000 -        0x1867bdba3  libdyld.dylib (1286.10) <D76600A2-B862-3FF9-AF06-F860B37184EB> /usr/lib/system/libdyld.dylib
+       0x1867be000 -        0x1867c5e0b  libsystem_platform.dylib (349.140.6) <D67E2CE2-F8E7-3EA8-8361-F7205551848F> /usr/lib/system/libsystem_platform.dylib
+       0x1867c6000 -        0x1867f5d83  libsystem_info.dylib (597.0.0.701.2) <6B05F821-534F-3D8F-B03D-B9F35E6955FF> /usr/lib/system/libsystem_info.dylib
+       0x18a28b000 -        0x18a295397  libsystem_darwin.dylib (1698.140.3.705.1) <FE3BD229-0A83-3397-9996-3E597A5D22A6> /usr/lib/system/libsystem_darwin.dylib
+       0x18a6ee000 -        0x18a6ffff3  libsystem_notify.dylib (342.0.0.701.1) <414C11DC-AE3D-3D95-B43A-1D56C2A0E346> /usr/lib/system/libsystem_notify.dylib
+       0x18c6f2000 -        0x18c70ce8f  libsystem_networkextension.dylib (2063.140.6.701.3) <57D3AC78-B98A-3FAA-B850-720E4B16E786> /usr/lib/system/libsystem_networkextension.dylib
+       0x18c789000 -        0x18c7a0fdb  libsystem_asl.dylib (402) <9DFAA6B8-B95A-3340-8DC0-1115FC1B8CF4> /usr/lib/system/libsystem_asl.dylib
+       0x18e2e5000 -        0x18e2ed3a7  libsystem_symptoms.dylib (2022.140.4.702.1) <E08B8791-9709-3FAB-9002-EF551BE521ED> /usr/lib/system/libsystem_symptoms.dylib
+       0x191b37000 -        0x191b67213  libsystem_containermanager.dylib (689.100.6.702.2) <2735B015-D4FE-3170-8C46-68D0D9E44C11> /usr/lib/system/libsystem_containermanager.dylib
+       0x192da5000 -        0x192da95df  libsystem_configuration.dylib (1351.140.5.703.3) <9DFC3F49-5273-3EE5-94E9-820F007B8ED4> /usr/lib/system/libsystem_configuration.dylib
+       0x192daa000 -        0x192db06ff  libsystem_sandbox.dylib (2401.140.15.705.3) <9CD2D046-A67B-3056-A7E5-C70974ED448B> /usr/lib/system/libsystem_sandbox.dylib
+       0x193db5000 -        0x193db7fe3  libquarantine.dylib (181.120.2.701.3) <713E7FD6-51DE-3E62-935D-13885C2C7F29> /usr/lib/system/libquarantine.dylib
+       0x1944cb000 -        0x1944d1fa3  libsystem_coreservices.dylib (178.6.9) <FF33CA2D-C09E-3C32-9F6C-132DBA72056C> /usr/lib/system/libsystem_coreservices.dylib
+       0x194949000 -        0x1949862b7  libsystem_m.dylib (3291.100.4) <BD64331C-5999-3884-9FB7-36A2BEB204B6> /usr/lib/system/libsystem_m.dylib
+       0x194987000 -        0x194987c9b  libcharset.1.dylib (109.100.2.701.1) <989837A8-0C44-3E6D-93BB-58E05B67C31B> /usr/lib/libcharset.1.dylib
+       0x194988000 -        0x19498b4e7  libmacho.dylib (1024.3) <DE7963A2-B790-3081-86F8-887A48D90FB0> /usr/lib/system/libmacho.dylib
+       0x1949a5000 -        0x1949b25ef  libcommonCrypto.dylib (600035) <17FE8FEC-FB07-3FE5-A7A5-FADCAD4DB24B> /usr/lib/system/libcommonCrypto.dylib
+       0x1949b3000 -        0x1949bcad7  libunwind.dylib (1900.125) <E34460B4-37E4-30AB-9F67-8D14D52332E8> /usr/lib/system/libunwind.dylib
+       0x1949c5000 -        0x1949cfab3  libcopyfile.dylib (224.0.0.702.1) <B5807A84-8EF8-3309-97AC-0E430093F48A> /usr/lib/system/libcopyfile.dylib
+       0x1949d0000 -        0x1949d398f  libcompiler_rt.dylib (103.3) <2CF1F4A7-0D75-38B0-9FE9-93FE10E6E76C> /usr/lib/system/libcompiler_rt.dylib
+       0x1949d4000 -        0x1949d8a1b  libsystem_collections.dylib (1698.140.3.705.1) <239A6D71-1325-3D88-B8D6-876E714143D1> /usr/lib/system/libsystem_collections.dylib
+       0x1949d9000 -        0x1949dc2c7  libsystem_secinit.dylib (153.140.2) <2D3D6117-DB58-35F4-B7BE-DE04FD8FBD6D> /usr/lib/system/libsystem_secinit.dylib
+       0x1949dd000 -        0x1949dfb6f  libremovefile.dylib (81) <08848440-1868-3FCF-A466-2FA44038B4DE> /usr/lib/system/libremovefile.dylib
+       0x1949e0000 -        0x1949e0f27  libkeymgr.dylib (31) <56163FDF-F247-3B51-A7F8-6E968BA3A2B5> /usr/lib/system/libkeymgr.dylib
+       0x1949e1000 -        0x1949e9d5f  libsystem_dnssd.dylib (2600.140.3.704.1) <6B5D6255-2C72-3B3B-9942-D8A2F1BBF35F> /usr/lib/system/libsystem_dnssd.dylib
+       0x1949ea000 -        0x1949ef0b3  libcache.dylib (95) <A19B4E8F-D340-3195-B473-A920E01DFD66> /usr/lib/system/libcache.dylib
+       0x1949f0000 -        0x1949f1ca3  libSystem.B.dylib (1351) <E8CBD68D-5444-3924-83E2-A9B8731CDAA9> /usr/lib/libSystem.B.dylib
+       0x194a2c000 -        0x194a332db  libiconv.2.dylib (109.100.2.701.1) <73C34EE1-DBB3-3F45-B906-EBE49352A0DC> /usr/lib/libiconv.2.dylib
+       0x26de37000 -        0x26de3e109  libRosetta.dylib (349) <9C6BE278-D18F-365D-97BE-E27C0DC5E9CE> /usr/lib/libRosetta.dylib
+       0x26f262000 -        0x26f265deb  libsystem_darwindirectory.dylib (122) <A27318B8-3F5A-31CC-9653-F73E9E32EFB9> /usr/lib/system/libsystem_darwindirectory.dylib
+       0x26f266000 -        0x26f26d523  libsystem_eligibility.dylib (181.140.5) <61FAFCE2-C744-3FD2-9715-A2EFDCCD9844> /usr/lib/system/libsystem_eligibility.dylib
+       0x26f26e000 -        0x26f2736c5  libsystem_sanitizers.dylib (19) <E4AF519D-1473-302A-BCE7-5B7317667050> /usr/lib/system/libsystem_sanitizers.dylib

@@ -197,19 +197,24 @@ struct TunnelLog {
 impl Drop for TunnelLog {
     fn drop(&mut self) {
         let c = &mut self.completion;
-        c.event.duration_ms = ms(c.started);
-        c.event.transfer_ms = Some(ms(c.headers_at));
-        c.event.request_bytes = self.up.load(Ordering::Relaxed);
-        c.event.response_bytes = self.down.load(Ordering::Relaxed);
-        c.event.outcome = self.outcome.into();
-        if let Some(a) = c.event.attempts.last_mut() {
-            a.outcome = self.outcome.into();
+        let response_bytes = self.down.load(Ordering::Relaxed);
+        if let Some(event) = &mut c.event {
+            event.duration_ms = ms(c.started);
+            event.transfer_ms = Some(ms(c.headers_at));
+            event.request_bytes = self.up.load(Ordering::Relaxed);
+            event.response_bytes = response_bytes;
+            event.outcome = self.outcome.into();
+            if let Some(attempt) = event.attempts.last_mut() {
+                attempt.outcome = self.outcome.into();
+            }
+            if self.outcome != "complete" {
+                event.error_direction = Some("upstream_or_downstream".into());
+                event.error_category = Some("websocket".into());
+                event.error_phase = Some("tunnel".into());
+                event.reason = self.reason.map(str::to_owned);
+            }
         }
         if self.outcome != "complete" {
-            c.event.error_direction = Some("upstream_or_downstream".into());
-            c.event.error_category = Some("websocket".into());
-            c.event.error_phase = Some("tunnel".into());
-            c.event.reason = self.reason.map(str::to_owned);
             c.logger.metrics.body_errors.fetch_add(1, Ordering::Relaxed);
         }
         if self.outcome == "cancelled" {
@@ -221,8 +226,10 @@ impl Drop for TunnelLog {
         c.logger
             .metrics
             .response_bytes
-            .fetch_add(c.event.response_bytes, Ordering::Relaxed);
-        c.logger.emit(c.event.clone());
+            .fetch_add(response_bytes, Ordering::Relaxed);
+        if let Some(event) = c.event.take() {
+            c.logger.emit(event);
+        }
         // The lease is discarded. An upgraded socket can never reenter the HTTP pool.
     }
 }

@@ -1,0 +1,9 @@
+layout,routes,linear_median_ns,radix_median_ns,ratio,paired_ci95_low,paired_ci95_high
+distinct-hosts,1,5.97,6.93,0.866,0.840,0.871
+distinct-hosts,16,29.73,25.52,1.165,1.161,1.185
+distinct-hosts,128,178.86,25.12,7.145,7.112,7.182
+distinct-hosts,1024,1759.61,32.51,54.389,53.706,54.627
+shared-host,1,6.11,7.10,0.859,0.838,0.866
+shared-host,16,83.46,42.50,1.976,1.962,1.993
+shared-host,128,573.94,49.88,11.504,11.244,11.840
+shared-host,1024,4589.25,86.12,54.026,51.293,54.716

@@ -616,6 +616,15 @@
     "source": "https://github.com/rusqlite/rusqlite"
   },
   {
+    "name": "libyaml-rs",
+    "version": "0.3.0",
+    "license": "MIT",
+    "notices": [
+      "LICENSE-MIT"
+    ],
+    "source": "https://github.com/yaml/libyaml-rs"
+  },
+  {
     "name": "linux-raw-sys",
     "version": "0.12.1",
     "license": "Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT",
@@ -1446,6 +1455,16 @@
       "LICENSE"
     ],
     "source": "https://github.com/unicode-org/icu4x"
+  },
+  {
+    "name": "yaml_serde",
+    "version": "0.10.7",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "source": "https://github.com/yaml/yaml-serde"
   },
   {
     "name": "yoke",

@@ -188,6 +188,10 @@ fn flush(writer: &mut Option<BufWriter<File>>) -> std::io::Result<()> {
     Ok(())
 }
 impl Logger {
+    pub fn enabled(&self) -> bool {
+        self.tx.is_some()
+    }
+
     pub fn start(
         config: Logs,
         metrics: Arc<Metrics>,

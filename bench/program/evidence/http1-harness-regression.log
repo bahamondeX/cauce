@@ -1,0 +1,16 @@
+WARN Ignoring project discovery error due to `--no-project`: Workspace member `/Users/oscarbahamonde/Desktop/portfolio` is missing a `pyproject.toml` (matches: `Desktop/portfolio`)
+test_cold_warmup_is_skipped_and_summary_is_complete (test_load.LoadGeneratorTests) ... ok
+test_full_bounded_queue_rejects_offers_without_synthetic_responses (test_load.LoadGeneratorTests) ... ok
+test_http_failures_are_not_counted_as_success (test_load.LoadGeneratorTests) ... ok
+test_measurement_marker_release_gates_output_persistence (test_load.LoadGeneratorTests) ... ok
+test_nan_rate_is_rejected (test_load.LoadGeneratorTests) ... ok
+test_nearest_rank_quantiles (test_load.LoadGeneratorTests) ... ok
+test_open_loop_counts_latency_and_connection_reuse (test_load.LoadGeneratorTests) ... ok
+test_sse_first_event_and_five_event_completion (test_load.LoadGeneratorTests) ... ok
+test_warmup_gate_preserves_session_and_excludes_preload_rows (test_load.LoadGeneratorTests) ... ok
+test_websocket_handshake_is_recorded_without_unsupported_trace_arg (test_load.LoadGeneratorTests) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 9.623s
+
+OK

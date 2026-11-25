@@ -176,3 +176,23 @@ prueba mediante la feature `fuzzing`; no mantiene otra copia del parser y no se
 incluye en la imagen de producción. Los controles Docker combinan gauges del
 proxy, actividad observada por el backend y recursos del proceso/contenedor.
 Las mediciones y sus presupuestos finitos constan en [VALIDATION-6](VALIDATION-6.md).
+
+## Índice inmutable de rutas
+
+Cada generación construye un mapa de autoridades exactas. Un árbol radix comprimido por
+autoridad vincula los prefijos al vector de rutas de la misma generación. La búsqueda
+conserva el prefijo válido más largo y aplica el límite de segmento. Se mantiene la ruta
+rápida de comparación directa cuando la configuración contiene una sola ruta. Véase
+[ADR 0001](adr/0001-compiled-routes.md) y la [evidencia de rendimiento](PERFORMANCE.md).
+
+La preparación de recarga y el mantenimiento del pool se ejecutan fuera del bucle de
+accept. El bucle activa únicamente candidatos completos. Un barrido concurrente usa
+la generación observada como límite inferior. [ADR 0002](adr/0002-prepared-reload.md).
+
+## Registros de acceso opcionales
+
+El dataplane construye eventos y diagnósticos por intento cuando el escritor JSONL
+está habilitado. Todas las solicitudes generan un ID de correlación y aplican la
+misma validación de `traceparent`. La contabilidad de métricas y los permisos de
+solicitud, conexión y stream viven fuera del evento. La finalización de HTTP y los
+túneles conservan esa separación. [ADR 0003](adr/0003-optional-access-events.md).

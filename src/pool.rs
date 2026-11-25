@@ -3,6 +3,7 @@
 use crate::{
     body::ProxyBody,
     config::{Balance, Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol},
+    routing::Routes,
     telemetry::{Attempt, Metrics},
     tls,
 };
@@ -69,6 +70,7 @@ pub struct Endpoint {
 pub struct Generation {
     pub version: u64,
     pub config: Config,
+    routes: Routes,
     pub endpoints: HashMap<String, Arc<Endpoint>>,
     pub draining: AtomicBool,
     cursor: AtomicUsize,
@@ -102,11 +104,15 @@ impl Generation {
             .collect();
         Arc::new(Self {
             version,
+            routes: Routes::compile(&config.routes),
             config,
             endpoints,
             draining: AtomicBool::new(false),
             cursor: AtomicUsize::new(0),
         })
+    }
+    pub fn route(&self, host: &str, path: &str) -> Option<&Route> {
+        self.routes.find(&self.config.routes, host, path)
     }
     pub fn select(&self, route: &Route) -> Option<Arc<Endpoint>> {
         let start = self.cursor.fetch_add(1, Ordering::Relaxed);
@@ -407,10 +413,12 @@ impl Pool {
             next_id: AtomicU64::new(1),
         })
     }
-    pub fn sweep(&self, keep_generation: u64) {
+    pub fn sweep(&self, oldest_generation: u64) {
         let mut idle = self.idle.lock().unwrap();
+        // A sweep scheduled before reload can finish after publication. It may
+        // retire older generations, while new sockets keep their own lifetime.
         idle.connections.retain(|k, list| {
-            if k.generation != keep_generation {
+            if k.generation < oldest_generation {
                 return false;
             }
             list.retain(|c| {
@@ -421,7 +429,7 @@ impl Pool {
             !list.is_empty()
         });
         idle.h2.retain(|k, list| {
-            if k.generation != keep_generation {
+            if k.generation < oldest_generation {
                 return false;
             }
             list.retain(|c| {
@@ -497,14 +505,17 @@ impl Pool {
         self: &Arc<Self>,
         generation: Arc<Generation>,
         endpoint: Arc<Endpoint>,
-    ) -> Result<(Lease, Attempt)> {
+        log_attempt: bool,
+    ) -> Result<(Lease, Option<Attempt>)> {
         let begin = Instant::now();
         let key = Key {
             generation: generation.version,
             upstream: endpoint.config.id.clone(),
         };
         if endpoint.config.protocol == UpstreamProtocol::Http2 {
-            return self.acquire_h2(generation, endpoint, key, begin).await;
+            return self
+                .acquire_h2(generation, endpoint, key, begin, log_attempt)
+                .await;
         }
         let acquired = timeout(Duration::from_millis(self.limits.acquire_ms), async {
             loop {
@@ -558,31 +569,26 @@ impl Pool {
         self.metrics
             .pool_wait_us
             .fetch_add((wait * 1000.0) as u64, Ordering::Relaxed);
-        let mut attempt = Attempt {
-            number: 1,
-            outcome: "acquired".into(),
-            connection_id: None,
+        let mut attempt = log_attempt.then(|| Attempt {
             reused: Some(acquired.0.is_some()),
             pool_wait_ms: Some(wait),
-            connect_gate_ms: None,
-            dns_ms: None,
-            tcp_ms: None,
-            tls_ms: None,
-            headers_ms: None,
-        };
+            ..empty_attempt()
+        });
         let connection = if let Some(c) = acquired.0 {
             self.metrics.reused.fetch_add(1, Ordering::Relaxed);
             c
         } else {
             let (global, ep) = acquired.1.unwrap();
-            let gate_started = Instant::now();
+            let gate_started = log_attempt.then(Instant::now);
             let _gate = timeout(
                 Duration::from_millis(self.limits.acquire_ms),
                 self.connecting.clone().acquire_owned(),
             )
             .await
             .map_err(|_| anyhow!("connect_capacity_timeout"))??;
-            attempt.connect_gate_ms = Some(ms(gate_started));
+            if let Some(attempt) = &mut attempt {
+                attempt.connect_gate_ms = gate_started.map(ms);
+            }
             let connected = self.connect(&endpoint, global, ep, &mut attempt).await;
             if connected.is_err() {
                 *endpoint.failed_until.lock().unwrap() = Some(
@@ -593,7 +599,9 @@ impl Pool {
             }
             connected?
         };
-        attempt.connection_id = Some(connection.id.clone());
+        if let Some(attempt) = &mut attempt {
+            attempt.connection_id = Some(connection.id.clone());
+        }
         endpoint.inflight.fetch_add(1, Ordering::Relaxed);
         Ok((
             Lease {
@@ -612,10 +620,12 @@ impl Pool {
         endpoint: Arc<Endpoint>,
         key: Key,
         begin: Instant,
-    ) -> Result<(Lease, Attempt)> {
+        log_attempt: bool,
+    ) -> Result<(Lease, Option<Attempt>)> {
         let deadline = tokio::time::Instant::now() + Duration::from_millis(self.limits.acquire_ms);
         let mut reserved: Option<(OwnedSemaphorePermit, OwnedSemaphorePermit)> = None;
-        let (connection, stream_permit, newly_connected, gate_ms, mut attempt) = loop {
+        let mut attempt = log_attempt.then(empty_attempt);
+        let (connection, stream_permit, newly_connected) = loop {
             let notified = self.notify.notified();
             tokio::pin!(notified);
             notified.as_mut().enable();
@@ -646,7 +656,7 @@ impl Pool {
                 }
             }
             if let Some((c, p)) = selected {
-                break (c, p, false, None, empty_attempt());
+                break (c, p, false);
             }
             if reserved.is_none() {
                 let ep = endpoint.slots.clone().try_acquire_owned();
@@ -673,7 +683,7 @@ impl Pool {
                     Ok(Err(e)) => return Err(e.into()),
                     Err(_) => return Err(anyhow!("connect_capacity_timeout")),
                 };
-                let started = Instant::now();
+                let started = log_attempt.then(Instant::now);
                 let gate = match tokio::time::timeout_at(
                     deadline,
                     self.connecting.clone().acquire_owned(),
@@ -684,7 +694,9 @@ impl Pool {
                     Ok(Err(e)) => return Err(e.into()),
                     Err(_) => return Err(anyhow!("connect_capacity_timeout")),
                 };
-                let gate_ms = ms(started);
+                if let Some(attempt) = &mut attempt {
+                    attempt.connect_gate_ms = started.map(ms);
+                }
                 // A concurrent opener may have created a usable socket while we waited.
                 let existing = {
                     let idle = self.idle.lock().unwrap();
@@ -709,16 +721,17 @@ impl Pool {
                     drop(open_gate);
                     drop(global);
                     drop(ep);
-                    break (c, p, false, Some(gate_ms), empty_attempt());
+                    break (c, p, false);
                 }
                 let cap = Arc::new(DriverCapacity {
                     global: Some(global),
                     endpoint: Some(ep),
                     notify: self.notify.clone(),
                 });
-                let mut a = empty_attempt();
-                a.connect_gate_ms = Some(gate_ms);
-                match self.connect_h2(&endpoint, key.clone(), cap, &mut a).await {
+                match self
+                    .connect_h2(&endpoint, key.clone(), cap, &mut attempt)
+                    .await
+                {
                     Ok(c) => {
                         let p = c
                             .streams
@@ -735,7 +748,7 @@ impl Pool {
                             .push(c.clone());
                         drop(gate);
                         drop(open_gate);
-                        break (c, p, true, Some(gate_ms), a);
+                        break (c, p, true);
                     }
                     Err(e) => {
                         drop(gate);
@@ -754,17 +767,14 @@ impl Pool {
             }
             tokio::select! { _ = notified => {}, _ = tokio::time::sleep_until(deadline) => return Err(anyhow!("pool_capacity_timeout")) }
         };
-        attempt.number = 1;
-        attempt.outcome = "acquired".into();
-        attempt.connection_id = Some(connection.id.clone());
-        attempt.reused = Some(!newly_connected);
-        attempt.pool_wait_ms = Some(ms(begin));
-        self.metrics.pool_wait_us.fetch_add(
-            (attempt.pool_wait_ms.unwrap_or_default() * 1000.0) as u64,
-            Ordering::Relaxed,
-        );
-        if let Some(v) = gate_ms {
-            attempt.connect_gate_ms = Some(v);
+        let wait = ms(begin);
+        self.metrics
+            .pool_wait_us
+            .fetch_add((wait * 1000.0) as u64, Ordering::Relaxed);
+        if let Some(attempt) = &mut attempt {
+            attempt.connection_id = Some(connection.id.clone());
+            attempt.reused = Some(!newly_connected);
+            attempt.pool_wait_ms = Some(wait);
         }
         if !newly_connected {
             self.metrics.reused.fetch_add(1, Ordering::Relaxed);
@@ -799,10 +809,10 @@ impl Pool {
         e: &Endpoint,
         key: Key,
         capacity: Arc<DriverCapacity>,
-        a: &mut Attempt,
+        attempt: &mut Option<Attempt>,
     ) -> Result<Arc<H2Connection>> {
         let duration = Duration::from_millis(self.limits.connect_ms);
-        let tcp_start = Instant::now();
+        let tcp_start = attempt.is_some().then(Instant::now);
         let io: Box<dyn PoolIo> = if let Some(path) = e.config.address.strip_prefix("unix:") {
             Box::new(
                 timeout(duration, UnixStream::connect(path))
@@ -810,7 +820,7 @@ impl Pool {
                     .map_err(|_| anyhow!("unix_connect_timeout"))??,
             )
         } else {
-            let dns_start = Instant::now();
+            let dns_start = attempt.is_some().then(Instant::now);
             let _refresh = timeout(duration, e.resolving.acquire())
                 .await
                 .map_err(|_| anyhow!("dns_timeout"))??;
@@ -837,7 +847,9 @@ impl Pool {
                 }
             };
             drop(_refresh);
-            a.dns_ms = Some(ms(dns_start));
+            if let Some(attempt) = attempt {
+                attempt.dns_ms = dns_start.map(ms);
+            }
             let addr = addresses[e.dns_cursor.fetch_add(1, Ordering::Relaxed) % addresses.len()];
             let socket = timeout(duration, TcpStream::connect(addr))
                 .await
@@ -847,14 +859,16 @@ impl Pool {
                 &socket2::TcpKeepalive::new()
                     .with_time(Duration::from_secs(self.limits.tcp_keepalive_secs)),
             )?;
-            a.tcp_ms = Some(ms(tcp_start));
+            if let Some(attempt) = attempt {
+                attempt.tcp_ms = tcp_start.map(ms);
+            }
             if let Some(tls_config) = &e.config.tls {
                 let client = e
                     .tls_client
                     .clone()
                     .ok_or_else(|| anyhow!("upstream_tls_not_prepared"))?;
                 let name = tls::server_name(tls_config)?;
-                let tls_start = Instant::now();
+                let tls_start = attempt.is_some().then(Instant::now);
                 let stream = timeout(
                     Duration::from_millis(self.limits.tls_handshake_ms),
                     tokio_rustls::TlsConnector::from(client).connect(name, socket),
@@ -862,7 +876,9 @@ impl Pool {
                 .await
                 .map_err(|_| anyhow!("tls_handshake_timeout"))?
                 .map_err(|_| anyhow!("tls_handshake_error"))?;
-                a.tls_ms = Some(ms(tls_start));
+                if let Some(attempt) = attempt {
+                    attempt.tls_ms = tls_start.map(ms);
+                }
                 if stream.get_ref().1.alpn_protocol() != Some(b"h2") {
                     return Err(anyhow!("http2_alpn_required"));
                 }
@@ -936,7 +952,7 @@ impl Pool {
         e: &Endpoint,
         global: OwnedSemaphorePermit,
         ep: OwnedSemaphorePermit,
-        a: &mut Attempt,
+        attempt: &mut Option<Attempt>,
     ) -> Result<Connection> {
         // Drivers retain capacity until their sockets actually drop, including abort cleanup.
         let capacity = Arc::new(DriverCapacity {
@@ -965,7 +981,7 @@ impl Pool {
                 .abort_handle(),
             )
         } else {
-            let dns_start = Instant::now();
+            let dns_start = attempt.is_some().then(Instant::now);
             let _refresh = timeout(duration, e.resolving.acquire())
                 .await
                 .map_err(|_| anyhow!("dns_timeout"))??;
@@ -992,9 +1008,11 @@ impl Pool {
                 }
             };
             drop(_refresh);
-            a.dns_ms = Some(ms(dns_start));
+            if let Some(attempt) = attempt {
+                attempt.dns_ms = dns_start.map(ms);
+            }
             let chosen = addresses[e.dns_cursor.fetch_add(1, Ordering::Relaxed) % addresses.len()];
-            let tcp_start = Instant::now();
+            let tcp_start = attempt.is_some().then(Instant::now);
             let socket = timeout(duration, TcpStream::connect(chosen))
                 .await
                 .map_err(|_| anyhow!("tcp_connect_timeout"))??;
@@ -1003,14 +1021,16 @@ impl Pool {
                 &socket2::TcpKeepalive::new()
                     .with_time(Duration::from_secs(self.limits.tcp_keepalive_secs)),
             )?;
-            a.tcp_ms = Some(ms(tcp_start));
+            if let Some(attempt) = attempt {
+                attempt.tcp_ms = tcp_start.map(ms);
+            }
             let io: Box<dyn PoolIo> = if let Some(tls_config) = &e.config.tls {
                 let client = e
                     .tls_client
                     .clone()
                     .ok_or_else(|| anyhow!("upstream_tls_not_prepared"))?;
                 let name = tls::server_name(tls_config)?;
-                let tls_start = Instant::now();
+                let tls_start = attempt.is_some().then(Instant::now);
                 let stream = timeout(
                     Duration::from_millis(self.limits.tls_handshake_ms),
                     tokio_rustls::TlsConnector::from(client).connect(name, socket),
@@ -1018,7 +1038,9 @@ impl Pool {
                 .await
                 .map_err(|_| anyhow!("tls_handshake_timeout"))?
                 .map_err(|_| anyhow!("tls_handshake_error"))?;
-                a.tls_ms = Some(ms(tls_start));
+                if let Some(attempt) = attempt {
+                    attempt.tls_ms = tls_start.map(ms);
+                }
                 Box::new(stream)
             } else {
                 Box::new(socket)
@@ -1214,9 +1236,10 @@ mod h2_pool_tests {
         let mut connection_id = None;
         for _ in 0..8 {
             let (lease, attempt) = pool
-                .acquire(generation.clone(), endpoint.clone())
+                .acquire(generation.clone(), endpoint.clone(), true)
                 .await
                 .unwrap();
+            let attempt = attempt.unwrap();
             if let Some(id) = &connection_id {
                 assert_eq!(attempt.connection_id.as_ref(), Some(id));
             } else {
@@ -1303,12 +1326,15 @@ mod h2_pool_tests {
         let metrics = Arc::new(Metrics::default());
         let pool = Pool::new(config.limits, config.http2, metrics.clone());
         let (first_result, second_result) = tokio::join!(
-            pool.acquire(generation.clone(), endpoint.clone()),
-            pool.acquire(generation, endpoint),
+            pool.acquire(generation.clone(), endpoint.clone(), true),
+            pool.acquire(generation, endpoint, true),
         );
         let (mut first, first_attempt) = first_result.unwrap();
         let (mut second, second_attempt) = second_result.unwrap();
-        assert_eq!(first_attempt.connection_id, second_attempt.connection_id);
+        assert_eq!(
+            first_attempt.unwrap().connection_id,
+            second_attempt.unwrap().connection_id
+        );
         assert_eq!(metrics.upstream_streams_active.load(Ordering::Relaxed), 2);
         let request = || {
             Request::builder()
@@ -1383,10 +1409,10 @@ mod h2_pool_tests {
         let metrics = Arc::new(Metrics::default());
         let pool = Pool::new(config.limits.clone(), config.http2.clone(), metrics.clone());
         let (mut lease, _) = pool
-            .acquire(generation.clone(), endpoint.clone())
+            .acquire(generation.clone(), endpoint.clone(), true)
             .await
             .unwrap();
-        let (mut sibling, _) = pool.acquire(generation, endpoint).await.unwrap();
+        let (mut sibling, _) = pool.acquire(generation, endpoint, true).await.unwrap();
         let deadline = tokio::time::Instant::now() + Duration::from_millis(250);
         lease.arm_deadline(deadline);
         sibling.arm_deadline(tokio::time::Instant::now() + Duration::from_secs(1));
