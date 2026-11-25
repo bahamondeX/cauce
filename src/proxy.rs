@@ -5,7 +5,7 @@ use crate::{
     telemetry::{self, Attempt, Event, Logger},
 };
 use hyper::{
-    body::Incoming,
+    body::{Body, Incoming},
     header::{
         HeaderMap, HeaderName, HeaderValue, CONNECTION, CONTENT_LENGTH, HOST, TRANSFER_ENCODING,
     },
@@ -572,7 +572,7 @@ pub async fn handle(
     let request_bytes = Arc::new(AtomicU64::new(0));
     let upload_guard = lease.upload_guard();
     let upstream_req = req.map(|b| {
-        if websocket.is_some() {
+        if websocket.is_some() || (upstream_h2 && b.is_end_stream()) {
             uploaded.store(true, Ordering::Release);
             return body::full("");
         }

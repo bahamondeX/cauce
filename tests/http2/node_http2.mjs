@@ -6,7 +6,7 @@ import crypto from 'node:crypto';
 let next = 0;
 const sessions = new WeakMap();
 const activity = new WeakMap();
-function handle(stream, headers) {
+function handle(stream, headers, flags = 0) {
   const session = stream.session;
   if (!sessions.has(session)) sessions.set(session, `up-${++next}`);
   if (!activity.has(session)) activity.set(session,{active:0,peak:0});
@@ -39,7 +39,8 @@ function handle(stream, headers) {
     if (stream.destroyed) return;
     const body = Buffer.concat(chunks);
     const responseHeaders={ ':status': 200, 'content-type': 'application/json', 'x-backend-session': id,
-      'x-backend-initial': 'yes', 'x-backend-peak': String(counters.peak), 'x-request-copy': headers['x-fixture-request'] || '', 'x-request-trailer-copy': requestTrailer };
+      'x-backend-initial': 'yes', 'x-backend-peak': String(counters.peak), 'x-request-copy': headers['x-fixture-request'] || '', 'x-request-trailer-copy': requestTrailer,
+      'x-request-ended-in-headers': String(Boolean(flags & http2.constants.NGHTTP2_FLAG_END_STREAM)) };
     const responseBody=JSON.stringify({ path, body: body.toString('base64'), session: id,
       protocol: session.socket.alpnProtocol || 'h2c', requestId: crypto.randomUUID() });
     // grpcio's HTTP/2 service below supplies real response trailers; keep this

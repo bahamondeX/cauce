@@ -29,12 +29,13 @@ def h2_request(host, tls=False, path='/', headers=None, body=b'', request_traile
     assert peer_settings_seen, 'server did not send SETTINGS'
     cap=conn.remote_settings.max_concurrent_streams
     stream=conn.get_next_available_stream_id()
-    hs=[(':method','POST' if body else 'GET'),(':scheme','https' if tls else 'http'),(':authority',host+':8080'),(':path',path),('content-length',str(len(body)))]
+    hs=[(':method','POST' if body or request_trailers else 'GET'),(':scheme','https' if tls else 'http'),(':authority',host+':8080'),(':path',path),('content-length',str(len(body)))]
     hs += list((headers or {}).items())
-    conn.send_headers(stream,hs,end_stream=not body)
+    conn.send_headers(stream,hs,end_stream=not body and request_trailers is None)
     if body:
         conn.send_data(stream,body,end_stream=request_trailers is None)
-        if request_trailers is not None:conn.send_headers(stream,list(request_trailers.items()),end_stream=True)
+    if request_trailers is not None:
+        conn.send_headers(stream,list(request_trailers.items()),end_stream=True)
     sock.sendall(conn.data_to_send())
     response=[]; trailers=[]; chunks=[]; ended=False
     while not ended and time.time()<deadline:
@@ -298,6 +299,12 @@ for label,tls,target in [('clear',False,'proxy-clear:8080'),('tls',True,'proxy-t
     assert headers.get('x-backend-initial')=='yes',headers
     assert headers.get('x-request-copy')=='copied',headers
     assert cap==4, (label,cap)
+    assert headers.get('x-request-ended-in-headers')=='true',(label,headers)
+    tail_only=h2_request('proxy-'+label,tls=tls,path='/request-trailer',
+                         request_trailers={'x-request-trailer':'only-trailers'})
+    assert tail_only[0]==200 and tail_only[1].get('x-request-trailer-copy')=='only-trailers',(label,tail_only[:3])
+    assert tail_only[1].get('x-request-ended-in-headers')=='false',(label,tail_only[:3])
+    checks.append(f'{label}: empty uploads end in initial HEADERS; zero-data request trailers forwarded')
     reqtrail=h2_request('proxy-'+label,tls=tls,path='/request-trailer',body=b'payload',request_trailers={'x-request-trailer':'client-finished'})
     assert reqtrail[0]==200 and reqtrail[1].get('x-request-trailer-copy')=='client-finished',(label,reqtrail[:3])
     h1=h2_request('proxy-'+label,tls=tls,path='/http1/check')
