@@ -207,6 +207,8 @@ impl Logger {
             let mut rotation_pending = true;
             let mut writer = open(&config, &mut rotation_pending).ok();
             let mut size = fs::metadata(&config.path).map(|x| x.len()).unwrap_or(0);
+            let mut batch = Vec::with_capacity(128);
+            let mut data = Vec::with_capacity(1024);
             loop {
                 let first = match rx.recv_timeout(Duration::from_millis(100)) {
                     Ok(e) => e,
@@ -218,10 +220,11 @@ impl Logger {
                     }
                     Err(_) => break,
                 };
-                let mut batch = vec![first];
+                batch.push(first);
                 batch.extend(rx.try_iter().take(127));
-                for event in batch {
-                    let mut data = serde_json::to_vec(&event).expect("serializable event");
+                for event in batch.drain(..) {
+                    data.clear();
+                    serde_json::to_writer(&mut data, &event).expect("serializable event");
                     data.push(b'\n');
                     if writer.is_none() {
                         writer = open(&config, &mut rotation_pending).ok();
