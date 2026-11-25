@@ -1,0 +1,95 @@
+services:
+  backend:
+    image: node:24-bookworm-slim
+    user: "10001:10001"
+    working_dir: /app
+    command: ["node", "/app/backend.mjs"]
+    volumes:
+      - ./tests/http2_stress/backend.mjs:/app/backend.mjs:ro
+      - ./work/http2-stress/tls:/tls:ro
+    expose: ["7001", "7002", "7003", "7009"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+  proxy-clear:
+    image: ${CAUCE_STRESS_PROXY_CLEAR_IMAGE:-cauce:0.6-final-arm64}
+    command: ["/etc/cauce/http2-stress/clear.toml"]
+    volumes:
+      - ./examples/http2-stress/clear.toml:/etc/cauce/http2-stress/clear.toml:ro
+      - stress_clear_logs:/var/log/cauce
+    expose: ["8080"]
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_STRESS_ADMIN_TOKEN:-increment6-http2-stress-probe-token}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    depends_on: [backend]
+  proxy-tls:
+    image: ${CAUCE_STRESS_PROXY_TLS_IMAGE:-cauce:0.6-final-arm64}
+    command: ["/etc/cauce/http2-stress/tls.toml"]
+    volumes:
+      - ./examples/http2-stress/tls.toml:/etc/cauce/http2-stress/tls.toml:ro
+      - ./work/http2-stress/tls:/tls:ro
+      - stress_tls_logs:/var/log/cauce
+    expose: ["8080"]
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_STRESS_ADMIN_TOKEN:-increment6-http2-stress-probe-token}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    depends_on: [backend]
+  probe-clear:
+    image: python:3.13-slim-bookworm
+    network_mode: "service:proxy-clear"
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_STRESS_ADMIN_TOKEN:-increment6-http2-stress-probe-token}
+    command: ["python", "-c", "import time; time.sleep(3600)"]
+    depends_on: [proxy-clear]
+  probe-tls:
+    image: python:3.13-slim-bookworm
+    network_mode: "service:proxy-tls"
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_STRESS_ADMIN_TOKEN:-increment6-http2-stress-probe-token}
+    command: ["python", "-c", "import time; time.sleep(3600)"]
+    depends_on: [proxy-tls]
+  client-clear:
+    build: { context: ., dockerfile: tests/http2_stress/Dockerfile }
+    network_mode: "service:proxy-clear"
+    pid: "service:proxy-clear"
+    volumes:
+      - ./work/http2-stress/tls:/tls:ro
+      - ./work/http2-stress/results:/results
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_STRESS_ADMIN_TOKEN:-increment6-http2-stress-probe-token}
+      CAUCE_STRESS_SEED: ${CAUCE_STRESS_SEED:-1592639710}
+      CAUCE_STRESS_WAVES: ${CAUCE_STRESS_WAVES:-3}
+      CAUCE_STRESS_REQUESTS: ${CAUCE_STRESS_REQUESTS:-32}
+      CAUCE_STRESS_FUZZ_CASES: ${CAUCE_STRESS_FUZZ_CASES:-24}
+      CAUCE_STRESS_MODE: clear
+    depends_on: [proxy-clear, proxy-tls, backend]
+    profiles: [test]
+  client-tls:
+    build: { context: ., dockerfile: tests/http2_stress/Dockerfile }
+    network_mode: "service:proxy-tls"
+    pid: "service:proxy-tls"
+    volumes:
+      - ./work/http2-stress/tls:/tls:ro
+      - ./work/http2-stress/results:/results
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_STRESS_ADMIN_TOKEN:-increment6-http2-stress-probe-token}
+      CAUCE_STRESS_SEED: ${CAUCE_STRESS_SEED:-1592639710}
+      CAUCE_STRESS_WAVES: ${CAUCE_STRESS_WAVES:-3}
+      CAUCE_STRESS_REQUESTS: ${CAUCE_STRESS_REQUESTS:-32}
+      CAUCE_STRESS_FUZZ_CASES: ${CAUCE_STRESS_FUZZ_CASES:-24}
+      CAUCE_STRESS_MODE: tls
+    depends_on: [proxy-clear, proxy-tls, backend]
+    profiles: [test]
+volumes:
+  stress_clear_logs:
+  stress_tls_logs:

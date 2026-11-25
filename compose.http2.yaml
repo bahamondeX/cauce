@@ -1,0 +1,86 @@
+services:
+  proxy-clear:
+    image: ${CAUCE_HTTP2_PROXY_CLEAR_IMAGE:-cauce-http2-proxy-clear:local}
+    build: .
+    command: ["/etc/cauce/http2/clear.toml"]
+    volumes:
+      - ./examples/http2:/etc/cauce/http2:ro
+      - cauce_http2_clear_logs:/var/log/cauce
+    expose: ["8080"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    depends_on: [node, grpc, h2early]
+  proxy-tls:
+    image: ${CAUCE_HTTP2_PROXY_TLS_IMAGE:-cauce-http2-proxy-tls:local}
+    build: .
+    command: ["/etc/cauce/http2/tls.toml"]
+    volumes:
+      - ./examples/http2:/etc/cauce/http2:ro
+      - ./work/http2/tls:/run/cauce-http2-tls:ro
+      - cauce_http2_tls_logs:/var/log/cauce
+    expose: ["8080"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    depends_on: [node, grpc, h2early]
+  node:
+    build:
+      context: .
+      dockerfile: tests/http2/node.Dockerfile
+    volumes:
+      - ./work/http2/tls:/tls:ro
+    expose: ["7001", "7002", "7003", "7004", "7005", "7006", "7007", "7008"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+  grpc:
+    build:
+      context: .
+      dockerfile: tests/http2/grpc.Dockerfile
+    volumes:
+      - ./work/http2/tls:/tls:ro
+    expose: ["50051", "50052"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 256m
+  h2early:
+    build:
+      context: .
+      dockerfile: tests/http2/early.Dockerfile
+    volumes:
+      - ./work/http2/tls:/tls:ro
+    expose: ["7009", "7010"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+  client:
+    build:
+      context: .
+      dockerfile: tests/http2/client.Dockerfile
+    volumes:
+      - ./work/http2/tls:/tls:ro
+      - ./tests/http2/client.py:/test/client.py:ro
+    environment:
+      CA_FILE: /tls/ca.crt
+    depends_on: [proxy-clear, proxy-tls, node, grpc]
+    profiles: [test]
+  lifecycle:
+    build:
+      context: .
+      dockerfile: tests/http2/node_lifecycle.Dockerfile
+    depends_on: [proxy-clear]
+    profiles: [test]
+volumes:
+  cauce_http2_clear_logs:
+  cauce_http2_tls_logs:

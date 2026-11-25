@@ -1,0 +1,133 @@
+services:
+  backend-h2:
+    image: ${BACKEND_H2_IMAGE:-cauce-increment8-h2:local}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.h2
+    volumes:
+      - ${CERT_DIR:-./certs}:/certs:ro
+    expose: ["8000", "8443", "9000"]
+    cpus: 1.0
+    cpuset: "${CPUSET_BACKEND:-1}"
+    mem_limit: 256m
+    pids_limit: 64
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    profiles: [http2]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9000/stats').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 1h
+      timeout: 1s
+      retries: 30
+      start_period: 30s
+      start_interval: 1s
+
+  backend-grpc:
+    image: ${BACKEND_GRPC_IMAGE:-cauce-increment8-grpc:local}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.grpc
+    volumes:
+      - ${CERT_DIR:-./certs}:/certs:ro
+    expose: ["50051", "50052", "9001"]
+    cpus: 1.0
+    cpuset: "${CPUSET_BACKEND:-1}"
+    mem_limit: 256m
+    pids_limit: 64
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    profiles: [grpc]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9001/stats', timeout=1).read()"]
+      interval: 1h
+      timeout: 2s
+      retries: 30
+      start_period: 30s
+      start_interval: 1s
+
+  proxy-cauce:
+    image: ${CAUCE_IMAGE:-cauce:0.7-final-arm64}
+    command: ["/etc/cauce/cauce.toml"]
+    volumes:
+      - ${CAUCE_CONFIG:-./configs/cauce-h2-clear.toml}:/etc/cauce/cauce.toml:ro
+      - ${CERT_DIR:-./certs}:/certs:ro
+    environment:
+      TOKIO_WORKER_THREADS: "1"
+    expose: ["8080", "8443", "9090"]
+    cpus: 1.0
+    cpuset: "${CPUSET_PROXY:-0}"
+    mem_limit: 256m
+    pids_limit: 128
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    networks:
+      default:
+        aliases: [proxy]
+
+  proxy-nginx:
+    image: ${NGINX_IMAGE:-nginx:1.30.6@sha256:42c68eab6f7e22611786a9fe1d1c019e275c50185bd54b8f75dc2b9184322703}
+    volumes:
+      - ${NGINX_CONFIG:-./configs/nginx-h2-clear.conf}:/etc/nginx/nginx.conf:ro
+      - ${CERT_DIR:-./certs}:/certs:ro
+    expose: ["8080", "8443"]
+    cpus: 1.0
+    cpuset: "${CPUSET_PROXY:-0}"
+    mem_limit: 256m
+    pids_limit: 128
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    tmpfs: [/tmp]
+    networks:
+      default:
+        aliases: [proxy]
+
+  client:
+    image: ${CLIENT_IMAGE:-node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944}
+    working_dir: /bench
+    command: ["node", "/bench/load_h2.mjs"]
+    volumes:
+      - ./load_h2.mjs:/bench/load_h2.mjs:ro
+      - ./gate_h2.mjs:/bench/gate_h2.mjs:ro
+      - ${CERT_DIR:-./certs}:/certs:ro
+      - ${RESULT_DIR:-./results}:/results
+    cpus: 1.0
+    cpuset: "${CPUSET_CLIENT:-2}"
+    mem_limit: 256m
+    pids_limit: 128
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    profiles: [client]
+
+  sampler-cauce:
+    image: python:3.13.2-slim-bookworm@sha256:6b3223eb4d93718828223966ad316909c39813dee3ee9395204940500792b740
+    command: ["python", "/probe/proc_sampler.py"]
+    volumes:
+      - ../increment7/proc_sampler.py:/probe/proc_sampler.py:ro
+      - ${RESULT_DIR:-./results}:/results
+    pid: "service:proxy-cauce"
+    network_mode: "service:proxy-cauce"
+    cap_add: [SYS_PTRACE]
+    cpus: 0.1
+    cpuset: "${CPUSET_SAMPLER:-3}"
+    mem_limit: 32m
+    pids_limit: 16
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    profiles: [sampler-cauce]
+
+  sampler-nginx:
+    image: python:3.13.2-slim-bookworm@sha256:6b3223eb4d93718828223966ad316909c39813dee3ee9395204940500792b740
+    command: ["python", "/probe/proc_sampler.py"]
+    volumes:
+      - ../increment7/proc_sampler.py:/probe/proc_sampler.py:ro
+      - ${RESULT_DIR:-./results}:/results
+    pid: "service:proxy-nginx"
+    network_mode: "service:proxy-nginx"
+    cap_add: [SYS_PTRACE]
+    cpus: 0.1
+    cpuset: "${CPUSET_SAMPLER:-3}"
+    mem_limit: 32m
+    pids_limit: 16
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    profiles: [sampler-nginx]

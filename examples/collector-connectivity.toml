@@ -1,0 +1,24 @@
+# Opt-in local Connectivity contract example. Offline spool remains the default;
+# copy this file and supply an owner-provisioned token and trusted CA before use.
+[collector]
+access_log = "/var/log/cauce/access.jsonl"
+state_path = "/var/lib/cauce/collector/state.db"
+delivery = "spool"
+# To opt in after obtaining the real local service URL, provisioned token and
+# trusted CA, set delivery to proposal-http and uncomment these settings:
+# delivery = "proposal-http"
+# endpoint = "https://connectivity.example.invalid/v1/ingest/cauce-proposal"
+# token_file = "/run/secrets/cauce-connectivity-token"
+# ca_file = "/etc/ssl/certs/connectivity-ingest-ca.pem"
+spool_max_bytes = 8388608
+db_max_bytes = 12582912
+batch_max_events = 128
+batch_max_bytes = 524288
+max_line_bytes = 262144
+max_files = 32
+# Low-frequency profile: service request budgets are shared and can still
+# produce 429; the collector retains the batch and retries with backoff.
+poll_ms = 10000
+backoff_min_ms = 10000
+backoff_max_ms = 300000
+request_timeout_ms = 10000

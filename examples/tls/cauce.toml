@@ -1,0 +1,86 @@
+name = "cauce"
+listen = "0.0.0.0:8080"
+admin = "127.0.0.1:9090"
+
+[tls]
+cert_file = "/run/cauce-tls/proxy.crt"
+key_file = "/run/cauce-tls/proxy.key"
+
+[limits]
+clients = 64
+requests = 32
+connections = 16
+idle_connections = 8
+connecting = 4
+acquire_ms = 500
+connect_ms = 3000
+headers_ms = 5000
+stream_idle_ms = 30000
+request_ms = 120000
+client_headers_ms = 5000
+idle_connection_ms = 10000
+max_connection_age_ms = 60000
+dns_cache_ms = 5000
+tcp_keepalive_secs = 30
+max_header_bytes = 32768
+max_headers = 64
+max_body_bytes = 16777216
+shutdown_ms = 5000
+websocket_max_ms = 300000
+
+[logs]
+enabled = true
+path = "/var/log/cauce/access.jsonl"
+queue = 4096
+rotate_bytes = 16777216
+retained_files = 3
+
+[[upstreams]]
+id = "echo"
+address = "websocket:8765"
+host = "backend.test:8765"
+isolation = "websocket-tls"
+connections = 8
+idle_connections = 4
+failure_backoff_ms = 500
+tls = { server_name = "backend.test", ca_file = "/run/cauce-tls/ca.crt" }
+
+[[routes]]
+id = "websocket-echo"
+host = "localhost:8443"
+path_prefix = "/ws"
+balance = "round_robin"
+upstreams = ["echo"]
+
+[[upstreams]]
+id = "plain-ws"
+address = "websocket:8764"
+host = "websocket:8764"
+isolation = "websocket-cleartext"
+connections = 4
+idle_connections = 2
+failure_backoff_ms = 500
+
+[[routes]]
+id = "websocket-plain-upstream"
+host = "localhost:8443"
+path_prefix = "/plainws"
+balance = "round_robin"
+upstreams = ["plain-ws"]
+
+[[upstreams]]
+id = "https"
+address = "websocket:8766"
+host = "backend.test:8766"
+isolation = "https-keepalive"
+connections = 4
+idle_connections = 2
+failure_backoff_ms = 500
+tls = { server_name = "backend.test", ca_file = "/run/cauce-tls/ca.crt" }
+
+[[routes]]
+id = "https-api"
+host = "localhost:8443"
+path_prefix = "/http"
+balance = "round_robin"
+upstreams = ["https"]

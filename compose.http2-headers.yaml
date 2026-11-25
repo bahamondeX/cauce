@@ -1,0 +1,56 @@
+services:
+  proxy-clear:
+    image: ${CAUCE_HEADERS_PROXY_CLEAR_IMAGE:-cauce-headers-proxy-clear:local}
+    build: .
+    command: ["/etc/cauce/http2-headers/clear.toml"]
+    volumes:
+      - ./examples/http2-headers:/etc/cauce/http2-headers:ro
+      - cauce_headers_clear_logs:/var/log/cauce
+    expose: ["8080"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    depends_on: [node]
+  proxy-tls:
+    image: ${CAUCE_HEADERS_PROXY_TLS_IMAGE:-cauce-headers-proxy-tls:local}
+    build: .
+    command: ["/etc/cauce/http2-headers/tls.toml"]
+    volumes:
+      - ./examples/http2-headers:/etc/cauce/http2-headers:ro
+      - ./work/http2-headers/tls:/run/cauce-http2-tls:ro
+      - cauce_headers_tls_logs:/var/log/cauce
+    expose: ["8080"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    depends_on: [node]
+  node:
+    build:
+      context: .
+      dockerfile: tests/http2/node.Dockerfile
+    volumes:
+      - ./work/http2-headers/tls:/tls:ro
+    expose: ["7001", "7002"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+  client:
+    build:
+      context: .
+      dockerfile: tests/http2/headers_timeout.Dockerfile
+    volumes:
+      - ./work/http2-headers/tls:/tls:ro
+      - ./tests/http2/headers_timeout.py:/test/headers_timeout.py:ro
+    environment:
+      CA_FILE: /tls/ca.crt
+    depends_on: [proxy-clear, proxy-tls, node]
+    profiles: [test]
+volumes:
+  cauce_headers_clear_logs:
+  cauce_headers_tls_logs:

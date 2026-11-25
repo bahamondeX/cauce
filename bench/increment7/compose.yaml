@@ -1,0 +1,119 @@
+services:
+  backend:
+    image: ${BACKEND_IMAGE:-cauce-increment7-backend:local}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      TLS: "1"
+    volumes:
+      - ${CERT_DIR:-./certs}:/certs:ro
+    expose: ["8000", "8443", "9000"]
+    cpus: 1.0
+    cpuset: "${CPUSET_BACKEND:-1}"
+    mem_limit: 256m
+    pids_limit: 64
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9000/stats').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 1h
+      timeout: 1s
+      retries: 30
+      start_period: 30s
+      start_interval: 1s
+  proxy:
+    image: ${CAUCE_IMAGE:-cauce:0.7-final-arm64}
+    command: ["/etc/cauce/cauce.toml"]
+    volumes:
+      - ${CAUCE_CONFIG:-./configs/cauce-clear.toml}:/etc/cauce/cauce.toml:ro
+      - ${CERT_DIR:-./certs}:/certs:ro
+      - proxy_logs:/proxylogs
+    environment:
+      TOKIO_WORKER_THREADS: "1"
+    expose: ["8080", "8443", "9090"]
+    cpus: 1.0
+    cpuset: "${CPUSET_PROXY:-0}"
+    mem_limit: 256m
+    pids_limit: 128
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    depends_on:
+      backend: {condition: service_healthy}
+      log-init: {condition: service_completed_successfully}
+  nginx:
+    image: ${NGINX_IMAGE:-nginx:1.30.6@sha256:42c68eab6f7e22611786a9fe1d1c019e275c50185bd54b8f75dc2b9184322703}
+    volumes:
+      - ${NGINX_CONFIG:-./configs/nginx-clear.conf}:/etc/nginx/nginx.conf:ro
+      - ${CERT_DIR:-./certs}:/certs:ro
+      - proxy_logs:/proxylogs
+    expose: ["8080", "8443"]
+    cpus: 1.0
+    cpuset: "${CPUSET_PROXY:-0}"
+    mem_limit: 256m
+    pids_limit: 128
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+    depends_on:
+      backend: {condition: service_healthy}
+      log-init: {condition: service_completed_successfully}
+    networks:
+      default:
+        aliases: [proxy]
+  client:
+    image: ${CLIENT_IMAGE:-cauce-increment7-client:local}
+    build:
+      context: .
+      dockerfile: Dockerfile.client
+    profiles: ["client"]
+    volumes:
+      - ${RESULT_DIR:-./results}:/results
+      - ${CERT_DIR:-./certs}:/certs:ro
+      - ./preflight.py:/bench/preflight.py:ro
+    cpus: 1.0
+    cpuset: "${CPUSET_CLIENT:-2}"
+    mem_limit: 256m
+    pids_limit: 128
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+  sampler-cauce:
+    image: python:3.13.2-slim-bookworm@sha256:6b3223eb4d93718828223966ad316909c39813dee3ee9395204940500792b740
+    profiles: ["sampler-cauce"]
+    command: ["python", "/probe/proc_sampler.py"]
+    volumes:
+      - ./proc_sampler.py:/probe/proc_sampler.py:ro
+      - ${RESULT_DIR:-./results}:/results
+    pid: "service:proxy"
+    network_mode: "service:proxy"
+    cap_add: [SYS_PTRACE]
+    cpus: 0.1
+    cpuset: "${CPUSET_SAMPLER:-3}"
+    mem_limit: 32m
+    pids_limit: 16
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+  sampler-nginx:
+    image: python:3.13.2-slim-bookworm@sha256:6b3223eb4d93718828223966ad316909c39813dee3ee9395204940500792b740
+    profiles: ["sampler-nginx"]
+    command: ["python", "/probe/proc_sampler.py"]
+    volumes:
+      - ./proc_sampler.py:/probe/proc_sampler.py:ro
+      - ${RESULT_DIR:-./results}:/results
+    pid: "service:nginx"
+    network_mode: "service:nginx"
+    cap_add: [SYS_PTRACE]
+    cpus: 0.1
+    cpuset: "${CPUSET_SAMPLER:-3}"
+    mem_limit: 32m
+    pids_limit: 16
+    ulimits:
+      nofile: {soft: 1024, hard: 1024}
+  log-init:
+    image: python:3.13.2-slim-bookworm@sha256:6b3223eb4d93718828223966ad316909c39813dee3ee9395204940500792b740
+    command: ["python", "-c", "import os; os.chmod('/proxylogs', 0o777)"]
+    volumes:
+      - proxy_logs:/proxylogs
+    restart: "no"
+volumes:
+  proxy_logs:
+    name: ${LOG_VOLUME:-increment7-logs}

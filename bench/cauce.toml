@@ -1,0 +1,56 @@
+name = "cauce"
+listen = "0.0.0.0:8080"
+admin = "127.0.0.1:9090"
+
+[limits]
+clients = 1024
+requests = 256
+connections = 64
+idle_connections = 32
+connecting = 8
+acquire_ms = 250
+connect_ms = 1000
+headers_ms = 5000
+stream_idle_ms = 15000
+request_ms = 120000
+client_headers_ms = 5000
+idle_connection_ms = 10000
+max_connection_age_ms = 60000
+dns_cache_ms = 5000
+tcp_keepalive_secs = 30
+max_header_bytes = 32768
+max_headers = 64
+max_body_bytes = 16777216
+shutdown_ms = 5000
+
+[logs]
+enabled = false
+path = "/var/log/cauce/access.jsonl"
+queue = 4096
+rotate_bytes = 16777216
+retained_files = 3
+
+[[upstreams]]
+id = "python"
+address = "python:8000"
+host = "localhost:8000"
+isolation = "default"
+connections = 32
+idle_connections = 16
+failure_backoff_ms = 500
+
+[[upstreams]]
+id = "node"
+address = "node:8001"
+host = "localhost:8001"
+isolation = "default"
+connections = 32
+idle_connections = 16
+failure_backoff_ms = 500
+
+[[routes]]
+id = "api"
+host = "localhost:8080"
+path_prefix = "/"
+balance = "round_robin"
+upstreams = ["node"]

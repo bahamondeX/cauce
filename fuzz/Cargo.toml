@@ -1,0 +1,25 @@
+[package]
+name = "cauce-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[features]
+default = ["fuzzing"]
+fuzzing = []
+
+[dependencies]
+libfuzzer-sys = "0.4"
+hyper = { version = "1.12", features = ["client", "server", "http1", "http2"] }
+hyper-util = { version = "0.1", features = ["tokio", "server-auto", "http1", "http2"] }
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal", "fs", "io-util"] }
+
+[[bin]]
+name = "header_observer"
+path = "fuzz_targets/header_observer.rs"
+test = false
+doc = false
+bench = false

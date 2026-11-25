@@ -1,0 +1,53 @@
+name = "cauce"
+listen = "0.0.0.0:8080"
+admin = "127.0.0.1:9090"
+[http2]
+enabled = true
+max_concurrent_streams = 4
+initial_stream_window_bytes = 65535
+initial_connection_window_bytes = 1048576
+max_send_buffer_bytes = 65536
+max_pending_accept_reset_streams = 32
+max_local_error_reset_streams = 32
+[limits]
+clients = 16
+requests = 8
+connections = 16
+idle_connections = 8
+connecting = 4
+acquire_ms = 500
+connect_ms = 3000
+headers_ms = 5000
+stream_idle_ms = 30000
+request_ms = 5000
+client_headers_ms = 800
+idle_connection_ms = 10000
+max_connection_age_ms = 60000
+dns_cache_ms = 5000
+tcp_keepalive_secs = 30
+max_header_bytes = 32768
+max_headers = 128
+max_body_bytes = 16777216
+shutdown_ms = 5000
+[logs]
+enabled = true
+path = "/var/log/cauce/access.jsonl"
+queue = 4096
+rotate_bytes = 16777216
+retained_files = 3
+[[upstreams]]
+id = "http2"
+address = "node:7001"
+host = "backend.test:7001"
+isolation = "headers-test-clear"
+connections = 2
+idle_connections = 2
+failure_backoff_ms = 500
+protocol = "http2"
+streams_per_connection = 4
+[[routes]]
+id = "http2"
+host = "proxy-clear:8080"
+path_prefix = "/"
+balance = "round_robin"
+upstreams = ["http2"]

@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:cauce:access-log:1.1",
+  "title": "Cauce access log 1.1 (compatible with 1.0)",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "1.0",
+        "1.1"
+      ]
+    },
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "instance_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "config_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "traceparent": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$"
+    },
+    "route_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "upstream_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "method": {
+      "enum": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "PATCH",
+        "HEAD",
+        "OPTIONS",
+        "OTHER"
+      ]
+    },
+    "path": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "protocol": {
+      "enum": [
+        "HTTP/1.1",
+        "HTTP/2"
+      ]
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 599
+    },
+    "duration_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "transfer_ms": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "request_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "response_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outcome": {
+      "enum": [
+        "complete",
+        "cancelled",
+        "rejected",
+        "stream_timeout",
+        "body_error",
+        "body_limit"
+      ]
+    },
+    "error_direction": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "error_category": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "error_phase": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 256
+    },
+    "backpressure_observations": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "attempts": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1
+          },
+          "outcome": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "connection_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 256
+          },
+          "reused": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "pool_wait_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "connect_gate_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "dns_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "tcp_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "tls_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "headers_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          }
+        },
+        "required": [
+          "number",
+          "outcome",
+          "connection_id",
+          "reused",
+          "pool_wait_ms",
+          "connect_gate_ms",
+          "dns_ms",
+          "tcp_ms",
+          "tls_ms",
+          "headers_ms"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "timestamp",
+    "instance_id",
+    "config_version",
+    "request_id",
+    "traceparent",
+    "route_id",
+    "upstream_id",
+    "method",
+    "path",
+    "protocol",
+    "status",
+    "duration_ms",
+    "transfer_ms",
+    "request_bytes",
+    "response_bytes",
+    "outcome",
+    "error_direction",
+    "error_category",
+    "error_phase",
+    "reason",
+    "backpressure_observations",
+    "attempts"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": "1.0"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "protocol": {
+            "const": "HTTP/1.1"
+          }
+        }
+      }
+    }
+  ]
+}

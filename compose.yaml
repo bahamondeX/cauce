@@ -1,0 +1,60 @@
+services:
+  proxy:
+    build: .
+    ports: ["127.0.0.1:8080:8080"]
+    volumes:
+      - ./examples/docker.toml:/etc/cauce/cauce.toml:ro
+      - logs:/var/log/cauce
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_ADMIN_TOKEN:-}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: 2
+    stop_grace_period: 7s
+    depends_on: [python, node]
+  collector:
+    profiles: [collector]
+    build: .
+    entrypoint: ["/usr/local/bin/cauce-collector"]
+    command: ["--config", "/etc/cauce/collector.toml"]
+    volumes:
+      - ./examples/collector.toml:/etc/cauce/collector.toml:ro
+      - logs:/var/log/cauce:ro
+      - collector-state:/var/lib/cauce
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 32
+    mem_limit: 128m
+    cpus: 1
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options: {max-size: "1m", max-file: "3"}
+    depends_on: [proxy]
+  python:
+    build:
+      context: .
+      dockerfile: examples/python.Dockerfile
+    read_only: true
+    cap_drop: [ALL]
+    pids_limit: 64
+    mem_limit: 128m
+  node:
+    image: node:24-bookworm-slim
+    user: "10001:10001"
+    working_dir: /app
+    command: ["node", "node.mjs"]
+    volumes: ["./examples/node.mjs:/app/node.mjs:ro"]
+    read_only: true
+    cap_drop: [ALL]
+    pids_limit: 64
+    mem_limit: 128m
+volumes:
+  logs:
+  collector-state:
+# Offline collector is opt-in: --profile collector. TLS/WebSocket: compose.tls.yaml.

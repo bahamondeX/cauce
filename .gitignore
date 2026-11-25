@@ -1,0 +1,10 @@
+/target/
+/logs/
+/work/
+__pycache__/
+
+# Generated benchmark and test artifacts
+/bench/results/
+/bench/increment*/results/
+/tests/resilience/results/
+/tests/resilience/.proxy-run-*

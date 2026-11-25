@@ -1,0 +1,36 @@
+services:
+  proxy:
+    build: .
+    ports: ["127.0.0.1:8443:8080"]
+    command: ["/etc/cauce/tls/cauce.toml"]
+    volumes:
+      - ./examples/tls:/etc/cauce/tls:ro
+      - ./work/tls:/run/cauce-tls:ro
+      - cauce_tls_logs:/var/log/cauce
+    environment:
+      CAUCE_ADMIN_TOKEN: ${CAUCE_ADMIN_TOKEN:-}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: 2
+    stop_grace_period: 7s
+    depends_on: [websocket]
+  websocket:
+    build:
+      context: .
+      dockerfile: tests/fixtures/websocket.Dockerfile
+    environment:
+      TLS_CERT: /run/cauce-tls/backend.crt
+      TLS_KEY: /run/cauce-tls/backend.key
+    volumes:
+      - ./work/tls:/run/cauce-tls:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+    expose: ["8764", "8765", "8766"]
+volumes:
+  cauce_tls_logs:
