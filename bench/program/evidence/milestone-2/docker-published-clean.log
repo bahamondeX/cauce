@@ -1,0 +1,75 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.68kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 162B done
+#4 DONE 0.0s
+
+#5 [stage-1 1/7] FROM docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#5 DONE 0.0s
+
+#6 [builder 1/8] FROM docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 42.65kB 0.0s done
+#7 DONE 0.0s
+
+#8 [builder 6/8] COPY schemas ./schemas
+#8 CACHED
+
+#9 [builder 4/8] COPY Cargo.toml Cargo.lock ./
+#9 CACHED
+
+#10 [builder 5/8] COPY src ./src
+#10 CACHED
+
+#11 [builder 2/8] RUN case "arm64" in       amd64) cauce_target=x86_64-unknown-linux-gnu ;;       arm64) cauce_target=aarch64-unknown-linux-gnu ;;       *) exit 1 ;; esac     && if [ "arm64" != "arm64" ]; then       apt-get update && case "arm64" in         amd64) apt-get install -y --no-install-recommends gcc-x86-64-linux-gnu libc6-dev-amd64-cross ;;         arm64) apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross ;;       esac && rm -rf /var/lib/apt/lists/*; fi     && rustup target add "$cauce_target"
+#11 CACHED
+
+#12 [builder 3/8] WORKDIR /src
+#12 CACHED
+
+#13 [builder 7/8] COPY examples/cauce.toml ./examples/cauce.toml
+#13 CACHED
+
+#14 [builder 8/8] RUN --mount=type=cache,id=cauce-registry,target=/usr/local/cargo/registry,sharing=locked     --mount=type=cache,id=cauce-target-arm64,target=/src/target,sharing=locked     case "arm64" in       amd64) cauce_target=x86_64-unknown-linux-gnu; export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc ;;       arm64) cauce_target=aarch64-unknown-linux-gnu; export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc ;;     esac     && if [ "arm64" = "arm64" ]; then       unset CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER; fi     && cargo clean --release --target "$cauce_target" -p cauce     && cargo build --release --locked --target "$cauce_target"     && cp "/src/target/$cauce_target/release/cauce" /usr/local/bin/cauce-built     && cp "/src/target/$cauce_target/release/cauce-collector" /usr/local/bin/cauce-collector-built
+#14 0.263      Removed 28 files, 29.4MiB total
+#14 0.617    Compiling cauce v0.9.1 (/src)
+#14 21.84     Finished `release` profile [optimized] target(s) in 21.55s
+#14 DONE 22.0s
+
+#15 [stage-1 3/7] COPY --from=builder /usr/local/bin/cauce-built /usr/local/bin/cauce
+#15 CACHED
+
+#16 [stage-1 4/7] COPY --from=builder /usr/local/bin/cauce-collector-built /usr/local/bin/cauce-collector
+#16 CACHED
+
+#17 [stage-1 2/7] RUN groupadd --gid 10001 cauce && useradd --uid 10001 --gid 10001 --no-create-home cauce     && mkdir -p /etc/cauce /var/log/cauce /var/lib/cauce && chown 10001:10001 /var/log/cauce /var/lib/cauce
+#17 CACHED
+
+#18 [stage-1 6/7] COPY LICENSE /usr/share/doc/cauce/LICENSE
+#18 CACHED
+
+#19 [stage-1 5/7] COPY examples/docker.toml /etc/cauce/cauce.toml
+#19 CACHED
+
+#20 [stage-1 7/7] COPY third-party /usr/share/doc/cauce/third-party
+#20 CACHED
+
+#21 exporting to image
+#21 exporting layers done
+#21 writing image sha256:f61c34cf818dcbcd59543e18ab21cd7f11bc8056dbb497f3e22e581ddcec5a38 done
+#21 naming to docker.io/library/cauce:milestone2-published-clean done
+#21 DONE 0.0s
+
+View build details: docker-desktop://dashboard/build/default/default/sojgf0ao6ye5cvlpfe2p6eybk

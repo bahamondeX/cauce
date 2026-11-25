@@ -25,6 +25,7 @@ RUN --mount=type=cache,id=cauce-registry,target=/usr/local/cargo/registry,sharin
     esac \
     && if [ "$TARGETARCH" = "$BUILDARCH" ]; then \
       unset CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER; fi \
+    && cargo clean --release --target "$cauce_target" -p cauce \
     && cargo build --release --locked --target "$cauce_target" \
     && cp "/src/target/$cauce_target/release/cauce" /usr/local/bin/cauce-built \
     && cp "/src/target/$cauce_target/release/cauce-collector" /usr/local/bin/cauce-collector-built
