@@ -1,18 +1,27 @@
 use anyhow::{anyhow, ensure, Context, Result};
 use bytes::Bytes;
 use hdrhistogram::Histogram;
-use reqwest::{Client, Url, Version};
+use http_body_util::{BodyExt, Full};
+use hyper::{header, Method, Request, Uri, Version};
+use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
+use hyper_util::{
+    client::legacy::{connect::HttpConnector, Client},
+    rt::{TokioExecutor, TokioTimer},
+};
+use rustls::{ClientConfig, RootCertStore};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::BTreeMap,
     fs::{self, File},
     hint,
-    io::{BufWriter, Write},
+    io::{BufReader, BufWriter, Write},
     path::{Path, PathBuf},
+    sync::Arc,
     thread,
     time::{Duration, Instant},
 };
 use tokio::{sync::mpsc, task::JoinSet};
+use url::Url;
 
 fn default_timeout_ms() -> u64 {
     5_000
@@ -193,16 +202,80 @@ fn schedule(
     rejected
 }
 
+type LoadClient = Client<HttpsConnector<HttpConnector>, Full<Bytes>>;
+
+struct RequestTemplate {
+    uri: Uri,
+    method: Method,
+    version: Version,
+    host: Option<header::HeaderValue>,
+    payload: Bytes,
+}
+
+impl RequestTemplate {
+    fn request(&self) -> Request<Full<Bytes>> {
+        let mut request = Request::new(Full::new(self.payload.clone()));
+        *request.uri_mut() = self.uri.clone();
+        *request.method_mut() = self.method.clone();
+        *request.version_mut() = self.version;
+        request
+            .headers_mut()
+            .insert(header::ACCEPT, header::HeaderValue::from_static("*/*"));
+        if let Some(host) = &self.host {
+            request.headers_mut().insert(header::HOST, host.clone());
+        }
+        request
+    }
+}
+
+fn create_client(config: &Config) -> Result<LoadClient> {
+    let mut roots = RootCertStore::empty();
+    if let Some(path) = &config.ca_file {
+        let mut reader = BufReader::new(File::open(path)?);
+        for certificate in rustls_pemfile::certs(&mut reader) {
+            roots.add(certificate?)?;
+        }
+        ensure!(
+            !roots.is_empty(),
+            "fixture CA file contains no certificates"
+        );
+    }
+    let tls =
+        ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+            .with_safe_default_protocol_versions()?
+            .with_root_certificates(roots)
+            .with_no_client_auth();
+    let mut transport = HttpConnector::new();
+    transport.enforce_http(false);
+    transport.set_nodelay(true);
+    transport.set_keepalive(Some(Duration::from_secs(15)));
+    let tls = HttpsConnectorBuilder::new()
+        .with_tls_config(tls)
+        .https_or_http();
+    let connector = match config.protocol {
+        Protocol::Http1 => tls.enable_http1().wrap_connector(transport),
+        Protocol::Http2 => tls.enable_http2().wrap_connector(transport),
+    };
+    // Reqwest's retry-never policy does not disable the Hyper client's replay
+    // of a request canceled on a reused connection before it was written.
+    Ok(Client::builder(TokioExecutor::new())
+        .pool_timer(TokioTimer::new())
+        .pool_max_idle_per_host(config.concurrency)
+        .http2_only(matches!(config.protocol, Protocol::Http2))
+        .retry_canceled_requests(false)
+        .build(connector))
+}
+
 async fn transfer(
     row: &mut Row,
-    request: reqwest::Request,
-    client: &Client,
+    request: Request<Full<Bytes>>,
+    client: &LoadClient,
     version: Version,
     expected_len: usize,
     expected_byte: u8,
     trace: bool,
 ) -> Result<()> {
-    let mut response = client.execute(request).await?;
+    let response = client.request(request).await?;
     row.status = Some(response.status().as_u16());
     if trace {
         row.request_id = response
@@ -219,7 +292,11 @@ async fn transfer(
         row.outcome = "protocol_error";
         return Ok(());
     }
-    while let Some(chunk) = response.chunk().await? {
+    let mut body = response.into_body();
+    while let Some(frame) = body.frame().await {
+        let Ok(chunk) = frame?.into_data() else {
+            continue;
+        };
         row.bytes += chunk.len();
         if row.bytes > expected_len || chunk.iter().any(|byte| *byte != expected_byte) {
             row.outcome = "body_error";
@@ -236,8 +313,8 @@ async fn transfer(
 
 async fn phase(
     config: &Config,
-    client: &Client,
-    request: &reqwest::Request,
+    client: &LoadClient,
+    request: &RequestTemplate,
     seconds: u64,
     warmup: bool,
 ) -> Result<Vec<Row>> {
@@ -263,7 +340,7 @@ async fn phase(
                     continue;
                 };
                 let client = client.clone();
-                let mut req = request.try_clone().context("clone replayable fixture request")?;
+                let mut req = request.request();
                 let trace = config.trace_offers;
                 if trace {
                     let offer_id = if warmup { 1_000_000_000 + offer.n } else { offer.n };
@@ -394,32 +471,21 @@ async fn main() -> Result<()> {
     };
     let config: Config = serde_json::from_reader(File::open(config_path)?)?;
     let url = config.validate()?;
-    let mut builder = Client::builder()
-        .no_proxy()
-        .redirect(reqwest::redirect::Policy::none())
-        .retry(reqwest::retry::never())
-        .pool_max_idle_per_host(config.concurrency)
-        .tls_built_in_root_certs(false);
-    if let Some(ca_file) = &config.ca_file {
-        builder =
-            builder.add_root_certificate(reqwest::Certificate::from_pem(&fs::read(ca_file)?)?);
-    }
-    let (builder, version) = match config.protocol {
-        Protocol::Http1 => (builder.http1_only(), Version::HTTP_11),
-        Protocol::Http2 => (builder.http2_prior_knowledge(), Version::HTTP_2),
+    let client = create_client(&config)?;
+    let request = RequestTemplate {
+        uri: url.as_str().parse()?,
+        version: match config.protocol {
+            Protocol::Http1 => Version::HTTP_11,
+            Protocol::Http2 => Version::HTTP_2,
+        },
+        method: if config.request_bytes == 0 {
+            Method::GET
+        } else {
+            Method::POST
+        },
+        host: config.host.as_deref().map(str::parse).transpose()?,
+        payload: Bytes::from(vec![b'x'; config.request_bytes]),
     };
-    let client = builder.build()?;
-    let mut request = if config.request_bytes == 0 {
-        client.get(url)
-    } else {
-        client
-            .post(url)
-            .body(Bytes::from(vec![b'x'; config.request_bytes]))
-    };
-    if let Some(host) = &config.host {
-        request = request.header(reqwest::header::HOST, host);
-    }
-    let request = request.version(version).build()?;
     let warmup = if config.warmup_seconds > 0 {
         phase(&config, &client, &request, config.warmup_seconds, true).await?
     } else {

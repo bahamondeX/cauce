@@ -2,6 +2,7 @@
 """Profile an isolated native Cauce process under the shared HTTP fixture."""
 
 import argparse
+import gzip
 import json
 import os
 import signal
@@ -122,8 +123,20 @@ def main():
                     raise RuntimeError("heaptrack did not finalize its output")
             if profile_status or results["successful"] != results["offered"]:
                 return 1
-    if args.heaptrack and not any(root.glob("heaptrack.*")):
-        return 1
+    if args.heaptrack:
+        traces = list(root.glob("heaptrack.gz")) + list(root.glob("heaptrack.zst"))
+        if len(traces) != 1 or not traces[0].stat().st_size:
+            raise RuntimeError("heaptrack capture missing")
+        if traces[0].suffix == ".gz":
+            with gzip.open(traces[0], "rb") as trace:
+                if not trace.read(1):
+                    raise RuntimeError("heaptrack capture is empty")
+        else:
+            with subprocess.Popen(["zstd", "-dc", str(traces[0])],
+                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as decoder:
+                if not decoder.stdout.read(1):
+                    raise RuntimeError("heaptrack capture is empty or unreadable")
+                decoder.terminate()
     return 0
 
 
