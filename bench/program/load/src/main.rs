@@ -5,7 +5,10 @@ use http_body_util::{BodyExt, Full};
 use hyper::{header, Method, Request, Uri, Version};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use hyper_util::{
-    client::legacy::{connect::HttpConnector, Client},
+    client::legacy::{
+        connect::{capture_connection, HttpConnector, HttpInfo},
+        Client,
+    },
     rt::{TokioExecutor, TokioTimer},
 };
 use rustls::{ClientConfig, RootCertStore};
@@ -133,6 +136,8 @@ struct Row {
     error: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     request_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    local_port: Option<u16>,
 }
 
 impl Row {
@@ -148,6 +153,7 @@ impl Row {
             outcome,
             error: None,
             request_id: None,
+            local_port: None,
         }
     }
 }
@@ -346,6 +352,7 @@ async fn phase(
                     let offer_id = if warmup { 1_000_000_000 + offer.n } else { offer.n };
                     req.headers_mut().insert("x-cauce-bench-offer", offer_id.into());
                 }
+                let connection = trace.then(|| capture_connection(&mut req));
                 let timeout = Duration::from_millis(config.timeout_ms);
                 let expected_len = config.response_bytes;
                 let expected_byte = config.response_byte;
@@ -367,6 +374,13 @@ async fn phase(
                         }
                     }
                     row.end_ns = ns(origin.elapsed());
+                    if let Some(connection) = connection {
+                        if let Some(metadata) = connection.connection_metadata().as_ref() {
+                            let mut extras = hyper::http::Extensions::new();
+                            metadata.get_extras(&mut extras);
+                            row.local_port = extras.get::<HttpInfo>().map(|info| info.local_addr().port());
+                        }
+                    }
                     row
                 });
             }

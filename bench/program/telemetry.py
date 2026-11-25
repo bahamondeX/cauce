@@ -151,6 +151,24 @@ def proxy_config(args, listen, admin, backend_port, path, logs_on):
     return config
 
 
+def endpoint_config(template, endpoints, hot_route=False):
+    limits, rest = template.split("[[upstreams]]", 1)
+    upstream, route = rest.split("[[routes]]", 1)
+    entries = []
+    names = []
+    for index in range(endpoints):
+        name = f"backend-{index}"
+        names.append(name)
+        entries.append("[[upstreams]]" + upstream.replace('id="backend"', f'id="{name}"'))
+    root = route.replace('upstreams=["backend"]', "upstreams=" + json.dumps(names))
+    entries.append("[[routes]]" + root)
+    if hot_route:
+        entries.append("[[routes]]" + route.replace('path_prefix="/"', 'path_prefix="/echo-hot"')
+                       .replace('upstreams=["backend"]', 'upstreams=["backend-0"]')
+                       .replace('id="api"', 'id="hot"').replace('id="http2"', 'id="hot"'))
+    return limits + "".join(entries)
+
+
 def native_summary(path, spec):
     raw = path / "offers.jsonl"
     summary = json.loads((path / "offers.summary.json").read_text())
@@ -167,14 +185,18 @@ def native_summary(path, spec):
     }, [(row["end_ns"] - row["scheduled_ns"]) / 1e6 for row in rows if row["outcome"] == "success"]
 
 
-def compare_cell(args, path, binary, logs_on, backend_port, stats_port, cpus, workers):
+def compare_cell(args, path, binary, logs_on, backend_port, stats_port, cpus, workers, strategy):
     path.mkdir()
     listen, admin = available_port(), available_port()
     proxy_log = path / "access.jsonl"
     config_path = path / "proxy.toml"
-    config_path.write_text(proxy_config(args, listen, admin, backend_port, proxy_log, logs_on))
+    config = proxy_config(args, listen, admin, backend_port, proxy_log, logs_on)
+    if args.endpoints != 1:
+        config = endpoint_config(config, args.endpoints)
+    config_path.write_text(config)
     token = secrets.token_hex(32)
-    env = {**os.environ, "TOKIO_WORKER_THREADS": str(workers), "CAUCE_ADMIN_TOKEN": token}
+    env = {**os.environ, "TOKIO_WORKER_THREADS": str(workers), "CAUCE_ADMIN_TOKEN": token,
+           "CAUCE_POOL_STRATEGY": strategy, "CAUCE_TRANSPORT_DIAGNOSTICS": "0"}
     warm, resume, done, release = [path / n for n in ("warm", "resume", "done", "release")]
     command = cpus[0] + [str(binary), str(config_path)]
     client_command = cpus[2] + [
@@ -261,14 +283,20 @@ def compare_cell(args, path, binary, logs_on, backend_port, stats_port, cpus, wo
             or log_records != (metric_end["requests_total"] if logs_on else 0)):
         failures.append("Access-log losses or unexpected records")
     latency.sort()
+    percentiles = {
+        name: latency[math.ceil(len(latency) * q) - 1] if latency else None
+        for name, q in (("p50", .5), ("p95", .95), ("p99", .99), ("p99.9", .999))
+    }
+    if args.require_http1_slo and (
+        not latency or percentiles["p99"] > 20 or percentiles["p99.9"] > 100
+        or load["offer_window_goodput_per_second"] < .99 * args.rate
+    ):
+        failures.append("HTTP/1.1 latency or offer-window goodput SLO failed")
     return {
         "failures": failures, "offers": load["offered"], "successful": successful,
         "goodput_per_second": load["offer_window_goodput_per_second"],
         "scheduler_p99_ms": lag,
-        "latency_ms": {
-            name: latency[math.ceil(len(latency) * q) - 1] if latency else None
-            for name, q in (("p50", .5), ("p95", .95), ("p99", .99), ("p99.9", .999))
-        },
+        "latency_ms": percentiles,
         "cpu_us_per_success": 1e6 * (stat_end["cpu_seconds"] - stat_start["cpu_seconds"]) / max(1, successful),
         "rss_kib_at_end": stat_end["rss_kib"], "logged": log_records,
         "upstream_reused": delta["upstream_reused_total"],
@@ -333,6 +361,10 @@ def main():
     parser.add_argument("--native-load", type=Path)
     parser.add_argument("--protocol", choices=("http1", "http2"), default="http1")
     parser.add_argument("--routes", type=int, choices=(1, 16, 128, 1024), default=1)
+    parser.add_argument("--endpoints", type=int, choices=range(1, 1025), metavar="1..1024", default=1)
+    parser.add_argument("--before-strategy", choices=("compact", "sharded"), default="compact")
+    parser.add_argument("--after-strategy", choices=("compact", "sharded"), default="compact")
+    parser.add_argument("--require-http1-slo", action="store_true")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--candidate-workers", type=int)
     parser.add_argument("--cpu-sets", nargs=3, metavar=("PROXY_SET", "BACKEND_SET", "CLIENT_SET"))
@@ -341,6 +373,10 @@ def main():
     args = parser.parse_args()
     if args.protocol == "http2" and not args.native_load:
         parser.error("the HTTP/2 workload needs the native client")
+    if args.endpoints != 1 and args.routes != 1:
+        parser.error("separate route-count and endpoint-count experiments")
+    if args.require_http1_slo and (args.protocol != "http1" or not args.native_load):
+        parser.error("--require-http1-slo needs the native HTTP/1.1 client")
     if min(args.rate, args.seconds, args.warmup, args.repetitions, args.max_lag_p99) <= 0:
         parser.error("Load, timing, and repetition settings must be positive")
     if (not args.max_lag_p99 <= JITTER_P99_NS / 1e6 or args.workers < 1
@@ -399,9 +435,11 @@ def main():
             for name, logs in order:
                 until(backend, lambda: json.loads(http(stats_port, "/stats")[0])["connections"] == 0, 5)
                 workers = (args.candidate_workers or args.workers) if name == "after" else args.workers
+                strategy = getattr(args, f"{name}_strategy")
                 cell = compare_cell(args, args.output / f"{repeat}-{name}-{logs}",
-                                    binaries[name], logs == "on", backend_port, stats_port, cpus, workers)
-                cells.append({"repeat": repeat, "binary": name, "logs": logs, "workers": workers, **cell})
+                                    binaries[name], logs == "on", backend_port, stats_port, cpus, workers, strategy)
+                cells.append({"repeat": repeat, "binary": name, "logs": logs, "workers": workers,
+                              "strategy": strategy, **cell})
                 save(args.output / "cells.json", cells)
                 save(args.output / "summary.json", summarize(cells, args.seed))
                 print(json.dumps(cells[-1]), flush=True)

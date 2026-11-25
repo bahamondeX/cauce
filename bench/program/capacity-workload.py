@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from capacity import digest, write_json
-from telemetry import H2_LAB, LAB, available_port, http, native_spec, process, proxy_config, until
+from telemetry import H2_LAB, LAB, available_port, endpoint_config, http, native_spec, process, proxy_config, until
 
 
 def main():
@@ -17,6 +17,8 @@ def main():
     parser.add_argument("generator", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--protocol", choices=("http1", "http2"), required=True)
+    parser.add_argument("--strategy", choices=("compact", "sharded"), default="compact")
+    parser.add_argument("--endpoints", type=int, choices=range(1, 1025), metavar="1..1024", default=1)
     parser.add_argument("--logs", action="store_true")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--proxy-cpus", type=int, nargs="+", default=[0])
@@ -52,11 +54,13 @@ def main():
     listen, admin, backend_port, stats_port = (available_port() for _ in range(4))
     fixture = LAB / "backend" / "server.mjs" if args.protocol == "http1" else H2_LAB / "backend" / "node.mjs"
     config = root / "proxy.toml"
-    config.write_text(proxy_config(args, listen, admin, backend_port, root / "access.jsonl", args.logs))
+    source = proxy_config(args, listen, admin, backend_port, root / "access.jsonl", args.logs)
+    config.write_text(endpoint_config(source, args.endpoints) if args.endpoints > 1 else source)
     write_json(root / "fixture.json", {
         "proxy_sha256": digest(args.proxy), "backend_source_sha256": digest(fixture),
         "proxy_cpus": args.proxy_cpus, "backend_cpu": args.backend_cpu, "client_cpu": args.client_cpu,
         "workers": args.workers, "logs": args.logs, "protocol": args.protocol,
+        "strategy": args.strategy, "endpoints": args.endpoints,
         "sampler_cpu": args.sampler_cpu, "concurrency": args.concurrency, "queue": args.queue,
     })
     target, control = root / "target.json", root / "control.json"
@@ -64,7 +68,8 @@ def main():
         write_json(path, {**native_spec(args, port), "concurrency": args.concurrency, "queue": args.queue})
     backend_env = {**os.environ, "PORT": str(backend_port), "TLS": "0", "BENCH_H2_TLS": "0",
                    "BENCH_BIND": "127.0.0.1", "BENCH_STATS_PORT": str(stats_port)}
-    proxy_env = {**os.environ, "TOKIO_WORKER_THREADS": str(args.workers)}
+    proxy_env = {**os.environ, "TOKIO_WORKER_THREADS": str(args.workers),
+                 "CAUCE_POOL_STRATEGY": args.strategy}
     with process(["taskset", "-c", str(args.backend_cpu), "node", str(fixture)],
                  root / "backend.log", backend_env) as backend:
         until(backend, lambda: http(stats_port, "/stats"), 5)

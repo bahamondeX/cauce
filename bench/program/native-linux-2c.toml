@@ -1,0 +1,31 @@
+[common]
+region = "us-east-1"
+distribution = "Ubuntu Server 24.04 LTS"
+rust = "1.88.0"
+node = "24.11.1"
+root_volume_gib = 40
+root_volume_type = "gp3"
+deployment = "sequential"
+planned_max_hours_per_host = 4
+proxy_cpus = [0, 1, 2, 3, 4, 5, 6, 7]
+generator_cpus = [8, 9]
+backend_cpu = 10
+sampler_cpu = 11
+workers = [1, 2, 4, 8]
+hardware_counters = ["cycles", "instructions", "branches", "branch-misses", "L1-dcache-load-misses", "LLC-load-misses"]
+
+[arm64]
+machine = "aarch64"
+instance_type = "c7g.4xlarge"
+cpu = "AWS Graviton3"
+default_vcpus = 16
+physical_cores = 16
+pmu = "unverified"
+
+[amd64]
+machine = "x86_64"
+instance_type = "c7a.4xlarge"
+cpu = "AMD EPYC"
+default_vcpus = 16
+physical_cores = 16
+pmu = "unverified"

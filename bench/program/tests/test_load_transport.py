@@ -110,6 +110,7 @@ class LoadTransportTests(unittest.TestCase):
                         for n, row in enumerate(rows):
                             self.assertEqual(row["outcome"], "success", row)
                             self.assertEqual(row["request_id"], str(offset + n))
+                            self.assertTrue(0 < row["local_port"] <= 65535, row)
 
     def test_tls_rejects_the_wrong_name(self):
         self.certificate()
@@ -123,6 +124,7 @@ class LoadTransportTests(unittest.TestCase):
             self.assertEqual(len(rows), 10)
             self.assertTrue(all(row["outcome"] == "transport_error" and row["status"] is None
                                 for row in rows))
+            self.assertTrue(all(0 < row["local_port"] <= 65535 for row in rows))
 
 
 if __name__ == "__main__":

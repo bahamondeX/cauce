@@ -122,6 +122,8 @@ def cpu_quotas():
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--strategy", choices=("compact", "sharded"), default="compact")
+    parser.add_argument("--endpoints", type=int, choices=range(1, 1025), metavar="1..1024", default=1)
     parser.add_argument("--revision", action="append", help="committed Cauce revision, repeat to compare")
     parser.add_argument("--toolchain", default="1.88.0")
     parser.add_argument("--proxy-cpus", type=int, nargs="+", required=True)
@@ -171,7 +173,7 @@ def main():
         }:
             del env[key]
     env["CARGO_INCREMENTAL"] = "0"
-    state = {"arch": arch, "smoke": args.smoke, "roles": {
+    state = {"arch": arch, "smoke": args.smoke, "strategy": args.strategy, "endpoints": args.endpoints, "roles": {
         "proxy": args.proxy_cpus, "generator": args.generator_cpus, "backend": args.backend_cpu,
         "sampler": args.sampler_cpu}, "toolchain": args.toolchain,
         "frequency_before": frequencies(cpus), "cgroup_v2_cpu_quotas": quotas}
@@ -199,6 +201,8 @@ def main():
                                                        cwd=REPO, text=True).strip()
                     source = workspace / revision
                     extract(revision, source)
+                    if args.strategy == "sharded" and "CAUCE_POOL_STRATEGY" not in (source / "src/pool.rs").read_text():
+                        raise RuntimeError("selected revision has no sharded pool")
                     build(env, source, args, output / f"{revision}-build.log")
                     proxy = source / "target/release/cauce"
                     state.setdefault("proxy_locks", {})[revision] = digest(source / "Cargo.lock")
@@ -209,7 +213,8 @@ def main():
                         rc = command([
                             sys.executable,
                             str(PROGRAM / "capacity-workload.py"), str(proxy), str(generator), str(dest),
-                            "--protocol", "http1", "--workers", str(workers), "--proxy-cpus",
+                            "--protocol", "http1", "--strategy", args.strategy, "--endpoints", str(args.endpoints),
+                            "--workers", str(workers), "--proxy-cpus",
                             *map(str, args.proxy_cpus[:workers]), "--client-cpu", *map(str, args.generator_cpus),
                             "--backend-cpu", str(args.backend_cpu), "--sampler-cpu", str(args.sampler_cpu),
                             "--seconds", str(args.seconds), "--warmup", str(args.warmup),
