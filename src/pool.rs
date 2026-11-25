@@ -54,6 +54,7 @@ fn empty_attempt() -> Attempt {
     }
 }
 pub struct Endpoint {
+    pool_index: usize,
     pub config: Upstream,
     pub slots: Arc<Semaphore>,
     pub inflight: AtomicUsize,
@@ -85,10 +86,12 @@ impl Generation {
         let endpoints = config
             .upstreams
             .iter()
-            .map(|u| {
+            .enumerate()
+            .map(|(pool_index, u)| {
                 (
                     u.id.clone(),
                     Arc::new(Endpoint {
+                        pool_index,
                         config: u.clone(),
                         slots: Arc::new(Semaphore::new(u.connections)),
                         inflight: AtomicUsize::new(0),
@@ -165,15 +168,43 @@ impl Drop for Connection {
         self.driver.abort();
     }
 }
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Copy)]
 struct Key {
     generation: u64,
-    upstream: String,
+    // Assigned once within each immutable generation, including distinct
+    // logical upstreams that happen to share a network address or TLS policy.
+    upstream: usize,
 }
 struct Idle {
     connections: HashMap<Key, Vec<Connection>>,
+    h1_count: usize,
     h2: HashMap<Key, Vec<Arc<H2Connection>>>,
 }
+impl Idle {
+    fn pop_any_h1(&mut self) -> Option<Connection> {
+        let socket = self.connections.values_mut().find_map(Vec::pop)?;
+        self.h1_count -= 1;
+        Some(socket)
+    }
+
+    fn reclaim_h2(&mut self) -> bool {
+        let Some((key, index)) = self.h2.iter().find_map(|(k, sockets)| {
+            sockets
+                .iter()
+                .position(|socket| socket.streams.available_permits() == socket.capacity)
+                .map(|i| (*k, i))
+        }) else {
+            return false;
+        };
+        let sockets = self.h2.get_mut(&key).unwrap();
+        sockets.remove(index);
+        if sockets.is_empty() {
+            self.h2.remove(&key);
+        }
+        true
+    }
+}
+
 pub struct Pool {
     idle: Mutex<Idle>,
     global: Arc<Semaphore>,
@@ -431,22 +462,24 @@ impl Lease {
                 );
                 return;
             }
-            let count: usize = idle.connections.values().map(Vec::len).sum();
+            let count = idle.h1_count;
             let key = Key {
                 generation: self.generation.version,
-                upstream: self.endpoint.config.id.clone(),
+                upstream: self.endpoint.pool_index,
             };
             let list = idle.connections.entry(key).or_default();
             if count < self.pool.limits.idle_connections
                 && list.len() < self.endpoint.config.idle_connections
             {
-                diagnostics::emit(
-                    "upstream_idle_return",
-                    || serde_json::json!({"connection": c.id}),
-                );
+                let connection = c.id;
                 list.push(c);
+                idle.h1_count += 1;
                 drop(idle);
                 self.pool.notify.notify_waiters();
+                diagnostics::emit(
+                    "upstream_idle_return",
+                    || serde_json::json!({"connection": connection}),
+                );
             } else {
                 diagnostics::emit(
                     "upstream_lease_discarded",
@@ -461,6 +494,7 @@ impl Pool {
         Arc::new(Self {
             idle: Mutex::new(Idle {
                 connections: HashMap::new(),
+                h1_count: 0,
                 h2: HashMap::new(),
             }),
             global: Arc::new(Semaphore::new(limits.connections)),
@@ -509,6 +543,7 @@ impl Pool {
             });
             !list.is_empty()
         });
+        idle.h1_count = idle.connections.values().map(Vec::len).sum();
         idle.h2.retain(|k, list| {
             if k.generation < oldest_generation {
                 return false;
@@ -535,7 +570,7 @@ impl Pool {
             });
             !list.is_empty()
         });
-        let mut idle_total: usize = idle.connections.values().map(Vec::len).sum();
+        let mut idle_total = idle.h1_count;
         idle_total += idle
             .h2
             .values()
@@ -546,23 +581,10 @@ impl Pool {
             })
             .sum::<usize>();
         while idle_total > self.limits.idle_connections {
-            if let Some((key, idx)) = idle.h2.iter().find_map(|(k, xs)| {
-                xs.iter()
-                    .position(|c| c.streams.available_permits() == c.capacity)
-                    .map(|i| (k.clone(), i))
-            }) {
-                let xs = idle.h2.get_mut(&key).unwrap();
-                xs.remove(idx);
-                if xs.is_empty() {
-                    idle.h2.remove(&key);
-                }
-                idle_total -= 1;
-            } else if let Some(xs) = idle.connections.values_mut().find(|xs| !xs.is_empty()) {
-                xs.pop();
-                idle_total -= 1;
-            } else {
+            if !idle.reclaim_h2() && idle.pop_any_h1().is_none() {
                 break;
             }
+            idle_total -= 1;
         }
         self.notify.notify_waiters();
     }
@@ -571,7 +593,7 @@ impl Pool {
     }
     pub fn idle_count(&self) -> usize {
         let idle = self.idle.lock().unwrap();
-        idle.connections.values().map(Vec::len).sum::<usize>()
+        idle.h1_count
             + idle
                 .h2
                 .values()
@@ -591,7 +613,7 @@ impl Pool {
         let begin = Instant::now();
         let key = Key {
             generation: generation.version,
-            upstream: endpoint.config.id.clone(),
+            upstream: endpoint.pool_index,
         };
         if endpoint.config.protocol == UpstreamProtocol::Http2 {
             return self
@@ -605,8 +627,14 @@ impl Pool {
                 notified.as_mut().enable();
                 {
                     let mut idle = self.idle.lock().unwrap();
-                    if let Some(list) = idle.connections.get_mut(&key) {
+                    let Idle {
+                        connections,
+                        h1_count,
+                        ..
+                    } = &mut *idle;
+                    if let Some(list) = connections.get_mut(&key) {
                         while let Some(c) = list.pop() {
+                            *h1_count -= 1;
                             if !c.sender.is_closed()
                                 && c.idle_since.elapsed().as_millis()
                                     < self.limits.idle_connection_ms as u128
@@ -619,22 +647,8 @@ impl Pool {
                     }
                     if let Ok(ep) = endpoint.slots.clone().try_acquire_owned() {
                         // Reclaim idle capacity from other keys rather than waiting forever behind it.
-                        if self.global.available_permits() == 0 {
-                            if let Some(list) =
-                                idle.connections.values_mut().find(|v| !v.is_empty())
-                            {
-                                list.pop();
-                            } else if let Some((key, idx)) = idle.h2.iter().find_map(|(k, xs)| {
-                                xs.iter()
-                                    .position(|c| c.streams.available_permits() == c.capacity)
-                                    .map(|i| (k.clone(), i))
-                            }) {
-                                let xs = idle.h2.get_mut(&key).unwrap();
-                                xs.remove(idx);
-                                if xs.is_empty() {
-                                    idle.h2.remove(&key);
-                                }
-                            }
+                        if self.global.available_permits() == 0 && idle.pop_any_h1().is_none() {
+                            idle.reclaim_h2();
                         }
                         if let Ok(global) = self.global.clone().try_acquire_owned() {
                             return (None, Some((global, ep)));
@@ -809,7 +823,7 @@ impl Pool {
                     break (c, p, false);
                 }
                 match self
-                    .connect_h2(&endpoint, key.clone(), capacity, &mut attempt)
+                    .connect_h2(&endpoint, key, capacity, &mut attempt)
                     .await
                 {
                     Ok(c) => {
@@ -822,7 +836,7 @@ impl Pool {
                         {
                             let mut idle = self.idle.lock().unwrap();
                             if !generation.draining.load(Ordering::Acquire) {
-                                idle.h2.entry(key.clone()).or_default().push(c.clone());
+                                idle.h2.entry(key).or_default().push(c.clone());
                             }
                         }
                         drop(gate);
@@ -1007,20 +1021,8 @@ impl Pool {
     }
     fn reclaim_idle_connection(&self) {
         let mut idle = self.idle.lock().unwrap();
-        if let Some((key, idx)) = idle.h2.iter().find_map(|(k, xs)| {
-            xs.iter()
-                .position(|c| c.streams.available_permits() == c.capacity)
-                .map(|i| (k.clone(), i))
-        }) {
-            let xs = idle.h2.get_mut(&key).unwrap();
-            xs.remove(idx);
-            if xs.is_empty() {
-                idle.h2.remove(&key);
-            }
-            return;
-        }
-        if let Some(xs) = idle.connections.values_mut().find(|xs| !xs.is_empty()) {
-            xs.pop();
+        if !idle.reclaim_h2() {
+            idle.pop_any_h1();
         }
     }
     async fn connect(
@@ -1407,12 +1409,14 @@ mod pool_tests {
             .unwrap();
         assert!(!lease.connection.as_ref().unwrap().sender.is_ready());
         lease.complete(true);
+        assert_eq!(lease.pool.idle_count(), 1);
         let (mut lease, attempt) = lease
             .pool
             .acquire(lease.generation.clone(), lease.endpoint.clone(), true)
             .await
             .unwrap();
         assert_eq!(attempt.unwrap().reused, Some(true));
+        assert_eq!(lease.pool.idle_count(), 0);
         let mut second = Box::pin(lease.send_request(request()));
         let second_state = std::future::poll_fn(|cx| Poll::Ready(second.as_mut().poll(cx))).await;
         resume_driver.send(()).unwrap();
