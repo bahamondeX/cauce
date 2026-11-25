@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Qualify independent generator/backend headroom, then ramp and confirm goodput."""
+
+import argparse
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import platform
+import subprocess
+import sys
+import time
+
+JITTER_P99_NS = 10_000_000
+LOAD_SCHEMA = "cauce.open-loop.v1"
+
+
+def write_json(path, obj):
+    path.write_text(json.dumps(obj, indent=2) + "\n")
+
+
+def digest(path):
+    with path.open("rb") as stream:
+        hash_value = hashlib.sha256()
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            hash_value.update(block)
+        return hash_value.hexdigest()
+
+
+def quantile(values, fraction):
+    return sorted(values)[math.ceil(fraction * len(values)) - 1] if values else None
+
+
+def audit(raw, summary, spec):
+    expected = spec["rate"] * spec["seconds"]
+    if summary["schema"] != LOAD_SCHEMA or summary["offered"] != expected:
+        raise ValueError("client summary count or schema differs")
+    outcomes = {}
+    jitter, latency, queue, service = [], [], [], []
+    within = 0
+    with raw.open() as offers:
+        for n, line in enumerate(offers):
+            row = json.loads(line)
+            scheduled = n * 1_000_000_000 // spec["rate"]
+            arrival, start, end = (row[key] for key in ("arrival_ns", "start_ns", "end_ns"))
+            if (row["n"] != n or row["scheduled_ns"] != scheduled
+                    or not scheduled <= arrival <= end
+                    or (start is not None and not arrival <= start <= end)):
+                raise ValueError(f"offer {n} has invalid identity or timestamp ordering")
+            jitter.append(arrival - scheduled)
+            outcome = row["outcome"]
+            outcomes[outcome] = outcomes.get(outcome, 0) + 1
+            if start is not None:
+                queue.append(start - arrival)
+            if outcome == "success":
+                if start is None or not 200 <= row["status"] < 300 or row["bytes"] != spec["response_bytes"]:
+                    raise ValueError(f"offer {n} has an inconsistent success record")
+                latency.append(end - scheduled)
+                service.append(end - start)
+                within += end <= spec["seconds"] * 1_000_000_000
+    if expected != len(jitter) or outcomes != summary["outcomes"] or within != summary["offer_window_successes"]:
+        raise ValueError("raw offer counts differ from summary")
+    if summary["warmup_offers"] != spec["rate"] * spec["warmup_seconds"]:
+        raise ValueError("warm-up offer count differs from spec")
+    if summary["warmup_offers"]:
+        warm_count = warm_success = 0
+        with raw.with_suffix(".warmup.jsonl").open() as warmup:
+            for n, line in enumerate(warmup):
+                row = json.loads(line)
+                if row["n"] != n or row["scheduled_ns"] != n * 1_000_000_000 // spec["rate"]:
+                    raise ValueError("warm-up offer identity differs")
+                warm_count += 1
+                warm_success += row["outcome"] == "success"
+        if (warm_count, warm_success) != (summary["warmup_offers"], summary["warmup_successes"]):
+            raise ValueError("warm-up raw counts differ from summary")
+    contaminated = []
+    if quantile(jitter, .99) > JITTER_P99_NS:
+        contaminated.append("scheduler p99 exceeds 10 ms")
+    if outcomes.get("scheduler_drop", 0) or outcomes.get("dispatcher_closed", 0):
+        contaminated.append("scheduler or dispatcher lost offers")
+    return {
+        "invalid_reasons": contaminated, "outcomes": outcomes, "offered": expected, "rate": spec["rate"],
+        "successful": len(latency), "offer_window_successes": within,
+        "goodput_per_s": within / spec["seconds"],
+        "scheduled_latency_ns": {name: quantile(latency, p) for name, p in
+                                 (("p50", .50), ("p95", .95), ("p99", .99), ("p99.9", .999))},
+        "queue_p99_ns": quantile(queue, .99), "service_p99_ns": quantile(service, .99),
+        "scheduler_p99_ns": quantile(jitter, .99), "warmup_successes": summary["warmup_successes"],
+        "warmup_offers": summary["warmup_offers"],
+    }
+
+
+def state():
+    result = {}
+    for name in ("cpu", "memory", "io"):
+        path = Path("/proc/pressure") / name
+        if path.is_file():
+            result[name] = path.read_text()
+    return result
+
+
+def run_cell(binary, root, spec, label, prefix=()):
+    path = root / label
+    path.mkdir()
+    command = [*prefix, str(binary), str(path / "spec.json"), str(path / "offers.jsonl"), str(path / "summary.json")]
+    write_json(path / "spec.json", spec)
+    started = time.monotonic_ns()
+    before = state()
+    try:
+        with (path / "client.log").open("w") as log:
+            subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, check=True,
+                           timeout=spec["seconds"] + spec["warmup_seconds"] + 30)
+        result = audit(path / "offers.jsonl", json.loads((path / "summary.json").read_text()), spec)
+    except (ValueError, TypeError, KeyError, OSError, subprocess.SubprocessError) as error:
+        result = {"invalid_reasons": [str(error)]}
+    result.update(label=label, rate=spec["rate"], seconds=spec["seconds"],
+                  elapsed_ns=time.monotonic_ns() - started, pressure_before=before, pressure_after=state())
+    write_json(path / "audit.json", result)
+    print(json.dumps({k: v for k, v in result.items() if not k.startswith("pressure")}), flush=True)
+    return result
+
+
+def passes(result, p99_ns, p999_ns, min_goodput, max_error):
+    if result["invalid_reasons"]:
+        return False
+    quantiles = result["scheduled_latency_ns"]
+    return (
+        quantiles["p99"] is not None and quantiles["p99"] <= p99_ns and quantiles["p99.9"] <= p999_ns
+        and result["warmup_offers"] == result["warmup_successes"]
+        and (result["offered"] - result["successful"]) / result["offered"] <= max_error
+        and result["goodput_per_s"] >= min_goodput * result["rate"]
+    )
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("binary", type=Path)
+    parser.add_argument("target", type=Path, help="base measurement spec JSON")
+    parser.add_argument("control", type=Path, help="direct fixture spec with its own authority and CA")
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--rates", type=int, nargs="+", required=True)
+    parser.add_argument("--confirm-seconds", type=int, required=True)
+    parser.add_argument("--p99-ms", type=float, required=True)
+    parser.add_argument("--p999-ms", type=float, required=True)
+    parser.add_argument("--min-goodput", type=float, default=.99)
+    parser.add_argument("--max-error", type=float, default=0)
+    args = parser.parse_args()
+    if (args.rates != sorted(set(args.rates)) or args.rates[0] <= 0
+            or not 0 < args.min_goodput <= 1 or not 0 <= args.max_error < 1
+            or not 0 < args.p99_ms <= args.p999_ms < float("inf")):
+        parser.error("rates must increase and SLO values must be valid")
+    target, control = [json.loads(path.read_text()) for path in (args.target, args.control)]
+    if set(target) & {"warmup_done_file", "resume_file", "measurement_done_file", "measurement_release_file"}:
+        parser.error("capacity runner owns phase timing")
+    if set(control) & {"warmup_done_file", "resume_file", "measurement_done_file", "measurement_release_file"}:
+        parser.error("control spec cannot configure phase barriers")
+    if any(target.get(key) != control.get(key) for key in
+           ("protocol", "request_bytes", "response_bytes", "response_byte")):
+        parser.error("the control must preserve protocol and payload")
+    if not 0 < target["seconds"] < args.confirm_seconds:
+        parser.error("confirmation must be longer than each ramp")
+    target, control = dict(target), dict(control)
+    args.output.mkdir(parents=True)
+    binary = args.binary.resolve()
+    write_json(args.output / "environment.json", {
+        "platform": platform.platform(), "clock": vars(time.get_clock_info("monotonic")),
+        "binary_sha256": digest(binary),
+        "affinity": sorted(os.sched_getaffinity(0)) if sys.platform == "linux" else None,
+    })
+    report = {"status": "PREFLIGHT", "caps": {
+        "p99_ms": args.p99_ms, "p999_ms": args.p999_ms, "max_error_fraction": args.max_error,
+        "min_goodput_fraction": args.min_goodput, "jitter_p99_ns": JITTER_P99_NS,
+    }, "cells": []}
+    manifest = args.output / "campaign.json"
+
+    def run(spec, label):
+        result = run_cell(binary, args.output, spec, label)
+        report["cells"].append(result)
+        write_json(manifest, report)
+        return result
+
+    # This is a combined generator-plus-backend control at twice the largest target rate.
+    preflight = run({**control, "rate": 2 * max(args.rates)}, "control-before")
+    if not passes(preflight, args.p99_ms * 1e6, args.p999_ms * 1e6, args.min_goodput, 0):
+        report["status"] = "REJECTED_PREFLIGHT"
+        write_json(manifest, report)
+        return 2
+
+    report["status"] = "RAMP"
+    best = None
+    limits = (args.p99_ms * 1e6, args.p999_ms * 1e6, args.min_goodput, args.max_error)
+    for rate in args.rates:
+        result = run({**target, "rate": rate}, f"ramp-{rate}")
+        if result["invalid_reasons"]:
+            report["status"] = "CONTAMINATED"
+            break
+        if not passes(result, *limits):
+            report["status"] = "SLO_LIMIT"
+            break
+        best = rate
+    if best is not None and report["status"] != "CONTAMINATED":
+        confirm = run({**target, "rate": best, "seconds": args.confirm_seconds}, f"confirm-{best}")
+        after = run({**control, "rate": 2 * max(args.rates)}, "control-after")
+        if not passes(after, args.p99_ms * 1e6, args.p999_ms * 1e6, args.min_goodput, 0):
+            report["status"] = "REJECTED_POSTFLIGHT"
+        elif passes(confirm, *limits):
+            report["status"] = "CONFIRMED"
+            report["highest_tested_confirmed_rate"] = best
+            report["confirmed_goodput_per_s"] = confirm["goodput_per_s"]
+        else:
+            report["status"] = "CONFIRMATION_FAILED"
+    write_json(manifest, report)
+    return 0 if report["status"] == "CONFIRMED" else 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())

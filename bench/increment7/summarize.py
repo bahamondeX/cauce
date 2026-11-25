@@ -39,13 +39,19 @@ def summarize(directory):
     if manifest['status'] != 'COMPLETE' or manifest.get('errors'):
         raise ValueError('only COMPLETE campaigns without errors can be summarized')
     verify_image_architectures(manifest['docker_context'].split()[-1], manifest['images'])
-    expected_groups = manifest['workload']['repetitions'] * 2 * 2
+    stacks = manifest['workload'].get('stacks', ['cauce', 'nginx'])
+    assert set(stacks) in ({'cauce', 'nginx'}, {'cauce', 'candidate', 'nginx'}) and len(stacks) == len(set(stacks))
+    expected_groups = manifest['workload']['repetitions'] * len(stacks) * 2
     assert len(manifest['capacity_gates']) == expected_groups, 'missing capacity gates'
     assert len(manifest['runs']) == expected_groups * len(manifest['workload']['scenarios']), 'incomplete matrix'
+    if manifest['workload'].get('generator') == 'rust':
+        assert set(manifest['native_controls']) == {'before', 'after'}, 'missing generator controls'
+        for gate in manifest['native_controls'].values():
+            assert not gate['invalid_reasons'] and gate['successful'] == gate['offered']
     assert len({r['id'] for r in manifest['runs']}) == len(manifest['runs']), 'duplicate run ids'
     tuples = {(r['repetition'], r['stack'], r['logs'], r['scenario']) for r in manifest['runs']}
     assert tuples == {(rep, stack, logs, scenario) for rep in range(1, manifest['workload']['repetitions'] + 1)
-                      for stack in ('cauce', 'nginx') for logs in ('off', 'on')
+                      for stack in stacks for logs in ('off', 'on')
                       for scenario in manifest['workload']['scenarios']}, 'duplicate/missing matrix cell'
     if 'access_log_checks' in manifest:
         assert len(manifest['access_log_checks']) == expected_groups // 2, 'missing log checks'
@@ -63,7 +69,12 @@ def summarize(directory):
     rows = []
     for run in manifest['runs']:
         ident = run['id']
-        raw = [json.loads(line) for line in (directory / 'raw' / f'{ident}.jsonl').read_text().splitlines()]
+        raw_path = directory / 'raw' / f'{ident}.jsonl'
+        if manifest['workload'].get('generator') == 'rust':
+            from native_load import project_rows
+            raw = project_rows(raw_path)
+        else:
+            raw = [json.loads(line) for line in raw_path.read_text().splitlines()]
         gen = run['generator']
         assert len(raw) == gen['offered'], (ident, 'lost arrivals')
         assert sorted(r['n'] for r in raw) == list(range(len(raw))), (ident, 'duplicate/missing arrival number')
@@ -151,6 +162,7 @@ def summarize(directory):
         aggregate.append(item)
     result = dict(schema='cauce.increment7.comparison.v1', campaign=manifest['run_id'], runs=len(rows),
                   percentile_aggregation='median of per-run nearest-rank percentiles; not a pooled percentile', groups=aggregate)
+    result['rejected_comparison_cells'] = [row['id'] for row in rows if row['generator_comparison_limited']]
     (directory / 'comparison.json').write_text(json.dumps(result, indent=2) + '\n')
     lines = ['# Resultados locales', '', 'Mediana entre repeticiones. CPU 100% = un núcleo; RSS suma procesos del proxy.',
              'RSS puede contar páginas compartidas varias veces; memoria cgroup cuenta el contenedor e incluye caché.',
@@ -165,8 +177,9 @@ def summarize(directory):
         nums = [med(x) for x in ('goodput_rps','p50_ms','p95_ms','p99_ms','proxy_cpu_pct','rss_peak_mib','cgroup_peak_mib')]
         other = sum(g[x] for x in ('errors','timeouts','drops','queue_rejections'))
         lines.append('| ' + ' | '.join([g['scenario'], g['logs'], g['stack'], str(g['offered_rate']), *nums, str(g['http_errors']), str(other)]) + ' |')
+    jitter_limit = manifest['workload'].get('scheduler_p99_limit_ms', 50)
     lines += ['', 'Los rangos mínimo/máximo por repetición están en `comparison.json`; todas las corridas en `comparison.csv`.',
-              'Las corridas con jitter p99 del generador >50 ms se marcan como `generator_comparison_limited`; sus latencias incluyen esa interferencia y no permiten atribuir el retraso exclusivamente al proxy.',
+              f'Las corridas con jitter p99 del generador >{jitter_limit} ms se marcan como `generator_comparison_limited`; sus latencias incluyen esa interferencia y no permiten atribuir el retraso exclusivamente al proxy.',
               'También se conserva throughput completado dentro de la ventana ofrecida (`offer_window_goodput_rps`) y éxitos totales / duración ofrecida (`successes_per_offer_duration`, incluye éxitos del drenaje).',
               'Los errores HTTP se contabilizan por separado; los 503 de saturación no se consideran respuestas útiles.', '']
     (directory / 'COMPARISON.md').write_text('\n'.join(lines))

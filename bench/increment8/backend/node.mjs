@@ -60,14 +60,17 @@ function reset(res) {
   state.connection_rows = Object.fromEntries(Object.entries(state.connection_rows).map(([k,v]) => [k, {...v, active:0, peak_streams:0, requests:0}]));
   res.writeHead(200, {'content-type':'application/json'}); res.end(JSON.stringify(snapshot()));
 }
+const bind = process.env.BENCH_BIND || '0.0.0.0';
 http.createServer((req,res) => {
   if (req.url === '/stats') { res.writeHead(200, {'content-type':'application/json'}); res.end(JSON.stringify(snapshot())); }
   else if (req.url === '/reset') reset(res);
   else { res.writeHead(404); res.end(); }
-}).listen(9000, '0.0.0.0');
+}).listen(Number(process.env.BENCH_STATS_PORT || 9000), bind);
 
 http2.createServer({ settings: { maxConcurrentStreams: 16 } })
-  .on('session', addConnection).on('stream', handle).listen(8000, '0.0.0.0');
-http2.createSecureServer({ key: fs.readFileSync('/certs/backend.key'), cert: fs.readFileSync('/certs/backend.crt'),
-  allowHTTP1: false, settings: { maxConcurrentStreams: 16 } })
-  .on('session', addConnection).on('stream', handle).listen(8443, '0.0.0.0');
+  .on('session', addConnection).on('stream', handle).listen(Number(process.env.PORT || 8000), bind);
+if (process.env.BENCH_H2_TLS !== '0') {
+  http2.createSecureServer({ key: fs.readFileSync('/certs/backend.key'), cert: fs.readFileSync('/certs/backend.crt'),
+    allowHTTP1: false, settings: { maxConcurrentStreams: 16 } })
+    .on('session', addConnection).on('stream', handle).listen(8443, bind);
+}

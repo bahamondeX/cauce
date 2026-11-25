@@ -110,14 +110,14 @@ def make_cauce_config(logs_dir, group, tls, logs):
     return dest
 
 def switch_app(dc_run, env, project, stack, service, sampler, tls, logs, group, template, logpath):
-    profile=f'sampler-{stack}'
+    profile=sampler
     # The PID/network-sharing sampler must be recreated after its service container changes.
     dc_run(['-p',project,'--profile',profile,'stop',sampler],env=env,check=False,timeout=20)
     dc_run(['-p',project,'--profile',profile,'rm','-f',sampler],env=env,check=False,timeout=20)
     dc_run(['-p',project,'stop',service],env=env,check=False,timeout=20)
     dc_run(['-p',project,'rm','-f',service],env=env,check=False,timeout=20)
     out=env.copy()
-    if stack=='cauce': out['CAUCE_CONFIG']=str(make_cauce_config(pathlib.Path(out['LOG_DIR']),group,tls,logs))
+    if stack!='nginx': out['CAUCE_CONFIG']=str(make_cauce_config(pathlib.Path(out['LOG_DIR']),group,tls,logs))
     else:
         nconf=pathlib.Path(out['RESULT_DIR'])/f'{group}-nginx-{"tls" if tls else "clear"}.conf'
         render_nginx(template,nconf,tls,logs,logpath)
@@ -168,6 +168,8 @@ def engine_ready(env):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--image',default='cauce:0.7-final-arm64')
+    p.add_argument('--native-load',type=pathlib.Path,help='native generator binary for the normal cleartext workload')
+    p.add_argument('--candidate-image',help='add a third stack using a second Cauce release image')
     p.add_argument('--nginx-image',default=os.environ.get('NGINX_IMAGE','nginx:1.30.6@sha256:42c68eab6f7e22611786a9fe1d1c019e275c50185bd54b8f75dc2b9184322703'))
     p.add_argument('--scenarios',nargs='+',choices=SCENARIOS,default=list(SCENARIOS))
     p.add_argument('--repetitions',type=int,default=3)
@@ -180,6 +182,12 @@ def main():
     p.add_argument('--skip-build',action='store_true',help='Use already-built local fixture images')
     p.add_argument('--skip-preflight',action='store_true',help='Debug only; final campaigns should retain the capacity gate')
     a=p.parse_args()
+    stacks = (*STACKS, 'candidate') if a.candidate_image else STACKS
+    jitter_limit_ms = 10 if a.candidate_image or a.native_load else 50
+    if a.native_load:
+        import native_load
+        if a.scenarios != ['normal'] or not all(float(x).is_integer() for x in (a.rate or 500, a.seconds, a.warmup)):
+            p.error('native mode requires the normal workload and integer rate and phase durations')
     if not 1<=a.repetitions<=20 or not 8<=a.seconds<=3600 or not 0<=a.warmup<=30 or a.concurrency!=32 or (a.rate is not None and not 1<=a.rate<=10000): p.error('invalid benchmark limits; baseline concurrency is fixed at 32')
     a.results_root=a.results_root.resolve()
     a.results_root.mkdir(parents=True,exist_ok=True)
@@ -195,6 +203,8 @@ def main():
     else: compose=['docker','compose']
     stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex[:6]
     outdir=a.results_root/f'increment7-{stamp}'; outdir.mkdir(parents=True,exist_ok=False)
+    if a.native_load:
+        shutil.copy2(a.native_load, outdir/'cauce-load')
     certdir=outdir/'certs'; create_certificates(certdir)
     template=HERE/'configs/nginx.conf.template'
     logdir=outdir/'proxy-logs';logdir.mkdir();logdir.chmod(0o777)
@@ -211,7 +221,8 @@ def main():
       'workload':{'scenarios':a.scenarios,'repetitions':a.repetitions,'seconds':a.seconds,'warmup_seconds':a.warmup,
                   'concurrency':a.concurrency,'rate_override':a.rate,'scenario_rates_per_second':SCENARIO_RATES,
                   'scenario_concurrency':{'saturation':64,'default':a.concurrency},'seed':a.seed,'http_version':'HTTP/1.1 on both hops',
-                  'logging_variants':['off','on'],'stack_order':'alternates by repetition'},
+                  'logging_variants':['off','on'],'generator':'rust' if a.native_load else 'python','stacks':stacks,'scheduler_p99_limit_ms':jitter_limit_ms,
+                  'stack_order':'seeded shuffle per repetition' if a.candidate_image else 'alternates by repetition'},
       'limits_contract':{'proxy_cpu_cores':1,'proxy_memory_bytes':268435456,'pids':128,'nofile':1024,
                          'requests':32,'upstream_physical_connections':32,'idle_upstream_connections':32,
                          'client_connections':128,'backend_max_body_bytes':16777216,
@@ -225,6 +236,9 @@ def main():
        'Both proxies write access logs to a Docker-local named volume; the runner exports the complete directory to the result folder after measurement. Logs include capacity preflight and excluded warmup requests as well as measured requests. Log schema and flush behavior differ.'],
       'host_disk_free_at_start_bytes':shutil.disk_usage(outdir).free,
       'runs':[],'capacity_gates':[],'access_log_checks':[],'errors':[]}
+    if a.native_load:
+        manifest['native_load_sha256'] = native_load.digest(a.native_load)
+        manifest['native_controls'] = {}
     (outdir/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
     try:
         run(['docker','pull',a.nginx_image],env=env,timeout=900)
@@ -234,7 +248,10 @@ def main():
         if not a.skip_build:
             dc_run(['--profile','client','build','backend','client'],timeout=900)
         image_lock={}
-        for name,ref in [('cauce',a.image),('nginx',a.nginx_image),('backend','cauce-increment7-backend:local'),('client','cauce-increment7-client:local'),('sampler',sampler_image)]:
+        references=[('cauce',a.image),('nginx',a.nginx_image),('backend','cauce-increment7-backend:local'),('client','cauce-increment7-client:local'),('sampler',sampler_image)]
+        if a.candidate_image:
+            references.append(('candidate',a.candidate_image))
+        for name,ref in references:
             info=json.loads(run(['docker','image','inspect',ref],env=env).stdout)[0]
             image_lock[name]={'reference':ref,'id':info.get('Id'),'architecture':info.get('Architecture'),'os':info.get('Os'),
                               'repo_digests':info.get('RepoDigests',[])}
@@ -253,24 +270,31 @@ def main():
         rng=random.Random(a.seed)
         for rep in range(a.repetitions):
             scenario_order=list(a.scenarios); rng.shuffle(scenario_order)
-            stack_order=list(STACKS) if rep%2==0 else list(reversed(STACKS))
+            stack_order=list(stacks) if rep%2==0 else list(reversed(stacks))
+            if a.candidate_image:
+                rng.shuffle(stack_order)
             for stack in stack_order:
-                for logs in ('off','on'):
+                log_order = rng.sample(('off', 'on'), 2) if a.candidate_image else ('off', 'on')
+                for logs in log_order:
                     group=f'r{rep+1}-{stack}-logs-{logs}'
                     logpath=f'/proxylogs/{group}-nginx-access.jsonl'
                     envg=baseenv.copy()
-                    if stack=='cauce': envg['CAUCE_CONFIG']=str(make_cauce_config(logdir,group,False,logs=='on'))
+                    if stack=='candidate': envg['CAUCE_IMAGE']=a.candidate_image
+                    if stack!='nginx': envg['CAUCE_CONFIG']=str(make_cauce_config(logdir,group,False,logs=='on'))
                     else:
                         nconf=outdir/f'{group}-nginx-clear.conf';render_nginx(template,nconf,False,logs=='on',logpath);envg['NGINX_CONFIG']=str(nconf)
-                    service='proxy' if stack=='cauce' else 'nginx';sampler=f'sampler-{stack}'
+                    service='nginx' if stack=='nginx' else 'proxy';sampler='sampler-nginx' if stack=='nginx' else 'sampler-cauce'
                     project=f'i7-{stamp[-6:]}-{rep}-{stack}-{logs}'
                     envg['LOG_VOLUME']=project+'-proxylogs'
                     try:
-                        dc_run(['-p',project,'--profile',f'sampler-{stack}','up','-d','--no-build','backend',service,sampler],env=envg,timeout=90)
+                        dc_run(['-p',project,'--profile',sampler,'up','-d','--no-build','backend',service,sampler],env=envg,timeout=90)
                         app_cid=dc_run(['-p',project,'ps','-q',service],env=envg).stdout.strip()
                         backend_cid=dc_run(['-p',project,'ps','-q','backend'],env=envg).stdout.strip()
                         if not app_cid or not backend_cid: raise RuntimeError('Compose failed to create app/backend containers')
                         limits=resource_limits(env,app_cid,service)
+                        if a.native_load and not manifest['runs']:
+                            manifest['native_controls']['before'] = native_load.control(
+                                dc_run,project,envg,outdir,a.rate or 500,a.seconds,a.warmup,'native-control-before')
                         if not a.skip_preflight:
                             gate_id=f'{group}-gate';reset_backend(env,backend_cid,gate_id)
                             gate=dc_run(['-p',project,'--profile','client','run','--no-deps','-T','--rm','--entrypoint','python','client','/bench/preflight.py','http://proxy:8080','--count','33'],env=envg,timeout=30)
@@ -306,7 +330,10 @@ def main():
                                      '--measurement-release-file',f'/results/{release.name}']
                             if scenario in ('normal','delayed','saturation','tls-warm','tls-cold'): cmdload += ['--expect-bytes','1024']
                             if tls: cmdload += ['--ca-file','/certs/ca.crt']
-                            shell=' '.join(shlex.quote(x) for x in ['python','/bench/load.py']+cmdload)
+                            command=['python','/bench/load.py']+cmdload
+                            if a.native_load:
+                                command=native_load.prepare(rate,a.seconds,a.warmup,raw,summary,warmf,resumef,measurement,release)
+                            shell=' '.join(shlex.quote(x) for x in command)
                             oneoff=f'i7-{stamp[-6:]}-{len(manifest["runs"]):03d}'
                             cmd=['-p',project,'--profile','client','run','--no-deps','-T','-d','--name',oneoff,'--entrypoint','/bin/sh','client','-c',f'{shell}; rc=$?; echo $rc > /results/{exitf.name}; touch /results/{done.name}; sleep 3600; exit $rc']
                             started=dc_run(cmd,env=envg,timeout=30);client_id=started.stdout.strip().splitlines()[-1]
@@ -354,6 +381,7 @@ def main():
                             if not exitf.exists() or exitf.read_text().strip()!='0':
                                 log=run(['docker','logs',client_id],env=env,check=False).stdout or '';raise RuntimeError(f'load process failed: {log[-3000:]}')
                             proc=inspect(env,client_id);client_log=run(['docker','logs',client_id],env=env,check=False).stdout or '';clog.write_text(client_log)
+                            if a.native_load: native_load.normalize(raw,summary)
                             if not summary.exists(): raise RuntimeError(f'generator did not write summary {summary}')
                             load_summary=json.loads(summary.read_text())
                             backend_end=wait_backend(env,backend_cid,lambda s:s['active']==0,timeout=15)
@@ -370,7 +398,9 @@ def main():
                                 'cpu_summary':{name:cpu_delta(baseline[name],final[name]) for name in baseline},
                                 'docker_samples':samples,'proc_baseline':diag_baseline,'proc_samples':diag_proc,
                                 'cgroup_memory_peak_bytes':cgroup_peak,'backend_final':backend_end,
-                                'generator_summary':load_summary,'raw_rows':rows}
+                                'generator_summary':load_summary,'raw_rows_file':raw.name}
+                            if not a.native_load:
+                                diagnostic['raw_rows'] = rows
                             (run_dir/f'{run_id}.diagnostic.json').write_text(json.dumps(diagnostic,indent=2)+'\n')
                             required=('offered','successful_responses','errors','http_errors','rejections','drops','connection_new','connection_reused','percentiles_ms','total_goodput_per_second')
                             miss=[k for k in required if k not in load_summary]
@@ -398,11 +428,11 @@ def main():
                             if cgroup_peak['proxy']>256*1024*1024: raise RuntimeError(f'proxy exceeded memory limit: {cgroup_peak}')
                             procs=diag_proc;proc_baseline=diag_baseline
                             if not procs or not proc_baseline or len(samples)<2: raise RuntimeError(f'missing resource sampling for {run_id}')
-                            expected_processes=1 if stack=='cauce' else 2
+                            expected_processes=1 if stack!='nginx' else 2
                             if not any(len(x['processes'])>=expected_processes for x in procs): raise RuntimeError(f'process sampler missed proxy processes: {procs[:1]}')
                             cpu_summary={name:cpu_delta(baseline[name],final[name]) for name in baseline}
                             jitter=load_summary['percentiles_ms'].get('scheduler_lag',{}).get('all',{}).get('p99')
-                            generator_limited=bool(load_summary['drops'] or load_summary['rejections'] or (jitter is not None and jitter>50))
+                            generator_limited=bool(load_summary['drops'] or load_summary['rejections'] or (jitter is not None and jitter>jitter_limit_ms))
                             resource_doc={'run_id':run_id,'measurement_elapsed_s':t_end-t_start,'baseline':baseline,'final':final,
                                 'cpu_summary':cpu_summary,'docker_samples':samples,'proc_baseline':proc_baseline,
                                 'proc_samples':procs,'cgroup_memory_peak_bytes':cgroup_peak,
@@ -421,8 +451,11 @@ def main():
                               'generator':load_summary,'backend':backend_end,'resource_file':str(respath.relative_to(outdir)),
                               'container_states':state_rows,'proxy_process_rss_peak_bytes':rss,'proxy_process_threads_peak':threads,
                               'proxy_process_fds_peak':fds,'proxy_process_fds_missing':fds_missing,'proxy_process_count':expected_processes,
-                              'access_log_file':str(logdir/f'{group}-cauce-access.jsonl') if stack=='cauce' and logs=='on' else (str(logdir/f'{group}-nginx-access.jsonl') if logs=='on' else None)}
+                              'access_log_file':str(logdir/f'{group}-cauce-access.jsonl') if stack!='nginx' and logs=='on' else (str(logdir/f'{group}-nginx-access.jsonl') if logs=='on' else None)}
                             manifest['runs'].append(row);(outdir/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+                            if a.native_load and len(manifest['runs']) == a.repetitions * len(stacks) * 2:
+                                manifest['native_controls']['after'] = native_load.control(
+                                    dc_run,project,envg,outdir,a.rate or 500,a.seconds,a.warmup,'native-control-after')
                             print(f"[{len(manifest['runs'])}] {stack} logs={logs} {scenario} offered={load_summary['offered']} goodput_with_drain={load_summary['total_goodput_per_second']:.2f}/s p95={load_summary['percentiles_ms']['scheduled_latency']['success']['p95']}",flush=True)
                             run(['docker','rm','-f',client_id],env=env,check=False)
                         if logs=='on':
@@ -441,7 +474,7 @@ def main():
                                 raise RuntimeError(f'access log verification failed for {group}: files={files} valid_rows={count} expected={expected}')
                             manifest['access_log_checks'].append({'group':group,'expected':expected,'valid_rows':count,'files':[str(f.relative_to(outdir)) for f in files]})
                     finally:
-                        dc_run(['-p',project,'--profile','client','--profile',f'sampler-{stack}','down','-v','--remove-orphans'],env=envg,check=False,timeout=60)
+                        dc_run(['-p',project,'--profile','client','--profile',sampler,'down','-v','--remove-orphans'],env=envg,check=False,timeout=60)
         manifest['status']='COMPLETE';manifest['finished_utc']=dt.datetime.now(dt.timezone.utc).isoformat()
     except KeyboardInterrupt:
         manifest['status']='ABORTED';manifest['finished_utc']=dt.datetime.now(dt.timezone.utc).isoformat();manifest['errors'].append({'error':'KeyboardInterrupt','message':'campaign interrupted; partial runs are not a complete comparison'})
