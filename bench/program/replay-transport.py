@@ -20,27 +20,28 @@ def correlate(proxy_log, offers, warmup):
     by_request, by_upstream, by_downstream = (defaultdict(list) for _ in range(3))
     counts = Counter()
     capture = None
-    for line in proxy_log.open():
-        row = json.loads(line)
-        name = row["event"]
-        counts[name] += 1
-        fields = row.get("fields", {})
-        if name == "transport_diagnostics_end":
-            capture = row
-        if name == "request_started" and fields["offer"] is not None:
-            requests[fields["offer"]] = fields
-        if name == "downstream_accept" and "peer_port" in fields:
-            peer_sockets[fields["peer_port"]].add(fields["connection"])
-        if "request_id" in fields:
-            by_request[fields["request_id"]].append(row)
-        if name.startswith("socket_") or name == "transport_task_end":
-            side = fields.get("side") or fields["kind"]
-            index = by_downstream if side == "downstream" else by_upstream
-            index[fields["connection"]].append(row)
-        elif name.startswith("upstream_") and "connection" in fields:
-            by_upstream[fields["connection"]].append(row)
-        elif name.startswith("downstream_") and "connection" in fields:
-            by_downstream[fields["connection"]].append(row)
+    with proxy_log.open() as stream:
+        for line in stream:
+            row = json.loads(line)
+            name = row["event"]
+            counts[name] += 1
+            fields = row.get("fields", {})
+            if name == "transport_diagnostics_end":
+                capture = row
+            if name == "request_started" and fields["offer"] is not None:
+                requests[fields["offer"]] = fields
+            if name == "downstream_accept" and "peer_port" in fields:
+                peer_sockets[fields["peer_port"]].add(fields["connection"])
+            if "request_id" in fields:
+                by_request[fields["request_id"]].append(row)
+            if name.startswith("socket_") or name == "transport_task_end":
+                side = fields.get("side") or fields["kind"]
+                index = by_downstream if side == "downstream" else by_upstream
+                index[fields["connection"]].append(row)
+            elif name.startswith("upstream_") and "connection" in fields:
+                by_upstream[fields["connection"]].append(row)
+            elif name.startswith("downstream_") and "connection" in fields:
+                by_downstream[fields["connection"]].append(row)
 
     def join(row, rows, offset):
         req = requests.get(row["n"] + offset, {})
@@ -72,7 +73,8 @@ def correlate(proxy_log, offers, warmup):
     for path, offset in [(offers, 0), (warmup, 1_000_000_000)]:
         if not path.exists():
             continue
-        rows = [json.loads(line) for line in path.open()]
+        with path.open() as stream:
+            rows = [json.loads(line) for line in stream]
         failures.extend(join(row, rows, offset) for row in rows if row["outcome"] != "success")
         if not offset:
             slowest = sorted((r for r in rows if r["outcome"] == "success"),

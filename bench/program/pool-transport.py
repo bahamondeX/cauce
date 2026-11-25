@@ -45,13 +45,14 @@ def exercise(args, dest, protocol, strategy, endpoints):
     waits, holds = [], []
     trace = None
     if args.diagnostics:
-        for line in (dest / "proxy.log").open():
-            event = json.loads(line)
-            if event["event"] == "pool_lock":
-                waits.append(event["fields"]["wait_ns"])
-                holds.append(event["fields"]["hold_ns"])
-            elif event["event"] == "transport_diagnostics_end":
-                trace = event
+        with (dest / "proxy.log").open() as stream:
+            for line in stream:
+                event = json.loads(line)
+                if event["event"] == "pool_lock":
+                    waits.append(event["fields"]["wait_ns"])
+                    holds.append(event["fields"]["hold_ns"])
+                elif event["event"] == "transport_diagnostics_end":
+                    trace = event
     accepted = (all(audit.get("successful") == audit.get("offered") for audit in audits)
                 and len(events) == expected and len({e["event_id"] for e in events}) == expected
                 and len(by_endpoint) == endpoints and all(e["outcome"] == "complete" for e in events))
