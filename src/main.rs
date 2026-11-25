@@ -1,5 +1,6 @@
 mod body;
 mod config;
+mod diagnostics;
 mod health;
 mod pool;
 mod proxy;
@@ -36,6 +37,7 @@ trait ClientIo: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send {}
 impl<T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send> ClientIo for T {}
 
 fn main() -> Result<()> {
+    diagnostics::init();
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .max_blocking_threads(16)
@@ -126,16 +128,34 @@ async fn run() -> Result<()> {
             },
             accepted = listener.accept() => {
                 let (socket, peer) = accepted?;
+                let downstream = diagnostics::downstream_id();
+                diagnostics::emit("downstream_accept", || serde_json::json!({
+                    "connection": downstream, "tasks": tasks.len(),
+                    "client_permits_available": clients.available_permits(),
+                }));
                 if tasks.len() >= config.limits.clients + 16 {
-                    state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed); drop(socket); continue;
+                    state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed);
+                    diagnostics::emit("downstream_rejected", || serde_json::json!({
+                        "connection": downstream, "tasks": tasks.len(),
+                        "client_permits_available": clients.available_permits(),
+                    }));
+                    drop(socket);
+                    continue;
                 }
                 let slot = match clients.clone().try_acquire_owned() { Ok(p) => Arc::new(p), Err(_) => {
-                    state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed); drop(socket); continue;
+                    state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed);
+                    diagnostics::emit("downstream_rejected", || serde_json::json!({
+                        "connection": downstream, "tasks": tasks.len(),
+                        "client_permits_available": clients.available_permits(),
+                    }));
+                    drop(socket);
+                    continue;
                 }};
                 socket.set_nodelay(true)?;
                 let state = state.clone(); let mut shutdown = shutdown_rx.clone(); let l = config.limits.clone();
                 let h2 = config.http2.clone();
                 let acceptor = server_tls.clone();
+                let mut lifecycle = diagnostics::Task::new("downstream", downstream);
                 tasks.spawn(async move {
                     let _slot = slot;
                     let secure = acceptor.is_some();
@@ -146,12 +166,21 @@ async fn run() -> Result<()> {
                                 negotiated_h2 = stream.get_ref().1.alpn_protocol() == Some(b"h2");
                                 Box::new(transport::WriteTimeout::new(stream, Duration::from_millis(l.stream_idle_ms)))
                             },
-                            _ => return,
+                            error => {
+                                if let Some(task) = &mut lifecycle {
+                                    match error {
+                                        Ok(Err(error)) => task.finish("tls_error", Some(&error)),
+                                        Err(error) => task.finish("tls_timeout", Some(&error)),
+                                        Ok(Ok(_)) => unreachable!(),
+                                    }
+                                }
+                                return;
+                            },
                         }
                     } else { Box::new(transport::WriteTimeout::new(socket, Duration::from_millis(l.stream_idle_ms))) };
                     let metrics = state.logger.metrics.clone();
                     let service_slot = _slot.clone();
-                    let service = service_fn(move |req| proxy::handle(req, peer, state.clone(), secure, service_slot.clone()));
+                    let service = service_fn(move |req| proxy::handle(req, peer, state.clone(), secure, service_slot.clone(), downstream));
                     let (socket, mut headers) = transport::PrefaceTimeout::new(socket, Duration::from_millis(l.client_headers_ms));
                     let (executor, _stream_guard) = transport::StreamExecutor::new(Duration::from_millis(l.request_ms));
                     let mut builder = auto::Builder::new(executor.with_active_counter(metrics.http2_tasks_active.clone()));
@@ -173,16 +202,24 @@ async fn run() -> Result<()> {
                     }
                     let connection = builder.serve_connection_with_upgrades(TokioIo::new(socket), service);
                     tokio::pin!(connection);
-                    tokio::select! {
-                        _ = &mut connection => {},
-                        _ = headers.expired() => {},
+                    let (reason, error) = tokio::select! {
+                        result = &mut connection => ("connection_end", result.err()),
+                        _ = headers.expired() => ("header_deadline", None),
                         _ = shutdown.changed() => {
                             connection.as_mut().graceful_shutdown();
                             tokio::select! {
-                                _ = tokio::time::timeout(Duration::from_millis(l.shutdown_ms), &mut connection) => {},
-                                _ = headers.expired() => {},
+                                result = tokio::time::timeout(Duration::from_millis(l.shutdown_ms), &mut connection) => {
+                                    match result {
+                                        Ok(result) => ("shutdown", result.err()),
+                                        Err(_) => ("shutdown_deadline", None),
+                                    }
+                                },
+                                _ = headers.expired() => ("header_deadline", None),
                             }
                         }
+                    };
+                    if let Some(task) = &mut lifecycle {
+                        task.finish(reason, error.as_deref().map(|error| error as _));
                     }
                     if headers.http2_expired() {
                         metrics.http2_header_timeouts.fetch_add(1, Ordering::Relaxed);

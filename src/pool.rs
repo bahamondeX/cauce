@@ -3,6 +3,7 @@
 use crate::{
     body::ProxyBody,
     config::{Balance, Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol},
+    diagnostics,
     routing::Routes,
     telemetry::{Attempt, Metrics},
     tls,
@@ -133,7 +134,7 @@ impl Generation {
 }
 pub struct Connection {
     pub sender: SendRequest<ProxyBody>,
-    pub id: String,
+    id: u64,
     born: Instant,
     idle_since: Instant,
     pub driver: AbortHandle,
@@ -141,7 +142,7 @@ pub struct Connection {
 }
 struct H2Connection {
     sender: H2SendRequest<ProxyBody>,
-    id: String,
+    id: u64,
     born: Instant,
     idle_since: Mutex<Instant>,
     streams: Arc<Semaphore>,
@@ -183,7 +184,27 @@ pub struct Pool {
     pub metrics: Arc<Metrics>,
     next_id: AtomicU64,
 }
+// Keep the socket future and its permits together even if the task is
+// cancelled before its first poll. Tuple fields drop in declaration order.
+fn spawn_driver(
+    connection: impl Future<Output = hyper::Result<()>> + Send + 'static,
+    capacity: Arc<DriverCapacity>,
+    kind: &'static str,
+) -> AbortHandle {
+    let lifecycle = diagnostics::Task::new(kind, diagnostics::enabled().then_some(capacity.id));
+    let transport = (connection, capacity, lifecycle);
+    tokio::spawn(async move {
+        let (connection, _capacity, mut lifecycle) = transport;
+        let result = connection.await;
+        if let Some(task) = &mut lifecycle {
+            task.finish("connection_end", result.as_ref().err().map(|e| e as _));
+        }
+    })
+    .abort_handle()
+}
+
 struct DriverCapacity {
+    id: u64,
     global: Option<OwnedSemaphorePermit>,
     endpoint: Option<OwnedSemaphorePermit>,
     notify: Arc<Notify>,
@@ -228,6 +249,10 @@ impl Drop for DriverCapacity {
         self.global.take();
         self.endpoint.take();
         self.notify.notify_waiters();
+        diagnostics::emit(
+            "upstream_permits_released",
+            || serde_json::json!({"connection": self.id}),
+        );
     }
 }
 pub struct Lease {
@@ -322,14 +347,26 @@ pub struct UploadGuard {
 impl Drop for Lease {
     fn drop(&mut self) {
         // Dropping an incomplete response aborts the driver before releasing capacity.
-        self.connection.take();
+        if let Some(connection) = self.connection.take() {
+            diagnostics::emit(
+                "upstream_lease_discarded",
+                || serde_json::json!({"connection": connection.id, "reason": "incomplete"}),
+            );
+            drop(connection);
+        }
         if self.h2.is_none() {
             self.endpoint.inflight.fetch_sub(1, Ordering::Relaxed);
         }
-        self.pool.notify.notify_waiters();
     }
 }
 impl Lease {
+    pub fn connection_id(&self) -> u64 {
+        self.h2.as_ref().map_or_else(
+            || self.connection.as_ref().expect("HTTP/1 lease").id,
+            |hold| hold.connection.id,
+        )
+    }
+
     pub fn arm_deadline(&self, deadline: tokio::time::Instant) {
         let Some(hold) = &self.h2 else {
             return;
@@ -363,25 +400,37 @@ impl Lease {
             sender.ready().await?;
             sender.send_request(req).await
         } else {
-            self.connection
-                .as_mut()
-                .expect("HTTP/1 lease")
-                .sender
-                .send_request(req)
-                .await
+            let sender = &mut self.connection.as_mut().expect("HTTP/1 lease").sender;
+            // Receiving the last body frame does not synchronize with the
+            // driver returning to its keep-alive state on another worker.
+            sender.ready().await?;
+            sender.send_request(req).await
         }
     }
     pub fn complete(&mut self, upload_complete: bool) {
         if let Some(mut c) = self.connection.take() {
             if !upload_complete
-                || self.generation.draining.load(Ordering::Acquire)
                 || c.sender.is_closed()
                 || c.born.elapsed().as_millis() >= self.pool.limits.max_connection_age_ms as u128
             {
+                diagnostics::emit(
+                    "upstream_lease_discarded",
+                    || serde_json::json!({"connection": c.id, "reason": "not_reusable"}),
+                );
                 return;
             }
             c.idle_since = Instant::now();
             let mut idle = self.pool.idle.lock().unwrap();
+            // A sweep may have already removed this generation while the
+            // response was finishing. Never publish an idle socket after it.
+            if self.generation.draining.load(Ordering::Acquire) {
+                drop(idle);
+                diagnostics::emit(
+                    "upstream_lease_discarded",
+                    || serde_json::json!({"connection": c.id, "reason": "generation_draining"}),
+                );
+                return;
+            }
             let count: usize = idle.connections.values().map(Vec::len).sum();
             let key = Key {
                 generation: self.generation.version,
@@ -391,10 +440,20 @@ impl Lease {
             if count < self.pool.limits.idle_connections
                 && list.len() < self.endpoint.config.idle_connections
             {
+                diagnostics::emit(
+                    "upstream_idle_return",
+                    || serde_json::json!({"connection": c.id}),
+                );
                 list.push(c);
+                drop(idle);
+                self.pool.notify.notify_waiters();
+            } else {
+                diagnostics::emit(
+                    "upstream_lease_discarded",
+                    || serde_json::json!({"connection": c.id, "reason": "idle_limit"}),
+                );
             }
         }
-        self.pool.notify.notify_waiters();
     }
 }
 impl Pool {
@@ -413,6 +472,28 @@ impl Pool {
             next_id: AtomicU64::new(1),
         })
     }
+    fn reserve(
+        &self,
+        endpoint: &Endpoint,
+        global: OwnedSemaphorePermit,
+        ep: OwnedSemaphorePermit,
+    ) -> Arc<DriverCapacity> {
+        let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+        diagnostics::emit("upstream_permits_reserved", || {
+            serde_json::json!({
+                "connection": id, "endpoint": endpoint.config.id,
+                "global_available": self.global.available_permits(),
+                "endpoint_available": endpoint.slots.available_permits(),
+            })
+        });
+        Arc::new(DriverCapacity {
+            id,
+            global: Some(global),
+            endpoint: Some(ep),
+            notify: self.notify.clone(),
+        })
+    }
+
     pub fn sweep(&self, oldest_generation: u64) {
         let mut idle = self.idle.lock().unwrap();
         // A sweep scheduled before reload can finish after publication. It may
@@ -579,6 +660,7 @@ impl Pool {
             c
         } else {
             let (global, ep) = acquired.1.unwrap();
+            let capacity = self.reserve(&endpoint, global, ep);
             let gate_started = log_attempt.then(Instant::now);
             let _gate = timeout(
                 Duration::from_millis(self.limits.acquire_ms),
@@ -586,10 +668,14 @@ impl Pool {
             )
             .await
             .map_err(|_| anyhow!("connect_capacity_timeout"))??;
+            diagnostics::emit(
+                "upstream_connect_gate_acquired",
+                || serde_json::json!({"connection": capacity.id, "available": self.connecting.available_permits()}),
+            );
             if let Some(attempt) = &mut attempt {
                 attempt.connect_gate_ms = gate_started.map(ms);
             }
-            let connected = self.connect(&endpoint, global, ep, &mut attempt).await;
+            let connected = self.connect(&endpoint, capacity, &mut attempt).await;
             if connected.is_err() {
                 *endpoint.failed_until.lock().unwrap() = Some(
                     Instant::now() + Duration::from_millis(endpoint.config.failure_backoff_ms),
@@ -600,7 +686,7 @@ impl Pool {
             connected?
         };
         if let Some(attempt) = &mut attempt {
-            attempt.connection_id = Some(connection.id.clone());
+            attempt.connection_id = Some(format!("c{}", connection.id));
         }
         endpoint.inflight.fetch_add(1, Ordering::Relaxed);
         Ok((
@@ -623,7 +709,7 @@ impl Pool {
         log_attempt: bool,
     ) -> Result<(Lease, Option<Attempt>)> {
         let deadline = tokio::time::Instant::now() + Duration::from_millis(self.limits.acquire_ms);
-        let mut reserved: Option<(OwnedSemaphorePermit, OwnedSemaphorePermit)> = None;
+        let mut reserved = None;
         let mut attempt = log_attempt.then(empty_attempt);
         let (connection, stream_permit, newly_connected) = loop {
             let notified = self.notify.notified();
@@ -659,20 +745,16 @@ impl Pool {
                 break (c, p, false);
             }
             if reserved.is_none() {
-                let ep = endpoint.slots.clone().try_acquire_owned();
-                let global = self.global.clone().try_acquire_owned();
-                match (ep, global) {
-                    (Ok(ep), Ok(global)) => reserved = Some((global, ep)),
-                    (ep, global) => {
-                        drop(ep.ok());
-                        drop(global.ok());
-                        if self.global.available_permits() == 0 {
-                            self.reclaim_idle_connection();
-                        }
+                if let Ok(ep) = endpoint.slots.clone().try_acquire_owned() {
+                    if let Ok(global) = self.global.clone().try_acquire_owned() {
+                        reserved = Some(self.reserve(&endpoint, global, ep));
                     }
                 }
+                if reserved.is_none() && self.global.available_permits() == 0 {
+                    self.reclaim_idle_connection();
+                }
             }
-            if let Some((global, ep)) = reserved.take() {
+            if let Some(capacity) = reserved.take() {
                 let open_gate = match tokio::time::timeout_at(
                     deadline,
                     endpoint.h2_opening.clone().acquire_owned(),
@@ -694,6 +776,10 @@ impl Pool {
                     Ok(Err(e)) => return Err(e.into()),
                     Err(_) => return Err(anyhow!("connect_capacity_timeout")),
                 };
+                diagnostics::emit(
+                    "upstream_connect_gate_acquired",
+                    || serde_json::json!({"connection": capacity.id, "available": self.connecting.available_permits()}),
+                );
                 if let Some(attempt) = &mut attempt {
                     attempt.connect_gate_ms = started.map(ms);
                 }
@@ -702,13 +788,13 @@ impl Pool {
                     let idle = self.idle.lock().unwrap();
                     idle.h2.get(&key).and_then(|xs| {
                         xs.iter()
-                            .find(|c| {
+                            .filter(|c| {
                                 !c.draining.load(Ordering::Acquire)
                                     && !c.sender.is_closed()
                                     && c.born.elapsed().as_millis()
                                         < self.limits.max_connection_age_ms as u128
                             })
-                            .and_then(|c| {
+                            .find_map(|c| {
                                 c.streams.clone().try_acquire_owned().ok().map(|p| {
                                     c.live.fetch_add(1, Ordering::AcqRel);
                                     (c.clone(), p)
@@ -719,17 +805,11 @@ impl Pool {
                 if let Some((c, p)) = existing {
                     drop(gate);
                     drop(open_gate);
-                    drop(global);
-                    drop(ep);
+                    drop(capacity);
                     break (c, p, false);
                 }
-                let cap = Arc::new(DriverCapacity {
-                    global: Some(global),
-                    endpoint: Some(ep),
-                    notify: self.notify.clone(),
-                });
                 match self
-                    .connect_h2(&endpoint, key.clone(), cap, &mut attempt)
+                    .connect_h2(&endpoint, key.clone(), capacity, &mut attempt)
                     .await
                 {
                     Ok(c) => {
@@ -739,13 +819,12 @@ impl Pool {
                             .try_acquire_owned()
                             .map_err(|_| anyhow!("h2_stream_capacity_race"))?;
                         c.live.fetch_add(1, Ordering::AcqRel);
-                        self.idle
-                            .lock()
-                            .unwrap()
-                            .h2
-                            .entry(key.clone())
-                            .or_default()
-                            .push(c.clone());
+                        {
+                            let mut idle = self.idle.lock().unwrap();
+                            if !generation.draining.load(Ordering::Acquire) {
+                                idle.h2.entry(key.clone()).or_default().push(c.clone());
+                            }
+                        }
                         drop(gate);
                         drop(open_gate);
                         break (c, p, true);
@@ -772,7 +851,7 @@ impl Pool {
             .pool_wait_us
             .fetch_add((wait * 1000.0) as u64, Ordering::Relaxed);
         if let Some(attempt) = &mut attempt {
-            attempt.connection_id = Some(connection.id.clone());
+            attempt.connection_id = Some(format!("c{}", connection.id));
             attempt.reused = Some(!newly_connected);
             attempt.pool_wait_ms = Some(wait);
         }
@@ -908,15 +987,12 @@ impl Pool {
         )
         .await
         .map_err(|_| anyhow!("http2_handshake_timeout"))??;
-        let driver = tokio::spawn(async move {
-            let _capacity = capacity;
-            let _ = conn.await;
-        })
-        .abort_handle();
+        let id = capacity.id;
+        let driver = spawn_driver(conn, capacity, "upstream_http2");
         self.metrics.new_connections.fetch_add(1, Ordering::Relaxed);
         Ok(Arc::new(H2Connection {
             sender,
-            id: format!("c{}", self.next_id.fetch_add(1, Ordering::Relaxed)),
+            id,
             born: Instant::now(),
             idle_since: Mutex::new(Instant::now()),
             streams: Arc::new(Semaphore::new(e.config.streams_per_connection)),
@@ -950,16 +1026,9 @@ impl Pool {
     async fn connect(
         &self,
         e: &Endpoint,
-        global: OwnedSemaphorePermit,
-        ep: OwnedSemaphorePermit,
+        capacity: Arc<DriverCapacity>,
         attempt: &mut Option<Attempt>,
     ) -> Result<Connection> {
-        // Drivers retain capacity until their sockets actually drop, including abort cleanup.
-        let capacity = Arc::new(DriverCapacity {
-            global: Some(global),
-            endpoint: Some(ep),
-            notify: self.notify.clone(),
-        });
         let duration = Duration::from_millis(self.limits.connect_ms);
         let mut http = hyper::client::conn::http1::Builder::new();
         http.max_headers(self.limits.max_headers)
@@ -971,14 +1040,9 @@ impl Pool {
                 .map_err(|_| anyhow!("unix_connect_timeout"))??;
             let io = TokioIo::new(socket);
             let (sender, conn) = timeout(duration, http.handshake(io)).await??;
-            let driver_capacity = capacity.clone();
             (
                 sender,
-                tokio::spawn(async move {
-                    let _capacity = driver_capacity;
-                    let _ = conn.with_upgrades().await;
-                })
-                .abort_handle(),
+                spawn_driver(conn.with_upgrades(), capacity.clone(), "upstream_http1"),
             )
         } else {
             let dns_start = attempt.is_some().then(Instant::now);
@@ -1046,21 +1110,16 @@ impl Pool {
                 Box::new(socket)
             };
             let (sender, conn) = timeout(duration, http.handshake(TokioIo::new(io))).await??;
-            let driver_capacity = capacity.clone();
             (
                 sender,
-                tokio::spawn(async move {
-                    let _capacity = driver_capacity;
-                    let _ = conn.with_upgrades().await;
-                })
-                .abort_handle(),
+                spawn_driver(conn.with_upgrades(), capacity.clone(), "upstream_http1"),
             )
         };
         self.metrics.new_connections.fetch_add(1, Ordering::Relaxed);
         Ok(Connection {
             sender,
             driver,
-            id: format!("c{}", self.next_id.fetch_add(1, Ordering::Relaxed)),
+            id: capacity.id,
             born: Instant::now(),
             idle_since: Instant::now(),
             _capacity: capacity,
@@ -1074,7 +1133,7 @@ impl Pool {
 }
 
 #[cfg(test)]
-mod h2_pool_tests {
+mod pool_tests {
     use super::*;
     use crate::config::{Http2Config, Logs};
     use bytes::Bytes;
@@ -1180,6 +1239,196 @@ mod h2_pool_tests {
                 upstreams: vec!["backend".into()],
             }],
         }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn cancelled_opening_wakes_capacity_waiters() {
+        for protocol in [UpstreamProtocol::Http1, UpstreamProtocol::Http2] {
+            let mut cfg = config("127.0.0.1:1".into());
+            cfg.limits.connections = 1;
+            cfg.limits.connecting = 1;
+            cfg.upstreams[0].connections = 1;
+            cfg.upstreams[0].protocol = protocol;
+            let generation = Generation::new(cfg, 1, &HashMap::new());
+            let pool = Pool::new(
+                generation.config.limits.clone(),
+                generation.config.http2.clone(),
+                Arc::new(Metrics::default()),
+            );
+            let endpoint = generation.endpoints["backend"].clone();
+            let _gate = pool.connecting.acquire().await.unwrap();
+            let mut opening = Box::pin(pool.acquire(generation, endpoint.clone(), false));
+            std::future::poll_fn(|cx| {
+                assert!(opening.as_mut().poll(cx).is_pending());
+                Poll::Ready(())
+            })
+            .await;
+            assert_eq!(pool.available(), 0);
+            assert_eq!(endpoint.slots.available_permits(), 0);
+
+            let notified = pool.notify.notified();
+            tokio::pin!(notified);
+            notified.as_mut().enable();
+            drop(opening);
+            timeout(Duration::from_millis(200), notified).await.unwrap();
+            assert_eq!(pool.available(), 1);
+            assert_eq!(endpoint.slots.available_permits(), 1);
+        }
+    }
+
+    struct ParkAfterReply {
+        socket: tokio::io::DuplexStream,
+        reads_after_reply: Option<usize>,
+        pause: Option<(
+            tokio::sync::oneshot::Sender<()>,
+            std::sync::mpsc::Receiver<()>,
+        )>,
+    }
+
+    impl tokio::io::AsyncRead for ParkAfterReply {
+        fn poll_read(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+            buf: &mut tokio::io::ReadBuf<'_>,
+        ) -> Poll<std::io::Result<()>> {
+            if let Some(reads) = &mut self.reads_after_reply {
+                *reads += 1;
+                // Hyper probes the socket once before delivering headers.
+                // Park on its next read, before it polls the sender again.
+                if *reads == 2 {
+                    let (parked, proceed) = self.pause.take().unwrap();
+                    parked.send(()).unwrap();
+                    let _ = proceed.recv_timeout(Duration::from_secs(3));
+                }
+            }
+            let before = buf.filled().len();
+            let result = Pin::new(&mut self.socket).poll_read(cx, buf);
+            if self.reads_after_reply.is_none() && buf.filled().len() > before {
+                self.reads_after_reply = Some(0);
+            }
+            result
+        }
+    }
+
+    impl tokio::io::AsyncWrite for ParkAfterReply {
+        fn poll_write(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+            data: &[u8],
+        ) -> Poll<std::io::Result<usize>> {
+            Pin::new(&mut self.socket).poll_write(cx, data)
+        }
+
+        fn poll_flush(self: Pin<&mut Self>, _: &mut Context<'_>) -> Poll<std::io::Result<()>> {
+            Poll::Ready(Ok(()))
+        }
+
+        fn poll_shutdown(
+            mut self: Pin<&mut Self>,
+            cx: &mut Context<'_>,
+        ) -> Poll<std::io::Result<()>> {
+            Pin::new(&mut self.socket).poll_shutdown(cx)
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn reused_http1_sender_waits_for_the_driver_after_complete_response() {
+        use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+        let mut cfg = config("127.0.0.1:1".into());
+        cfg.upstreams[0].protocol = UpstreamProtocol::Http1;
+        let generation = Generation::new(cfg, 1, &HashMap::new());
+        let pool = Pool::new(
+            generation.config.limits.clone(),
+            generation.config.http2.clone(),
+            Arc::new(Metrics::default()),
+        );
+        let endpoint = generation.endpoints["backend"].clone();
+        let (socket, peer) = tokio::io::duplex(4096);
+        let (parked, driver_parked) = tokio::sync::oneshot::channel();
+        let (resume_driver, proceed) = std::sync::mpsc::channel();
+        let io = TokioIo::new(ParkAfterReply {
+            socket,
+            reads_after_reply: None,
+            pause: Some((parked, proceed)),
+        });
+        let (sender, driver) = hyper::client::conn::http1::handshake(io).await.unwrap();
+        let capacity = pool.reserve(
+            &endpoint,
+            pool.global.clone().try_acquire_owned().unwrap(),
+            endpoint.slots.clone().try_acquire_owned().unwrap(),
+        );
+        let mut lease = Lease {
+            connection: Some(Connection {
+                sender,
+                id: capacity.id,
+                born: Instant::now(),
+                idle_since: Instant::now(),
+                driver: spawn_driver(driver, capacity.clone(), "upstream_http1"),
+                _capacity: capacity,
+            }),
+            pool,
+            generation,
+            endpoint,
+            h2: None,
+        };
+        let backend = tokio::spawn(async move {
+            let mut peer = BufReader::new(peer);
+            for _ in 0..2 {
+                loop {
+                    let mut line = Vec::new();
+                    assert_ne!(peer.read_until(b'\n', &mut line).await.unwrap(), 0);
+                    if line == b"\r\n" {
+                        break;
+                    }
+                }
+                peer.write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                    .await
+                    .unwrap();
+            }
+        });
+        let request = || {
+            Request::builder()
+                .uri("/")
+                .header("host", "backend.test")
+                .body(crate::body::full(""))
+                .unwrap()
+        };
+        let first = lease.send_request(request()).await.unwrap();
+        assert!(first
+            .into_body()
+            .collect()
+            .await
+            .unwrap()
+            .to_bytes()
+            .is_empty());
+        timeout(Duration::from_secs(1), driver_parked)
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(!lease.connection.as_ref().unwrap().sender.is_ready());
+        lease.complete(true);
+        let (mut lease, attempt) = lease
+            .pool
+            .acquire(lease.generation.clone(), lease.endpoint.clone(), true)
+            .await
+            .unwrap();
+        assert_eq!(attempt.unwrap().reused, Some(true));
+        let mut second = Box::pin(lease.send_request(request()));
+        let second_state = std::future::poll_fn(|cx| Poll::Ready(second.as_mut().poll(cx))).await;
+        resume_driver.send(()).unwrap();
+        assert!(
+            second_state.is_pending(),
+            "dispatch tried to send while driver was parked"
+        );
+        assert_eq!(
+            timeout(Duration::from_secs(1), second)
+                .await
+                .unwrap()
+                .unwrap()
+                .status(),
+            200
+        );
+        backend.await.unwrap();
     }
 
     async fn peer_settings_burst(peer_limit: Option<u32>) -> usize {

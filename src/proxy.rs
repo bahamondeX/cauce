@@ -1,6 +1,7 @@
 use crate::{
     body::{self, Completion, ProxyBody},
     config::UpstreamProtocol,
+    diagnostics,
     pool::{ms, Generation, Pool},
     telemetry::{self, Attempt, Event, Logger},
 };
@@ -218,6 +219,7 @@ pub async fn handle(
     state: Arc<State>,
     secure: bool,
     client_slot: Arc<OwnedSemaphorePermit>,
+    downstream: Option<u64>,
 ) -> Result<Response<ProxyBody>, Infallible> {
     let started = Instant::now();
     let generation = state.generation.read().unwrap().clone();
@@ -227,6 +229,17 @@ pub async fn handle(
     let is_h2 = inbound_version == hyper::Version::HTTP_2;
     let grpc = grpc_request(req.headers());
     let id = uuid::Uuid::new_v4().to_string();
+    diagnostics::emit("request_started", || {
+        let offer = req
+            .headers()
+            .get("x-cauce-bench-offer")
+            .and_then(|value| value.to_str().ok())
+            .and_then(|value| value.parse::<u64>().ok());
+        serde_json::json!({
+            "downstream": downstream, "request_id": id, "offer": offer,
+            "generation": generation.version, "protocol": if is_h2 { "http2" } else { "http1" },
+        })
+    });
     let trace = req
         .headers()
         .get("traceparent")
@@ -436,6 +449,13 @@ pub async fn handle(
     if websocket.is_some() && upstream_h2 {
         reject!(NOT_IMPLEMENTED, "websocket_requires_http1_upstream");
     }
+    diagnostics::emit("upstream_acquire_started", || {
+        serde_json::json!({
+            "request_id": id, "endpoint": endpoint.config.id,
+            "remaining_us": deadline.saturating_duration_since(tokio::time::Instant::now()).as_micros() as u64,
+            "acquire_ms": limits.acquire_ms,
+        })
+    });
     let acquired = tokio::time::timeout_at(
         deadline,
         state
@@ -446,6 +466,16 @@ pub async fn handle(
     let (mut lease, attempt) = match acquired {
         Ok(Ok(pair)) => pair,
         failure => {
+            diagnostics::emit("upstream_acquire_failed", || {
+                serde_json::json!({
+                    "request_id": id, "endpoint": endpoint.config.id,
+                    "error": match &failure {
+                        Ok(Err(error)) => diagnostics::chain(error.as_ref()),
+                        Err(error) => diagnostics::chain(error),
+                        Ok(Ok(_)) => unreachable!(),
+                    },
+                })
+            });
             let reason = match failure {
                 Err(_) => "request_deadline",
                 Ok(Err(error)) => match error.to_string().as_str() {
@@ -489,6 +519,11 @@ pub async fn handle(
             return Ok(record_error(&state, event, started, status, reason));
         }
     };
+    diagnostics::emit("upstream_lease_acquired", || {
+        serde_json::json!({
+            "request_id": id, "connection": lease.connection_id(), "endpoint": endpoint.config.id,
+        })
+    });
     lease.arm_deadline(hard_deadline);
     if let Some(event) = &mut event {
         event.attempts.extend(attempt);
@@ -590,12 +625,23 @@ pub async fn handle(
         )
     });
     let headers_at = Instant::now();
-    let header_deadline =
-        (tokio::time::Instant::now() + Duration::from_millis(limits.headers_ms)).min(deadline);
+    let header_start = tokio::time::Instant::now();
+    let header_deadline = (header_start + Duration::from_millis(limits.headers_ms)).min(deadline);
     let response = tokio::time::timeout_at(header_deadline, lease.send_request(upstream_req)).await;
     let mut response = match response {
         Ok(Ok(r)) => r,
         other => {
+            diagnostics::emit("upstream_headers_failed", || {
+                serde_json::json!({
+                    "request_id": id, "connection": lease.connection_id(),
+                    "budget_us": header_deadline.duration_since(header_start).as_micros() as u64,
+                    "error": match &other {
+                        Ok(Err(error)) => diagnostics::chain(error),
+                        Err(error) => diagnostics::chain(error),
+                        Ok(Ok(_)) => unreachable!(),
+                    },
+                })
+            });
             let client_error = upload_error.load(Ordering::Acquire);
             if let Some(event) = &mut event {
                 event.request_bytes = request_bytes.load(Ordering::Relaxed);

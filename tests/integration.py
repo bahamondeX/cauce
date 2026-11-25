@@ -83,6 +83,11 @@ class Backend(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(b'0\r\n\r\n')
                 self.wfile.flush()
                 return
+            if self.path.startswith('/held'):
+                self.server.held.set()
+                if not self.server.release.wait(timeout=3):
+                    self.close_connection = True
+                    return
             if self.path.startswith('/close'):
                 self.close_connection = True
                 return
@@ -128,6 +133,8 @@ class Server(http.server.ThreadingHTTPServer):
         self.connections = self.hits = self.posts = 0
         self.last_framing = None
         self.upload_progress = threading.Event()
+        self.held = threading.Event()
+        self.release = threading.Event()
         self.lock = threading.Lock()
         threading.Thread(target=self.serve_forever, daemon=True).start()
     def handle_error(self, *args):
@@ -158,6 +165,12 @@ class ProxyTests(unittest.TestCase):
             config = config.replace('rotate_bytes = 16777216', 'rotate_bytes = 4096').replace('retained_files = 3', 'retained_files = 2')
         if self._testMethodName == 'test_disabled_access_log_preserves_metrics_and_request_identity':
             config = config.replace('enabled = true', 'enabled = false')
+        if self._testMethodName == 'test_burst_reuse_and_eviction_during_reload':
+            config = config.replace('requests = 2\n', 'requests = 16\n')
+            config = config.replace('connections = 64', 'connections = 4').replace('idle_connections = 32', 'idle_connections = 4')
+            config = config.replace('connections = 32', 'connections = 4').replace('idle_connections = 16', 'idle_connections = 4')
+            config = config.replace('acquire_ms = 250', 'acquire_ms = 1000')
+            config = config.replace('client_headers_ms = 200', 'client_headers_ms = 2000')
         self.path = self.base / 'config.toml'
         if self._testMethodName == 'test_yaml_reload_routes_and_rollback':
             self.path = self.base / 'config.yaml'
@@ -438,6 +451,51 @@ class ProxyTests(unittest.TestCase):
             other = json.loads(self.request('/')[1])
             first = json.loads(pending.result()[1])
             self.assertNotEqual(first['backend'], other['backend'])
+
+    def test_burst_reuse_and_eviction_during_reload(self):
+        host = {'Host': f'localhost:{self.listen}'}
+        start = threading.Barrier(8)
+
+        def exchange():
+            conn = http.client.HTTPConnection('127.0.0.1', self.listen, timeout=3)
+            labels = set()
+            try:
+                for _ in range(12):
+                    start.wait(timeout=3)
+                    conn.request('GET', '/', headers=host)
+                    response = conn.getresponse()
+                    self.assertEqual(response.status, 200)
+                    labels.add(json.loads(response.read())['backend'])
+            finally:
+                conn.close()
+            return labels
+
+        with concurrent.futures.ThreadPoolExecutor(9) as executor:
+            held = executor.submit(self.request, '/held')
+            try:
+                self.assertTrue(self.backends[0].held.wait(timeout=2))
+                self.assertEqual(json.loads(self.request('/')[1])['backend'], 'a')
+                changed = self.path.read_text().replace('upstreams = ["python"]', 'upstreams = ["node"]')
+                self.path.write_text(changed)
+                self.proc.send_signal(signal.SIGHUP)
+                for _ in range(100):
+                    if '"reloaded"' in (self.base / 'stderr.jsonl').read_text():
+                        break
+                    time.sleep(.02)
+                else:
+                    self.fail('generation was not published with a live request')
+                burst = [executor.submit(exchange) for _ in range(8)]
+                self.assertEqual([client.result() for client in burst], [{'b'}] * 8)
+            finally:
+                self.backends[0].release.set()
+            self.assertEqual(json.loads(held.result()[1])['backend'], 'a')
+
+        all_events = self.logs()
+        self.assertEqual(len(all_events), 98)
+        self.assertEqual(sum(event['config_version'] == 1 for event in all_events), 2)
+        attempts = [event['attempts'][0] for event in all_events if event['config_version'] == 2]
+        self.assertGreater(sum(attempt['reused'] for attempt in attempts), 80)
+        self.assertLessEqual(len({attempt['connection_id'] for attempt in attempts}), 3)
 
     def test_backend_unexpected_close_no_retry(self):
         self.assertEqual(self.request('/close')[0], 502)

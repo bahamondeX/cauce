@@ -1,5 +1,6 @@
 use crate::{
     config::Limits,
+    diagnostics,
     pool::{ms, Lease, UploadGuard},
     telemetry::{Event, Logger},
 };
@@ -154,7 +155,14 @@ impl Body for GuardBody {
                 self.finish("complete");
                 Poll::Ready(None)
             }
-            Poll::Ready(Some(Err(_))) => {
+            Poll::Ready(Some(Err(error))) => {
+                diagnostics::emit("upstream_body_failed", || {
+                    serde_json::json!({
+                        "connection": self.completion.as_ref().map(|c| c.lease.connection_id()),
+                        "direction": if self.completion.is_some() { "download" } else { "upload" },
+                        "error": diagnostics::chain(&error)
+                    })
+                });
                 self.finish("body_error");
                 Poll::Ready(Some(Err("body_error".into())))
             }
