@@ -1,0 +1,9 @@
+PASS: upstream capacity retained after 101; second upgrade returns 503
+PASS: abrupt disconnect releases capacity; next tunnel closes normally with 1000
+PASS: idle tunnel closes within configured timeout
+PASS: bidirectional activity resets idle; absolute websocket lifetime still closes
+PASS: tunnel outcomes recorded as versioned JSONL
+PASS: SIGTERM drains then aborts active tunnel within shared shutdown deadline
+PASS: plain ws listener to verified TLS WebSocket backend
+PASS: verified wss listener to plain WebSocket backend
+PASS: plain ws listener to plain WebSocket backend

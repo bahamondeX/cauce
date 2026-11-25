@@ -16,14 +16,16 @@ then checks the absolute deadline. A bounded channel carries offers to persisten
 HTTP/1.1 or HTTP/2 client connections. Its dispatcher limits in-flight work.
 Every offer records scheduled, arrival, dispatch and completion offsets as
 integer nanoseconds. Arrivals that miss the cutoff and full-queue rejections get
-their own rows. Requests can also expire in the queue. Connection retries and
-redirects are disabled. HTTPS verifies the hostname and chain with the explicit
-fixture CA. Successful responses must match the expected version, size and byte
+their own rows. Requests can also expire in the queue. The direct Hyper client disables
+pooled replay of canceled requests and has no redirect handler. HTTPS verifies
+the hostname and chain with the explicit fixture CA. Archived Reqwest-backed
+runs retain their original client policy. Successful responses must match the expected version, size and byte
 pattern. HDR buckets and exact rows are emitted after measurement.
 
-Run a direct generator-to-backend control before and after target measurements
-at twice the highest target offer rate. Keep CPU affinity, protocol and payload
-consistent. The qualification gate rejects scheduling p99 above 10 ms, missing
+Run a direct generator-to-backend control before targeting a new rate.
+Use twice that rate for the control. After confirmation and stability,
+retest the highest qualified control rate. Keep CPU affinity, protocol
+and payload consistent. The qualification gate rejects scheduling p99 above 10 ms, missing
 or duplicate offers, scheduler drops and a control with transport or integrity
 errors. The SLO runner also requires the control to meet the chosen latency and
 goodput SLOs. Record jitter and host pressure inside the run. Reject a comparison
@@ -32,10 +34,13 @@ when the generator or backend becomes the bottleneck.
 ## Capacity and paired comparisons
 
 Declare the workload's p99, p99.9, minimum offer-window goodput fraction and
-maximum error fraction before running. The capacity runner executes strictly
-increasing rates, stops at the first failure and confirms the highest qualifying
-rate for a longer interval. Confirm only the rates actually tested. End-to-end
-latency starts at the scheduled arrival. Positive goodput excludes rejected,
+maximum error fraction before running. The capacity runner raises the direct
+control with the ramp and stops advancing at the first failed or contaminated
+cell. Refine between a passing and failing target rate with
+`--refine-steps`. Confirm the highest passing rate for at least 60 seconds
+in the native runner and use a separate stability hold for the retained
+implementation. A control failure limits how much of the ramp can be
+attributed. End-to-end latency starts at the scheduled arrival. Positive goodput excludes rejected,
 invalid, and late-completing requests. Report scheduler, queue and service
 latency independently. Keep warm-up traffic and rows available for accounting.
 
@@ -133,3 +138,6 @@ binaries to bind the manifest to those builds.
 ```sh
 sh bench/program/linux-environment.sh /path/to/cauce /path/to/cauce-load > linux-environment.txt
 ```
+
+The native ARM64 and AMD64 workflow, resource placement and output files are
+listed in the [native Linux lab guide](NATIVE-LINUX-BENCHMARKS.md).

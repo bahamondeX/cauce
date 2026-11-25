@@ -1,0 +1,14 @@
+test_control_and_confirmation_cannot_promote_failed_run (test_capacity.BracketTests.test_control_and_confirmation_cannot_promote_failed_run) ... ok
+test_control_failure_preserves_smaller_confirmed_lower_bound (test_capacity.BracketTests.test_control_failure_preserves_smaller_confirmed_lower_bound) ... ok
+test_refinement_searches_passing_to_failing_bracket (test_capacity.BracketTests.test_refinement_searches_passing_to_failing_bracket) ... ok
+test_duplicate_offer_is_rejected (test_capacity.CapacityAuditTests.test_duplicate_offer_is_rejected) ... ok
+test_infrastructure_jitter_rejects_intact_response (test_capacity.CapacityAuditTests.test_infrastructure_jitter_rejects_intact_response) ... ok
+test_scheduled_arrival_is_origin_for_slo (test_capacity.CapacityAuditTests.test_scheduled_arrival_is_origin_for_slo) ... ok
+test_http1_http2_clear_and_tls_keep_offer_identity (test_load_transport.LoadTransportTests.test_http1_http2_clear_and_tls_keep_offer_identity) ... ok
+test_no_response_disconnect_is_accounted_as_transport_error (test_load_transport.LoadTransportTests.test_no_response_disconnect_is_accounted_as_transport_error) ... ok
+test_tls_rejects_the_wrong_name (test_load_transport.LoadTransportTests.test_tls_rejects_the_wrong_name) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 14.333s
+
+OK

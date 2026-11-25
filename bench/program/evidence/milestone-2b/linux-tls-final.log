@@ -1,0 +1,162 @@
+...+.+........+......+.+..+.+...........+.+..+......+.+.....+......+.......+..+....+..+.......+.....+++++++++++++++++++++++++++++++++++++++*.....+++++++++++++++++++++++++++++++++++++++*...+...........+......+.........+.+........+......+......+...............+..........+..+.+..+.........+...............+.+.....+..........+.........+...+...+.....+.......+...+..+.......+...+....................+.+.....+....+..+...+.+...........+....+.....+.......+..+............+....+..+...+......+......+....+...+........+....+......+........+.........+......................+...+...+........+....+........+...+.......+.........+........+.+.....+................++++++
+........+.+++++++++++++++++++++++++++++++++++++++*....+..+...+.+......+.........+.........+..+...............+...+.+......+.....+.+........+.......+...+..+.............+......+.....+......+++++++++++++++++++++++++++++++++++++++*......+............+...+.....+......+.........+.+......+............+......+..+............+.+..+...+....+...+..+......+....+.....+......+............+...+............+...+......+....+..+...+.........+...+.........+...+.......+...+.....+.+..+...+.+.....+....+......+...............+........+......+......+.+...+..............+.......+........+.+.....+.+......+..+..........+...........+.......+.....+...+......+.+..............+.+..............+...+.+..+....+.....+......+.......+......+......+...+...........+......+......+...............+...+....+...+.....+...+......+....+.................+...+.......+..++++++
+-----
+..+.+...+......+..............+.+++++++++++++++++++++++++++++++++++++++*.+....+............+++++++++++++++++++++++++++++++++++++++*.....+...+......+..............+.+..+.......+...+........+......+...+.+..+...............+....+...+..+.+...............+.....+.......+..+...+......+....+......+.....+.+.....+.+........+......+.+...+......+...+..+.+..+...+...+......+.+...........................+..+......+.......+...+.........+.....+..................+.++++++
+...+..+.+........+.+...+........+...+....+..+.+..+.+..+.......+.....+......................+++++++++++++++++++++++++++++++++++++++*....+.....+......+..........+...+.................................+..+...+....+...+........+.............+..+...+.+...+...+..+++++++++++++++++++++++++++++++++++++++*........+.+......+.....+......+..................+.+.....+...+......+.+.........+..+...+.......+.....+....+......+..............+...+...+....+.....+....+......++++++
+-----
+Certificate request self-signature ok
+subject=CN=localhost
+.+..+++++++++++++++++++++++++++++++++++++++*.+++++++++++++++++++++++++++++++++++++++*..+.+.....+......................+.....+.......+..+....+..+.......+.....+...+............+...+....+...........++++++
+.+.....+.+..+.+..+++++++++++++++++++++++++++++++++++++++*..+...+..........+........+......+..........+......+..+.+...........+...+..........+...+++++++++++++++++++++++++++++++++++++++*........+...............+..............+.+.........+..+.+........+......+....+...........+.+............+......+..+...+....+..+....+......+...+..+...+.............+..+.............+..+.+.................+...+.+......+.....+...+......+.+.................++++++
+-----
+Certificate request self-signature ok
+subject=CN=backend.test
+...+.+...+...........+.+....................+...+...+.......+...+..+..........+...+...+++++++++++++++++++++++++++++++++++++++*.+...+.+++++++++++++++++++++++++++++++++++++++*............+...............+.......+..............+.+........+...+...+......+......+.......+........+.......+.....+.+..+...+.........+.......+.....+...............+.+.....+....+......+..+...+....+..................+...+..+.......+.....+......++++++
+...........+......+...+.......+...+..+....+...+..+....+...........+...+.+..+..........+++++++++++++++++++++++++++++++++++++++*.+.+.....+.........+.+.....+....+..+++++++++++++++++++++++++++++++++++++++*...+...............+.....+.........+...+.+.........+...............+...+.........+.....+.........+.......+.....+....+...+...+............+..+.+...++++++
+-----
+Certificate request self-signature ok
+subject=CN=untrusted.test
+............+....+......+..+..........+..+.......+++++++++++++++++++++++++++++++++++++++*.....+......+.............+.....+..........+......+..............+++++++++++++++++++++++++++++++++++++++*..+......+...+.+.....+......+.+..................+...........+...+.......+...+.....+.+..+...................+...+...+........+.......+.........+...+..+.+.....+...+.+...+...+........++++++
+..+...+..+...+....+........+...+......+.+........+....+...+.....+....+...........+....+...+...+..+......+.+.....+....+......+.....+.+++++++++++++++++++++++++++++++++++++++*.........+..........+.....+....+...+......+.....+.+...+...........+....+..+...+.+.....................+.....+.+..+++++++++++++++++++++++++++++++++++++++*.+.......+........+..........+..+...+....+.....+....+.....+..........+..+...++++++
+-----
+Compose now can delegate build to bake for better performances
+Just set COMPOSE_BAKE=true
+#0 building with "lucid_benz" instance using docker-container driver
+
+#1 [websocket internal] load build definition from websocket.Dockerfile
+#1 transferring dockerfile: 315B 0.0s done
+#1 DONE 0.1s
+
+#2 [websocket internal] load metadata for docker.io/library/python:3.13-slim-bookworm
+#2 DONE 0.8s
+
+#3 [websocket internal] load .dockerignore
+#3 transferring context: 162B done
+#3 DONE 0.0s
+
+#4 [websocket 1/4] FROM docker.io/library/python:3.13-slim-bookworm@sha256:f0fa218d5b06f9b9235024fa061cde2cb141f726de52134471053d2d9b5324a3
+#4 resolve docker.io/library/python:3.13-slim-bookworm@sha256:f0fa218d5b06f9b9235024fa061cde2cb141f726de52134471053d2d9b5324a3 done
+#4 DONE 0.0s
+
+#5 [websocket internal] load build context
+#5 transferring context: 2.42kB 0.1s done
+#5 DONE 0.1s
+
+#6 [websocket 2/4] RUN pip install --no-cache-dir websockets==15.0.1
+#6 CACHED
+
+#7 [websocket 3/4] COPY tests/fixtures/websocket_server.py /app/server.py
+#7 CACHED
+
+#8 [websocket 4/4] WORKDIR /app
+#8 CACHED
+
+#9 [websocket] exporting to docker image format
+#9 exporting layers done
+#9 exporting manifest sha256:d7ba5132351d4c72f5a66db2b159192d72f522b9ae6a69dbb9bd4b50d011dc98 done
+#9 exporting config sha256:f3a08fb6c3c7f336b52d13a554331c25f8ab913ac506472c932a1f3a209a9800 done
+#9 sending tarball
+#9 sending tarball 2.5s done
+#9 DONE 2.5s
+
+#10 [websocket] resolving provenance for metadata file
+#10 DONE 0.0s
+
+#11 [websocket] importing to docker
+#11 DONE 0.0s
+
+#12 [proxy internal] load build definition from Dockerfile
+#12 transferring dockerfile: 2.69kB done
+#12 DONE 0.0s
+
+#13 [proxy internal] load metadata for docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#13 DONE 0.0s
+
+#14 [proxy internal] load metadata for docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#14 DONE 0.0s
+
+#15 [proxy internal] load .dockerignore
+#15 transferring context: 162B done
+#15 DONE 0.0s
+
+#16 [proxy stage-1 1/7] FROM docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#16 resolve docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc 0.0s done
+#16 DONE 0.0s
+
+#17 [proxy builder 1/8] FROM docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#17 resolve docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0 0.0s done
+#17 DONE 0.0s
+
+#18 [proxy internal] load build context
+#18 transferring context: 1.83MB 0.2s done
+#18 DONE 0.2s
+
+#19 [proxy stage-1 6/7] COPY LICENSE /usr/share/doc/cauce/LICENSE
+#19 CACHED
+
+#20 [proxy builder 7/8] COPY examples/cauce.toml examples/cauce.yaml ./examples/
+#20 CACHED
+
+#21 [proxy stage-1 2/7] RUN groupadd --gid 10001 cauce && useradd --uid 10001 --gid 10001 --no-create-home cauce     && mkdir -p /etc/cauce /var/log/cauce /var/lib/cauce && chown 10001:10001 /var/log/cauce /var/lib/cauce
+#21 CACHED
+
+#22 [proxy builder 2/8] RUN case "arm64" in       amd64) cauce_target=x86_64-unknown-linux-gnu ;;       arm64) cauce_target=aarch64-unknown-linux-gnu ;;       *) exit 1 ;; esac     && if [ "arm64" != "arm64" ]; then       apt-get update && case "arm64" in         amd64) apt-get install -y --no-install-recommends gcc-x86-64-linux-gnu libc6-dev-amd64-cross ;;         arm64) apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross ;;       esac && rm -rf /var/lib/apt/lists/*; fi     && rustup target add "$cauce_target"
+#22 CACHED
+
+#23 [proxy stage-1 5/7] COPY examples/docker.toml /etc/cauce/cauce.toml
+#23 CACHED
+
+#24 [proxy builder 8/8] RUN --mount=type=cache,id=cauce-registry,target=/usr/local/cargo/registry,sharing=locked     --mount=type=cache,id=cauce-target-arm64,target=/src/target,sharing=locked     case "arm64" in       amd64) cauce_target=x86_64-unknown-linux-gnu; export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=x86_64-linux-gnu-gcc ;;       arm64) cauce_target=aarch64-unknown-linux-gnu; export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc ;;     esac     && if [ "arm64" = "arm64" ]; then       unset CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER; fi     && cargo clean --release --target "$cauce_target" -p cauce     && cargo build --release --locked --target "$cauce_target"     && cp "/src/target/$cauce_target/release/cauce" /usr/local/bin/cauce-built     && cp "/src/target/$cauce_target/release/cauce-collector" /usr/local/bin/cauce-collector-built
+#24 CACHED
+
+#25 [proxy builder 6/8] COPY schemas ./schemas
+#25 CACHED
+
+#26 [proxy stage-1 4/7] COPY --from=builder /usr/local/bin/cauce-collector-built /usr/local/bin/cauce-collector
+#26 CACHED
+
+#27 [proxy builder 5/8] COPY src ./src
+#27 CACHED
+
+#28 [proxy stage-1 3/7] COPY --from=builder /usr/local/bin/cauce-built /usr/local/bin/cauce
+#28 CACHED
+
+#29 [proxy builder 4/8] COPY Cargo.toml Cargo.lock ./
+#29 CACHED
+
+#30 [proxy builder 3/8] WORKDIR /src
+#30 CACHED
+
+#31 [proxy stage-1 7/7] COPY third-party /usr/share/doc/cauce/third-party
+#31 CACHED
+
+#32 [proxy] exporting to docker image format
+#32 exporting layers done
+#32 exporting manifest sha256:d9c3a5dfa12d6dc6f724a88a080dc05b932098f2a897843ceac28682d3b5859c done
+#32 exporting config sha256:942454a37b72e6a5603eb931ba8d21202586d5a202d598bd0fe4fe4aa3999f88 done
+#32 ...
+
+#33 [proxy] importing to docker
+#33 DONE 0.1s
+
+#32 [proxy] exporting to docker image format
+#32 sending tarball 2.1s done
+#32 DONE 2.1s
+
+#34 [proxy] resolving provenance for metadata file
+#34 DONE 0.0s
+ proxy  Built
+ websocket  Built
+ Network cauce-m2b-tls_default  Creating
+ Network cauce-m2b-tls_default  Created
+ Volume "cauce-m2b-tls_cauce_tls_logs"  Creating
+ Volume "cauce-m2b-tls_cauce_tls_logs"  Created
+ Container cauce-m2b-tls-websocket-1  Creating
+ Container cauce-m2b-tls-websocket-1  Created
+ Container cauce-m2b-tls-proxy-1  Creating
+ Container cauce-m2b-tls-proxy-1  Created
+ Container cauce-m2b-tls-websocket-1  Starting
+ Container cauce-m2b-tls-websocket-1  Started
+ Container cauce-m2b-tls-proxy-1  Starting
+ Container cauce-m2b-tls-proxy-1  Started
+PASS: trusted inbound certificate and TLS upstream; 4 MiB fragmented binary echo, ping/pong and normal close; inbound hostname mismatch rejected; eight concurrent bidirectional sessions; HTTPS upstream socket reused; second tls_ms is null; upstream hostname mismatch rejected with HTTP 502; untrusted upstream CA rejected with HTTP 502

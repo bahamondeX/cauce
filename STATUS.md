@@ -82,3 +82,17 @@ successful requests/s in the cleartext capacity fixture. Two-worker runs
 failed the campaign SLO. The guest profiles cover HTTP/1.1, HTTP/2 cleartext,
 gRPC unary and bidirectional streaming. Native Linux results, multicore
 saturation and equivalent competitor capacity remain open.
+
+## Milestone 2B
+
+The branch fixes a reproducible HTTP/1.1 sender readiness race and missed
+pool wake-ups after canceling an opening reservation. It removes temporary
+pool key copies, counts idle HTTP/1.1 sockets without a return-path scan,
+and reuses buffers in the JSONL writer. The original two-worker transport
+failure remains unresolved after a correlated diagnostic replay.
+
+The Linux runner now records adaptive ramps, controls, confirmations,
+resource samples and scaling data. Production-wide capacity and parity gates
+remain open pending qualified ARM64 and AMD64 campaigns. The program stays
+in dataplane performance and concurrency optimization.
+[Milestone 2B evidence and open gates](docs/PERFORMANCE-MILESTONE-2B.md).

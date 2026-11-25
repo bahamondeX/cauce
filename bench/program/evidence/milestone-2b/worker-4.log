@@ -1,0 +1,8 @@
+test_burst_reuse_and_eviction_during_reload (__main__.ProxyTests.test_burst_reuse_and_eviction_during_reload) ... ok
+test_backend_unexpected_close_no_retry (__main__.ProxyTests.test_backend_unexpected_close_no_retry) ... ok
+test_idle_and_max_age_retirement (__main__.ProxyTests.test_idle_and_max_age_retirement) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 3.091s
+
+OK

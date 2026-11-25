@@ -1,0 +1,41 @@
+Installed 11 packages in 62ms
+test_cold_warmup_is_skipped_and_summary_is_complete (test_load.LoadGeneratorTests) ... ok
+test_full_bounded_queue_rejects_offers_without_synthetic_responses (test_load.LoadGeneratorTests) ... ok
+test_http_failures_are_not_counted_as_success (test_load.LoadGeneratorTests) ... ok
+test_measurement_marker_release_gates_output_persistence (test_load.LoadGeneratorTests) ... ok
+test_nan_rate_is_rejected (test_load.LoadGeneratorTests) ... ok
+test_nearest_rank_quantiles (test_load.LoadGeneratorTests) ... ok
+test_open_loop_counts_latency_and_connection_reuse (test_load.LoadGeneratorTests) ... ok
+test_sse_first_event_and_five_event_completion (test_load.LoadGeneratorTests) ... ok
+test_warmup_gate_preserves_session_and_excludes_preload_rows (test_load.LoadGeneratorTests) ... ok
+test_websocket_handshake_is_recorded_without_unsupported_trace_arg (test_load.LoadGeneratorTests) ... ok
+test_projection_preserves_raw_native_offers (test_native_load.NativeLoadProjectionTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 15.936s
+
+OK
+test_backend_and_protocol_evidence_required (test_audit.AuditTests.test_backend_and_protocol_evidence_required) ... ok
+test_duplicate_stream_and_wrong_grpc_status (test_audit.AuditTests.test_duplicate_stream_and_wrong_grpc_status) ... ok
+test_gate_or_stale_pool_contamination_rejected (test_audit.AuditTests.test_gate_or_stale_pool_contamination_rejected) ... ok
+test_good_and_missing_offer (test_audit.AuditTests.test_good_and_missing_offer) ... ok
+test_raw_latencies_match_timestamps (test_audit.AuditTests.test_raw_latencies_match_timestamps) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.028s
+
+OK
+✔ CLI defaults and validates HTTP/2/gRPC modes (9.822375ms)
+✔ gRPC framing decodes coalesced frames and rejects malformed frames (2.295458ms)
+✔ open-loop scheduler multiplexes streams and records bounded-queue rejections (397.402083ms)
+✔ execute validates gRPC terminal status and payload; clears completed timeout timer (13.347958ms)
+✔ HTTP 503 overload is an explicit expected result and skips body-size assertion (4.180042ms)
+✔ CLI warmup and barrier handshake defer result files until release (646.738167ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1374.149042

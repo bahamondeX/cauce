@@ -1,0 +1,24 @@
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.71s
+     Running unittests src/main.rs (target/debug/deps/cauce-97c20a9580d7b430)
+
+running 1 test
+
+thread 'pool::pool_tests::reused_http1_sender_waits_for_the_driver_after_complete_response' panicked at src/pool.rs:1417:9:
+dispatch tried to send while driver was parked
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'tokio-rt-worker' panicked at src/pool.rs:1377:21:
+assertion `left != right` failed
+  left: 0
+ right: 0
+test pool::pool_tests::reused_http1_sender_waits_for_the_driver_after_complete_response ... FAILED
+
+failures:
+
+failures:
+    pool::pool_tests::reused_http1_sender_waits_for_the_driver_after_complete_response
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 32 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--bin cauce`

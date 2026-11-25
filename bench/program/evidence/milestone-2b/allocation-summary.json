@@ -1,0 +1,66 @@
+{
+  "concurrency_fix": {
+    "measurement": {
+      "invalid_reasons": [],
+      "outcomes": {
+        "success": 1900
+      },
+      "offered": 1900,
+      "rate": 100,
+      "successful": 1900,
+      "offer_window_successes": 1900,
+      "goodput_per_s": 100.0,
+      "scheduled_latency_ns": {
+        "p50": 2474252,
+        "p95": 3941765,
+        "p99": 7943663,
+        "p99.9": 13967512
+      },
+      "queue_p99_ns": 278503,
+      "service_p99_ns": 5295106,
+      "scheduler_p99_ns": 2729046,
+      "warmup_successes": 200,
+      "warmup_offers": 200,
+      "profile_exit": null,
+      "usage": "diagnostic samples under profiler overhead"
+    },
+    "heaptrack_allocation_calls": 125978,
+    "heaptrack_cumulative_bytes": 46508419,
+    "successes_including_warmup": 2100,
+    "exact_unique_events": 2100,
+    "calls_per_success": 59.98952380952381,
+    "cumulative_bytes_per_success": 22146.86619047619
+  },
+  "retained": {
+    "measurement": {
+      "invalid_reasons": [],
+      "outcomes": {
+        "success": 1900
+      },
+      "offered": 1900,
+      "rate": 100,
+      "successful": 1900,
+      "offer_window_successes": 1900,
+      "goodput_per_s": 100.0,
+      "scheduled_latency_ns": {
+        "p50": 2484166,
+        "p95": 4950220,
+        "p99": 12366401,
+        "p99.9": 41761168
+      },
+      "queue_p99_ns": 431005,
+      "service_p99_ns": 9979117,
+      "scheduler_p99_ns": 3995946,
+      "warmup_successes": 200,
+      "warmup_offers": 200,
+      "profile_exit": null,
+      "usage": "diagnostic samples under profiler overhead"
+    },
+    "heaptrack_allocation_calls": 110984,
+    "heaptrack_cumulative_bytes": 39958723,
+    "successes_including_warmup": 2100,
+    "exact_unique_events": 2100,
+    "calls_per_success": 52.84952380952381,
+    "cumulative_bytes_per_success": 19027.963333333333
+  }
+}

@@ -1,0 +1,60 @@
+   Compiling cauce v0.9.1 (/src)
+    Finished `release` profile [optimized + debuginfo] target(s) in 2m 14s
+     Running unittests src/main.rs (target/release/deps/cauce-57bd8448523f6739)
+
+running 33 tests
+test config::tests::example_and_fail_closed ... ok
+test config::tests::h2_defaults_caps_and_reload ... ok
+test config::tests::yaml_and_toml_compile_to_the_same_configuration ... ok
+test config::tests::yaml_expands_whole_values_and_redacts_failed_substitutions ... ok
+test config::tests::yaml_rejects_invalid_fields_versions_and_durations ... ok
+test health::tests::invalid_config_rejected ... ok
+test health::tests::thresholds_and_disabled_default ... ok
+test pool::pool_tests::cancelled_opening_wakes_capacity_waiters ... ok
+test health::tests::actual_http_status_and_timeout ... ok
+test pool::pool_tests::multiplexes_two_leases_over_one_h2_socket ... ok
+test pool::pool_tests::absent_peer_stream_limit_releases_initial_zero_gate ... ok
+test pool::pool_tests::reused_http1_sender_waits_for_the_driver_after_complete_response ... ok
+test proxy::tests::framing_and_hop_headers ... ok
+test proxy::tests::grpc_deadlines_and_trailer_header ... ok
+test proxy::tests::rejects_ambiguous_paths ... ok
+test routing::tests::lookup_benchmark ... ignored, release-mode route lookup measurement
+test routing::tests::preserves_linear_match_semantics ... ok
+test telemetry::tests::failed_buffer_is_discarded_without_a_drop_flush_retry ... ok
+test telemetry::tests::failed_rotation_after_tail_repair_still_hands_off_inode_on_retry ... ok
+test telemetry::tests::reopen_preserves_complete_records_and_removes_only_unterminated_tail ... ok
+test telemetry::tests::trace_validation ... ok
+test transport::tests::absolute_deadline_covers_fragments_and_continuation_gaps ... ok
+test transport::tests::coalesced_frames_and_fragmented_preface_keep_next_block_deadline ... ok
+test transport::tests::connection_guard_cancels_stream_tasks_and_rejects_late_tasks ... ok
+test transport::tests::data_and_idle_are_not_header_timed_but_partial_frame_headers_are ... ok
+test transport::tests::end_headers_waits_for_all_payload_including_padding ... ok
+test transport::tests::header_watch_expires_without_further_io_polls ... ok
+test transport::tests::http1_passthrough_and_preface_have_separate_lifetimes ... ok
+test transport::tests::invalid_interleaving_does_not_disarm_or_reset_deadline ... ok
+test websocket::tests::rfc6455_handshake_and_rejections ... ok
+test pool::pool_tests::initial_peer_settings_bound_cold_start_streams ... ok
+test pool::pool_tests::watchdog_retires_stalled_early_response_without_leaking_pool_capacity ... ok
+test health::tests::scheduler_ejects_recovers_and_stops ... ok
+
+test result: ok. 32 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.86s
+
+     Running unittests src/bin/cauce-collector.rs (target/release/deps/cauce_collector-9f44a0976f51d2b8)
+
+running 14 tests
+test collector::tests::export_retains_queued_batches_and_lock_is_exclusive ... ok
+test collector::tests::invalid_ack_error_does_not_echo_untrusted_field_names ... ok
+test collector::tests::checkpoint_and_spool_commit_together_then_resume ... ok
+test collector::tests::a_present_inode_resets_missing_debounce_before_early_return ... ok
+test collector::tests::observed_frontier_shrink_after_resume_is_rejected ... ok
+test collector::tests::observed_frontier_shrink_while_full_is_rejected ... ok
+test collector::tests::lost_unread_log_fails_even_when_spool_is_full ... ok
+test collector::tests::partial_line_is_not_checkpointed_until_complete ... ok
+test collector::tests::rename_rotation_follows_inode_and_truncation_stops ... ok
+test collector::tests::schema_rejects_unknown_missing_and_bad_values ... ok
+test collector::tests::same_inode_same_size_rewrite_is_rejected ... ok
+test collector::tests::spool_quota_pauses_at_a_durable_checkpoint ... ok
+test collector::tests::rotated_tail_repair_accepts_only_a_scanned_fragment ... ok
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.09s

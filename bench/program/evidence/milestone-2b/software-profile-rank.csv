@@ -1,0 +1,572 @@
+workload,total_cpu_samples,rank,samples,leaf_symbol,object
+http1-off-profile,482,1,45,[unknown],/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,2,25,[unknown],[vdso]
+http1-off-profile,482,3,23,cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h66007d69ca4607dd,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,4,13,cauce::pool::spawn_driver::_$u7b$$u7b$closure$u7d$$u7d$::h6d2f948976cfe45f,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,5,12,http::header::name::StandardHeader::from_bytes,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,6,12,tokio::runtime::task::raw::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,7,12,_ZN5tokio4sync6notify15NotifiedProject13poll_notified17hd053cf08357f1ca7E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,8,8,cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h742353d9ad61fe2e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,9,8,malloc,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,10,7,clock_gettime,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,11,7,pow,/usr/lib/aarch64-linux-gnu/libm.so.6
+http1-off-profile,482,12,6,tokio::runtime::io::driver::Driver::turn,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,13,6,http::header::name::parse_hdr,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,14,6,http::header::map::hash_elem_using,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,15,6,cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h64bb4040e79b0abc,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,16,5,core::fmt::write,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,17,5,_ZN8httparse25parse_headers_iter_uninit17h9a17919e11aeb4d2E.llvm.941589225379427502,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,18,5,<&str as http::header::map::as_header_name::Sealed>::find,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,19,5,core::ptr::drop_in_place<core::option::Option<tokio::runtime::Timer>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,20,5,core::ptr::drop_in_place<alloc::vec::Vec<http::header::map::ExtraValue<http::header::value::HeaderValue>>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,21,5,<hyper::proto::h1::role::Client as hyper::proto::h1::Http1Transaction>::encode,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,22,4,tokio::sync::mpsc::list::Rx<T>::pop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,23,4,<cauce::body::GuardBody as http_body::Body>::poll_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,24,4,_ZN8httparse8Response36parse_with_config_and_uninit_headers17h5ef6b9f49df0047eE.llvm.941589225379427502,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,25,4,tokio::runtime::io::registration::Registration::poll_ready,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,26,4,<hyper::proto::h1::role::Client as hyper::proto::h1::Http1Transaction>::parse,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,27,4,"hyper::proto::h1::io::Buffered<T,B>::poll_read_from_io",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,28,4,tokio::runtime::task::raw::schedule,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,29,4,"hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_write",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,30,4,cauce::body::GuardBody::finish,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,31,4,<hyper::proto::h1::role::Server as hyper::proto::h1::Http1Transaction>::parse,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,32,4,epoll_pwait,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,33,4,http::header::map::HeaderMap<T>::get_all,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,34,3,<&str as core::str::pattern::Pattern>::is_contained_in,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,35,3,cauce::pool::Generation::select::_$u7b$$u7b$closure$u7d$$u7d$::h80e7ab6cc8e4c3c7,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,36,3,cauce::diagnostics::emit,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,37,3,http::header::name::HeaderName::from_bytes,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,38,3,tokio::runtime::io::scheduled_io::ScheduledIo::wake,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,39,3,http::uri::path::PathAndQuery::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,40,3,recv,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,41,3,core::str::pattern::StrSearcher::new,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,42,3,hyper::proto::h1::role::write_headers,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,43,3,__aarch64_ldadd8_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,44,3,<hyper_util::rt::tokio::TokioIo<T> as hyper::rt::io::Read>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,45,3,cauce::proxy::invalid_framing,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,46,3,__aarch64_ldadd8_relax,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,47,3,bytes::bytes::Bytes::slice,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,48,3,<alloc::collections::vec_deque::iter::Iter<T> as core::iter::traits::iterator::Iterator>::fold,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,49,3,http::header::map::HeaderMap<T>::try_reserve,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,50,3,<tokio::sync::oneshot::Receiver<T> as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,51,3,core::str::<impl str>::contains,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,52,3,hyper::proto::h1::conn::State::try_keep_alive,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,53,3,hyper::proto::h1::io::WriteBuf<B>::buffer,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,54,3,tokio::runtime::scheduler::multi_thread::worker::Context::run_task,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,55,3,_ZN5tokio4sync6notify15NotifiedProject13drop_notified17hd71dde9ac4ebcd3aE.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,56,2,core::ptr::drop_in_place<hyper_util::rt::tokio::TokioSleep>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,57,2,core::fmt::num::imp::<impl core::fmt::Display for u8>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,58,2,"tokio::sync::mpsc::chan::Rx<T,S>::recv",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,59,2,tokio::runtime::task::waker::wake_by_val,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,60,2,cauce::pool::Generation::route,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,61,2,hyper::headers::connection_any_close,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,62,2,tokio::runtime::time::<impl tokio::runtime::time::handle::Handle>::process_at_time,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,63,2,tokio::sync::mpsc::list::Tx<T>::find_block,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,64,2,tokio::runtime::scheduler::multi_thread::worker::Context::park_internal,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,65,2,bytes::bytes::Bytes::slice_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,66,2,_ZN4uuid3fmt17format_hyphenated17he83fd32382886af2E.llvm.14275938533096446886,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,67,2,_ZN5tokio7runtime9scheduler12multi_thread6worker73_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$13schedule_task17h03629e74ca7fd114E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,68,2,"hyper::client::dispatch::Receiver<T,U>::poll_recv",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,69,2,http::header::value::HeaderValue::from_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,70,2,core::fmt::Formatter::pad_integral,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,71,2,http::header::name::StandardHeader::as_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,72,2,cauce::proxy::strip_hop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,73,2,"<hyper_util::server::conn::auto::UpgradeableConnection<I,S,E> as core::future::future::Future>::poll",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,74,2,cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::h407c70e7d61331a9,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,75,2,tokio::runtime::time::Driver::park_internal,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,76,2,<cauce::transport::WriteTimeout<T> as tokio::io::async_read::AsyncRead>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,77,2,"<core::iter::adapters::filter_map::FilterMap<I,F> as core::iter::traits::iterator::Iterator>::next",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,78,2,"<hyper::proto::h1::dispatch::Server<S,hyper::body::incoming::Incoming> as hyper::proto::h1::dispatch::Dispatch>::recv_msg",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,79,2,bytes::bytes_mut::shared_v_drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,80,2,core::ptr::drop_in_place<http::header::map::HeaderMap>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,81,2,core::ptr::drop_in_place<[http::header::map::Bucket<http::header::value::HeaderValue>]>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,82,2,core::str::<impl str>::trim_matches,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,83,2,_ZN3std3sys3pal4unix4time8Timespec3now17h716e201243086f1bE.llvm.4686649216898816011,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,84,2,tokio::runtime::task::waker::clone_waker,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,85,2,"hyper::proto::h1::conn::Conn<I,B,T>::poll_read_body",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,86,2,tokio::runtime::blocking::pool::Spawner::spawn_task,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,87,2,bytes::bytes_mut::shared_v_clone,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,88,2,"hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_flush",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,89,2,"hyper::proto::h1::io::Buffered<T,B>::poll_flush",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,90,2,tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::hc613eaa46ce90401,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,91,2,http::header::map::HeaderMap<T>::try_reserve_one,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,92,2,core::ptr::drop_in_place$LT$cauce..pool..Pool..acquire..$u7b$$u7b$closure$u7d$$u7d$$GT$::h31dd564156ef3996,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,93,1,core::ptr::drop_in_place$LT$cauce..pool..Lease..send_request..$u7b$$u7b$closure$u7d$$u7d$$GT$::h5a80837ae5fb4d96,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,94,1,http::header::map::HeaderMap<T>::try_append2,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,95,1,core::option::Option<T>::and_then,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,96,1,bytes::bytes_mut::BytesMut::reserve_inner,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,97,1,_ZN4core3str21_$LT$impl$u20$str$GT$12trim_matches17h891027a65658b35aE.llvm.9126956870557562084,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,98,1,<http::header::name::HeaderName as core::convert::From<http::header::name::HdrName>>::from,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,99,1,__aarch64_ldadd8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,100,1,_ZN3mio3sys4unix5waker5Waker4wake17h2c308914ccfae40cE.llvm.7668511899369785526,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,101,1,<cauce::body::GuardBody as http_body::Body>::size_hint,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,102,1,tokio::runtime::task::waker::drop_waker,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,103,1,core::fmt::Formatter::pad_integral::write_prefix,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,104,1,__aarch64_cas4_acq,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,105,1,free@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,106,1,<http::uri::Uri as core::fmt::Display>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,107,1,http::status::StatusCode::canonical_reason,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,108,1,__aarch64_cas8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,109,1,hyper::body::chan::Sender::poll_ready,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,110,1,memcpy@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,111,1,__aarch64_swp4_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,112,1,<cauce::body::GuardBody as http_body::Body>::is_end_stream,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,113,1,_ZN5tokio3net4unix6stream10UnixStream14poll_read_priv17hebe1811cddf6a503E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,114,1,core::option::Option<T>::is_some_and,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,115,1,<cauce::transport::WriteTimeout<T> as tokio::io::async_write::AsyncWrite>::poll_flush,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,116,1,memcmp,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,117,1,cauce::transport::HeaderWatch::expired::_$u7b$$u7b$closure$u7d$$u7d$::h00743632a56e9ef0,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,118,1,<http::header::map::ValueIter<T> as core::iter::traits::iterator::Iterator>::next,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,119,1,core::ptr::drop_in_place$LT$core..option..Option$LT$alloc..boxed..Box$LT$std..collections..hash..map..HashMap$LT$core..any..TypeId$C$alloc..boxed..Box$LT$dyn$u20$http..extensions..AnyClone$u2b$core..marker..Send$u2b$core..marker..Sync$GT$$C$core..hash..BuildHasherDefault$LT$http..extensions..IdHasher$GT$$GT$$GT$$GT$$GT$::h82429a8a65f48335,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,120,1,<hyper::proto::h1::role::Server as hyper::proto::h1::Http1Transaction>::encode,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,121,1,core::ptr::drop_in_place<http::uri::Uri>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,122,1,"alloc::raw_vec::RawVec<T,A>::grow_one",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,123,1,cfree,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,124,1,http::method::Method::from_bytes,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,125,1,"hyper::client::dispatch::Callback<T,U>::send",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,126,1,http::uri::Uri::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,127,1,<cauce::transport::WriteTimeout<T> as tokio::io::async_write::AsyncWrite>::poll_write,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,128,1,cauce::transport::tighten_stream_deadline,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,129,1,http::header::map::HeaderMap<T>::contains_key,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,130,1,bytes::bytes_mut::BytesMut::split_to,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,131,1,__send,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,132,1,http::extensions::Extensions::remove,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,133,1,cauce::pool::Pool::sweep,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,134,1,tokio::sync::task::atomic_waker::AtomicWaker::register_by_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,135,1,hyper::proto::h1::role::set_content_length,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,136,1,"tokio::runtime::task::harness::Harness<T,S>::complete",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,137,1,std::time::Instant::elapsed,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,138,1,_ZN4core3ptr70drop_in_place$LT$core..option..Option$LT$tokio..runtime..Timer$GT$$GT$17h718853501da305ceE.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,139,1,tokio::time::sleep::Sleep::reset,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,140,1,syscall,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-off-profile,482,141,1,__floatuntidf,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,142,1,tokio::runtime::scheduler::multi_thread::worker::Core::maintenance,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,143,1,http::header::name::HdrName::from_static,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,144,1,core::ptr::drop_in_place<core::option::Option<cauce::telemetry::Attempt>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,145,1,<hyper::proto::h1::role::Server as hyper::proto::h1::Http1Transaction>::update_date,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,146,1,tokio::runtime::signal::Driver::process,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,147,1,<core::hash::sip::Hasher<S> as core::hash::Hasher>::write,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,148,1,<tokio::net::tcp::stream::TcpStream as tokio::io::async_write::AsyncWrite>::poll_flush,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,149,1,_ZN5tokio7runtime4time5wheel5Wheel6remove17he746dea68904be76E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,150,1,hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::_$u7b$$u7b$closure$u7d$$u7d$::ha0511e790fa1eccd,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,151,1,<tokio::net::unix::stream::UnixStream as tokio::io::async_read::AsyncRead>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,152,1,http::header::map::HeaderMap<T>::remove,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,153,1,hyper::headers::content_length_parse_all,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,154,1,core::ptr::drop_in_place<alloc::vec::into_iter::IntoIter<http::header::name::HeaderName>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,155,1,"hyper::client::dispatch::Callback<T,U>::poll_canceled",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,156,1,<tokio::time::sleep::Sleep as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,157,1,tokio::runtime::task::waker::wake_by_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,158,1,hyper::proto::h1::io::WriteBuf<B>::can_buffer,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,159,1,core::ptr::drop_in_place<cauce::body::GuardBody>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-off-profile,482,160,1,want::Giver::poll_want,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,1,92,[unknown],/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,2,39,cauce::telemetry::Logger::start::_$u7b$$u7b$closure$u7d$$u7d$::hf5fc9a9bc40d4de6,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,3,30,[unknown],[vdso]
+http1-on-profile,836,4,29,cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h66007d69ca4607dd,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,5,25,http::header::name::StandardHeader::from_bytes,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,6,22,tokio::runtime::task::raw::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,7,17,"<&mut serde_json::ser::Serializer<W,F> as serde_core::ser::Serializer>::serialize_str",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,8,15,cauce::pool::spawn_driver::_$u7b$$u7b$closure$u7d$$u7d$::h6d2f948976cfe45f,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,9,12,http::header::map::hash_elem_using,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,10,12,clock_gettime,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,11,11,cfree,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,12,11,"<hyper_util::server::conn::auto::UpgradeableConnection<I,S,E> as core::future::future::Future>::poll",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,13,11,http::header::name::parse_hdr,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,14,9,"hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_write",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,15,9,<f64 as zmij::private::Sealed>::write_to_zmij_buffer,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,16,9,<hyper::proto::h1::role::Server as hyper::proto::h1::Http1Transaction>::encode,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,17,8,tokio::runtime::signal::Driver::process,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,18,8,cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h742353d9ad61fe2e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,19,8,"<serde_json::ser::Compound<W,F> as serde_core::ser::SerializeStruct>::serialize_field",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,20,8,tokio::runtime::io::driver::Driver::turn,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,21,7,malloc,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,22,7,<&str as http::header::map::as_header_name::Sealed>::find,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,23,6,std::sync::mpmc::waker::SyncWaker::notify,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,24,6,cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h64bb4040e79b0abc,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,25,6,core::fmt::write,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,26,6,<hyper::proto::h1::role::Client as hyper::proto::h1::Http1Transaction>::encode,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,27,6,http::header::name::HeaderName::from_bytes,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,28,6,std::sync::mpmc::array::Channel<T>::recv,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,29,6,<hyper::proto::h1::role::Server as hyper::proto::h1::Http1Transaction>::update_date,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,30,6,tokio::runtime::task::waker::wake_by_val,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,31,6,tokio::sync::mpsc::list::Rx<T>::pop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,32,6,cauce::body::GuardBody::finish,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,33,5,tokio::time::sleep::Sleep::new_timeout,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,34,5,realloc,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,35,5,<cauce::body::GuardBody as http_body::Body>::poll_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,36,5,tokio::runtime::io::registration::Registration::poll_ready,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,37,5,cauce::telemetry::Logger::emit,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,38,5,"hyper::proto::h1::io::Buffered<T,B>::poll_read_from_io",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,39,5,<tokio::sync::oneshot::Receiver<T> as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,40,5,__aarch64_cas8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,41,5,_ZN3std3sys3pal4unix4time8Timespec3now17h716e201243086f1bE.llvm.4686649216898816011,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,42,5,"<core::iter::adapters::filter_map::FilterMap<I,F> as core::iter::traits::iterator::Iterator>::next",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,43,5,_ZN5tokio3net4unix6stream10UnixStream14poll_read_priv17hebe1811cddf6a503E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,44,5,core::option::Option<T>::and_then,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,45,5,http::header::map::HeaderMap<T>::try_reserve_one,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,46,5,http::header::map::HeaderMap<T>::contains_key,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,47,5,epoll_pwait,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,48,5,http::uri::Uri::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,49,4,<http::header::map::ValueIter<T> as core::iter::traits::iterator::Iterator>::next,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,50,4,<tokio::time::sleep::Sleep as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,51,4,http::header::map::HeaderMap<T>::get_all,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,52,4,_ZN8httparse25parse_headers_iter_uninit17h9a17919e11aeb4d2E.llvm.941589225379427502,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,53,4,"hyper::client::dispatch::Callback<T,U>::poll_canceled",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,54,4,_ZN5tokio4sync6notify15NotifiedProject13poll_notified17hd053cf08357f1ca7E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,55,4,http::header::name::HdrName::from_static,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,56,4,cauce::proxy::normal_path,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,57,4,tokio::runtime::scheduler::multi_thread::worker::Context::run_task,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,58,4,__aarch64_ldadd8_relax,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,59,4,<hyper::proto::h1::role::Client as hyper::proto::h1::Http1Transaction>::parse,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,60,4,recv,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,61,4,"hyper::proto::h1::dispatch::Dispatcher<D,Bs,I,T>::poll_flush",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,62,4,_ZN5bytes5bytes11static_drop17h0a807ecccfc8a3d0E.llvm.17019144402087557684,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,63,4,"hyper::proto::h1::io::Buffered<T,B>::poll_flush",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,64,3,<uuid::rng::imp::RngImp as uuid::rng::Rng>::u128,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,65,3,alloc::string::String::from_utf8_lossy,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,66,3,http::header::map::HeaderMap<T>::try_append2,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,67,3,writev,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,68,3,http::uri::path::PathAndQuery::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,69,3,cauce::proxy::invalid_framing,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,70,3,hyper::body::chan::Sender::try_send_data,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,71,3,core::str::pattern::StrSearcher::new,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,72,3,bytes::bytes::Bytes::slice,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,73,3,pow,/usr/lib/aarch64-linux-gnu/libm.so.6
+http1-on-profile,836,74,3,core::ptr::drop_in_place<core::option::Option<tokio::runtime::Timer>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,75,3,tokio::runtime::io::scheduled_io::ScheduledIo::wake,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,76,3,<hyper::proto::h1::role::Server as hyper::proto::h1::Http1Transaction>::parse,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,77,3,tokio::sync::mpsc::list::Tx<T>::find_block,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,78,3,tokio::runtime::scheduler::multi_thread::worker::Context::park_internal,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,79,3,_ZN8httparse8Response36parse_with_config_and_uninit_headers17h5ef6b9f49df0047eE.llvm.941589225379427502,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,80,3,"hyper::proto::h1::conn::Conn<I,B,T>::maybe_notify",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,81,3,<hyper_util::rt::tokio::TokioTimer as hyper::rt::timer::Timer>::now,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,82,3,std::sync::mpmc::array::Channel$LT$T$GT$::recv::_$u7b$$u7b$closure$u7d$$u7d$::h9c9c5c53c52987be,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,83,3,tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::hc613eaa46ce90401,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,84,3,<hyper::proto::h1::dispatch::Client<B> as hyper::proto::h1::dispatch::Dispatch>::poll_msg,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,85,3,<&str as core::str::pattern::Pattern>::is_contained_in,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,86,3,<cauce::transport::WriteTimeout<T> as tokio::io::async_read::AsyncRead>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,87,3,_ZN5tokio7runtime4time5wheel5Wheel6remove17he746dea68904be76E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,88,3,_ZN8httparse7Request36parse_with_config_and_uninit_headers17h1c93261ed34954f3E.llvm.941589225379427502,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,89,3,http::response::Response<T>::map,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,90,3,http::header::map::HeaderMap<T>::get,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,91,3,syscall,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,92,2,core::ptr::drop_in_place$LT$tokio..time..timeout..Timeout$LT$cauce..pool..Lease..send_request..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::h79a0c310d590ab0e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,93,2,bytes::bytes_mut::BytesMut::reserve_inner,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,94,2,core::ptr::drop_in_place<cauce::telemetry::Event>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,95,2,<hyper::proto::h1::io::WriteBuf<B> as bytes::buf::buf_impl::Buf>::advance,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,96,2,http::header::value::HeaderValue::from_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,97,2,bytes::bytes::Bytes::slice_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,98,2,httparse::parse_version,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,99,2,getrandom,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,100,2,__aarch64_ldadd8_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,101,2,<tokio::net::tcp::stream::TcpStream as tokio::io::async_write::AsyncWrite>::poll_flush,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,102,2,<cauce::telemetry::Logger as core::clone::Clone>::clone,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,103,2,tokio::sync::notify::NotifyGuard::notify_waiters,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,104,2,tokio::runtime::time::<impl tokio::runtime::time::handle::Handle>::reregister,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,105,2,core::ptr::drop_in_place$LT$core..option..Option$LT$alloc..boxed..Box$LT$std..collections..hash..map..HashMap$LT$core..any..TypeId$C$alloc..boxed..Box$LT$dyn$u20$http..extensions..AnyClone$u2b$core..marker..Send$u2b$core..marker..Sync$GT$$C$core..hash..BuildHasherDefault$LT$http..extensions..IdHasher$GT$$GT$$GT$$GT$$GT$::h82429a8a65f48335,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,106,2,"<hyper::proto::h1::io::Buffered<T,B> as hyper::proto::h1::io::MemRead>::read_mem",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,107,2,core::fmt::Formatter::pad_integral::write_prefix,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,108,2,e843419@0054_00003fd6_1468,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,109,2,bytes::bytes_mut::BytesMut::split_to,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,110,2,<alloc::string::String as core::fmt::Write>::write_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,111,2,std::sys::sync::mutex::futex::Mutex::lock_contended,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,112,2,"<hyper::proto::h1::dispatch::Server<S,hyper::body::incoming::Incoming> as hyper::proto::h1::dispatch::Dispatch>::recv_msg",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,113,2,cauce::websocket::request,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,114,2,<hyper::body::incoming::Incoming as http_body::Body>::poll_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,115,2,bytes::bytes_mut::shared_v_drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,116,2,__aarch64_cas4_acq,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,117,2,hyper::proto::h1::encode::Encoder::encode_and_end,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,118,2,tokio::runtime::task::raw::try_read_output,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,119,2,tokio::runtime::time::<impl tokio::runtime::time::handle::Handle>::process_at_time,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,120,2,<core::iter::adapters::cloned::Cloned<I> as core::iter::traits::iterator::Iterator>::next,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,121,2,core::ptr::drop_in_place<[http::header::map::Bucket<http::header::value::HeaderValue>]>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,122,2,tokio::sync::task::atomic_waker::AtomicWaker::register_by_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,123,2,<cauce::body::GuardBody as http_body::Body>::is_end_stream,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,124,2,http::header::name::StandardHeader::as_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,125,2,"alloc::sync::Arc<T,A>::drop_slow",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,126,2,"hyper::client::dispatch::Receiver<T,U>::poll_recv",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,127,2,hyper::client::conn::http1::SendRequest<B>::send_request,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,128,2,__send,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,129,2,"alloc::vec::Vec<T,A>::push",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,130,2,<core::net::ip_addr::Ipv4Addr as core::fmt::Display>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,131,2,_ZN3std3sys3pal4unix4time8Timespec12sub_timespec17ha1a0b8c292df3fe0E.llvm.4686649216898816011,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,132,2,memcmp,/usr/lib/aarch64-linux-gnu/libc.so.6
+http1-on-profile,836,133,1,_ZN4http6header3map18HeaderMap$LT$T$GT$10try_entry217h27b5840e4c8c7ec8E.llvm.9126956870557562084,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,134,1,http::header::map::HeaderMap<T>::remove_found,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,135,1,hyper::proto::h1::io::WriteBuf<B>::buffer,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,136,1,<hyper_util::rt::tokio::TokioIo<T> as hyper::rt::io::Read>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,137,1,core::ptr::drop_in_place<core::option::Option<http::method::Method>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,138,1,core::ptr::drop_in_place<cauce::pool::Lease>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,139,1,hyper::headers::connection_close,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,140,1,hyper::headers::te_is_trailers,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,141,1,<hyper::proto::h1::dispatch::Client<B> as hyper::proto::h1::dispatch::Dispatch>::recv_msg,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,142,1,"tokio::sync::mpsc::chan::Rx<T,S>::recv",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,143,1,core::ptr::drop_in_place<cauce::body::GuardBody>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,144,1,<alloc::collections::vec_deque::iter::Iter<T> as core::iter::traits::iterator::Iterator>::fold,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,145,1,core::ptr::drop_in_place<alloc::vec::into_iter::IntoIter<http::header::name::HeaderName>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,146,1,pow@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,147,1,http::header::map::HeaderMap<T>::insert,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,148,1,httparse::parse_reason,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,149,1,core::ptr::drop_in_place<hyper::body::incoming::Incoming>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,150,1,hyper::proto::h1::role::write_headers,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,151,1,<hyper_util::rt::tokio::TokioSleep as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,152,1,core::hash::BuildHasher::hash_one,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,153,1,core::ptr::drop_in_place<core::option::Option<cauce::websocket::Handshake>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,154,1,_ZN3mio3sys4unix5waker5Waker4wake17h2c308914ccfae40cE.llvm.7668511899369785526,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,155,1,__aarch64_swp8_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,156,1,hyper::client::conn::http1::SendRequest$LT$B$GT$::send_request::_$u7b$$u7b$closure$u7d$$u7d$::ha0511e790fa1eccd,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,157,1,tokio::runtime::task::waker::drop_waker,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,158,1,tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::h6de5f2632685005e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,159,1,<hyper::body::chan::Receiver as core::ops::drop::Drop>::drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,160,1,<tokio::net::unix::stream::UnixStream as tokio::io::async_read::AsyncRead>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,161,1,core::fmt::num::imp::<impl core::fmt::Display for usize>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,162,1,"hyper::client::dispatch::Callback<T,U>::send",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,163,1,_ZN4uuid3fmt17format_hyphenated17he83fd32382886af2E.llvm.14275938533096446886,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,164,1,"tokio::runtime::task::harness::Harness<T,S>::complete",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,165,1,core::fmt::Formatter::pad_integral,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,166,1,<http::header::name::HeaderName as core::convert::From<http::header::name::HdrName>>::from,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,167,1,core::ptr::drop_in_place$LT$tokio..time..timeout..Timeout$LT$cauce..pool..Pool..acquire..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::hf8e24003428a231a,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,168,1,core::ptr::drop_in_place<std::sync::poison::mutex::MutexGuard<cauce::pool::Idle>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,169,1,core::str::converts::from_utf8,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,170,1,tokio::runtime::task::waker::wake_by_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,171,1,__aarch64_ldset8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,172,1,core::iter::traits::iterator::Iterator::sum,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,173,1,tokio::runtime::time::entry::_::<impl core::ops::drop::Drop for tokio::runtime::time::entry::TimerEntry>::drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,174,1,"core::ptr::drop_in_place<tokio::sync::oneshot::Receiver<core::result::Result<http::response::Response<hyper::body::incoming::Incoming>,hyper::error::Error>>>",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,175,1,tokio::time::timeout::poll_delay,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,176,1,cauce::pool::Generation::route,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,177,1,std::sync::mpmc::waker::Waker::notify,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,178,1,hyper::body::chan::Sender::poll_ready,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,179,1,memcpy@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,180,1,__floatuntidf,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,181,1,cauce::proxy::strip_hop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,182,1,__aarch64_ldclr8_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,183,1,tokio::runtime::task::waker::clone_waker,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,184,1,core::ptr::drop_in_place<http::uri::Uri>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,185,1,tokio::time::timeout::timeout_at,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,186,1,core::fmt::num::imp::<impl core::fmt::Display for u8>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,187,1,<core::str::pattern::CharSearcher as core::str::pattern::Searcher>::next_match,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,188,1,"hyper::proto::h1::conn::Conn<I,B,T>::poll_read_body",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,189,1,_ZN4core3str4iter22SplitInternal$LT$P$GT$4next17h7ebce27789bf189dE.llvm.9126956870557562084,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,190,1,core::ptr::drop_in_place<http::header::map::Drain<http::header::value::HeaderValue>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,191,1,_ZN4core3ptr46drop_in_place$LT$hyper..body..chan..Shared$GT$17hace0f9eb547d2946E.llvm.9126956870557562084,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,192,1,clock_gettime@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,193,1,tokio::runtime::driver::Driver::park,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,194,1,hyper::proto::h1::role::set_content_length,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,195,1,tokio::sync::mpsc::unbounded::UnboundedSender<T>::send,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,196,1,tokio::runtime::scheduler::multi_thread::worker::Core::maintenance,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,197,1,_ZN5tokio3net3tcp6stream9TcpStream15poll_write_priv17h177ca1a94da98534E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,198,1,__aarch64_swp4_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,199,1,std::io::buffered::bufwriter::BufWriter<W>::flush_buf,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,200,1,cauce::maintain_pool::_$u7b$$u7b$closure$u7d$$u7d$::h459dec6fee15bf0b,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,201,1,http::header::map::HeaderMap<T>::try_reserve,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,202,1,<http::header::value::HeaderValue as core::convert::From<u64>>::from,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http1-on-profile,836,203,1,tokio::time::sleep::Sleep::reset,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,1,81,[unknown],/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,2,27,"h2::proto::connection::Connection<T,P,B>::poll",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,3,20,h2::frame::headers::HeaderBlock::into_encoding,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,4,15,cauce::proxy::handle::_$u7b$$u7b$closure$u7d$$u7d$::h66007d69ca4607dd,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,5,13,tokio::runtime::task::raw::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,6,10,[unknown],[vdso]
+http2-profile,593,7,9,_$LT$cauce..pool..H2TaskExecutor$u20$as$u20$hyper..rt..Executor$LT$F$GT$$GT$::execute::_$u7b$$u7b$closure$u7d$$u7d$::h2d097529adce9e2c,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,8,9,memcmp,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,9,9,"<hyper::proto::h2::server::Server<T,S,B,E> as core::future::future::Future>::poll",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,10,8,http::header::name::parse_hdr,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,11,8,http::header::map::hash_elem_using,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,12,7,http::header::name::StandardHeader::from_bytes,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,13,7,"<tokio::task::task_local::TaskLocalFuture<T,F> as core::future::future::Future>::poll",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,14,6,<&str as http::header::map::as_header_name::Sealed>::find,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,15,6,"<hyper_util::server::conn::auto::UpgradeableConnection<I,S,E> as core::future::future::Future>::poll",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,16,6,http::header::map::HeaderMap<T>::contains_key,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,17,6,cauce::pool::spawn_driver::_$u7b$$u7b$closure$u7d$$u7d$::h3f2b5af62fd31f58,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,18,6,_ZN5tokio7runtime9scheduler12multi_thread6worker73_$LT$impl$u20$tokio..runtime..scheduler..multi_thread..handle..Handle$GT$13schedule_task17h03629e74ca7fd114E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,19,6,h2::frame::headers::HeaderBlock::load::_$u7b$$u7b$closure$u7d$$u7d$::h81ab67db60f4e289,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,20,6,h2::frame::headers::HeaderBlock::load,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,21,6,http::header::map::HeaderMap<T>::try_append2,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,22,5,h2::proto::streams::store::Ptr::unlink,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,23,5,slab::Slab<T>::insert_at,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,24,5,core::ops::function::FnOnce::call_once,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,25,4,<tokio::time::sleep::Sleep as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,26,4,tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::h743b398380360fab,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,27,4,http::uri::Uri::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,28,4,_ZN5tokio4sync6notify15NotifiedProject13poll_notified17hd053cf08357f1ca7E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,29,4,cauce::pool::Pool::acquire_h2::_$u7b$$u7b$closure$u7d$$u7d$::he0338a05ac057ea2,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,30,4,h2::proto::streams::recv::Recv::recv_headers,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,31,4,_ZN2h25codec11framed_read12decode_frame17h3aae731e40ae10eaE.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,32,4,tokio::runtime::io::scheduled_io::ScheduledIo::wake,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,33,4,h2::proto::streams::prioritize::Prioritize::pop_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,34,4,<hyper::body::incoming::Incoming as http_body::Body>::poll_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,35,4,tokio::runtime::task::raw::schedule,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,36,4,_ZN5bytes5bytes12shared_clone17h2fc8f3c705178027E.llvm.10159842754925500582,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,37,4,h2::hpack::decoder::Table::get,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,38,4,tokio::runtime::io::driver::Driver::turn,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,39,4,__aarch64_cas8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,40,4,__aarch64_swp4_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,41,4,"h2::codec::framed_write::FramedWrite<T,B>::flush",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,42,3,_ZN4core3ptr53drop_in_place$LT$h2..proto..streams..state..Inner$GT$17hd9003609d2cb6f95E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,43,3,h2::proto::streams::prioritize::Prioritize::reclaim_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,44,3,h2::proto::connection::DynConnection<B>::recv_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,45,3,http::uri::authority::Authority::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,46,3,cauce::transport::HeaderWatch::expired::_$u7b$$u7b$closure$u7d$$u7d$::h00743632a56e9ef0,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,47,3,tokio::runtime::task::list::OwnedTasks<S>::bind_inner,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,48,3,core::ptr::drop_in_place<cauce::pool::StreamHold>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,49,3,h2::proto::streams::store::Store::find_entry,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,50,3,<tokio::net::tcp::stream::TcpStream as tokio::io::async_write::AsyncWrite>::poll_flush,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,51,3,malloc,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,52,3,"<E as hyper::rt::bounds::h2_client::Http2ClientConnExec<B,T>>::execute_h2_future",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,53,3,clock_gettime,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,54,3,<cauce::body::GuardBody as http_body::Body>::poll_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,55,3,tokio::runtime::signal::Driver::process,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,56,3,__send,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,57,3,h2::hpack::decoder::Decoder::try_decode_string,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,58,3,tokio::runtime::scheduler::multi_thread::handle::<impl tokio::runtime::task::Schedule for alloc::sync::Arc<tokio::runtime::scheduler::multi_thread::handle::Handle>>::release,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,59,3,bytes::bytes_mut::shared_v_drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,60,3,cfree,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,61,2,<h2::hpack::header::Header<T> as core::clone::Clone>::clone,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,62,2,h2::proto::streams::send::Send::poll_reset,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,63,2,recv,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,64,2,<hyper_util::rt::tokio::TokioIo<T> as hyper::rt::io::Read>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,65,2,"tokio::runtime::task::harness::Harness<T,S>::complete",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,66,2,h2::proto::streams::prioritize::Prioritize::reserve_capacity,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,67,2,core::ptr::drop_in_place<h2::share::RecvStream>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,68,2,"<core::iter::adapters::filter_map::FilterMap<I,F> as core::iter::traits::iterator::Iterator>::next",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,69,2,tokio::task::join_set::JoinSet<T>::try_join_next,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,70,2,http::header::map::HeaderMap<T>::try_grow,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,71,2,<tokio::runtime::task::join::JoinHandle<T> as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,72,2,core::ptr::drop_in_place$LT$cauce..pool..Pool..acquire..$u7b$$u7b$closure$u7d$$u7d$$GT$::h31dd564156ef3996,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,73,2,h2::server::SendResponse<B>::send_response,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,74,2,__aarch64_ldadd8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,75,2,core::ptr::drop_in_place<h2::hpack::header::Header>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,76,2,writev,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,77,2,_ZN3std3sys3pal4unix4time8Timespec3now17h716e201243086f1bE.llvm.4686649216898816011,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,78,2,<h2::server::Peer as h2::proto::peer::Peer>::convert_poll_message,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,79,2,realloc,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,80,2,cauce::run::_$u7b$$u7b$closure$u7d$$u7d$::_$u7b$$u7b$closure$u7d$$u7d$::h742353d9ad61fe2e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,81,2,h2::codec::framed_write::Encoder<B>::unset_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,82,2,_ZN4core3ptr47drop_in_place$LT$h2..frame..headers..Pseudo$GT$17hca354a1be13b4988E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,83,2,h2::client::SendRequest<B>::poll_ready,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,84,2,tokio::runtime::io::registration::Registration::poll_ready,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,85,2,h2::hpack::table::Table::converge,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,86,2,getrandom,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,87,2,h2::frame::headers::Headers::encode,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,88,2,h2::hpack::encoder::encode_not_indexed,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,89,2,http::header::map::HeaderMap<T>::try_entry2,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,90,2,tokio::runtime::time::Driver::park_internal,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,91,2,h2::codec::framed_write::Encoder<B>::buffer,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,92,2,<tokio::net::unix::stream::UnixStream as tokio::io::async_read::AsyncRead>::poll_read,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,93,2,h2::proto::streams::counts::Counts::transition_after,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,94,2,http::uri::path::PathAndQuery::from_shared,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,95,1,writev@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,96,1,h2::proto::streams::prioritize::Prioritize::schedule_send,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,97,1,http::header::map::HeaderMap<T>::remove,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,98,1,cauce::proxy::normal_path,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,99,1,<h2::client::ResponseFuture as core::future::future::Future>::poll,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,100,1,h2::proto::streams::stream::Stream::send_data,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,101,1,cauce::body::GuardBody::finish,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,102,1,epoll_wait,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,103,1,h2::proto::streams::prioritize::Prioritize::reclaim_frame_inner,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,104,1,posix_memalign@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,105,1,core::str::pattern::StrSearcher::new,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,106,1,http::header::value::HeaderValue::from_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,107,1,hyper::proto::h2::strip_connection_headers,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,108,1,"tokio::runtime::task::core::Core<T,S>::set_stage",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,109,1,core::ptr::drop_in_place$LT$http_body_util..combinators..map_err..MapErr$LT$http_body_util..full..Full$LT$bytes..bytes..Bytes$GT$$C$cauce..body..full$LT$$RF$str$GT$..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::hee29b42e6416e2e0,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,110,1,h2::share::RecvStream::is_end_stream,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,111,1,tokio::sync::mpsc::list::Rx<T>::pop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,112,1,pow,/usr/lib/aarch64-linux-gnu/libm.so.6
+http2-profile,593,113,1,bytes::bytes_mut::BytesMut::split_to,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,114,1,bcmp@plt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,115,1,h2::proto::streams::stream::Stream::new,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,116,1,cauce::pool::Lease::arm_deadline::_$u7b$$u7b$closure$u7d$$u7d$::h207066be4c3de366,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,117,1,<cauce::transport::WriteTimeout<T> as tokio::io::async_write::AsyncWrite>::poll_write,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,118,1,_ZN5tokio4sync6notify15NotifiedProject13drop_notified17hd71dde9ac4ebcd3aE.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,119,1,cauce::pool::Generation::select::_$u7b$$u7b$closure$u7d$$u7d$::h80e7ab6cc8e4c3c7,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,120,1,tokio::runtime::scheduler::multi_thread::worker::Context::run_task,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,121,1,core::iter::traits::iterator::Iterator::sum,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,122,1,<h2::proto::streams::streams::OpaqueStreamRef as core::ops::drop::Drop>::drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,123,1,core::ptr::drop_in_place$LT$hyper..proto..h2..client..H2ClientFuture$LT$http_body_util..combinators..box_body..UnsyncBoxBody$LT$bytes..bytes..Bytes$C$alloc..boxed..Box$LT$dyn$u20$core..error..Error$u2b$core..marker..Send$u2b$core..marker..Sync$GT$$GT$$C$hyper_util..rt..tokio..TokioIo$LT$alloc..boxed..Box$LT$dyn$u20$cauce..pool..PoolIo$GT$$GT$$C$cauce..pool..H2TaskExecutor$GT$$GT$::h72596c03d02e9a23,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,124,1,<cauce::body::GuardBody as http_body::Body>::is_end_stream,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,125,1,h2::proto::streams::prioritize::Prioritize::try_assign_capacity,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,126,1,tokio::runtime::scheduler::multi_thread::worker::Context::park_internal,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,127,1,"<http_body_util::combinators::map_err::MapErr<B,F> as http_body::Body>::size_hint",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,128,1,tokio::sync::oneshot::Sender<T>::send,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,129,1,h2::proto::streams::store::Queue<N>::push,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,130,1,<bytes::bytes_mut::BytesMut as core::ops::drop::Drop>::drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,131,1,tokio::sync::notify::NotifyGuard::notify_waiters,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,132,1,core::ptr::drop_in_place$LT$tokio..time..timeout..Timeout$LT$cauce..pool..Lease..send_request..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::h79a0c310d590ab0e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,133,1,core::fmt::write,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,134,1,core::fmt::Formatter::pad,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,135,1,http::header::map::HeaderMap<T>::insert,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,136,1,_ZN4core3ptr96drop_in_place$LT$$u5b$http..header..map..Bucket$LT$http..header..value..HeaderValue$GT$$u5d$$GT$17h0567f28715286947E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,137,1,tokio::runtime::task::waker::wake_by_val,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,138,1,<tokio::util::idle_notified_set::ListEntry<T> as tokio::util::wake::Wake>::wake_by_ref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,139,1,h2::proto::streams::recv::Recv::take_request,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,140,1,core::ptr::drop_in_place$LT$hyper..client..conn..http2..SendRequest$LT$http_body_util..combinators..box_body..UnsyncBoxBody$LT$bytes..bytes..Bytes$C$alloc..boxed..Box$LT$dyn$u20$core..error..Error$u2b$core..marker..Send$u2b$core..marker..Sync$GT$$GT$$GT$$GT$::h65c3838f69f87a28,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,141,1,h2::share::FlowControl::release_capacity,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,142,1,http::extensions::Extensions::remove,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,143,1,h2::hpack::decoder::take,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,144,1,"indexmap::inner::Core<K,V>::push_entry",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,145,1,_ZN5bytes5bytes11shared_drop17h881ad64df96d3d69E.llvm.10159842754925500582,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,146,1,h2::proto::streams::buffer::Deque::pop_front,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,147,1,<h2::frame::headers::Iter as core::iter::traits::iterator::Iterator>::next,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,148,1,__aarch64_cas4_acq,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,149,1,h2::hpack::header::Header::len,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,150,1,http::header::name::StandardHeader::as_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,151,1,_ZN2h25proto7streams6buffer5Deque9pop_front17h8a0f32011b174955E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,152,1,cauce::proxy::invalid_framing,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,153,1,_ZN5tokio4sync15batch_semaphore9Semaphore18add_permits_locked17h04246aa0560fb462E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,154,1,_ZN5bytes5bytes11static_drop17h0a807ecccfc8a3d0E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,155,1,core::fmt::num::imp::<impl core::fmt::Display for u8>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,156,1,__aarch64_cas8_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,157,1,"alloc::sync::Arc<T,A>::drop_slow",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,158,1,<core::iter::adapters::cloned::Cloned<I> as core::iter::traits::iterator::Iterator>::next,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,159,1,_ZN5tokio3net4unix6stream10UnixStream24poll_write_vectored_priv17h412f2cb2e1521d1aE.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,160,1,h2::client::Peer::convert_send_message,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,161,1,cauce::pool::Pool::acquire::_$u7b$$u7b$closure$u7d$$u7d$::h64bb4040e79b0abc,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,162,1,_ZN2h25proto7streams4recv4Recv16release_capacity17h6d1610e04785da15E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,163,1,bytes::bytes_mut::shared_v_clone,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,164,1,tokio::runtime::driver::Driver::park,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,165,1,core::ptr::drop_in_place$LT$cauce..pool..Lease..arm_deadline..$u7b$$u7b$closure$u7d$$u7d$$GT$::haf7e59483d58b03a,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,166,1,h2::frame::headers::Pseudo::set_scheme,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,167,1,_ZN4uuid3fmt17format_hyphenated17he83fd32382886af2E.llvm.14275938533096446886,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,168,1,epoll_pwait,/usr/lib/aarch64-linux-gnu/libc.so.6
+http2-profile,593,169,1,h2::frame::head::Head::encode,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,170,1,<h2::proto::streams::streams::OpaqueStreamRef as core::clone::Clone>::clone,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,171,1,<&T as core::fmt::Display>::fmt,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,172,1,tokio::runtime::scheduler::multi_thread::worker::Core::maintenance,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,173,1,tokio::sync::watch::Receiver$LT$T$GT$::changed::_$u7b$$u7b$closure$u7d$$u7d$::h6de5f2632685005e,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,174,1,<h2::proto::streams::store::Ptr as core::ops::deref::Deref>::deref,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,175,1,tokio::sync::mpsc::unbounded::UnboundedSender<T>::send,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,176,1,tokio::runtime::task::harness::can_read_output,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,177,1,_ZN4core3ptr113drop_in_place$LT$alloc..vec..Vec$LT$http..header..map..ExtraValue$LT$http..header..value..HeaderValue$GT$$GT$$GT$17h6c41aac4e113b715E.llvm.17865532483837059169,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,178,1,h2::proto::streams::recv::Recv::clear_expired_reset_streams,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,179,1,h2::proto::streams::prioritize::Prioritize::queue_frame,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,180,1,h2::proto::streams::streams::maybe_cancel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,181,1,h2::proto::streams::stream::Stream::notify_capacity,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,182,1,_ZN5tokio7runtime4task7harness14set_join_waker17hefc04862ca7139f6E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,183,1,http::header::map::HeaderMap<T>::get_all,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,184,1,core::ptr::drop_in_place<hyper::body::incoming::Incoming>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,185,1,alloc::vec::Vec$LT$T$C$A$GT$::retain::_$u7b$$u7b$closure$u7d$$u7d$::h19eace3e5df9f3f4,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,186,1,http::header::name::HdrName::from_static,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,187,1,tokio::runtime::task::raw::drop_abort_handle,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,188,1,_ZN4core3str21_$LT$impl$u20$str$GT$12trim_matches17h891027a65658b35aE.llvm.9126956870557562084,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,189,1,__aarch64_ldadd8_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,190,1,core::ptr::drop_in_place<cauce::pool::Lease>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,191,1,_ZN5tokio3net4unix6stream10UnixStream14poll_read_priv17hebe1811cddf6a503E.llvm.9053362458124984935,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,192,1,__aarch64_ldadd8_relax,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,193,1,h2::proto::streams::recv::Recv::recv_data,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,194,1,core::ptr::drop_in_place$LT$tokio..task..task_local..TaskLocalFuture$LT$tokio..sync..watch..Sender$LT$tokio..time..instant..Instant$GT$$C$$LT$cauce..transport..StreamExecutor$u20$as$u20$hyper..rt..Executor$LT$hyper..proto..h2..server..H2Stream$LT$cauce..proxy..handle..$u7b$$u7b$closure$u7d$$u7d$$C$http_body_util..combinators..box_body..UnsyncBoxBody$LT$bytes..bytes..Bytes$C$alloc..boxed..Box$LT$dyn$u20$core..error..Error$u2b$core..marker..Send$u2b$core..marker..Sync$GT$$GT$$C$cauce..transport..StreamExecutor$GT$$GT$$GT$..execute..$u7b$$u7b$closure$u7d$$u7d$$GT$$GT$::h3dd474018d25bb9f,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,195,1,"h2::proto::streams::streams::Streams<B,P>::has_streams_or_other_references",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,196,1,alloc::raw_vec::finish_grow,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,197,1,"<bytes::buf::chain::Chain<T,U> as bytes::buf::buf_impl::Buf>::advance",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,198,1,"hyper::client::dispatch::Receiver<T,U>::poll_recv",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,199,1,__aarch64_ldadd8_acq,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,200,1,tokio::runtime::time::entry::_::<impl core::ops::drop::Drop for tokio::runtime::time::entry::TimerEntry>::drop,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,201,1,hyper::headers::content_length_parse_all,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,202,1,"hyper::proto::h2::client::ClientTask<B,E,T>::poll_pipe",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,203,1,_ZN3std3sys3pal4unix4time8Timespec12sub_timespec17ha1a0b8c292df3fe0E.llvm.4686649216898816011,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,204,1,"hyper::client::dispatch::Callback<T,U>::poll_canceled",/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,205,1,h2::share::RecvStream::poll_data,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,206,1,core::ptr::drop_in_place<alloc::vec::into_iter::IntoIter<http::header::name::HeaderName>>,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,207,1,h2::hpack::encoder::encode_str,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized
+http2-profile,593,208,1,__aarch64_swp8_acq_rel,/home/oscarbahamonde.linux/cauce-m2b/bin/src-symbolized

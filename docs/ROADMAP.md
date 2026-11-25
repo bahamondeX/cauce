@@ -67,14 +67,13 @@ establecen superioridad fuera de sus cargas y límites.
 | Protocols and modules | Validate TLS and listener extensions, stream and mail proxying, file serving and caching, gateways, policies, filters, and programmable extensions against pinned reference fixtures. |
 | Release evidence | Reproduce SLO goodput, resources, recovery and stability with pinned NGINX, HAProxy and Pingora on the same native hosts. |
 
-Milestone 2 established a qualified Colima HTTP/1.1 replay and a capacity
-runner. Native Linux ARM64 and AMD64 profiling remains open. The guest exposes
-software events but lacks the hardware PMU required for cycles, instructions
-and cache misses. Collect per-endpoint lock wait, allocations, scheduler
-wake-ups and epoch-specific connection reuse using HTTP/1.1 and HTTP/2 loads
-with multiple workers. Use those results to prioritize pool sharding, ArcSwap,
-timer consolidation and worker affinity as independent experiments. Test
-scheduler migrations or io_uring once the reference runtime's costs are measured.
-[Milestone 2 results and open gates](PERFORMANCE-MILESTONE-2.md).
+Milestone 2B is the current gate before functional expansion. Its retained
+changes fix independently reproduced lease races and eliminate allocations
+from pool bookkeeping and access log serialization. The original two-worker
+transport error still requires attribution. Linux ARM64 and AMD64 capacity,
+hardware profiles and competitive parity remain open. Use the isolated pool
+layout study and the native runner to qualify the next dataplane experiment
+before selecting a new pool, timer design or runtime setting.
+[Milestone 2B results and open gates](PERFORMANCE-MILESTONE-2B.md).
 
 Statuses and evidence live in [the compatibility registry](../compatibility/nginx-oss.yaml) and [program status](../STATUS.md).

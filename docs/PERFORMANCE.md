@@ -140,3 +140,14 @@ fixture at twice the tested load. The Milestone 2 report records the
 three-way replay, telemetry confidence intervals, capacity gates, Linux
 software profiling and rejected measurements.
 [Results](PERFORMANCE-MILESTONE-2.md) [Reproduction](BENCHMARK-METHODOLOGY.md).
+
+
+## Milestone 2B
+
+The retained candidate removes two string-key copies from the reusable
+HTTP/1.1 lease path, replaces the idle-count scan with constant-time
+accounting and reuses the JSONL writer buffers. The associated concurrency
+changes synchronize Hyper readiness and return canceled opening reservations
+to waiters. Qualified native throughput, CPU and latency comparisons remain
+open. The platform-specific diagnostics, statistical gates and reproduced
+pool behavior are recorded in the [Milestone 2B report](PERFORMANCE-MILESTONE-2B.md).

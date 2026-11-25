@@ -1,0 +1,47 @@
+{
+  "url": "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.csv",
+  "source_sha256": "7543017246f89fa2c4dfc0fc1035c9cd7cf406a11dca52907da01f0ce61c8ef9",
+  "publication": "\"Publication Date\",\"2026-11-24T23:14:17Z\"",
+  "rows": [
+    {
+      "SKU": "6MV5UT3JAHP7V3W4",
+      "Instance Type": "c7g.4xlarge",
+      "usageType": "BoxUsage:c7g.4xlarge",
+      "PricePerUnit": "0.5800000000",
+      "Currency": "USD",
+      "Unit": "Hrs",
+      "PriceDescription": "$0.58 per On Demand Linux c7g.4xlarge Instance Hour"
+    },
+    {
+      "SKU": "7RFUEP9XE7QPFUGE",
+      "Instance Type": "c7i.8xlarge",
+      "usageType": "BoxUsage:c7i.8xlarge",
+      "PricePerUnit": "1.4280000000",
+      "Currency": "USD",
+      "Unit": "Hrs",
+      "PriceDescription": "$1.428 per On Demand Linux c7i.8xlarge Instance Hour"
+    },
+    {
+      "SKU": "JG3KUJMBRGHV3N8G",
+      "Instance Type": "",
+      "usageType": "EBS:VolumeUsage.gp3",
+      "PricePerUnit": "0.0800000000",
+      "Currency": "USD",
+      "Unit": "GB-Mo",
+      "PriceDescription": "$0.08 per GB-month of General Purpose (gp3) provisioned storage - US East (N. Virginia)"
+    },
+    {
+      "SKU": "MDCEERAZ4UHT28VS",
+      "Instance Type": "c7i.4xlarge",
+      "usageType": "BoxUsage:c7i.4xlarge",
+      "PricePerUnit": "0.7140000000",
+      "Currency": "USD",
+      "Unit": "Hrs",
+      "PriceDescription": "$0.714 per On Demand Linux c7i.4xlarge Instance Hour"
+    }
+  ],
+  "compute_hours_per_host": 4,
+  "volume_gb_per_host": 40,
+  "hours_per_month": 720,
+  "estimated_usd": "8.07"
+}
