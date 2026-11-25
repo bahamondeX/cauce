@@ -112,14 +112,15 @@ def proc_sample(pid):
 
 def measure_process(command, log, path, spec, pid):
     before, after, peak = None, None, 0
-    limit = time.monotonic() + spec["seconds"] + spec["warmup_seconds"] + 30
+    timeout = spec["seconds"] + spec["warmup_seconds"] + 30
+    limit = time.monotonic() + timeout
     with subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT) as child:
         try:
             next_sample = 0
             while child.poll() is None:
                 now = time.monotonic()
                 if now >= limit:
-                    raise subprocess.TimeoutExpired(command, limit)
+                    raise subprocess.TimeoutExpired(command, timeout)
                 if before is None and (path / "warmup.done").exists():
                     before = proc_sample(pid)
                     peak = before["rss_bytes"]

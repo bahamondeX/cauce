@@ -52,6 +52,9 @@ try:
     base=(ROOT/'examples/tls/cauce.toml').read_text().replace('localhost:8443','localhost:18444')
     base=base.replace('/run/cauce-tls/proxy.crt','/run/cauce-tls/lifecycle.crt').replace('/run/cauce-tls/ca.crt','/run/cauce-tls/lifecycle-ca.crt')
     base=base.replace('[limits]','[limits]\ntls_handshake_ms = 300')
+    # This fixture asserts an HTTP/1.1-only ALPN offer. The HTTP/2 suite
+    # separately verifies negotiation with the default HTTP/2 setting.
+    base += '\n[http2]\nenabled = false\n'
     config=WORK/'lifecycle.toml';config.write_text(base)
     shutil.copyfile(WORK/'proxy.crt',WORK/'lifecycle.crt');shutil.copyfile(CA,WORK/'lifecycle-ca.crt')
     remove(NAME)
