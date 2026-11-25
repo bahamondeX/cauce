@@ -1,0 +1,18 @@
+[package]
+name = "cauce-pingora-reference"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+resolver = "3"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+async-trait = "=0.1.89"
+pingora = { git = "https://github.com/cloudflare/pingora", rev = "f86ffda5d3ae5c3baf5125682138b33b26c01b08", default-features = false, features = ["proxy"] }
+tokio = { version = "1", features = ["sync"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

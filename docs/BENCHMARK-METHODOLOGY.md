@@ -82,6 +82,18 @@ Use the direct spec form with externally provisioned, identical cgroups for a
 release memory or CPU comparison. The standalone profiler also accepts a live
 proxy PID from any of the existing TLS, gRPC, SSE or recovery fixtures.
 
+Generate the Increment 8 fixture certificates and profile validated gRPC
+messages over cleartext HTTP/2. Repeat with `--method Bidi` and a distinct
+output directory to capture streaming. Use a symbolized proxy build.
+
+```sh
+sh bench/increment8/make-certs.sh /tmp/cauce-profile-certs
+docker build -t cauce-increment8-grpc:local -f bench/increment8/backend/Dockerfile.grpc bench/increment8/backend
+python3 bench/program/profile-grpc-workload.py /path/to/cauce /tmp/cauce-profile-certs \
+  /tmp/cauce-grpc-unary --method Unary --rate 140 --seconds 12 \
+  --backend-image cauce-increment8-grpc:local --flamegraph /path/to/FlameGraph --sudo
+```
+
 Run the three-way HTTP/1.1 Docker replay from the repository root. Build both
 Cauce images from their recorded source trees with the same Dockerfile cache fix.
 Use fresh extract directories and the daemon's native architecture. On ARM64

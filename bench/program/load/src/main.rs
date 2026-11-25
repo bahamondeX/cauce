@@ -266,7 +266,7 @@ async fn phase(
                             deadline.into(), transfer(&mut row, req, &client, version, expected_len, expected_byte)
                         ).await {
                             Ok(Ok(())) => {}
-                            Ok(Err(error)) => row.error = Some(error.to_string()),
+                            Ok(Err(error)) => row.error = Some(format!("{error:#}")),
                             Err(_) => row.outcome = "request_timeout",
                         }
                     }
