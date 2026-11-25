@@ -1,0 +1,346 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 556B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#3 DONE 3.7s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 84B done
+#4 DONE 0.0s
+
+#5 [build 1/5] FROM docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#5 CACHED
+
+#6 [stage-1 1/2] FROM docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#6 CACHED
+
+#7 [internal] load build context
+#7 transferring context: 48.97kB done
+#7 DONE 0.0s
+
+#8 [build 2/5] WORKDIR /app
+#8 DONE 0.0s
+
+#9 [build 3/5] COPY Cargo.toml Cargo.lock ./
+#9 DONE 0.0s
+
+#10 [build 4/5] COPY src ./src
+#10 DONE 0.0s
+
+#11 [build 5/5] RUN CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build --locked --release
+#11 0.506     Updating crates.io index
+#11 0.508     Updating git repository `https://github.com/cloudflare/pingora`
+#11 9.496 From https://github.com/cloudflare/pingora
+#11 9.496  * [new ref]         f86ffda5d3ae5c3baf5125682138b33b26c01b08 -> refs/commit/f86ffda5d3ae5c3baf5125682138b33b26c01b08
+#11 15.16  Downloading crates ...
+#11 15.46   Downloaded futures-sink v0.3.34
+#11 15.49   Downloaded httpdate v1.0.3
+#11 15.50   Downloaded event-listener v5.4.2
+#11 15.53   Downloaded dashmap v5.5.3
+#11 15.55   Downloaded pkg-config v0.3.34
+#11 15.56   Downloaded anstyle v1.0.14
+#11 15.58   Downloaded heck v0.5.0
+#11 15.59   Downloaded strsim v0.11.1
+#11 15.59   Downloaded scopeguard v1.2.0
+#11 15.60   Downloaded is_terminal_polyfill v1.70.2
+#11 15.62   Downloaded fnv v1.0.7
+#11 15.64   Downloaded cfg_aliases v0.2.2
+#11 15.65   Downloaded event-listener-strategy v0.5.4
+#11 15.71   Downloaded clap_lex v1.1.2
+#11 15.79   Downloaded atomic-waker v1.1.2
+#11 15.90   Downloaded version_check v0.9.5
+#11 16.00   Downloaded utf8parse v0.2.2
+#11 16.00   Downloaded rand_chacha v0.3.1
+#11 16.01   Downloaded const-random v0.1.20
+#11 16.01   Downloaded tokio-macros v2.7.2
+#11 16.02   Downloaded shlex v2.0.1
+#11 16.03   Downloaded percent-encoding v2.3.2
+#11 16.03   Downloaded openssl-probe v0.1.6
+#11 16.03   Downloaded num_cpus v1.17.0
+#11 16.04   Downloaded subtle v2.6.1
+#11 16.05   Downloaded parking v2.2.1
+#11 16.05   Downloaded memoffset v0.9.1
+#11 16.06   Downloaded itoa v1.0.19
+#11 16.06   Downloaded futures-macro v0.3.34
+#11 16.07   Downloaded concurrent-queue v2.5.0
+#11 16.08   Downloaded cmake v0.1.58
+#11 16.17   Downloaded jobserver v0.1.35
+#11 16.24   Downloaded thread_local v1.1.10
+#11 16.25   Downloaded tiny-keccak v2.0.2
+#11 16.26   Downloaded strum v0.26.3
+#11 16.28   Downloaded signal-hook-registry v1.4.8
+#11 16.28   Downloaded pin-project-lite v0.2.18
+#11 16.31   Downloaded find-msvc-tools v0.1.15
+#11 16.32   Downloaded daggy v0.8.1
+#11 16.32   Downloaded tokio-test v0.4.6
+#11 16.33   Downloaded ppv-lite86 v0.2.21
+#11 16.35   Downloaded foldhash v0.2.0
+#11 16.35   Downloaded async-trait v0.1.89
+#11 16.36   Downloaded slab v0.4.12
+#11 16.37   Downloaded rmp-serde v1.3.1
+#11 16.37   Downloaded async-channel v2.5.0
+#11 16.38   Downloaded httparse v1.10.1
+#11 16.39   Downloaded sfv v0.10.4
+#11 16.39   Downloaded seize v0.3.3
+#11 16.40   Downloaded rand_core v0.6.4
+#11 16.40   Downloaded lru v0.18.5
+#11 16.40   Downloaded fixedbitset v0.5.9
+#11 16.40   Downloaded autocfg v1.5.1
+#11 16.40   Downloaded rustversion v1.0.23
+#11 16.41   Downloaded lock_api v0.4.14
+#11 16.41   Downloaded futures-executor v0.3.34
+#11 16.41   Downloaded crossbeam-queue v0.3.14
+#11 16.41   Downloaded unicase v2.10.0
+#11 16.42   Downloaded hex v0.4.3
+#11 16.42   Downloaded futures-core v0.3.34
+#11 16.42   Downloaded errno v0.3.15
+#11 16.42   Downloaded equivalent v1.0.3
+#11 16.42   Downloaded daemonix v0.1.0
+#11 16.43   Downloaded crunchy v0.2.4
+#11 16.43   Downloaded block-buffer v0.10.4
+#11 16.43   Downloaded generic-array v0.14.7
+#11 16.43   Downloaded futures-io v0.3.34
+#11 16.43   Downloaded const-random-macro v0.1.18
+#11 16.43   Downloaded colorchoice v1.0.5
+#11 16.44   Downloaded cfg-if v1.0.5
+#11 16.44   Downloaded aho-corasick v1.1.5
+#11 16.45   Downloaded ahash v0.8.14
+#11 16.46   Downloaded futures-channel v0.3.34
+#11 16.47   Downloaded crossbeam-utils v0.8.23
+#11 16.47   Downloaded strum_macros v0.26.4
+#11 16.48   Downloaded futures-task v0.3.34
+#11 16.48   Downloaded crypto-common v0.1.7
+#11 16.48   Downloaded anstream v1.0.0
+#11 16.49   Downloaded alloc-stdlib v0.2.4
+#11 16.49   Downloaded alloc-no-stdlib v2.0.4
+#11 16.50   Downloaded anstyle-query v1.1.5
+#11 16.50   Downloaded anstyle-parse v1.0.0
+#11 16.51   Downloaded parking_lot v0.12.5
+#11 16.51   Downloaded parking_lot_core v0.9.12
+#11 16.52   Downloaded quote v1.0.47
+#11 16.52   Downloaded allocator-api2 v0.2.21
+#11 16.55   Downloaded getrandom v0.2.17
+#11 16.56   Downloaded digest v0.10.7
+#11 16.58   Downloaded blake2 v0.10.6
+#11 16.59   Downloaded smallvec v1.16.6
+#11 16.59   Downloaded rmp v0.8.15
+#11 16.72   Downloaded tokio-stream v0.1.19
+#11 16.79   Downloaded bitflags v2.13.2
+#11 16.82   Downloaded serde_yaml v0.9.34+deprecated
+#11 16.82   Downloaded num-traits v0.2.19
+#11 16.86   Downloaded getrandom v0.4.3
+#11 16.86   Downloaded derivative v2.2.0
+#11 16.88   Downloaded socket2 v0.6.5
+#11 16.88   Downloaded arrayvec v0.7.8
+#11 16.89   Downloaded crc32fast v1.5.6
+#11 16.89   Downloaded clap_derive v4.6.9
+#11 16.91   Downloaded proc-macro2 v1.0.107
+#11 16.91   Downloaded log v0.4.35
+#11 16.93   Downloaded once_cell v1.21.4
+#11 16.97   Downloaded futures v0.3.34
+#11 16.99   Downloaded serde_core v1.0.229
+#11 17.00   Downloaded clap v4.6.10
+#11 17.03   Downloaded tracing-core v0.1.36
+#11 17.03   Downloaded serde_derive v1.0.229
+#11 17.04   Downloaded ryu v1.0.23
+#11 17.05   Downloaded indexmap v1.9.3
+#11 17.05   Downloaded bytes v1.12.2
+#11 17.06   Downloaded unicode-ident v1.0.27
+#11 17.07   Downloaded base64 v0.22.1
+#11 17.08   Downloaded flurry v0.5.2
+#11 17.09   Downloaded flate2 v1.1.11
+#11 17.17   Downloaded rand v0.8.8
+#11 17.23   Downloaded hashbrown v0.12.3
+#11 17.26   Downloaded unsafe-libyaml v0.2.11
+#11 17.27   Downloaded mio v1.2.5
+#11 17.28   Downloaded memchr v2.8.3
+#11 17.29   Downloaded indexmap v2.14.2
+#11 17.30   Downloaded zstd v0.14.5
+#11 17.31   Downloaded http v1.5.0
+#11 17.35   Downloaded serde v1.0.229
+#11 17.44   Downloaded cc v1.11.3
+#11 17.47   Downloaded hashbrown v0.17.2
+#11 17.48   Downloaded hashbrown v0.14.5
+#11 17.51   Downloaded futures-util v0.3.34
+#11 17.53   Downloaded zstd-safe v8.4.0
+#11 17.53   Downloaded h2 v0.4.21
+#11 17.54   Downloaded clap_builder v4.6.10
+#11 17.55   Downloaded brotli-decompressor v2.5.1
+#11 17.57   Downloaded typenum v1.20.1
+#11 17.59   Downloaded chrono v0.4.45
+#11 17.79   Downloaded regex v1.13.2
+#11 18.09   Downloaded nix v0.31.4
+#11 18.26   Downloaded bstr v1.14.0
+#11 18.46   Downloaded tokio-util v0.7.20
+#11 18.57   Downloaded rust_decimal v1.43.0
+#11 18.63   Downloaded libz-ng-sys v1.1.33
+#11 18.77   Downloaded petgraph v0.7.1
+#11 18.89   Downloaded libc v0.2.191
+#11 18.99   Downloaded syn v1.0.109
+#11 19.04   Downloaded brotli v3.5.0
+#11 19.22   Downloaded syn v2.0.119
+#11 19.24   Downloaded syn v3.0.10
+#11 19.26   Downloaded zerocopy v0.8.65
+#11 19.30   Downloaded regex-syntax v0.8.12
+#11 19.40   Downloaded tracing v0.1.44
+#11 19.62   Downloaded regex-automata v0.4.19
+#11 19.78   Downloaded zstd-sys v2.2.0+zstd.1.6.0
+#11 19.86   Downloaded tokio v1.54.1
+#11 20.03    Compiling libc v0.2.191
+#11 20.03    Compiling proc-macro2 v1.0.107
+#11 20.03    Compiling quote v1.0.47
+#11 20.04    Compiling unicode-ident v1.0.27
+#11 20.37    Compiling cfg-if v1.0.5
+#11 20.38    Compiling pin-project-lite v0.2.18
+#11 20.42    Compiling autocfg v1.5.1
+#11 20.73    Compiling shlex v2.0.1
+#11 20.80    Compiling find-msvc-tools v0.1.15
+#11 21.07    Compiling syn v3.0.10
+#11 21.08    Compiling version_check v0.9.5
+#11 21.13    Compiling jobserver v0.1.35
+#11 21.27    Compiling bytes v1.12.2
+#11 21.41    Compiling cc v1.11.3
+#11 21.94    Compiling futures-core v0.3.34
+#11 22.01    Compiling errno v0.3.15
+#11 22.05    Compiling equivalent v1.0.3
+#11 22.16    Compiling foldhash v0.2.0
+#11 22.26    Compiling allocator-api2 v0.2.21
+#11 22.46    Compiling once_cell v1.21.4
+#11 22.98    Compiling signal-hook-registry v1.4.8
+#11 23.15    Compiling hashbrown v0.17.2
+#11 23.48    Compiling mio v1.2.5
+#11 24.16    Compiling socket2 v0.6.5
+#11 24.17    Compiling zerocopy v0.8.65
+#11 24.35    Compiling getrandom v0.4.3
+#11 24.48    Compiling memchr v2.8.3
+#11 24.51    Compiling crunchy v0.2.4
+#11 24.63    Compiling parking_lot_core v0.9.12
+#11 24.76    Compiling num-traits v0.2.19
+#11 24.89    Compiling scopeguard v1.2.0
+#11 24.91    Compiling pkg-config v0.3.34
+#11 24.93    Compiling smallvec v1.16.6
+#11 25.07    Compiling tiny-keccak v2.0.2
+#11 25.19    Compiling crossbeam-utils v0.8.23
+#11 25.22    Compiling futures-sink v0.3.34
+#11 25.29    Compiling zstd-sys v2.2.0+zstd.1.6.0
+#11 25.40    Compiling tokio-macros v2.7.2
+#11 25.63    Compiling lock_api v0.4.14
+#11 25.78    Compiling serde_core v1.0.229
+#11 25.99    Compiling tokio v1.54.1
+#11 27.10    Compiling indexmap v2.14.2
+#11 27.76    Compiling getrandom v0.2.17
+#11 27.92    Compiling generic-array v0.14.7
+#11 28.22    Compiling serde v1.0.229
+#11 28.67    Compiling itoa v1.0.19
+#11 28.93    Compiling slab v0.4.12
+#11 29.13    Compiling rand_core v0.6.4
+#11 29.31    Compiling const-random-macro v0.1.18
+#11 29.56    Compiling ppv-lite86 v0.2.21
+#11 29.87    Compiling parking_lot v0.12.5
+#11 30.53    Compiling futures-macro v0.3.34
+#11 31.45    Compiling serde_derive v1.0.229
+#11 32.01    Compiling futures-channel v0.3.34
+#11 32.21    Compiling cmake v0.1.58
+#11 32.56    Compiling ahash v0.8.14
+#11 32.75    Compiling thread_local v1.1.10
+#11 32.91    Compiling zstd-safe v8.4.0
+#11 33.00    Compiling utf8parse v0.2.2
+#11 33.03    Compiling futures-io v0.3.34
+#11 33.11    Compiling typenum v1.20.1
+#11 33.74    Compiling heck v0.5.0
+#11 33.91    Compiling futures-task v0.3.34
+#11 34.00    Compiling rustversion v1.0.23
+#11 34.22    Compiling futures-util v0.3.34
+#11 35.11    Compiling anstyle-parse v1.0.0
+#11 35.63    Compiling libz-ng-sys v1.1.33
+#11 36.24    Compiling rand_chacha v0.3.1
+#11 36.31    Compiling const-random v0.1.20
+#11 36.33    Compiling http v1.5.0
+#11 37.45    Compiling aho-corasick v1.1.5
+#11 38.04    Compiling syn v2.0.119
+#11 38.53    Compiling memoffset v0.9.1
+#11 38.67    Compiling arrayvec v0.7.8
+#11 38.85    Compiling cfg_aliases v0.2.2
+#11 38.90    Compiling httparse v1.10.1
+#11 39.19    Compiling syn v1.0.109
+#11 39.39    Compiling anstyle-query v1.1.5
+#11 39.44    Compiling crc32fast v1.5.6
+#11 39.62    Compiling is_terminal_polyfill v1.70.2
+#11 39.66    Compiling log v0.4.35
+#11 39.77    Compiling rust_decimal v1.43.0
+#11 39.94    Compiling alloc-no-stdlib v2.0.4
+#11 39.99    Compiling parking v2.2.1
+#11 40.06    Compiling regex-syntax v0.8.12
+#11 40.08    Compiling anstyle v1.0.14
+#11 40.26    Compiling colorchoice v1.0.5
+#11 40.30    Compiling anstream v1.0.0
+#11 40.50    Compiling event-listener v5.4.2
+#11 40.66    Compiling alloc-stdlib v0.2.4
+#11 40.74    Compiling nix v0.31.4
+#11 41.00    Compiling futures-executor v0.3.34
+#11 41.21    Compiling rand v0.8.8
+#11 42.17    Compiling regex-automata v0.4.19
+#11 42.75 error: failed to run custom build command for `libz-ng-sys v1.1.33`
+#11 42.75 
+#11 42.75 Caused by:
+#11 42.75   process didn't exit successfully: `/app/target/release/build/libz-ng-sys-f2604183eecf1097/build-script-cmake` (exit status: 101)
+#11 42.75   --- stdout
+#11 42.75   CMAKE_TOOLCHAIN_FILE_aarch64-unknown-linux-gnu = None
+#11 42.75   CMAKE_TOOLCHAIN_FILE_aarch64_unknown_linux_gnu = None
+#11 42.75   HOST_CMAKE_TOOLCHAIN_FILE = None
+#11 42.75   CMAKE_TOOLCHAIN_FILE = None
+#11 42.75   CMAKE_GENERATOR_aarch64-unknown-linux-gnu = None
+#11 42.75   CMAKE_GENERATOR_aarch64_unknown_linux_gnu = None
+#11 42.75   HOST_CMAKE_GENERATOR = None
+#11 42.75   CMAKE_GENERATOR = None
+#11 42.75   CMAKE_PREFIX_PATH_aarch64-unknown-linux-gnu = None
+#11 42.75   CMAKE_PREFIX_PATH_aarch64_unknown_linux_gnu = None
+#11 42.75   HOST_CMAKE_PREFIX_PATH = None
+#11 42.75   CMAKE_PREFIX_PATH = None
+#11 42.75   CMAKE_aarch64-unknown-linux-gnu = None
+#11 42.75   CMAKE_aarch64_unknown_linux_gnu = None
+#11 42.75   HOST_CMAKE = None
+#11 42.75   CMAKE = None
+#11 42.75 
+#11 42.75   --- stderr
+#11 42.75   running: cd "/app/target/release/build/libz-ng-sys-e083cd249f760c41/out/build" && CMAKE_PREFIX_PATH="" LC_ALL="C" "cmake" "/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libz-ng-sys-1.1.33/src/zlib-ng" "-B" "/app/target/release/build/libz-ng-sys-e083cd249f760c41/out/build" "-DBUILD_SHARED_LIBS=OFF" "-DZLIB_COMPAT=OFF" "-DZLIB_ENABLE_TESTS=OFF" "-DWITH_GZFILEOP=ON" "-DCMAKE_INSTALL_LIBDIR=lib" "-DCMAKE_INSTALL_PREFIX=/app/target/release/build/libz-ng-sys-e083cd249f760c41/out" "-DCMAKE_C_FLAGS= -ffunction-sections -fdata-sections -fPIC -w" "-DCMAKE_C_COMPILER=/usr/bin/cc" "-DCMAKE_CXX_FLAGS= -ffunction-sections -fdata-sections -fPIC -w" "-DCMAKE_CXX_COMPILER=/usr/bin/c++" "-DCMAKE_ASM_FLAGS= -ffunction-sections -fdata-sections -fPIC -w" "-DCMAKE_ASM_COMPILER=/usr/bin/cc" "-DCMAKE_BUILD_TYPE=Release"
+#11 42.75 
+#11 42.75   thread 'main' panicked at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cmake-0.1.58/src/lib.rs:1132:5:
+#11 42.75 
+#11 42.75   failed to execute command: No such file or directory (os error 2)
+#11 42.75   is `cmake` not installed?
+#11 42.75 
+#11 42.75   build script failed, must exit now
+#11 42.75   note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+#11 42.75 warning: build failed, waiting for other jobs to finish...
+#11 ERROR: process "/bin/sh -c CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build --locked --release" did not complete successfully: exit code: 101
+------
+ > [build 5/5] RUN CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build --locked --release:
+42.75   running: cd "/app/target/release/build/libz-ng-sys-e083cd249f760c41/out/build" && CMAKE_PREFIX_PATH="" LC_ALL="C" "cmake" "/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libz-ng-sys-1.1.33/src/zlib-ng" "-B" "/app/target/release/build/libz-ng-sys-e083cd249f760c41/out/build" "-DBUILD_SHARED_LIBS=OFF" "-DZLIB_COMPAT=OFF" "-DZLIB_ENABLE_TESTS=OFF" "-DWITH_GZFILEOP=ON" "-DCMAKE_INSTALL_LIBDIR=lib" "-DCMAKE_INSTALL_PREFIX=/app/target/release/build/libz-ng-sys-e083cd249f760c41/out" "-DCMAKE_C_FLAGS= -ffunction-sections -fdata-sections -fPIC -w" "-DCMAKE_C_COMPILER=/usr/bin/cc" "-DCMAKE_CXX_FLAGS= -ffunction-sections -fdata-sections -fPIC -w" "-DCMAKE_CXX_COMPILER=/usr/bin/c++" "-DCMAKE_ASM_FLAGS= -ffunction-sections -fdata-sections -fPIC -w" "-DCMAKE_ASM_COMPILER=/usr/bin/cc" "-DCMAKE_BUILD_TYPE=Release"
+42.75 
+42.75   thread 'main' panicked at /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/cmake-0.1.58/src/lib.rs:1132:5:
+42.75 
+42.75   failed to execute command: No such file or directory (os error 2)
+42.75   is `cmake` not installed?
+42.75 
+42.75   build script failed, must exit now
+42.75   note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+42.75 warning: build failed, waiting for other jobs to finish...
+------
+Dockerfile:5
+--------------------
+   3 |     COPY Cargo.toml Cargo.lock ./
+   4 |     COPY src ./src
+   5 | >>> RUN CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build --locked --release
+   6 |     
+   7 |     FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+--------------------
+ERROR: failed to solve: process "/bin/sh -c CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build --locked --release" did not complete successfully: exit code: 101
+
+View build details: docker-desktop://dashboard/build/default/default/uf4upwjwhh43chyp1wbor5jp8

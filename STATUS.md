@@ -48,10 +48,37 @@ The local Linux lab is a four-vCPU AArch64 Colima guest on Apple ARM64. Testing 
 | Address-sanitized HTTP/2 header observer | Colima restart recovered the daemon. A fresh image ran 100,000 executions with seed 60616. The run produced no crash artifacts. The target and production observer match `ba6f952` byte-for-byte. [Raw log](bench/program/evidence/fuzz-recovered-linux-arm64.log.gz). |
 | NGINX 1.30.8 Alpine benchmark replay | The isolated 250 requests/s retry completed all 12 cells and passed the independent audit of 24,000 successful requests. Earlier campaigns with generator losses are retained. [Accepted run](bench/program/evidence/nginx-alpine-arm64-isolated-raw.tar.gz) [500 requests/s rejection](bench/program/evidence/nginx-alpine-arm64-generator-rejection.tar.gz) [250 requests/s rejection](bench/program/evidence/nginx-alpine-arm64-250-generator-rejection.tar.gz). |
 
-The historical HTTP/1 cleartext comparison completed on the Colima guest at 500 requests/s using Cauce 0.7 and NGINX 1.30.6. The new 250 requests/s comparison covers published Cauce 0.9.1 and NGINX 1.30.8 Alpine on the same guest. Linux CPU profiling, SLO goodput, native Linux ARM64 and AMD64 results, and HAProxy and Pingora workload comparisons remain open. The routing datasets support lookup claims for the recorded workloads on macOS ARM64 and the Linux ARM64 guest. Product-wide NGINX parity and comparative release performance remain open. [Next milestones](docs/ROADMAP.md).
+The historical HTTP/1 cleartext comparisons covered Cauce 0.7 and NGINX 1.30.6
+at 500 requests/s and published Cauce 0.9.1 and NGINX 1.30.8 Alpine at 250
+requests/s. The routing datasets support lookup claims for the recorded
+workloads on macOS ARM64 and the Linux ARM64 guest.
 
 The normal Dockerfile build stalled while resolving pinned Debian metadata.
 The Linux integration runs used a local test image assembled from the baseline
 runtime image and binaries compiled offline with the pinned Rust image.
 [Proxy and collector build](bench/program/evidence/candidate-offline-linux-arm64.log)
 [Collector rebuild](bench/program/evidence/collector-rebuilt-linux-arm64.log).
+
+## Milestone 2
+
+Checkpoint `f754e44` preserves the Milestone 1 tree. Default Dockerfile builds
+work again. A package cache fix prevents an older source snapshot from reusing
+another revision's executable. Both Cauce references and the HTTP/2 experiment
+used the repaired release build. [Build decision](docs/adr/0004-docker-release-cache.md).
+
+The native open-loop generator passed the 10 ms scheduler p99 gate in all 18
+three-way HTTP/1.1 cells. Published Cauce, the checkpoint and NGINX all completed
+250 successful requests/s in the Colima guest. NGINX used less CPU per
+successful request in the three-repetition characterization. The separate
+eight-pair logs-off telemetry comparison left the CPU effect inconclusive.
+[Milestone 2 report](docs/PERFORMANCE-MILESTONE-2.md)
+[Benchmark methodology](docs/BENCHMARK-METHODOLOGY.md).
+
+The HTTP/2 candidate ends known-empty uploads in initial HEADERS. Cleartext,
+TLS, zero-data trailers, gRPC lifecycle, stress and Linux resilience gates
+passed. The fixed-rate HTTP/2 campaign verified the framing reduction and
+left CPU and latency effects inconclusive. One Tokio worker confirmed 399.7
+successful requests/s in the cleartext capacity fixture. Two-worker runs
+failed the campaign SLO. The guest profiles cover HTTP/1.1, HTTP/2 cleartext,
+gRPC unary and bidirectional streaming. Native Linux results, multicore
+saturation and equivalent competitor capacity remain open.

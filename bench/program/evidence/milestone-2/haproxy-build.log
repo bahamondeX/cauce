@@ -1,0 +1,235 @@
+/inputs/haproxy.tar.gz: OK
+gcc (Debian 12.2.0-14+deb12u1) 12.2.0
+make: Entering directory '/build'
+  CC      dev/flags/flags.o
+  CC      src/slz.o
+  CC      src/ev_poll.o
+  CC      src/ev_epoll.o
+  CC      src/cpuset.o
+  CC      src/cpu_topo.o
+  CC      src/namespace.o
+  CC      src/linuxcap.o
+  CC      src/mux_h2.o
+  CC      src/mux_h1.o
+  CC      src/mux_fcgi.o
+  CC      src/log.o
+  CC      src/server.o
+  CC      src/stream.o
+  CC      src/tcpcheck.o
+  CC      src/http_ana.o
+  CC      src/stick_table.o
+  CC      src/tools.o
+  CC      src/mux_spop.o
+  CC      src/sample.o
+  CC      src/activity.o
+  CC      src/cfgparse.o
+  CC      src/peers.o
+  CC      src/cli.o
+  CC      src/backend.o
+  CC      src/connection.o
+  CC      src/resolvers.o
+  CC      src/proxy.o
+  CC      src/cache.o
+  CC      src/stconn.o
+  CC      src/http_htx.o
+  CC      src/debug.o
+  CC      src/check.o
+  CC      src/stats-html.o
+  CC      src/haproxy.o
+  CC      src/listener.o
+  CC      src/applet.o
+  CC      src/pattern.o
+  CC      src/cfgparse-listen.o
+  CC      src/flt_spoe.o
+  CC      src/cebis_tree.o
+  CC      src/http_ext.o
+  CC      src/http_act.o
+  CC      src/http_fetch.o
+  CC      src/cebs_tree.o
+  CC      src/cebib_tree.o
+  CC      src/http_client.o
+  CC      src/dns.o
+  CC      src/cebb_tree.o
+  CC      src/vars.o
+  CC      src/event_hdl.o
+  CC      src/tcp_rules.o
+  CC      src/trace.o
+  CC      src/stats-proxy.o
+  CC      src/pool.o
+  CC      src/stats.o
+  CC      src/cfgparse-global.o
+  CC      src/filters.o
+  CC      src/mux_pt.o
+  CC      src/flt_http_comp.o
+  CC      src/sock.o
+  CC      src/h1.o
+  CC      src/sink.o
+  CC      src/ceba_tree.o
+  CC      src/session.o
+  CC      src/payload.o
+  CC      src/htx.o
+  CC      src/cebl_tree.o
+  CC      src/ceb32_tree.o
+  CC      src/ceb64_tree.o
+  CC      src/server_state.o
+  CC      src/proto_rhttp.o
+  CC      src/flt_trace.o
+  CC      src/fd.o
+  CC      src/task.o
+  CC      src/map.o
+  CC      src/fcgi-app.o
+  CC      src/h2.o
+  CC      src/mworker.o
+  CC      src/tcp_sample.o
+  CC      src/mjson.o
+  CC      src/h1_htx.o
+  CC      src/tcp_act.o
+  CC      src/ring.o
+  CC      src/flt_bwlim.o
+  CC      src/acl.o
+  CC      src/thread.o
+  CC      src/queue.o
+  CC      src/http_rules.o
+  CC      src/http.o
+  CC      src/channel.o
+  CC      src/proto_tcp.o
+  CC      src/mqtt.o
+  CC      src/lb_chash.o
+  CC      src/extcheck.o
+  CC      src/dns_ring.o
+  CC      src/errors.o
+  CC      src/ncbuf.o
+  CC      src/compression.o
+  CC      src/http_conv.o
+  CC      src/frontend.o
+  CC      src/stats-json.o
+  CC      src/proto_sockpair.o
+  CC      src/raw_sock.o
+  CC      src/action.o
+  CC      src/stats-file.o
+  CC      src/buf.o
+  CC      src/xprt_handshake.o
+  CC      src/proto_uxst.o
+  CC      src/lb_fwrr.o
+  CC      src/uri_normalizer.o
+  CC      src/mailers.o
+  CC      src/protocol.o
+  CC      src/cfgcond.o
+  CC      src/proto_udp.o
+  CC      src/lb_fwlc.o
+  CC      src/ebmbtree.o
+  CC      src/proto_uxdg.o
+  CC      src/cfgdiag.o
+  CC      src/sock_unix.o
+  CC      src/sha1.o
+  CC      src/lb_fas.o
+  CC      src/clock.o
+  CC      src/sock_inet.o
+  CC      src/ev_select.o
+  CC      src/lb_map.o
+  CC      src/shctx.o
+  CC      src/hpack-dec.o
+  CC      src/net_helper.o
+  CC      src/arg.o
+  CC      src/signal.o
+  CC      src/fix.o
+  CC      src/dynbuf.o
+  CC      src/guid.o
+  CC      src/cfgparse-tcp.o
+  CC      src/lb_ss.o
+  CC      src/chunk.o
+  CC      src/counters.o
+  CC      src/cfgparse-unix.o
+  CC      src/regex.o
+  CC      src/fcgi.o
+  CC      src/uri_auth.o
+  CC      src/eb64tree.o
+  CC      src/eb32tree.o
+  CC      src/eb32sctree.o
+  CC      src/lru.o
+  CC      src/limits.o
+  CC      src/ebimtree.o
+  CC      src/wdt.o
+  CC      src/hpack-tbl.o
+  CC      src/ebistree.o
+  CC      src/base64.o
+  CC      src/auth.o
+  CC      src/time.o
+  CC      src/ebsttree.o
+  CC      src/freq_ctr.o
+  CC      src/systemd.o
+  CC      src/init.o
+  CC      src/http_acl.o
+  CC      src/dict.o
+  CC      src/dgram.o
+  CC      src/pipe.o
+  CC      src/hpack-huff.o
+  CC      src/hpack-enc.o
+  CC      src/ebtree.o
+  CC      src/hash.o
+  CC      src/httpclient_cli.o
+  CC      src/version.o
+  CC      src/ncbmbuf.o
+  CC      src/ech.o
+  CC      src/cfgparse-peers.o
+  CC      src/haterm.o
+  LD      dev/flags/flags
+  LD      haproxy
+make: Leaving directory '/build'
+HAProxy version 3.4.8-1b15b69 2026/11/18 - https://haproxy.org/
+Status: long-term supported branch - will stop receiving fixes around Q2 2031.
+Known bugs: http://www.haproxy.org/bugs/bugs-3.4.8.html
+Running on: Linux 6.8.0-50-generic #51-Ubuntu SMP PREEMPT_DYNAMIC Sat Nov  9 18:03:35 UTC 2024 aarch64
+Build options : 
+  TARGET  = linux-glibc
+  CC      = cc
+  CFLAGS  = -O2 -g -fwrapv -fvect-cost-model=very-cheap
+  OPTIONS = 
+  DEBUG   = 
+
+Feature list : -51DEGREES +ACCEPT4 +BACKTRACE -CLOSEFROM +CPU_AFFINITY +CRYPT_H -DEVICEATLAS +DL -ECH -ENGINE +EPOLL -EVPORTS +GETADDRINFO +HAVE_TCP_MD5SIG -KQUEUE +KTLS -LIBATOMIC +LIBCRYPT +LINUX_CAP +LINUX_SPLICE +LINUX_TPROXY -LUA -MATH -MEMORY_PROFILING +NETFILTER +NS -OBSOLETE_LINKER -OPENSSL -OPENSSL_AWSLC -OPENSSL_WOLFSSL -OT -PCRE -PCRE2 -PCRE2_JIT -PCRE_JIT +POLL +PRCTL -PROCCTL -PROMEX -PTHREAD_EMULATION -QUIC -QUIC_OPENSSL_COMPAT +RT +SHM_OPEN +SLZ -SSL -STATIC_PCRE -STATIC_PCRE2 +TFO +THREAD +THREAD_DUMP +TPROXY +TRACE -WURFL -ZLIB
+Detected feature list : +HAVE_WORKING_TCP_MD5SIG
+
+Default settings :
+  bufsize = 16384, maxrewrite = 1024, maxpollevents = 200
+
+Built with multi-threading support (MAX_TGROUPS=32, MAX_THREADS=1024, default=4).
+Built with network namespace support.
+Built with libslz for stateless compression.
+Compression algorithms supported : identity("identity"), deflate("deflate"), raw-deflate("deflate"), gzip("gzip")
+Built with transparent proxy support using: IP_TRANSPARENT IPV6_TRANSPARENT IP_FREEBIND
+Built without PCRE or PCRE2 support (using libc's regex instead)
+Encrypted password support via crypt(3): yes
+Built with gcc compiler version 12.2.0
+
+Available polling systems :
+      epoll : pref=300,  test result OK
+       poll : pref=200,  test result OK
+     select : pref=150,  test result OK
+Total: 3 (3 usable), will use epoll.
+
+Available multiplexer protocols :
+(protocols marked as <default> cannot be specified using 'proto' keyword)
+         h2 : mode=HTTP  side=FE|BE  mux=H2    flags=HTX|HOL_RISK|NO_UPG
+  <default> : mode=HTTP  side=FE|BE  mux=H1    flags=HTX
+         h1 : mode=HTTP  side=FE|BE  mux=H1    flags=HTX|NO_UPG
+       fcgi : mode=HTTP  side=BE     mux=FCGI  flags=HTX|HOL_RISK|NO_UPG
+  <default> : mode=SPOP  side=BE     mux=SPOP  flags=HOL_RISK|NO_UPG
+       spop : mode=SPOP  side=BE     mux=SPOP  flags=HOL_RISK|NO_UPG
+  <default> : mode=TCP   side=FE|BE  mux=PASS  flags=
+       none : mode=TCP   side=FE|BE  mux=PASS  flags=NO_UPG
+
+Available services : none
+
+Available filters :
+	[BWLIM] bwlim-in
+	[BWLIM] bwlim-out
+	[CACHE] cache
+	[COMP] comp-req
+	[COMP] comp-res
+	[COMP] compression
+	[FCGI] fcgi-app
+	[SPOE] spoe
+	[TRACE] trace
+
+1a4cef1c1d7f4469395c458d13c31aa47f5c1fe4f11f2502d8267d1e5ec10607  /results/haproxy

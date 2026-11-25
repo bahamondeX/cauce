@@ -67,10 +67,14 @@ establecen superioridad fuera de sus cargas y límites.
 | Protocols and modules | Validate TLS and listener extensions, stream and mail proxying, file serving and caching, gateways, policies, filters, and programmable extensions against pinned reference fixtures. |
 | Release evidence | Reproduce SLO goodput, resources, recovery and stability with pinned NGINX, HAProxy and Pingora on the same native hosts. |
 
-The current profile attributes access-event overhead. The request-path benchmark
-needs isolated CPU resources before it can qualify a latency or CPU result.
-Pool sharding, ArcSwap, timer consolidation and I/O backend changes remain
-separate experiments. Start those with lock wait, scheduler and epoll measurements
-from HTTP/1 and HTTP/2 workloads that exercise more than one endpoint and worker.
+Milestone 2 established a qualified Colima HTTP/1.1 replay and a capacity
+runner. Native Linux ARM64 and AMD64 profiling remains open. The guest exposes
+software events but lacks the hardware PMU required for cycles, instructions
+and cache misses. Collect per-endpoint lock wait, allocations, scheduler
+wake-ups and epoch-specific connection reuse using HTTP/1.1 and HTTP/2 loads
+with multiple workers. Use those results to prioritize pool sharding, ArcSwap,
+timer consolidation and worker affinity as independent experiments. Test
+scheduler migrations or io_uring once the reference runtime's costs are measured.
+[Milestone 2 results and open gates](PERFORMANCE-MILESTONE-2.md).
 
 Statuses and evidence live in [the compatibility registry](../compatibility/nginx-oss.yaml) and [program status](../STATUS.md).

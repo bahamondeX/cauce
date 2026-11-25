@@ -1,0 +1,2 @@
+{"invalid_reasons": [], "outcomes": {"success": 6000}, "offered": 6000, "successful": 6000, "offer_window_successes": 5995, "goodput_per_s": 1199.0, "scheduled_latency_ns": {"p50": 318940, "p95": 2357763, "p99": 26798905, "p99.9": 53417234}, "queue_p99_ns": 4104964, "service_p99_ns": 8995417, "scheduler_p99_ns": 3261158, "warmup_successes": 2326, "warmup_offers": 2400, "label": "control-before", "rate": 1200, "seconds": 5, "elapsed_ns": 7207849114}
+time="2026-11-25T14:22:28-05:00" level=fatal msg="exit status 2"

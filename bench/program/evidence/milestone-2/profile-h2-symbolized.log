@@ -1,0 +1,31 @@
+Stack count is low (77). Did something go wrong?
+{
+  "mode": "record",
+  "recorded": true,
+  "perf_exit": 0,
+  "script_exit": 0
+}
+{
+  "invalid_reasons": [],
+  "outcomes": {
+    "success": 6000
+  },
+  "offered": 6000,
+  "rate": 400,
+  "successful": 6000,
+  "offer_window_successes": 6000,
+  "goodput_per_s": 400.0,
+  "scheduled_latency_ns": {
+    "p50": 1037762,
+    "p95": 2983356,
+    "p99": 48542209,
+    "p99.9": 163879433
+  },
+  "queue_p99_ns": 480527,
+  "service_p99_ns": 10043974,
+  "scheduler_p99_ns": 7877506,
+  "warmup_successes": 800,
+  "warmup_offers": 800,
+  "profile_exit": 0,
+  "usage": "diagnostic samples under profiler overhead"
+}

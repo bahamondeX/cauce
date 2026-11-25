@@ -1,0 +1,20 @@
+Preflight gate still exercises saturation for each stack/log configuration.
+[1] nginx logs=on normal offered=2000 goodput_with_drain=250.00/s p95=1.828947
+[2] nginx logs=off normal offered=2000 goodput_with_drain=250.00/s p95=1.794196
+[3] candidate logs=off normal offered=2000 goodput_with_drain=250.00/s p95=1.937974
+[4] candidate logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.027567
+[5] cauce logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.021279
+[6] cauce logs=off normal offered=2000 goodput_with_drain=250.00/s p95=1.923141
+[7] nginx logs=on normal offered=2000 goodput_with_drain=250.00/s p95=1.846474
+[8] nginx logs=off normal offered=2000 goodput_with_drain=250.00/s p95=2.525021
+[9] cauce logs=off normal offered=2000 goodput_with_drain=250.00/s p95=2.763301
+[10] cauce logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.644374
+[11] candidate logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.584731
+[12] candidate logs=off normal offered=2000 goodput_with_drain=250.00/s p95=2.676765
+[13] nginx logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.351237
+[14] nginx logs=off normal offered=2000 goodput_with_drain=250.00/s p95=2.517138
+[15] candidate logs=off normal offered=2000 goodput_with_drain=250.00/s p95=2.65744
+[16] candidate logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.647238
+[17] cauce logs=off normal offered=2000 goodput_with_drain=250.00/s p95=2.587803
+[18] cauce logs=on normal offered=2000 goodput_with_drain=250.00/s p95=2.608399
+Results: /home/oscarbahamonde.linux/cauce-m2/three-way-native-retry/increment7-20261125T194005Z-a3c8fd

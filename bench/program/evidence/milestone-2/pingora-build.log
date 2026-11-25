@@ -1,0 +1,429 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 673B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#3 DONE 0.0s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 84B done
+#4 DONE 0.0s
+
+#5 [stage-1 1/2] FROM docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+#5 CACHED
+
+#6 [build 1/6] FROM docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#6 CACHED
+
+#7 [internal] load build context
+#7 transferring context: 265B done
+#7 DONE 0.0s
+
+#8 [build 2/6] RUN apt-get update && apt-get install -y --no-install-recommends cmake=3.25.1-1     && rm -rf /var/lib/apt/lists/*
+#8 0.339 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+#8 0.479 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+#8 0.508 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [34.8 kB]
+#8 0.545 Get:4 http://deb.debian.org/debian bookworm/main arm64 Packages [8689 kB]
+#8 3.031 Get:5 http://deb.debian.org/debian bookworm-updates/main arm64 Packages [6936 B]
+#8 3.039 Get:6 http://deb.debian.org/debian-security bookworm-security/main arm64 Packages [379 kB]
+#8 3.763 Fetched 9317 kB in 4s (2640 kB/s)
+#8 3.763 Reading package lists...
+#8 4.139 Reading package lists...
+#8 4.447 Building dependency tree...
+#8 4.533 Reading state information...
+#8 4.641 The following additional packages will be installed:
+#8 4.642   cmake-data libarchive13 libjsoncpp25 librhash0 libuv1
+#8 4.644 Suggested packages:
+#8 4.644   cmake-doc cmake-format elpa-cmake-mode ninja-build lrzip
+#8 4.687 The following NEW packages will be installed:
+#8 4.687   cmake cmake-data libarchive13 libjsoncpp25 librhash0 libuv1
+#8 4.806 0 upgraded, 6 newly installed, 0 to remove and 152 not upgraded.
+#8 4.806 Need to get 9484 kB of archives.
+#8 4.806 After this operation, 38.1 MB of additional disk space will be used.
+#8 4.806 Get:1 http://deb.debian.org/debian-security bookworm-security/main arm64 libarchive13 arm64 3.6.2-1+deb12u5 [318 kB]
+#8 4.912 Get:2 http://deb.debian.org/debian bookworm/main arm64 libjsoncpp25 arm64 1.9.5-4 [72.3 kB]
+#8 4.933 Get:3 http://deb.debian.org/debian bookworm/main arm64 librhash0 arm64 1.4.3-3 [131 kB]
+#8 4.982 Get:4 http://deb.debian.org/debian bookworm/main arm64 libuv1 arm64 1.44.2-1+deb12u1 [130 kB]
+#8 5.049 Get:5 http://deb.debian.org/debian bookworm/main arm64 cmake-data all 3.25.1-1 [2026 kB]
+#8 5.483 Get:6 http://deb.debian.org/debian bookworm/main arm64 cmake arm64 3.25.1-1 [6806 kB]
+#8 7.349 debconf: delaying package configuration, since apt-utils is not installed
+#8 7.372 Fetched 9484 kB in 2s (3893 kB/s)
+#8 7.394 Selecting previously unselected package libarchive13:arm64.
+#8 7.394 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 23273 files and directories currently installed.)
+#8 7.475 Preparing to unpack .../0-libarchive13_3.6.2-1+deb12u5_arm64.deb ...
+#8 7.482 Unpacking libarchive13:arm64 (3.6.2-1+deb12u5) ...
+#8 7.519 Selecting previously unselected package libjsoncpp25:arm64.
+#8 7.521 Preparing to unpack .../1-libjsoncpp25_1.9.5-4_arm64.deb ...
+#8 7.522 Unpacking libjsoncpp25:arm64 (1.9.5-4) ...
+#8 7.538 Selecting previously unselected package librhash0:arm64.
+#8 7.539 Preparing to unpack .../2-librhash0_1.4.3-3_arm64.deb ...
+#8 7.540 Unpacking librhash0:arm64 (1.4.3-3) ...
+#8 7.561 Selecting previously unselected package libuv1:arm64.
+#8 7.563 Preparing to unpack .../3-libuv1_1.44.2-1+deb12u1_arm64.deb ...
+#8 7.565 Unpacking libuv1:arm64 (1.44.2-1+deb12u1) ...
+#8 7.587 Selecting previously unselected package cmake-data.
+#8 7.589 Preparing to unpack .../4-cmake-data_3.25.1-1_all.deb ...
+#8 7.595 Unpacking cmake-data (3.25.1-1) ...
+#8 7.983 Selecting previously unselected package cmake.
+#8 7.985 Preparing to unpack .../5-cmake_3.25.1-1_arm64.deb ...
+#8 7.986 Unpacking cmake (3.25.1-1) ...
+#8 8.685 Setting up libarchive13:arm64 (3.6.2-1+deb12u5) ...
+#8 8.693 Setting up libuv1:arm64 (1.44.2-1+deb12u1) ...
+#8 8.697 Setting up libjsoncpp25:arm64 (1.9.5-4) ...
+#8 8.700 Setting up librhash0:arm64 (1.4.3-3) ...
+#8 8.704 Setting up cmake-data (3.25.1-1) ...
+#8 8.711 Setting up cmake (3.25.1-1) ...
+#8 8.716 Processing triggers for libc-bin (2.36-9+deb12u10) ...
+#8 DONE 9.1s
+
+#9 [build 3/6] WORKDIR /app
+#9 DONE 0.0s
+
+#10 [build 4/6] COPY Cargo.toml Cargo.lock ./
+#10 DONE 0.0s
+
+#11 [build 5/6] COPY src ./src
+#11 DONE 0.0s
+
+#12 [build 6/6] RUN CARGO_NET_GIT_FETCH_WITH_CLI=true cargo build --locked --release
+#12 0.341     Updating crates.io index
+#12 0.524     Updating git repository `https://github.com/cloudflare/pingora`
+#12 5.568 From https://github.com/cloudflare/pingora
+#12 5.568  * [new ref]         f86ffda5d3ae5c3baf5125682138b33b26c01b08 -> refs/commit/f86ffda5d3ae5c3baf5125682138b33b26c01b08
+#12 9.172  Downloading crates ...
+#12 9.441   Downloaded strum v0.26.3
+#12 9.457   Downloaded smallvec v1.16.6
+#12 9.463   Downloaded alloc-stdlib v0.2.4
+#12 9.470   Downloaded anstyle-query v1.1.5
+#12 9.476   Downloaded alloc-no-stdlib v2.0.4
+#12 9.499   Downloaded rand_chacha v0.3.1
+#12 9.513   Downloaded atomic-waker v1.1.2
+#12 9.525   Downloaded block-buffer v0.10.4
+#12 9.528   Downloaded cfg-if v1.0.5
+#12 9.559   Downloaded quote v1.0.47
+#12 9.566   Downloaded equivalent v1.0.3
+#12 9.568   Downloaded async-channel v2.5.0
+#12 9.597   Downloaded anstream v1.0.0
+#12 9.613   Downloaded anstyle-parse v1.0.0
+#12 9.663   Downloaded dashmap v5.5.3
+#12 9.677   Downloaded async-trait v0.1.89
+#12 9.758   Downloaded thread_local v1.1.10
+#12 9.822   Downloaded strsim v0.11.1
+#12 9.824   Downloaded parking v2.2.1
+#12 9.827   Downloaded futures-task v0.3.34
+#12 9.829   Downloaded futures-sink v0.3.34
+#12 9.830   Downloaded futures-core v0.3.34
+#12 9.831   Downloaded fnv v1.0.7
+#12 9.832   Downloaded errno v0.3.15
+#12 9.835   Downloaded tokio-macros v2.7.2
+#12 9.843   Downloaded generic-array v0.14.7
+#12 9.865   Downloaded memoffset v0.9.1
+#12 9.866   Downloaded hex v0.4.3
+#12 9.868   Downloaded is_terminal_polyfill v1.70.2
+#12 9.889   Downloaded percent-encoding v2.3.2
+#12 9.891   Downloaded scopeguard v1.2.0
+#12 9.892   Downloaded httpdate v1.0.3
+#12 9.893   Downloaded futures-io v0.3.34
+#12 9.903   Downloaded clap_lex v1.1.2
+#12 9.905   Downloaded openssl-probe v0.1.6
+#12 9.909   Downloaded const-random v0.1.20
+#12 9.927   Downloaded heck v0.5.0
+#12 9.929   Downloaded daemonix v0.1.0
+#12 9.936   Downloaded num_cpus v1.17.0
+#12 9.948   Downloaded utf8parse v0.2.2
+#12 9.969   Downloaded itoa v1.0.19
+#12 10.01   Downloaded colorchoice v1.0.5
+#12 10.01   Downloaded futures-macro v0.3.34
+#12 10.04   Downloaded crypto-common v0.1.7
+#12 10.05   Downloaded autocfg v1.5.1
+#12 10.06   Downloaded anstyle v1.0.14
+#12 10.16   Downloaded pkg-config v0.3.34
+#12 10.17   Downloaded event-listener-strategy v0.5.4
+#12 10.19   Downloaded const-random-macro v0.1.18
+#12 10.25   Downloaded cfg_aliases v0.2.2
+#12 10.25   Downloaded allocator-api2 v0.2.21
+#12 10.38   Downloaded digest v0.10.7
+#12 10.38   Downloaded futures-executor v0.3.34
+#12 10.40   Downloaded lru v0.18.5
+#12 10.42   Downloaded crunchy v0.2.4
+#12 10.42   Downloaded pin-project-lite v0.2.18
+#12 10.43   Downloaded cmake v0.1.58
+#12 10.43   Downloaded jobserver v0.1.35
+#12 10.44   Downloaded concurrent-queue v2.5.0
+#12 10.44   Downloaded daggy v0.8.1
+#12 10.45   Downloaded foldhash v0.2.0
+#12 10.46   Downloaded arrayvec v0.7.8
+#12 10.48   Downloaded blake2 v0.10.6
+#12 10.57   Downloaded indexmap v1.9.3
+#12 10.63   Downloaded version_check v0.9.5
+#12 10.65   Downloaded bitflags v2.13.2
+#12 10.78   Downloaded sfv v0.10.4
+#12 10.79   Downloaded crossbeam-queue v0.3.14
+#12 10.79   Downloaded ahash v0.8.14
+#12 10.80   Downloaded fixedbitset v0.5.9
+#12 10.81   Downloaded event-listener v5.4.2
+#12 10.82   Downloaded httparse v1.10.1
+#12 10.83   Downloaded find-msvc-tools v0.1.15
+#12 10.83   Downloaded rand_core v0.6.4
+#12 10.83   Downloaded lock_api v0.4.14
+#12 10.84   Downloaded parking_lot v0.12.5
+#12 10.84   Downloaded subtle v2.6.1
+#12 10.86   Downloaded rustversion v1.0.23
+#12 10.87   Downloaded once_cell v1.21.4
+#12 10.87   Downloaded ppv-lite86 v0.2.21
+#12 10.92   Downloaded tiny-keccak v2.0.2
+#12 10.94   Downloaded clap_derive v4.6.9
+#12 10.94   Downloaded slab v0.4.12
+#12 10.96   Downloaded strum_macros v0.26.4
+#12 10.97   Downloaded shlex v2.0.1
+#12 10.99   Downloaded parking_lot_core v0.9.12
+#12 11.00   Downloaded crossbeam-utils v0.8.23
+#12 11.01   Downloaded getrandom v0.2.17
+#12 11.02   Downloaded futures v0.3.34
+#12 11.03   Downloaded getrandom v0.4.3
+#12 11.04   Downloaded clap v4.6.10
+#12 11.04   Downloaded tokio-test v0.4.6
+#12 11.05   Downloaded derivative v2.2.0
+#12 11.06   Downloaded log v0.4.35
+#12 11.06   Downloaded futures-channel v0.3.34
+#12 11.10   Downloaded flate2 v1.1.11
+#12 11.12   Downloaded bytes v1.12.2
+#12 11.12   Downloaded base64 v0.22.1
+#12 11.14   Downloaded seize v0.3.3
+#12 11.14   Downloaded crc32fast v1.5.6
+#12 11.22   Downloaded num-traits v0.2.19
+#12 11.23   Downloaded flurry v0.5.2
+#12 11.30   Downloaded unicode-ident v1.0.27
+#12 11.33   Downloaded rmp-serde v1.3.1
+#12 11.34   Downloaded http v1.5.0
+#12 11.36   Downloaded rmp v0.8.15
+#12 11.41   Downloaded memchr v2.8.3
+#12 11.42   Downloaded hashbrown v0.12.3
+#12 11.42   Downloaded mio v1.2.5
+#12 11.45   Downloaded indexmap v2.14.2
+#12 11.47   Downloaded unsafe-libyaml v0.2.11
+#12 11.47   Downloaded signal-hook-registry v1.4.8
+#12 11.51   Downloaded ryu v1.0.23
+#12 11.51   Downloaded proc-macro2 v1.0.107
+#12 11.58   Downloaded socket2 v0.6.5
+#12 11.63   Downloaded unicase v2.10.0
+#12 11.66   Downloaded cc v1.11.3
+#12 11.66   Downloaded zstd v0.14.5
+#12 11.67   Downloaded aho-corasick v1.1.5
+#12 11.68   Downloaded serde_derive v1.0.229
+#12 11.69   Downloaded hashbrown v0.14.5
+#12 11.73   Downloaded tracing-core v0.1.36
+#12 11.74   Downloaded hashbrown v0.17.2
+#12 11.93   Downloaded brotli-decompressor v2.5.1
+#12 11.94   Downloaded clap_builder v4.6.10
+#12 11.98   Downloaded futures-util v0.3.34
+#12 12.00   Downloaded h2 v0.4.21
+#12 12.16   Downloaded zstd-safe v8.4.0
+#12 12.17   Downloaded tokio-stream v0.1.19
+#12 12.19   Downloaded serde v1.0.229
+#12 12.21   Downloaded serde_yaml v0.9.34+deprecated
+#12 12.21   Downloaded chrono v0.4.45
+#12 12.23   Downloaded rand v0.8.8
+#12 12.32   Downloaded serde_core v1.0.229
+#12 12.43   Downloaded nix v0.31.4
+#12 12.46   Downloaded bstr v1.14.0
+#12 12.47   Downloaded typenum v1.20.1
+#12 12.77   Downloaded libz-ng-sys v1.1.33
+#12 12.81   Downloaded tokio-util v0.7.20
+#12 12.89   Downloaded petgraph v0.7.1
+#12 12.92   Downloaded regex v1.13.2
+#12 12.94   Downloaded rust_decimal v1.43.0
+#12 12.97   Downloaded libc v0.2.191
+#12 13.36   Downloaded brotli v3.5.0
+#12 13.48   Downloaded syn v1.0.109
+#12 13.69   Downloaded syn v2.0.119
+#12 13.71   Downloaded zerocopy v0.8.65
+#12 13.75   Downloaded syn v3.0.10
+#12 13.76   Downloaded regex-syntax v0.8.12
+#12 13.84   Downloaded tracing v0.1.44
+#12 13.96   Downloaded regex-automata v0.4.19
+#12 14.14   Downloaded zstd-sys v2.2.0+zstd.1.6.0
+#12 14.21   Downloaded tokio v1.54.1
+#12 14.36    Compiling proc-macro2 v1.0.107
+#12 14.36    Compiling libc v0.2.191
+#12 14.37    Compiling quote v1.0.47
+#12 14.37    Compiling unicode-ident v1.0.27
+#12 14.68    Compiling cfg-if v1.0.5
+#12 14.71    Compiling pin-project-lite v0.2.18
+#12 14.74    Compiling autocfg v1.5.1
+#12 14.98    Compiling find-msvc-tools v0.1.15
+#12 15.17    Compiling shlex v2.0.1
+#12 15.28    Compiling syn v3.0.10
+#12 15.28    Compiling version_check v0.9.5
+#12 15.52    Compiling bytes v1.12.2
+#12 15.64    Compiling jobserver v0.1.35
+#12 15.95    Compiling cc v1.11.3
+#12 16.13    Compiling futures-core v0.3.34
+#12 16.16    Compiling errno v0.3.15
+#12 16.24    Compiling equivalent v1.0.3
+#12 16.28    Compiling allocator-api2 v0.2.21
+#12 16.28    Compiling once_cell v1.21.4
+#12 16.41    Compiling foldhash v0.2.0
+#12 16.49    Compiling signal-hook-registry v1.4.8
+#12 16.51    Compiling hashbrown v0.17.2
+#12 16.66    Compiling socket2 v0.6.5
+#12 17.00    Compiling mio v1.2.5
+#12 17.04    Compiling getrandom v0.4.3
+#12 17.21    Compiling zerocopy v0.8.65
+#12 17.33    Compiling parking_lot_core v0.9.12
+#12 17.34    Compiling memchr v2.8.3
+#12 17.43    Compiling crunchy v0.2.4
+#12 17.59    Compiling num-traits v0.2.19
+#12 17.71    Compiling smallvec v1.16.6
+#12 17.79    Compiling pkg-config v0.3.34
+#12 17.85    Compiling tiny-keccak v2.0.2
+#12 17.95    Compiling futures-sink v0.3.34
+#12 17.98    Compiling scopeguard v1.2.0
+#12 18.01    Compiling crossbeam-utils v0.8.23
+#12 18.09    Compiling zstd-sys v2.2.0+zstd.1.6.0
+#12 18.14    Compiling lock_api v0.4.14
+#12 18.19    Compiling tokio-macros v2.7.2
+#12 18.50    Compiling serde_core v1.0.229
+#12 18.71    Compiling tokio v1.54.1
+#12 19.76    Compiling indexmap v2.14.2
+#12 20.50    Compiling getrandom v0.2.17
+#12 20.72    Compiling generic-array v0.14.7
+#12 20.95    Compiling slab v0.4.12
+#12 21.08    Compiling serde v1.0.229
+#12 21.09    Compiling itoa v1.0.19
+#12 21.23    Compiling ppv-lite86 v0.2.21
+#12 21.39    Compiling rand_core v0.6.4
+#12 21.48    Compiling const-random-macro v0.1.18
+#12 21.73    Compiling parking_lot v0.12.5
+#12 22.02    Compiling futures-macro v0.3.34
+#12 22.94    Compiling serde_derive v1.0.229
+#12 23.63    Compiling futures-channel v0.3.34
+#12 23.78    Compiling cmake v0.1.58
+#12 23.96    Compiling ahash v0.8.14
+#12 24.06    Compiling thread_local v1.1.10
+#12 24.16    Compiling rustversion v1.0.23
+#12 24.29    Compiling futures-task v0.3.34
+#12 24.34    Compiling heck v0.5.0
+#12 24.45    Compiling zstd-safe v8.4.0
+#12 24.55    Compiling typenum v1.20.1
+#12 24.89    Compiling utf8parse v0.2.2
+#12 24.92    Compiling futures-io v0.3.34
+#12 25.02    Compiling futures-util v0.3.34
+#12 25.50    Compiling anstyle-parse v1.0.0
+#12 25.62    Compiling libz-ng-sys v1.1.33
+#12 26.01    Compiling const-random v0.1.20
+#12 26.02    Compiling rand_chacha v0.3.1
+#12 26.05    Compiling http v1.5.0
+#12 26.80    Compiling aho-corasick v1.1.5
+#12 27.23    Compiling syn v2.0.119
+#12 27.35    Compiling memoffset v0.9.1
+#12 27.48    Compiling regex-syntax v0.8.12
+#12 28.44    Compiling syn v1.0.109
+#12 28.59    Compiling alloc-no-stdlib v2.0.4
+#12 28.65    Compiling arrayvec v0.7.8
+#12 28.77    Compiling cfg_aliases v0.2.2
+#12 28.79    Compiling httparse v1.10.1
+#12 28.99    Compiling anstyle-query v1.1.5
+#12 29.03    Compiling crc32fast v1.5.6
+#12 29.14    Compiling is_terminal_polyfill v1.70.2
+#12 29.16    Compiling log v0.4.35
+#12 29.27    Compiling colorchoice v1.0.5
+#12 29.32    Compiling rust_decimal v1.43.0
+#12 29.45    Compiling anstyle v1.0.14
+#12 29.54    Compiling parking v2.2.1
+#12 29.62    Compiling event-listener v5.4.2
+#12 29.74    Compiling anstream v1.0.0
+#12 29.86    Compiling nix v0.31.4
+#12 29.90    Compiling alloc-stdlib v0.2.4
+#12 29.97    Compiling regex-automata v0.4.19
+#12 30.04    Compiling futures-executor v0.3.34
+#12 30.17    Compiling rand v0.8.8
+#12 31.05    Compiling tracing-core v0.1.36
+#12 31.40    Compiling num_cpus v1.17.0
+#12 31.80    Compiling pingora-error v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 32.01    Compiling strsim v0.11.1
+#12 32.45    Compiling hashbrown v0.14.5
+#12 32.94    Compiling fixedbitset v0.5.9
+#12 33.12    Compiling clap_lex v1.1.2
+#12 33.25    Compiling seize v0.3.3
+#12 33.46    Compiling flurry v0.5.2
+#12 33.79    Compiling clap_builder v4.6.10
+#12 35.71    Compiling petgraph v0.7.1
+#12 37.15    Compiling dashmap v5.5.3
+#12 37.60    Compiling pingora-http v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 37.99    Compiling tracing v0.1.44
+#12 38.04    Compiling strum_macros v0.26.4
+#12 38.14    Compiling futures v0.3.34
+#12 39.43    Compiling brotli-decompressor v2.5.1
+#12 40.37    Compiling event-listener-strategy v0.5.4
+#12 40.42    Compiling block-buffer v0.10.4
+#12 40.47    Compiling crypto-common v0.1.7
+#12 40.51    Compiling clap_derive v4.6.9
+#12 40.80    Compiling pingora-timeout v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 41.20    Compiling tokio-util v0.7.20
+#12 41.38    Compiling tokio-stream v0.1.19
+#12 41.66    Compiling crossbeam-queue v0.3.14
+#12 41.75    Compiling concurrent-queue v2.5.0
+#12 41.79    Compiling lru v0.18.5
+#12 41.81    Compiling indexmap v1.9.3
+#12 41.88    Compiling base64 v0.22.1
+#12 41.90    Compiling ryu v1.0.23
+#12 41.91    Compiling subtle v2.6.1
+#12 41.98    Compiling atomic-waker v1.1.2
+#12 41.99    Compiling bitflags v2.13.2
+#12 42.01    Compiling unsafe-libyaml v0.2.11
+#12 42.10    Compiling fnv v1.0.7
+#12 42.13    Compiling h2 v0.4.21
+#12 43.41    Compiling serde_yaml v0.9.34+deprecated
+#12 44.24    Compiling sfv v0.10.4
+#12 44.79    Compiling digest v0.10.7
+#12 45.00    Compiling pingora-pool v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 45.14    Compiling async-channel v2.5.0
+#12 45.19    Compiling tokio-test v0.4.6
+#12 45.27    Compiling clap v4.6.10
+#12 45.30    Compiling flate2 v1.1.11
+#12 45.57    Compiling derivative v2.2.0
+#12 45.68    Compiling brotli v3.5.0
+#12 46.25    Compiling strum v0.26.3
+#12 46.44    Compiling daggy v0.8.1
+#12 46.59    Compiling regex v1.13.2
+#12 47.13    Compiling bstr v1.14.0
+#12 47.31    Compiling pingora-runtime v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 48.07    Compiling async-trait v0.1.89
+#12 48.15    Compiling chrono v0.4.45
+#12 48.74    Compiling rmp v0.8.15
+#12 48.94    Compiling daemonix v0.1.0
+#12 49.15    Compiling openssl-probe v0.1.6
+#12 49.26    Compiling percent-encoding v2.3.2
+#12 49.38    Compiling hashbrown v0.12.3
+#12 49.38    Compiling unicase v2.10.0
+#12 49.57    Compiling httpdate v1.0.3
+#12 49.76    Compiling rmp-serde v1.3.1
+#12 50.05    Compiling pingora-lru v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 50.19    Compiling blake2 v0.10.6
+#12 50.47    Compiling hex v0.4.3
+#12 53.27    Compiling zstd v0.14.5
+#12 53.51    Compiling pingora-core v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 53.51    Compiling pingora-header-serde v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 56.65    Compiling pingora-cache v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 57.94    Compiling pingora-proxy v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 60.81    Compiling pingora v0.9.1 (https://github.com/cloudflare/pingora?rev=f86ffda5d3ae5c3baf5125682138b33b26c01b08#f86ffda5)
+#12 64.90    Compiling cauce-pingora-reference v0.1.0 (/app)
+#12 84.39     Finished `release` profile [optimized] target(s) in 1m 24s
+#12 DONE 85.0s
+
+#13 [stage-1 2/2] COPY --from=build /app/target/release/cauce-pingora-reference /usr/local/bin/
+#13 DONE 0.0s
+
+#14 exporting to image
+#14 exporting layers 0.0s done
+#14 writing image sha256:0f8617ad684b9d0f307a879452df38088b852769faa3dc3f8e787f11b8de0d7e done
+#14 naming to docker.io/library/cauce-pingora-reference:0.9.1 done
+#14 DONE 0.0s
+
+View build details: docker-desktop://dashboard/build/default/default/m61iaxb75ui2d9iqrjgmxkq40

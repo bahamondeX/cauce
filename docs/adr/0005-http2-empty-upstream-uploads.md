@@ -13,7 +13,7 @@ cover the upstream exchange. HTTP/1.1 upstreams use their existing framing.
 Retain the change for the verified reduction of one framing operation and
 one unused upload timer per known-ended request. The Node server saw the
 `END_STREAM` flag on initial HEADERS over both cleartext and TLS. The
-checkpoint failed that assertions path. The candidate forwarded zero-data
+checkpoint failed that assertion. The candidate forwarded zero-data
 request trailers and passed the gRPC and HTTP/2 lifecycle suites. The
 paired Colima CPU and latency intervals span zero. The decision carries
 no end-to-end CPU or latency improvement claim.

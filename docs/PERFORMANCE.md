@@ -68,7 +68,12 @@ Use the existing open-loop [HTTP/1 harness](../bench/increment7/README.md) and [
 
 Run on separate native Linux ARM64 and AMD64 machines with the platform, kernel, CPU, topology, affinity, cgroup limits and compiler recorded. Keep client, backend and proxy on dedicated CPU sets. Validate body, trailers, error classification, TLS and capacity behavior before timing each stack. Discard a run from comparative claims if demand is missed, the scheduler lags, counts disagree, or CPU throttling changes the budget. Retain the raw run and the rejection reason.
 
-Add load-rate sweeps before claiming sustainable capacity. Define latency and error SLOs per workload and use the highest offered rate sustained throughout the measurement interval. Report latency from each planned arrival, including scheduler delay and explicit rejections. Record proxy CPU time, reuse and handshakes from counters, Linux PSS/cgroup memory, and perf or equivalent kernel counters where available. Separate cold start, reload, overload and recovery campaigns from steady-state runs. HAProxy and Pingora reference workloads require equivalent configuration and a capacity and protocol gate before their first comparison.
+Use the Milestone 2 load-rate runner for scheduled-arrival latency and
+offer-window goodput under workload-specific SLOs. Record proxy CPU, reuse,
+handshakes, Linux PSS/cgroup memory and available kernel counters. Run cold
+start, reload, overload and recovery campaigns separately from steady state.
+HAProxy and Pingora comparisons require equivalent resource and protocol gates.
+[Methodology](BENCHMARK-METHODOLOGY.md).
 
 The selected source pins for those future comparisons are HAProxy 3.4.8 (SHA-256 `024bd521a6cbbe32b426853147e6bbd6a89b107c5a34144846193fee5b7c6ed1`) and Pingora 0.9.1 (commit `f86ffda5d3ae5c3baf5125682138b33b26c01b08`). Lock the built binary, settings and cryptographic provider together when recording a run. [HAProxy source checksum](https://www.haproxy.org/download/3.4/src/haproxy-3.4.8.tar.gz.sha256) [Pingora source](https://github.com/cloudflare/pingora/tree/f86ffda5d3ae5c3baf5125682138b33b26c01b08).
 
@@ -116,6 +121,22 @@ The revised run completed all 72,000 scheduled requests and logged all 48,010 ex
 ## Reference implementation review
 
 - NGINX constructs static location trees separately from its server-name structures. Its location semantics include modifiers and regex phases. Cauce's first index compiles its existing exact-authority and prefix rules. [NGINX HTTP initialization](https://github.com/nginx/nginx/blob/release-1.30.8/src/http/ngx_http.c).
-- Pingora's timeout implementation initializes timers on first pending poll and groups deadlines by clock tick. Compare allocation and wake-up rates and preserve Cauce's absolute header and gRPC limits when evaluating timer changes. Pingora's pool exposes a hot path per connection group. Use Cauce's own measurements to decide whether reducing lock contention justifies additional cache and eviction state. [Pingora timeout source](https://github.com/cloudflare/pingora/blob/main/pingora-timeout/src/lib.rs) [Pingora pool source](https://github.com/cloudflare/pingora/blob/main/pingora-pool/src/lib.rs).
-- HAProxy's backend layer is a reference for assignment and reusable connections. Envoy describes upstream pooling by wire protocol and drains HTTP/2 connections on GOAWAY. Investigate their capacity models before specifying balancing and pooling equivalence for a benchmark. [HAProxy backend source](https://github.com/haproxy/haproxy/blob/master/src/backend.c) [Envoy pool architecture](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/connection_pooling).
+- Pingora initializes timers on first pending poll and groups deadlines by clock
+  tick. Its pool looks up idle connections by group. Measure Cauce allocation
+  and wake-up rates, lock waiting and capacity before changing timers or the
+  pool. [Pinned Pingora timeout source](https://github.com/cloudflare/pingora/blob/f86ffda5d3ae5c3baf5125682138b33b26c01b08/pingora-timeout/src/lib.rs) [Pinned Pingora pool source](https://github.com/cloudflare/pingora/blob/f86ffda5d3ae5c3baf5125682138b33b26c01b08/pingora-pool/src/lib.rs).
+- HAProxy 3.4.8 checks thread-local idle connections before searching other
+  threads within the same group. Envoy separates pools by protocol and drains
+  HTTP/2 connections on GOAWAY. NGINX uses its upstream keepalive cache to
+  retain idle connections and limits active connections separately.
+  [HAProxy 3.4.8 source archive](https://www.haproxy.org/download/3.4/src/haproxy-3.4.8.tar.gz) [Envoy pool architecture](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/connection_pooling) [NGINX keepalive source](https://github.com/nginx/nginx/blob/release-1.30.8/src/http/modules/ngx_http_upstream_keepalive_module.c).
 - Caddy's reverse proxy and Traefik's service builder are references for configuration lifecycle and backend selection. Varnish's fetch state machine is a reference for future cache and filter stages. [Caddy reverse proxy source](https://github.com/caddyserver/caddy/blob/master/modules/caddyhttp/reverseproxy/reverseproxy.go) [Traefik service source](https://github.com/traefik/traefik/blob/master/pkg/server/service/service.go) [Varnish fetch source](https://github.com/varnishcache/varnish-cache/blob/master/bin/varnishd/cache/cache_fetch.c).
+
+## Milestone 2 replay
+
+The current baseline uses a Rust open-loop client with persistent HTTP/1.1 and
+HTTP/2 connections. Direct preflight and postflight controls qualify the
+fixture at twice the tested load. The Milestone 2 report records the
+three-way replay, telemetry confidence intervals, capacity gates, Linux
+software profiling and rejected measurements.
+[Results](PERFORMANCE-MILESTONE-2.md) [Reproduction](BENCHMARK-METHODOLOGY.md).

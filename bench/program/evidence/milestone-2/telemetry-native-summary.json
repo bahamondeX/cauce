@@ -1,0 +1,132 @@
+{
+  "off": {
+    "pairs": 8,
+    "before_cpu_us": 212.0,
+    "after_cpu_us": 208.0,
+    "paired_cpu_delta_us": -20.0,
+    "paired_cpu_delta_ci95_us": [
+      -40.0,
+      32.00000000000003
+    ],
+    "before_p99_ms": 5.3917915,
+    "after_p99_ms": 9.2803015,
+    "metrics": {
+      "cpu_us_per_success": {
+        "before": 212.0,
+        "after": 208.0,
+        "paired_median_delta": -20.0,
+        "paired_delta_ci95": [
+          -40.0,
+          32.00000000000003
+        ]
+      },
+      "goodput_per_second": {
+        "before": 250.0,
+        "after": 250.0,
+        "paired_median_delta": 0.0,
+        "paired_delta_ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "rss_kib_at_end": {
+        "before": 5056.0,
+        "after": 4928.0,
+        "paired_median_delta": -192.0,
+        "paired_delta_ci95": [
+          -256.0,
+          128.0
+        ]
+      },
+      "p50_ms": {
+        "before": 1.224267,
+        "after": 1.1279575,
+        "paired_median_delta": -0.05777100000000002,
+        "paired_delta_ci95": [
+          -0.09267899999999996,
+          0.015758999999999856
+        ]
+      },
+      "p95_ms": {
+        "before": 2.229516,
+        "after": 2.330618,
+        "paired_median_delta": -0.15239400000000003,
+        "paired_delta_ci95": [
+          -1.3851199999999997,
+          0.546538
+        ]
+      },
+      "p99_ms": {
+        "before": 5.3917915,
+        "after": 9.2803015,
+        "paired_median_delta": 1.0133964999999998,
+        "paired_delta_ci95": [
+          -10.208963999999998,
+          26.189858
+        ]
+      },
+      "p99.9_ms": {
+        "before": 12.8007465,
+        "after": 20.2398235,
+        "paired_median_delta": 1.9188989999999997,
+        "paired_delta_ci95": [
+          -44.885018,
+          24.83289
+        ]
+      }
+    }
+  },
+  "on": {
+    "pairs": 4,
+    "before_cpu_us": 211.99999999999994,
+    "after_cpu_us": 248.0,
+    "paired_cpu_delta_us": 28.00000000000003,
+    "paired_cpu_delta_ci95_us": null,
+    "before_p99_ms": 5.2081965,
+    "after_p99_ms": 8.014783,
+    "metrics": {
+      "cpu_us_per_success": {
+        "before": 211.99999999999994,
+        "after": 248.0,
+        "paired_median_delta": 28.00000000000003,
+        "paired_delta_ci95": null
+      },
+      "goodput_per_second": {
+        "before": 250.0,
+        "after": 250.0,
+        "paired_median_delta": 0.0,
+        "paired_delta_ci95": null
+      },
+      "rss_kib_at_end": {
+        "before": 7040.0,
+        "after": 6976.0,
+        "paired_median_delta": -64.0,
+        "paired_delta_ci95": null
+      },
+      "p50_ms": {
+        "before": 1.169204,
+        "after": 1.2225934999999999,
+        "paired_median_delta": 0.032885000000000164,
+        "paired_delta_ci95": null
+      },
+      "p95_ms": {
+        "before": 2.001317,
+        "after": 2.2127145,
+        "paired_median_delta": 0.22630250000000018,
+        "paired_delta_ci95": null
+      },
+      "p99_ms": {
+        "before": 5.2081965,
+        "after": 8.014783,
+        "paired_median_delta": 2.249511499999999,
+        "paired_delta_ci95": null
+      },
+      "p99.9_ms": {
+        "before": 15.203785500000002,
+        "after": 24.0264655,
+        "paired_median_delta": 11.990999500000001,
+        "paired_delta_ci95": null
+      }
+    }
+  }
+}

@@ -1,0 +1,75 @@
+Linux 6.8.0-50-generic #51-Ubuntu SMP PREEMPT_DYNAMIC Sat Nov  9 18:03:35 UTC 2024 aarch64
+Architecture:                         aarch64
+CPU op-mode(s):                       64-bit
+Byte Order:                           Little Endian
+CPU(s):                               4
+On-line CPU(s) list:                  0-3
+Vendor ID:                            Apple
+Model name:                           -
+Model:                                0
+Thread(s) per core:                   1
+Core(s) per cluster:                  4
+Socket(s):                            -
+Cluster(s):                           1
+Stepping:                             0x0
+BogoMIPS:                             48.00
+Flags:                                fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm jscvt fcma lrcpc dcpop sha3 asimddp sha512 asimdfhm dit uscat ilrcpc flagm sb paca pacg dcpodp flagm2 frint bf16
+NUMA node(s):                         1
+NUMA node0 CPU(s):                    0-3
+Vulnerability Gather data sampling:   Not affected
+Vulnerability Itlb multihit:          Not affected
+Vulnerability L1tf:                   Not affected
+Vulnerability Mds:                    Not affected
+Vulnerability Meltdown:               Not affected
+Vulnerability Mmio stale data:        Not affected
+Vulnerability Reg file data sampling: Not affected
+Vulnerability Retbleed:               Not affected
+Vulnerability Spec rstack overflow:   Not affected
+Vulnerability Spec store bypass:      Vulnerable
+Vulnerability Spectre v1:             Mitigation; __user pointer sanitization
+Vulnerability Spectre v2:             Not affected
+Vulnerability Srbds:                  Not affected
+Vulnerability Tsx async abort:        Not affected
+
+Virtualization
+apple
+
+Process affinity and cgroup
+pid 37824's current affinity list: 0-3
+0::/user.slice/user-501.slice/session-2.scope
+
+Clock source and perf access
+arch_sys_counter
+4
+breakpoint
+kprobe
+software
+tracepoint
+uprobe
+
+Host pressure
+cpu
+some avg10=5.08 avg60=3.96 avg300=2.76 total=18070033
+full avg10=0.00 avg60=0.00 avg300=0.00 total=0
+memory
+some avg10=0.00 avg60=0.00 avg300=0.00 total=429
+full avg10=0.00 avg60=0.00 avg300=0.00 total=358
+io
+some avg10=0.17 avg60=0.14 avg300=0.20 total=4365912
+full avg10=0.14 avg60=0.11 avg300=0.18 total=3983611
+
+Cgroup limits
+cpu.max max 100000
+cpuset.cpus.effective 0-3
+memory.max max
+pids.max max
+
+Toolchain and runtime
+glibc 2.39
+v24.22.3
+perf version 6.8.12
+27.4.0 arm64
+2.31.0
+e0ec7798b649b2b08a5516e8392f620e50936f23b0783c27f8476aeb469e51d6  /home/oscarbahamonde.linux/cauce-m2/bin/checkpoint
+9ca201d1509a911c4e524121cfcb04e92d0da827bdd2ab7aa1fbf2fc41fe2fc3  /home/oscarbahamonde.linux/cauce-m2/bin/eos
+ff59fa78fd4817a56a131d3f7bf0d26d5fab2aa02eff068c816059f4c7d7357c  /home/oscarbahamonde.linux/cauce-m2/load/target/release/cauce-load

@@ -196,3 +196,18 @@ está habilitado. Todas las solicitudes generan un ID de correlación y aplican 
 misma validación de `traceparent`. La contabilidad de métricas y los permisos de
 solicitud, conexión y stream viven fuera del evento. La finalización de HTTP y los
 túneles conservan esa separación. [ADR 0003](adr/0003-optional-access-events.md).
+
+## Instrumentación de rendimiento
+
+El generador Rust del laboratorio mantiene conexiones HTTP/1.1 y HTTP/2
+persistentes y programa llegadas con un reloj monotónico. La cola de despacho
+es acotada. El generador conserva hora programada, llegada, despacho,
+finalización y resultado de cada oferta. Los controles directos validan
+generador y backend, y el muestreo Linux utiliza un proceso separado.
+[Metodología](BENCHMARK-METHODOLOGY.md).
+
+Para un upstream HTTP/2, un cuerpo que Hyper ya considera terminado se
+envía con `END_STREAM` en los HEADERS iniciales. Los cuerpos con datos o
+trailers pendientes conservan el guard de subida y sus límites. El lease
+de respuesta y el watchdog siguen abarcando el intercambio.
+[ADR 0005](adr/0005-http2-empty-upstream-uploads.md).

@@ -1,0 +1,206 @@
+ Service grpc  Building
+ Service node  Building
+ Service h2early  Building
+#0 building with "default" instance using docker driver
+
+#1 [grpc internal] load build definition from grpc.Dockerfile
+#1 transferring dockerfile: 220B done
+#1 DONE 0.0s
+
+#2 [node internal] load build definition from node.Dockerfile
+#2 transferring dockerfile: 166B done
+#2 DONE 0.0s
+
+#3 [h2early internal] load build definition from early.Dockerfile
+#3 transferring dockerfile: 222B done
+#3 DONE 0.0s
+
+#4 [node internal] load metadata for docker.io/library/node:24-bookworm-slim
+#4 DONE 0.0s
+
+#5 [h2early internal] load metadata for docker.io/library/python:3.13-slim-bookworm
+#5 DONE 0.0s
+
+#6 [node internal] load .dockerignore
+#6 transferring context: 2B done
+#6 DONE 0.0s
+
+#7 [h2early internal] load .dockerignore
+#7 transferring context: 2B done
+#7 DONE 0.0s
+
+#8 [node 1/3] FROM docker.io/library/node:24-bookworm-slim
+#8 DONE 0.0s
+
+#9 [grpc internal] load .dockerignore
+#9 transferring context: 2B done
+#9 DONE 0.0s
+
+#10 [h2early 1/4] FROM docker.io/library/python:3.13-slim-bookworm
+#10 DONE 0.0s
+
+#11 [node internal] load build context
+#11 transferring context: 4.80kB done
+#11 DONE 0.0s
+
+#12 [grpc internal] load build context
+#12 transferring context: 3.03kB done
+#12 DONE 0.0s
+
+#13 [h2early internal] load build context
+#13 transferring context: 2.38kB done
+#13 DONE 0.0s
+
+#14 [grpc 3/4] RUN pip install --no-cache-dir grpcio==1.85.1
+#14 CACHED
+
+#15 [grpc 4/4] COPY tests/http2/grpc_server.py ./grpc_server.py
+#15 CACHED
+
+#16 [node 2/3] WORKDIR /fixture
+#16 CACHED
+
+#17 [node 3/3] COPY tests/http2/node_http2.mjs ./node_http2.mjs
+#17 CACHED
+
+#18 [h2early 3/4] RUN pip install --no-cache-dir h2==4.4.1
+#18 CACHED
+
+#19 [h2early 2/4] WORKDIR /fixture
+#19 CACHED
+
+#20 [h2early 4/4] COPY tests/http2/early_backend.py ./early_backend.py
+#20 CACHED
+
+#21 [grpc] exporting to image
+#21 exporting layers done
+#21 writing image sha256:2d1a4e79f117d829a26154fd34d40d0e2ca4d25c5958593772d7f1ab70ed583d done
+#21 naming to docker.io/library/cauce-m2-eos-after-grpc done
+#21 DONE 0.0s
+
+#22 [node] exporting to image
+#22 exporting layers done
+#22 writing image sha256:9a7c9a0a853d08e93bf829c6b2e4e316d3671d7b9d6d252ab3e548594c074b88 done
+#22 naming to docker.io/library/cauce-m2-eos-after-node done
+#22 DONE 0.0s
+
+#23 [h2early] exporting to image
+#23 exporting layers done
+#23 writing image sha256:02c4f5b88ed79975d1b5c89fbb6b4e1c4714030edbc98cd2aef503e6d14aa7e0 done
+#23 naming to docker.io/library/cauce-m2-eos-after-h2early done
+#23 DONE 0.0s
+
+#24 [h2early] resolving provenance for metadata file
+ Service node  Built
+ Service grpc  Built
+ Service h2early  Built
+ Service client  Building
+ Service lifecycle  Building
+ Service client  Built
+#24 DONE 0.0s
+
+#25 [node] resolving provenance for metadata file
+#25 DONE 0.0s
+
+#26 [grpc] resolving provenance for metadata file
+#26 DONE 0.0s
+
+#27 [client internal] load build definition from client.Dockerfile
+#27 transferring dockerfile: 259B done
+#27 DONE 0.0s
+
+#28 [lifecycle internal] load build definition from node_lifecycle.Dockerfile
+#28 transferring dockerfile: 175B done
+#28 DONE 0.0s
+
+#5 [client internal] load metadata for docker.io/library/python:3.13-slim-bookworm
+#5 DONE 0.0s
+
+#4 [lifecycle internal] load metadata for docker.io/library/node:24-bookworm-slim
+#4 DONE 0.0s
+
+#29 [client internal] load .dockerignore
+#29 transferring context: 2B done
+#29 DONE 0.0s
+
+#30 [lifecycle internal] load .dockerignore
+#30 transferring context: 2B done
+#30 DONE 0.0s
+
+#10 [client 1/5] FROM docker.io/library/python:3.13-slim-bookworm
+#10 DONE 0.0s
+
+#8 [lifecycle 1/3] FROM docker.io/library/node:24-bookworm-slim
+#8 DONE 0.0s
+
+#31 [client internal] load build context
+#31 transferring context: 25.41kB done
+#31 DONE 0.0s
+
+#32 [lifecycle internal] load build context
+#32 transferring context: 942B done
+#32 DONE 0.0s
+
+#33 [client 3/5] RUN pip install --no-cache-dir grpcio==1.85.1 h2==4.4.1
+#33 CACHED
+
+#34 [client 2/5] WORKDIR /test
+ Service lifecycle  Built
+#34 CACHED
+
+#35 [client 4/5] COPY tests/http2/client.py ./client.py
+#35 CACHED
+
+#36 [client 5/5] COPY tests/http2/lifecycle.py ./lifecycle.py
+#36 CACHED
+
+#37 [lifecycle 2/3] WORKDIR /test
+#37 CACHED
+
+#38 [lifecycle 3/3] COPY tests/http2/node_lifecycle.mjs ./lifecycle.mjs
+#38 CACHED
+
+#39 [client] exporting to image
+#39 exporting layers done
+#39 writing image sha256:3e883e83d239ec53a53596e94150bde1621d60ac43965db1151ee7ad4779e23f done
+#39 naming to docker.io/library/cauce-m2-eos-after-client done
+#39 DONE 0.0s
+
+#40 [lifecycle] exporting to image
+#40 exporting layers done
+#40 writing image sha256:ea8b73fff8d119d235058c4cc24ab30afda550ef9d31b1e55b07d14312b31463 done
+#40 naming to docker.io/library/cauce-m2-eos-after-lifecycle done
+#40 DONE 0.0s
+
+#41 [client] resolving provenance for metadata file
+#41 DONE 0.0s
+
+#42 [lifecycle] resolving provenance for metadata file
+#42 DONE 0.0s
+ Network cauce-m2-eos-after_default  Creating
+ Network cauce-m2-eos-after_default  Created
+ Volume "cauce-m2-eos-after_cauce_http2_tls_logs"  Creating
+ Volume "cauce-m2-eos-after_cauce_http2_tls_logs"  Created
+ Volume "cauce-m2-eos-after_cauce_http2_clear_logs"  Creating
+ Volume "cauce-m2-eos-after_cauce_http2_clear_logs"  Created
+ Container cauce-m2-eos-after-node-1  Creating
+ Container cauce-m2-eos-after-grpc-1  Creating
+ Container cauce-m2-eos-after-h2early-1  Creating
+ Container cauce-m2-eos-after-grpc-1  Created
+ Container cauce-m2-eos-after-node-1  Created
+ Container cauce-m2-eos-after-h2early-1  Created
+ Container cauce-m2-eos-after-proxy-tls-1  Creating
+ Container cauce-m2-eos-after-proxy-clear-1  Creating
+ Container cauce-m2-eos-after-proxy-tls-1  Created
+ Container cauce-m2-eos-after-proxy-clear-1  Created
+ Container cauce-m2-eos-after-grpc-1  Starting
+ Container cauce-m2-eos-after-h2early-1  Starting
+ Container cauce-m2-eos-after-node-1  Starting
+ Container cauce-m2-eos-after-h2early-1  Started
+ Container cauce-m2-eos-after-node-1  Started
+ Container cauce-m2-eos-after-grpc-1  Started
+ Container cauce-m2-eos-after-proxy-tls-1  Starting
+ Container cauce-m2-eos-after-proxy-clear-1  Starting
+ Container cauce-m2-eos-after-proxy-tls-1  Started
+ Container cauce-m2-eos-after-proxy-clear-1  Started
+PASS: clear: empty uploads end in initial HEADERS; zero-data request trailers forwarded; clear: HTTP/2-to-HTTP/1 translation; local upstream stream cap 2 {'up-2': 2, 'up-3': 2}; peer SETTINGS cap 4 {'up-4': 4}; clear: ALPN/H2C, stream cap, header limits, authority validation, multiplex reuse, trailers, GOAWAY replacement, all four gRPC shapes/status/cancel/deadline; tls: empty uploads end in initial HEADERS; zero-data request trailers forwarded; tls: HTTP/2-to-HTTP/1 translation; local upstream stream cap 2 {'up-7': 2, 'up-8': 2}; peer SETTINGS cap 4 {'up-9': 4}; tls: ALPN/H2C, stream cap, header limits, authority validation, multiplex reuse, trailers, GOAWAY replacement, all four gRPC shapes/status/cancel/deadline; fifth concurrent downstream stream rejected at advertised cap 4; TLS listener negotiates HTTP/1.1 when ALPN selects it; readable and trailers-only gRPC deadlines return grpc-status 4; blocked gRPC stream stopped at 65535 response bytes; terminal status/reset isolated sibling RPC; early response with zero upstream window retained request capacity until deadline; same-route request recovered

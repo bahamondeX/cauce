@@ -1,0 +1,17 @@
+Preflight gate still exercises saturation for each stack/log configuration.
+Results: /home/oscarbahamonde.linux/cauce-m2/three-way-native/increment7-20261125T193844Z-528abe
+Traceback (most recent call last):
+  File "/home/oscarbahamonde.linux/cauce-m2/lab/bench/increment7/run.py", line 488, in <module>
+    try: raise SystemExit(main())
+                          ^^^^^^
+  File "/home/oscarbahamonde.linux/cauce-m2/lab/bench/increment7/run.py", line 383, in main
+    if a.native_load: native_load.normalize(raw,summary)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/oscarbahamonde.linux/cauce-m2/lab/bench/increment7/native_load.py", line 95, in normalize
+    with raw.open("w") as stream:
+         ^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+PermissionError: [Errno 13] Permission denied: '/home/oscarbahamonde.linux/cauce-m2/three-way-native/increment7-20261125T193844Z-528abe/raw/r1-nginx-logs-off-normal-n001.jsonl'
+time="2026-11-25T14:39:25-05:00" level=fatal msg="exit status 1"

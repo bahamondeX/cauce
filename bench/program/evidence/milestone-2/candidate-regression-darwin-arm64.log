@@ -1,0 +1,187 @@
+    Checking cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 8.14s
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.94s
+     Running unittests src/main.rs (target/debug/deps/cauce-97c20a9580d7b430)
+
+running 31 tests
+test config::tests::yaml_and_toml_compile_to_the_same_configuration ... ok
+test health::tests::invalid_config_rejected ... ok
+test config::tests::h2_defaults_caps_and_reload ... ok
+test config::tests::yaml_expands_whole_values_and_redacts_failed_substitutions ... ok
+test health::tests::thresholds_and_disabled_default ... ok
+test config::tests::example_and_fail_closed ... ok
+test config::tests::yaml_rejects_invalid_fields_versions_and_durations ... ok
+test proxy::tests::framing_and_hop_headers ... ok
+test proxy::tests::grpc_deadlines_and_trailer_header ... ok
+test proxy::tests::rejects_ambiguous_paths ... ok
+test routing::tests::lookup_benchmark ... ignored, release-mode route lookup measurement
+test telemetry::tests::failed_buffer_is_discarded_without_a_drop_flush_retry ... ok
+test routing::tests::preserves_linear_match_semantics ... ok
+test telemetry::tests::failed_rotation_after_tail_repair_still_hands_off_inode_on_retry ... ok
+test telemetry::tests::trace_validation ... ok
+test transport::tests::absolute_deadline_covers_fragments_and_continuation_gaps ... ok
+test transport::tests::coalesced_frames_and_fragmented_preface_keep_next_block_deadline ... ok
+test transport::tests::connection_guard_cancels_stream_tasks_and_rejects_late_tasks ... ok
+test transport::tests::data_and_idle_are_not_header_timed_but_partial_frame_headers_are ... ok
+test transport::tests::end_headers_waits_for_all_payload_including_padding ... ok
+test telemetry::tests::reopen_preserves_complete_records_and_removes_only_unterminated_tail ... ok
+test transport::tests::http1_passthrough_and_preface_have_separate_lifetimes ... ok
+test transport::tests::invalid_interleaving_does_not_disarm_or_reset_deadline ... ok
+test websocket::tests::rfc6455_handshake_and_rejections ... ok
+test health::tests::actual_http_status_and_timeout ... ok
+test transport::tests::header_watch_expires_without_further_io_polls ... ok
+test pool::h2_pool_tests::multiplexes_two_leases_over_one_h2_socket ... ok
+test pool::h2_pool_tests::absent_peer_stream_limit_releases_initial_zero_gate ... ok
+test pool::h2_pool_tests::initial_peer_settings_bound_cold_start_streams ... ok
+test pool::h2_pool_tests::watchdog_retires_stalled_early_response_without_leaking_pool_capacity ... ok
+test health::tests::scheduler_ejects_recovers_and_stops ... ok
+
+test result: ok. 30 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.86s
+
+     Running unittests src/bin/cauce-collector.rs (target/debug/deps/cauce_collector-5ddfa9c3ec835e07)
+
+running 14 tests
+test collector::tests::invalid_ack_error_does_not_echo_untrusted_field_names ... ok
+test collector::tests::checkpoint_and_spool_commit_together_then_resume ... ok
+test collector::tests::export_retains_queued_batches_and_lock_is_exclusive ... ok
+test collector::tests::observed_frontier_shrink_after_resume_is_rejected ... ok
+test collector::tests::observed_frontier_shrink_while_full_is_rejected ... ok
+test collector::tests::partial_line_is_not_checkpointed_until_complete ... ok
+test collector::tests::schema_rejects_unknown_missing_and_bad_values ... ok
+test collector::tests::a_present_inode_resets_missing_debounce_before_early_return ... ok
+test collector::tests::lost_unread_log_fails_even_when_spool_is_full ... ok
+test collector::tests::same_inode_same_size_rewrite_is_rejected ... ok
+test collector::tests::spool_quota_pauses_at_a_durable_checkpoint ... ok
+test collector::tests::rename_rotation_follows_inode_and_truncation_stops ... ok
+test collector::tests::rotated_tail_repair_accepts_only_a_scanned_fragment ... ok
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.95s
+
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 9.18s
+WARN Ignoring project discovery error due to `--no-project`: Workspace member `/Users/oscarbahamonde/Desktop/portfolio` is missing a `pyproject.toml` (matches: `Desktop/portfolio`)
+test_accepts_clients_while_reload_reads_candidate (__main__.ProxyTests) ... ok
+test_atomic_reload_and_invalid_reload_preserves_generation (__main__.ProxyTests) ... ok
+test_backend_unexpected_close_no_retry (__main__.ProxyTests) ... ok
+test_bad_upload_does_not_withdraw_healthy_backend (__main__.ProxyTests) ... ok
+test_body_limit_early (__main__.ProxyTests) ... ok
+test_cancel_and_stream_timeout_discard_upstream (__main__.ProxyTests) ... ok
+test_disabled_access_log_preserves_metrics_and_request_identity (__main__.ProxyTests) ... ok
+test_idle_and_max_age_retirement (__main__.ProxyTests) ... ok
+test_log_io_failure_keeps_serving (__main__.ProxyTests) ... ok
+test_log_rotation_and_retention (__main__.ProxyTests) ... ok
+test_overload_and_shutdown_deadline (__main__.ProxyTests) ... ok
+test_pool_capacity_wait_is_bounded (__main__.ProxyTests) ... ok
+test_pool_reuse_across_new_client_connections_and_logs (__main__.ProxyTests) ... ok
+test_request_smuggling_rejected_or_canonicalized (__main__.ProxyTests) ... ok
+test_round_robin_and_least_inflight (__main__.ProxyTests) ... ok
+test_routing_framing_hops_and_forwarded (__main__.ProxyTests) ... ok
+test_schema_and_admin_auth (__main__.ProxyTests) ... ok
+test_slowloris_and_header_limits (__main__.ProxyTests) ... ok
+test_unix_backend (__main__.ProxyTests) ... ok
+test_upload_and_sse_without_event_buffering (__main__.ProxyTests) ... ok
+test_upload_backpressure_and_early_response_discard (__main__.ProxyTests) ... ok
+test_yaml_reload_routes_and_rollback (__main__.ProxyTests) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 23.751s
+
+OK
+PASS: complete-line tail, durable restart checkpoints and non-destructive export
+PASS: rename rotation preserves inode checkpoint and discovers new generation
+PASS: startup discovers retained rotated files oldest first
+PASS: bounded spool pauses input without advancing checkpoint past durable events
+PASS: invalid source is rejected without checkpointing or uploading
+PASS: oversized source is rejected without checkpointing or uploading
+PASS: HTTPS with trusted CA sends proposal batch and validates ACK
+PASS: HTTP 401 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 403 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 429 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 500 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 307 retains stable batch; retry succeeds; redirects never followed
+PASS: wrong_id retains durable batch and stable event IDs for retry/dedup
+PASS: wrong_count retains durable batch and stable event IDs for retry/dedup
+PASS: large_ack retains durable batch and stable event IDs for retry/dedup
+PASS: drop_ack retains durable batch and stable event IDs for retry/dedup
+PASS: delay_ms retains durable batch and stable event IDs for retry/dedup
+PASS: TLS rejects untrusted ca before sending credentials/events
+PASS: TLS rejects untrusted hostname before sending credentials/events
+PASS: credential file is reread on retry; rotated token accepted
+PASS: ACK received but dequeue transaction fails: durable batch is retried intact
+PASS: SIGKILL after receiver acceptance: restart resends identical durable batch
+PASS: bounded retry backoff, exclusive state ownership, clean SIGTERM
+PASS: 23 collector cases (arm64)
+PASS: state database rejects a changed source path without consuming it
+PASS: state path symlink to access log is rejected before opening SQLite
+PASS: same-inode atomic rename race does not crash the tailer
+PASS: disk-full fixture reached the configured SQLite page ceiling
+PASS: SQLite FULL rolls back spool and source checkpoint together
+PASS: copytruncate fixture preserves inode and is at least the prior byte offset
+PASS: copytruncate with same-size replacement is detected before loss
+PASS: first batch is durable before quota test
+PASS: full spool pauses source at its prior durable checkpoint
+PASS: evicted generation with observed but unspooled bytes fails closed after debounce
+PASS: corrupt state fails closed and is left intact
+PASS: read-only checkpoint storage fails without accepting new input
+PASS: state database rejects endpoint changes before sending a request
+PASS: 13 collector storage cases, 0 failures (arm64)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running unittests src/main.rs (target/debug/deps/cauce-97c20a9580d7b430)
+
+running 31 tests
+test config::tests::yaml_and_toml_compile_to_the_same_configuration ... ok
+test health::tests::thresholds_and_disabled_default ... ok
+test config::tests::yaml_expands_whole_values_and_redacts_failed_substitutions ... ok
+test health::tests::invalid_config_rejected ... ok
+test config::tests::h2_defaults_caps_and_reload ... ok
+test config::tests::example_and_fail_closed ... ok
+test proxy::tests::framing_and_hop_headers ... ok
+test proxy::tests::grpc_deadlines_and_trailer_header ... ok
+test proxy::tests::rejects_ambiguous_paths ... ok
+test routing::tests::lookup_benchmark ... ignored, release-mode route lookup measurement
+test config::tests::yaml_rejects_invalid_fields_versions_and_durations ... ok
+test telemetry::tests::failed_buffer_is_discarded_without_a_drop_flush_retry ... ok
+test routing::tests::preserves_linear_match_semantics ... ok
+test telemetry::tests::failed_rotation_after_tail_repair_still_hands_off_inode_on_retry ... ok
+test telemetry::tests::trace_validation ... ok
+test transport::tests::absolute_deadline_covers_fragments_and_continuation_gaps ... ok
+test transport::tests::coalesced_frames_and_fragmented_preface_keep_next_block_deadline ... ok
+test transport::tests::connection_guard_cancels_stream_tasks_and_rejects_late_tasks ... ok
+test transport::tests::data_and_idle_are_not_header_timed_but_partial_frame_headers_are ... ok
+test transport::tests::end_headers_waits_for_all_payload_including_padding ... ok
+test telemetry::tests::reopen_preserves_complete_records_and_removes_only_unterminated_tail ... ok
+test transport::tests::http1_passthrough_and_preface_have_separate_lifetimes ... ok
+test transport::tests::invalid_interleaving_does_not_disarm_or_reset_deadline ... ok
+test websocket::tests::rfc6455_handshake_and_rejections ... ok
+test health::tests::actual_http_status_and_timeout ... ok
+test transport::tests::header_watch_expires_without_further_io_polls ... ok
+test pool::h2_pool_tests::multiplexes_two_leases_over_one_h2_socket ... ok
+test pool::h2_pool_tests::absent_peer_stream_limit_releases_initial_zero_gate ... ok
+test pool::h2_pool_tests::initial_peer_settings_bound_cold_start_streams ... ok
+test pool::h2_pool_tests::watchdog_retires_stalled_early_response_without_leaking_pool_capacity ... ok
+test health::tests::scheduler_ejects_recovers_and_stops ... ok
+
+test result: ok. 30 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.87s
+
+     Running unittests src/bin/cauce-collector.rs (target/debug/deps/cauce_collector-5ddfa9c3ec835e07)
+
+running 14 tests
+test collector::tests::invalid_ack_error_does_not_echo_untrusted_field_names ... ok
+test collector::tests::checkpoint_and_spool_commit_together_then_resume ... ok
+test collector::tests::export_retains_queued_batches_and_lock_is_exclusive ... ok
+test collector::tests::observed_frontier_shrink_while_full_is_rejected ... ok
+test collector::tests::partial_line_is_not_checkpointed_until_complete ... ok
+test collector::tests::schema_rejects_unknown_missing_and_bad_values ... ok
+test collector::tests::observed_frontier_shrink_after_resume_is_rejected ... ok
+test collector::tests::a_present_inode_resets_missing_debounce_before_early_return ... ok
+test collector::tests::lost_unread_log_fails_even_when_spool_is_full ... ok
+test collector::tests::same_inode_same_size_rewrite_is_rejected ... ok
+test collector::tests::spool_quota_pauses_at_a_durable_checkpoint ... ok
+test collector::tests::rename_rotation_follows_inode_and_truncation_stops ... ok
+test collector::tests::rotated_tail_repair_accepts_only_a_scanned_fragment ... ok
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.76s
+

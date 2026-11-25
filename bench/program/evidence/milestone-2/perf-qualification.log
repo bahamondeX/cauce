@@ -1,0 +1,69 @@
+Get:1 http://ports.ubuntu.com/ubuntu-ports noble/main arm64 libslang2 arm64 2.3.3-3build2 [476 kB]
+Get:2 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libdw1t64 arm64 0.190-1.1ubuntu0.1 [258 kB]
+Get:3 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libelf1t64 arm64 0.190-1.1ubuntu0.1 [58.4 kB]
+Get:4 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libnuma1 arm64 2.0.18-1ubuntu0.24.04.1 [23.7 kB]
+Get:5 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libpython3.12t64 arm64 3.12.3-1ubuntu0.17 [2280 kB]
+Get:6 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libtraceevent1 arm64 1:1.8.2-1ubuntu2.1 [53.4 kB]
+Get:7 http://ports.ubuntu.com/ubuntu-ports noble-updates/main arm64 libunwind8 arm64 1.6.2-3build1.1 [53.6 kB]
+Fetched 3203 kB in 3s (937 kB/s)
+	linux-vdso.so.1 (0x0000fab485ebf000)
+	libm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x0000fab485de0000)
+	libz.so.1 => /lib/aarch64-linux-gnu/libz.so.1 (0x0000fab4859c0000)
+	libelf.so.1 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libelf.so.1 (0x0000fab485980000)
+	libdw.so.1 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libdw.so.1 (0x0000fab4858b0000)
+	libunwind.so.8 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libunwind.so.8 (0x0000fab485860000)
+	libunwind-aarch64.so.8 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libunwind-aarch64.so.8 (0x0000fab485810000)
+	libcrypto.so.3 => /lib/aarch64-linux-gnu/libcrypto.so.3 (0x0000fab485200000)
+	libslang.so.2 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libslang.so.2 (0x0000fab484e00000)
+	libpython3.12.so.1.0 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libpython3.12.so.1.0 (0x0000fab484400000)
+	libstdc++.so.6 => /lib/aarch64-linux-gnu/libstdc++.so.6 (0x0000fab484000000)
+	liblzma.so.5 => /lib/aarch64-linux-gnu/liblzma.so.5 (0x0000fab4857c0000)
+	libzstd.so.1 => /lib/aarch64-linux-gnu/libzstd.so.1 (0x0000fab485700000)
+	libcap.so.2 => /lib/aarch64-linux-gnu/libcap.so.2 (0x0000fab4856d0000)
+	libnuma.so.1 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libnuma.so.1 (0x0000fab4856a0000)
+	libtraceevent.so.1 => /home/oscarbahamonde.linux/cauce-m2/perf/usr/lib/aarch64-linux-gnu/libtraceevent.so.1 (0x0000fab484db0000)
+	libc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x0000fab483e40000)
+	/lib/ld-linux-aarch64.so.1 (0x0000fab485e82000)
+	libbz2.so.1.0 => /lib/aarch64-linux-gnu/libbz2.so.1.0 (0x0000fab484d80000)
+	libexpat.so.1 => /lib/aarch64-linux-gnu/libexpat.so.1 (0x0000fab484d30000)
+	libgcc_s.so.1 => /lib/aarch64-linux-gnu/libgcc_s.so.1 (0x0000fab484cf0000)
+perf version 6.8.12
+Error:
+Access to performance monitoring and observability operations is limited.
+Consider adjusting /proc/sys/kernel/perf_event_paranoid setting to open
+access to performance monitoring and observability operations for processes
+without CAP_PERFMON, CAP_SYS_PTRACE or CAP_SYS_ADMIN Linux capability.
+More information can be found at 'Perf events and tool security' document:
+https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html
+perf_event_paranoid setting is 4:
+  -1: Allow use of (almost) all events by all users
+      Ignore mlock limit after perf_event_mlock_kb without CAP_IPC_LOCK
+>= 0: Disallow raw and ftrace function tracepoint access
+>= 1: Disallow CPU event access
+>= 2: Disallow kernel profiling
+To make the adjusted perf_event_paranoid setting permanent preserve it
+in /etc/sysctl.conf (e.g. kernel.perf_event_paranoid = <setting>)
+
+ Performance counter stats for '/bin/true':
+
+              0.28 msec task-clock                       #    0.077 CPUs utilized             
+                 1      context-switches                 #    3.607 K/sec                     
+
+       0.003592189 seconds time elapsed
+
+       0.000586000 seconds user
+       0.000586000 seconds sys
+
+
+
+ Performance counter stats for '/bin/true':
+
+   <not supported>      cycles                                                                
+   <not supported>      instructions                                                          
+
+       0.000315355 seconds time elapsed
+
+       0.000000000 seconds user
+       0.000339000 seconds sys
+
+
