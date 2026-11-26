@@ -26,6 +26,15 @@ Linux ARM64 and AMD64. Pass `full arm64` after the revision to stage only
 that pair. Each pair has its own source identity and `SHA256SUMS` after
 the build and ELF architecture checks succeed.
 
+On Darwin, `scripts/stage-zig-linux.sh` can cross-link a single
+architecture and profile with repository-local build state. Run it once
+per profile and architecture, using `full/linux_arm64`, `core/linux_arm64`,
+`full/linux_amd64` and `core/linux_amd64` below one staging directory.
+`scripts/stage-oci-layout.py ELF_MATRIX OUTPUT` packages those exact
+executables into separate Full and Core multi-architecture OCI layouts
+over the Dockerfile's pinned Debian base. The layouts run with numeric
+UID/GID 10001 and do not use a container daemon for assembly.
+
 Core was 26.0% smaller than Full on Darwin ARM64. The separately matched
 Linux checkpoint reduced the executable by 26.8% on ARM64 and 26.0% on
 AMD64. The feature checks, process samples, Mach-O sections and binary
@@ -33,4 +42,6 @@ identities are in the milestone evidence.
 
 [Profile smoke checks](../scripts/check-build-profiles.sh)
 [Checksummed Linux staging](../scripts/stage-native-release.sh)
+[Darwin cross-link staging](../scripts/stage-zig-linux.sh)
+[OCI layout staging](../scripts/stage-oci-layout.py)
 [Measured profile comparison](PERFORMANCE-MILESTONE-9.md#distribution-checks).
