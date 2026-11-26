@@ -171,12 +171,16 @@ def preview(directives):
     endpoints = {}
     paths = set()
     for location in locations:
-        exact = len(location.args) == 2 and location.args[0] == "="
-        if (location.children is None or len(location.children) != 1 or len(location.args) != (2 if exact else 1)
+        mode = None
+        if len(location.args) == 1:
+            mode = "literal_prefix"
+        elif len(location.args) == 2:
+            mode = {"=": "exact", "^~": "prefix_no_regex"}.get(location.args[0])
+        if (mode is None or location.children is None or len(location.children) != 1
                 or not re.fullmatch(r"/[A-Za-z0-9_~./-]{0,255}", location.args[-1])):
-            raise ValueError("preview requires a literal prefix or exact location with a single proxy_pass")
+            raise ValueError("preview requires a literal location with a single proxy_pass")
         path = location.args[-1]
-        key = (path, exact)
+        key = (path, mode == "exact")
         if key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
             raise ValueError("preview requires unique and unambiguous paths")
         paths.add(key)
@@ -196,9 +200,7 @@ def preview(directives):
                 if len(proxy["routes"]) == 1024:
                     raise ValueError("preview exceeds Cauce route capacity")
                 row = dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
-                           balance="round_robin", upstreams=[endpoints[address]])
-                if exact:
-                    row["path_match"] = "exact"
+                           path_match=mode, balance="round_robin", upstreams=[endpoints[address]])
                 proxy["routes"].append(row)
     return config
 
@@ -222,7 +224,7 @@ def main():
     report = {"nginx_reference": matrix["reference"]["version"],
               "directives": list(audit(directives, inventory(matrix))),
               "semantic_differences": [
-                  "Cauce matches literal paths or segment-bounded prefixes. NGINX normalizes URIs and supports additional location modes.",
+                  "Cauce routes on the raw URI path. NGINX normalizes URIs. Regex and named locations require manual migration.",
                   "The preview matches explicit server names with the listener port or no port. NGINX also has default-server behavior.",
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",

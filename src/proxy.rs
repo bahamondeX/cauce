@@ -423,7 +423,7 @@ pub async fn handle(
     };
     if let Some(event) = &mut event {
         event.route_id = Some(route.id.clone());
-        event.path = Some(route.path_prefix.clone());
+        event.path = (!route.path_prefix.is_empty()).then(|| route.path_prefix.clone());
     }
     let downstream_upgrade = websocket.as_ref().map(|_| hyper::upgrade::on(&mut req));
     if req

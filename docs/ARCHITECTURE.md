@@ -25,6 +25,12 @@ Las coincidencias exactas preservan el puerto y el índice radix conserva el
 límite de segmento para prefijos. Una generación inválida se rechaza antes
 del intercambio. [ADR 0009](adr/0009-virtual-host-and-location-precedence.md).
 
+Las rutas planas pueden combinar coincidencia exacta, prefijos literales,
+prefijos que omiten expresiones regulares y expresiones regulares ordenadas.
+Los patrones se compilan con límites antes de publicar la generación. Un host
+sin patrones omite la evaluación de expresiones regulares. La ruta única con
+prefijo segmentado conserva el acceso directo.
+
 ## Pool y transporte
 
 Un pool global en memoria, semáforo global de conexiones y semáforo por endpoint.

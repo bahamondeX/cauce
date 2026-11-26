@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare the shared literal routing subset over loopback sockets."""
+"""Compare shared flat locations and virtual hosts over loopback sockets."""
 
 import argparse
 from contextlib import closing
@@ -22,6 +22,11 @@ VHOSTS = {
     "mail.*": [("/", "prefix")],
     "mail.internal.*": [("/", "long-prefix")],
     "api.example.test": [("= /only", "exact-host")],
+    "locations.example.test": [
+        ("/", "root"), ("/img", "literal"), ("^~ /private", "skip-regex"),
+        ("/private/preview", "longer-prefix"), ("= /img/icon.png", "exact"),
+        ("~ ^/img/.*[.]png$", "first-regex"), ("~* [.]png$", "caseless-regex"),
+    ],
 }
 CASES = [
     ("tenant.example.test", "/", "suffix"),
@@ -35,6 +40,14 @@ CASES = [
     ("api.example.test", "/", None),
     ("example.test", "/", "fallback-wildcard"),
     ("unmatched.invalid", "/", None),
+    ("locations.example.test", "/imgix", "literal"),
+    ("locations.example.test", "/img/icon.png?x=1", "exact"),
+    ("locations.example.test", "/img/one.png", "first-regex"),
+    ("locations.example.test", "/img/one.PNG", "caseless-regex"),
+    ("locations.example.test", "/private/a.png", "skip-regex"),
+    ("locations.example.test", "/private/preview/a.png", "caseless-regex"),
+    ("locations.example.test", "/private/preview/plain", "longer-prefix"),
+    ("locations.example.test", "/outside", "root"),
 ]
 
 
@@ -77,8 +90,10 @@ def configure(work, cauce_port, nginx_port, backend):
         locations = []
         for location, backend_host in routes:
             idx += 1
-            exact = location.startswith("= ")
-            prefix = location.removeprefix("= ")
+            modifier, path = location.split(" ", 1) if " " in location else ("", location)
+            mode = {"": "literal_prefix", "=": "exact", "^~": "prefix_no_regex",
+                    "~": "regex", "~*": "regex_insensitive"}[modifier]
+            selector = "path_pattern" if mode.startswith("regex") else "path_prefix"
             template += f"""
 [[upstreams]]
 id = "target{idx}"
@@ -92,8 +107,8 @@ failure_backoff_ms = 100
 [[routes]]
 id = "route{idx}"
 host = "{name}"
-path_prefix = "{prefix}"
-path_match = "{'exact' if exact else 'prefix'}"
+{selector} = {json.dumps(path)}
+path_match = "{mode}"
 balance = "round_robin"
 upstreams = ["target{idx}"]
 """

@@ -303,23 +303,47 @@ pub struct UpstreamTls {
 pub struct Route {
     pub id: String,
     pub host: String,
+    #[serde(
+        default,
+        deserialize_with = "nonempty_path_prefix",
+        skip_serializing_if = "String::is_empty"
+    )]
     pub path_prefix: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path_pattern: Option<String>,
     #[serde(default, skip_serializing_if = "PathMatch::is_prefix")]
     pub path_match: PathMatch,
     pub balance: Balance,
     pub upstreams: Vec<String>,
 }
+
+fn nonempty_path_prefix<'de, D: Deserializer<'de>>(value: D) -> Result<String, D::Error> {
+    let path = String::deserialize(value)?;
+    if path.is_empty() {
+        return Err(serde::de::Error::custom("path_prefix cannot be empty"));
+    }
+    Ok(path)
+}
+
 #[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq, Hash, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum PathMatch {
     #[default]
     Prefix,
     Exact,
+    LiteralPrefix,
+    PrefixNoRegex,
+    Regex,
+    RegexInsensitive,
 }
 
 impl PathMatch {
     fn is_prefix(&self) -> bool {
         *self == Self::Prefix
+    }
+
+    fn is_regex(self) -> bool {
+        matches!(self, Self::Regex | Self::RegexInsensitive)
     }
 }
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq, Debug)]
@@ -335,7 +359,7 @@ fn identifier(s: &str) -> bool {
             .all(|b| b.is_ascii_alphanumeric() || b"_-".contains(&b))
 }
 impl Config {
-    pub async fn load(path: &Path) -> Result<Self> {
+    pub async fn load(path: &Path) -> Result<(Self, crate::routing::Routes)> {
         use tokio::io::AsyncReadExt;
         let file = tokio::fs::File::open(path)
             .await
@@ -359,7 +383,8 @@ impl Config {
                 toml::from_str(text)?
             };
             config.validate()?;
-            Ok(config)
+            let routes = crate::routing::Routes::compile(&config.routes)?;
+            Ok((config, routes))
         })
         .await?
     }
@@ -547,14 +572,34 @@ impl Config {
                 );
                 let _: hyper::http::uri::Authority = r.host.parse()?;
             }
+            let (path, match_kind) = if r.path_match.is_regex() {
+                ensure!(
+                    r.path_prefix.is_empty(),
+                    "regex route requires path_pattern only"
+                );
+                let pattern = r
+                    .path_pattern
+                    .as_deref()
+                    .filter(|pattern| !pattern.is_empty() && pattern.len() <= 256)
+                    .context("regex route requires path_pattern of at most 256 bytes")?;
+                (pattern, r.path_match)
+            } else {
+                ensure!(
+                    r.path_pattern.is_none()
+                        && r.path_prefix.starts_with('/')
+                        && !r.path_prefix.contains(['?', '#', '%'])
+                        && r.path_prefix.len() <= 256,
+                    "literal route requires a valid path_prefix only"
+                );
+                let unique_kind = if r.path_match == PathMatch::Exact {
+                    PathMatch::Exact
+                } else {
+                    PathMatch::Prefix
+                };
+                (r.path_prefix.as_str(), unique_kind)
+            };
             ensure!(
-                r.path_prefix.starts_with('/')
-                    && !r.path_prefix.contains(['?', '#', '%'])
-                    && r.path_prefix.len() <= 256,
-                "invalid path prefix"
-            );
-            ensure!(
-                matches.insert((&r.host, &r.path_prefix, r.path_match)),
+                matches.insert((&r.host, path, match_kind)),
                 "duplicate route match"
             );
             ensure!(

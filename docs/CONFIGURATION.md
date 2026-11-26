@@ -35,6 +35,24 @@ the selected host. The default mode uses the longest segment-bounded prefix.
 A host with no matching path returns 404. Match selection never falls through
 to another virtual host. [Complete YAML example](../examples/wildcard-hosts.yaml).
 
+Opt in to flat NGINX location precedence with `literal_prefix`,
+`prefix_no_regex`, `regex`, and `regex_insensitive`. The first two use
+`path_prefix` and match a literal byte prefix, including suffixes in the
+same path segment. The regex modes use `path_pattern` in place of
+`path_prefix`. Exact locations win first. The longest applicable
+`prefix_no_regex` skips regex evaluation. Otherwise the first matching
+regex in configuration order wins, then selection falls back to the
+longest prefix. Existing `prefix` routes retain segment-aware matching.
+
+Regexes use Rust's byte regex syntax with ASCII case folding. Each
+pattern is limited to 256 bytes, with up to 16 patterns per configured
+authority and 128 per configuration. Cauce compiles them before
+publishing a generation. A malformed or oversized expression rejects a
+reload. `cauce check` identifies the affected route. The match sees the validated request path
+without the query. Named locations, nested locations, internal redirects,
+PCRE-only features and NGINX URI normalization remain outside this subset.
+[Advanced YAML example](../examples/advanced-locations.yaml).
+
 ## Reload and rollback
 
 Prepare the full candidate in a file next to the active configuration, retaining the same YAML or TOML extension. Run `cauce check` against the candidate, rename it over the active path on the same filesystem, and send the running process SIGHUP. The running process checks the listener, limits, HTTP/2 and logging settings for restart requirements and prepares certificates, trust stores, routes and upstreams before activating a generation. A rejected candidate leaves the current generation active.
@@ -53,6 +71,6 @@ uv run --no-project --with pyyaml python scripts/nginx-migration-report.py nginx
 cargo run --locked -- check candidate.yaml
 ```
 
-The report identifies each directive's line, context, reference registrations, coverage and known semantic differences. The registry includes the pinned NGINX source release, njs HTTP and stream modules, and the nginx-acme module and its issuer-block directives. Analyze included files separately. Directive arguments stay out of the report. The preview accepts a single cleartext HTTP server with an explicit IPv4 listener, explicit DNS names or edge wildcards, and literal exact or plain prefix locations that proxy to literal IPv4 upstreams. It generates a review-only file with Cauce defaults and records its confidence and a validation command. Review route matching, host forwarding, buffering, timeouts and capacity before use. Unsupported structures cause the preview command to exit unsuccessfully, and an existing output file is protected.
+The report identifies each directive's line, context, reference registrations, coverage and known semantic differences. The registry includes the pinned NGINX source release, njs HTTP and stream modules, and the nginx-acme module and its issuer-block directives. Analyze included files separately. Directive arguments stay out of the report. The preview accepts a single cleartext HTTP server with an explicit IPv4 listener, explicit DNS names or edge wildcards, and flat literal exact, prefix, or `^~` locations that proxy to literal IPv4 upstreams. Regex locations require manual migration because PCRE and Rust regex syntax differ. It generates a review-only file with Cauce defaults and records its confidence and a validation command. Review route matching, host forwarding, buffering, timeouts and capacity before use. Unsupported structures cause the preview command to exit unsuccessfully, and an existing output file is protected.
 
 Regenerate the source inventory with `python3 scripts/nginx-inventory.py` or verify the generated file with `--check`. Pass `--tarball`, `--njs-tarball` and `--acme-tarball` to use local copies of the checksummed sources. Maintain Cauce feature statuses and test references in [nginx-coverage.json](../compatibility/nginx-coverage.json).

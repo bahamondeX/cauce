@@ -631,9 +631,31 @@
       "required": [
         "id",
         "host",
-        "path_prefix",
         "balance",
         "upstreams"
+      ],
+      "oneOf": [
+        {
+          "required": ["path_prefix"],
+          "not": {
+            "anyOf": [
+              {"required": ["path_pattern"]},
+              {"required": ["path_match"], "properties": {"path_match": {"enum": ["regex", "regex_insensitive"]}}}
+            ]
+          }
+        },
+        {
+          "required": ["path_match", "path_pattern"],
+          "not": {"required": ["path_prefix"]},
+          "properties": {
+            "path_match": {
+              "anyOf": [
+                {"$ref": "#/$defs/environment"},
+                {"enum": ["regex", "regex_insensitive"]}
+              ]
+            }
+          }
+        }
       ],
       "properties": {
         "id": {
@@ -675,9 +697,14 @@
               "$ref": "#/$defs/environment"
             },
             {
-              "enum": ["prefix", "exact"]
+              "enum": ["prefix", "exact", "literal_prefix", "prefix_no_regex", "regex", "regex_insensitive"]
             }
           ]
+        },
+        "path_pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
         },
         "balance": {
           "anyOf": [

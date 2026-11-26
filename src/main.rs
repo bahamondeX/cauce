@@ -57,7 +57,8 @@ async fn run() -> Result<()> {
             .unwrap_or("examples/cauce.yaml"),
     );
     let strategy = PoolStrategy::from_environment()?;
-    let config = Arc::new(Config::load(&path).await?);
+    let (config, routes) = Config::load(&path).await?;
+    let config = Arc::new(config);
     let tls_clients = prepare_tls_clients(&config).await?;
     let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
     if check {
@@ -82,6 +83,7 @@ async fn run() -> Result<()> {
     let state = Arc::new(State {
         generation: RwLock::new(Generation::with_strategy(
             (*config).clone(),
+            routes,
             1,
             &tls_clients,
             strategy,
@@ -319,12 +321,12 @@ async fn prepare_reload(
     version: u64,
     strategy: PoolStrategy,
 ) -> Result<(Arc<Generation>, Option<tokio_rustls::TlsAcceptor>)> {
-    let candidate = Config::load(&path).await?;
+    let (candidate, routes) = Config::load(&path).await?;
     baseline.reload_compatible(&candidate)?;
     let clients = prepare_tls_clients(&candidate).await?;
     let server = prepare_server_tls(candidate.tls.clone(), candidate.http2.enabled).await?;
     let generation = tokio::task::spawn_blocking(move || {
-        Generation::with_strategy(candidate, version, &clients, strategy)
+        Generation::with_strategy(candidate, routes, version, &clients, strategy)
     })
     .await?;
     Ok((generation, server))

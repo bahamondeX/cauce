@@ -89,11 +89,13 @@ impl Generation {
         version: u64,
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
     ) -> Arc<Self> {
-        Self::with_strategy(config, version, tls_clients, PoolStrategy::Compact)
+        let routes = Routes::compile(&config.routes).unwrap();
+        Self::with_strategy(config, routes, version, tls_clients, PoolStrategy::Compact)
     }
 
     pub fn with_strategy(
         config: Config,
+        routes: Routes,
         version: u64,
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
         strategy: PoolStrategy,
@@ -129,7 +131,7 @@ impl Generation {
             .collect();
         Arc::new(Self {
             version,
-            routes: Routes::compile(&config.routes),
+            routes,
             config,
             endpoints,
             draining: AtomicBool::new(false),
@@ -1544,6 +1546,7 @@ mod pool_tests {
                 host: "example.test".into(),
                 path_prefix: "/".into(),
                 path_match: crate::config::PathMatch::Prefix,
+                path_pattern: None,
                 balance: Balance::RoundRobin,
                 upstreams: vec!["backend".into()],
             }],
@@ -1559,7 +1562,9 @@ mod pool_tests {
                 cfg.limits.connecting = 1;
                 cfg.upstreams[0].connections = 1;
                 cfg.upstreams[0].protocol = protocol;
-                let generation = Generation::with_strategy(cfg, 1, &HashMap::new(), strategy);
+                let routes = Routes::compile(&cfg.routes).unwrap();
+                let generation =
+                    Generation::with_strategy(cfg, routes, 1, &HashMap::new(), strategy);
                 let pool = Pool::with_strategy(
                     generation.config.limits.clone(),
                     generation.config.http2.clone(),
@@ -1626,8 +1631,9 @@ mod pool_tests {
                 Arc::new(Metrics::default()),
                 PoolStrategy::Sharded,
             );
+            let routes = Routes::compile(&cfg.routes).unwrap();
             let generation =
-                Generation::with_strategy(cfg, 1, &HashMap::new(), PoolStrategy::Sharded);
+                Generation::with_strategy(cfg, routes, 1, &HashMap::new(), PoolStrategy::Sharded);
             let a = generation.endpoints["backend"].clone();
             let b = generation.endpoints["second"].clone();
             let (mut first, _) = pool

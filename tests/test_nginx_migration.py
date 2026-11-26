@@ -43,7 +43,15 @@ class MigrationTests(unittest.TestCase):
         rows = config["proxy"]["routes"]
         self.assertEqual(len(rows), 12)
         self.assertEqual(sum(r.get("path_match") == "exact" for r in rows), 6)
+        self.assertEqual(sum(r.get("path_match") == "literal_prefix" for r in rows), 6)
         self.assertIn("*.example.org:8080", {r["host"] for r in rows})
+
+    def test_no_regex_prefix_is_preserved(self):
+        code, _, config = self.run_preview("example.org",
+            "location ^~ /images { proxy_pass http://127.0.0.1:2010; }")
+        self.assertEqual(code, 0)
+        self.assertTrue(all(route["path_match"] == "prefix_no_regex"
+                            for route in config["proxy"]["routes"]))
 
     def test_unsupported_host_or_location_refuses_partial_preview(self):
         for names, locations in [

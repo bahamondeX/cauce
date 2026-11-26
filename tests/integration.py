@@ -386,6 +386,12 @@ class ProxyTests(unittest.TestCase):
       path_match: exact
       balance: round_robin
       upstreams: [python]
+    - id: regex-items
+      host: "localhost:{self.listen}"
+      path_pattern: '^/downloads/[a-z]+[.]zip$'
+      path_match: regex
+      balance: round_robin
+      upstreams: [node]
 '''
         def publish(contents, event):
             log = self.base / 'stderr.jsonl'
@@ -409,6 +415,8 @@ class ProxyTests(unittest.TestCase):
         publish(candidate, '"reloaded"')
         self.assertEqual(backend('/api/items'), 'b')
         self.assertEqual(backend('/apix'), 'a')
+        self.assertEqual(backend('/downloads/item.zip?ignored=1'), 'b')
+        self.assertEqual(backend('/downloads/item.ZIP'), 'a')
         status, response, _ = self.request('/', headers={'Host': f'A.B.EXAMPLE.TEST:{self.listen}'})
         self.assertEqual((status, json.loads(response)['backend']), (200, 'b'))
         for path, expected in [('/health?check=1', 'a'), ('/health/child', 'b')]:
@@ -417,6 +425,8 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(self.request('/', headers={'Host': f'example.test:{self.listen}'})[0], 404)
         publish(candidate.replace('*.example.test', 'a.*.test'), '"reload_rejected"')
         self.assertEqual(self.request('/', headers={'Host': f'a.example.test:{self.listen}'})[0], 200)
+        publish(candidate.replace("[a-z]+", "("), '"reload_rejected"')
+        self.assertEqual(backend('/downloads/item.zip'), 'b')
         publish(candidate.replace('version: 1', 'version: 2'), '"reload_rejected"')
         self.assertEqual(backend('/api/items'), 'b')
         publish(original, '"reloaded"')

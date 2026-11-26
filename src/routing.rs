@@ -1,6 +1,11 @@
 //! Immutable host and path indexes compiled once per validated configuration.
 use crate::config::{PathMatch, Route};
+use anyhow::{ensure, Result};
+use regex::bytes::{Regex, RegexBuilder};
 use std::collections::{btree_map::Entry, BTreeMap, HashMap};
+
+const REGEXES_PER_HOST: usize = 16;
+const REGEXES_PER_CONFIG: usize = 128;
 
 pub struct Routes {
     single: bool,
@@ -26,6 +31,11 @@ struct Host {
         reason = "avoid an inline map in every prefix-only host"
     )]
     exact: Option<Box<HashMap<String, usize>>>,
+    #[expect(
+        clippy::box_collection,
+        reason = "avoid a vector in every literal-only host"
+    )]
+    regexes: Option<Box<Vec<(Regex, usize)>>>,
 }
 
 pub(crate) struct Wildcard<'a> {
@@ -77,8 +87,21 @@ pub(crate) fn wildcard(authority: &str) -> Option<Wildcard<'_>> {
 
 #[derive(Default)]
 struct Node {
-    route: Option<usize>,
+    route: Option<Prefix>,
     children: BTreeMap<u8, Edge>,
+}
+
+#[derive(Clone, Copy)]
+struct Prefix {
+    id: usize,
+    mode: PrefixMode,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum PrefixMode {
+    Segment,
+    Literal,
+    SkipRegex,
 }
 
 struct Edge {
@@ -91,11 +114,12 @@ fn path_boundary(prefix: &[u8], suffix: &[u8]) -> bool {
 }
 
 impl Routes {
-    pub fn compile(routes: &[Route]) -> Self {
+    pub fn compile(routes: &[Route]) -> Result<Self> {
         let mut hosts = HashMap::<String, Host>::new();
         let mut wildcards = None;
         let single = matches!(routes, [route]
             if route.path_match == PathMatch::Prefix && !route.host.contains('*'));
+        let mut regex_count = 0;
         if !single {
             for (id, route) in routes.iter().enumerate() {
                 let index = if let Some(pattern) = wildcard(&route.host) {
@@ -118,15 +142,48 @@ impl Routes {
                             .get_or_insert_with(|| Box::new(HashMap::new()))
                             .insert(route.path_prefix.clone(), id);
                     }
-                    PathMatch::Prefix => index.prefixes.insert(route.path_prefix.as_bytes(), id),
+                    PathMatch::Regex | PathMatch::RegexInsensitive => {
+                        let regexes = index.regexes.get_or_insert_with(Box::default);
+                        ensure!(
+                            regexes.len() < REGEXES_PER_HOST && regex_count < REGEXES_PER_CONFIG,
+                            "regex route limit is {REGEXES_PER_HOST} per authority and {REGEXES_PER_CONFIG} per configuration"
+                        );
+                        let pattern = route
+                            .path_pattern
+                            .as_deref()
+                            .expect("validated regex pattern");
+                        let regex = RegexBuilder::new(pattern)
+                            .unicode(false)
+                            .case_insensitive(route.path_match == PathMatch::RegexInsensitive)
+                            .nest_limit(32)
+                            .size_limit(128 * 1024)
+                            .dfa_size_limit(64 * 1024)
+                            .build()
+                            .map_err(|_| {
+                                anyhow::anyhow!("invalid or oversized regex on route {}", route.id)
+                            })?;
+                        regexes.push((regex, id));
+                        regex_count += 1;
+                    }
+                    mode => {
+                        let mode = match mode {
+                            PathMatch::Prefix => PrefixMode::Segment,
+                            PathMatch::LiteralPrefix => PrefixMode::Literal,
+                            PathMatch::PrefixNoRegex => PrefixMode::SkipRegex,
+                            _ => unreachable!(),
+                        };
+                        index
+                            .prefixes
+                            .insert(route.path_prefix.as_bytes(), Prefix { id, mode });
+                    }
                 }
             }
         }
-        Self {
+        Ok(Self {
             single,
             hosts,
             wildcards,
-        }
+        })
     }
 
     pub fn find<'a>(&self, routes: &'a [Route], host: &str, path: &str) -> Option<&'a Route> {
@@ -169,20 +226,32 @@ impl Routes {
                 break;
             };
             node = &edge.next;
-            if node.route.is_some() && path_boundary(&edge.prefix, suffix) {
-                matched = node.route;
+            if let Some(prefix) = node.route {
+                if prefix.mode != PrefixMode::Segment || path_boundary(&edge.prefix, suffix) {
+                    matched = Some(prefix);
+                }
             }
             remaining = suffix;
         }
-        matched.map(|id| &routes[id])
+        if let Some(regexes) = &host.regexes {
+            if !matched.is_some_and(|prefix| prefix.mode == PrefixMode::SkipRegex) {
+                if let Some((_, id)) = regexes
+                    .iter()
+                    .find(|(regex, _)| regex.is_match(path.as_bytes()))
+                {
+                    return Some(&routes[*id]);
+                }
+            }
+        }
+        matched.map(|prefix| &routes[prefix.id])
     }
 }
 
 impl Node {
-    fn insert(&mut self, path: &[u8], id: usize) {
+    fn insert(&mut self, path: &[u8], route: Prefix) {
         let Some(&first) = path.first() else {
             debug_assert!(self.route.is_none(), "validated route keys are unique");
-            self.route = Some(id);
+            self.route = Some(route);
             return;
         };
         match self.children.entry(first) {
@@ -190,7 +259,7 @@ impl Node {
                 entry.insert(Edge {
                     prefix: path.into(),
                     next: Node {
-                        route: Some(id),
+                        route: Some(route),
                         ..Node::default()
                     },
                 });
@@ -210,7 +279,7 @@ impl Node {
                     edge.prefix = edge.prefix[..common].into();
                     edge.next.children.insert(previous.prefix[0], previous);
                 }
-                edge.next.insert(&path[common..], id);
+                edge.next.insert(&path[common..], route);
             }
         }
     }
@@ -227,9 +296,64 @@ mod tests {
             host: host.into(),
             path_prefix: path.into(),
             path_match: PathMatch::Prefix,
+            path_pattern: None,
             balance: Balance::RoundRobin,
             upstreams: vec!["origin".into()],
         }
+    }
+
+    #[test]
+    fn flat_locations_order_exact_longest_prefix_and_first_regex() {
+        let host = "example.test";
+        let mut routes = [
+            route(host, "/", 0),
+            route(host, "/img", 1),
+            route(host, "/private", 2),
+            route(host, "/private/preview", 3),
+            route(host, "/img/icon.png", 4),
+            route(host, "", 5),
+            route(host, "", 6),
+        ];
+        routes[1].path_match = PathMatch::LiteralPrefix;
+        routes[2].path_match = PathMatch::PrefixNoRegex;
+        routes[3].path_match = PathMatch::LiteralPrefix;
+        routes[4].path_match = PathMatch::Exact;
+        routes[5].path_match = PathMatch::Regex;
+        routes[5].path_pattern = Some(r"^/img/.*[.]png$".into());
+        routes[6].path_match = PathMatch::RegexInsensitive;
+        routes[6].path_pattern = Some("[.]png$".into());
+        let compiled = Routes::compile(&routes).unwrap();
+        for (path, id) in [
+            ("/imgix", 1),
+            ("/img/icon.png", 4),
+            ("/img/file.png", 5),
+            ("/img/file.PNG", 6),
+            ("/private/a.png", 2),
+            ("/private/preview/a.png", 6),
+            ("/elsewhere", 0),
+        ] {
+            assert_eq!(
+                compiled.find(&routes, host, path).unwrap().id,
+                routes[id].id
+            );
+        }
+    }
+
+    #[test]
+    fn regex_location_count_and_diagnostics_are_bounded() {
+        let regex_route = |i| {
+            let mut route = route("example.test", "", i);
+            route.path_match = PathMatch::Regex;
+            route.path_pattern = Some(format!("^/{i}$"));
+            route
+        };
+        let mut routes: Vec<_> = (0..=REGEXES_PER_HOST).map(regex_route).collect();
+        assert!(Routes::compile(&routes[..REGEXES_PER_HOST]).is_ok());
+        assert!(Routes::compile(&routes).is_err());
+        routes[0].path_pattern = Some("(private+(".into());
+        let error = Routes::compile(&routes[..1]).err().unwrap().to_string();
+        assert!(!error.contains("private"));
+        assert!(error.contains(&routes[0].id));
     }
 
     fn linear<'a>(routes: &'a [Route], host: &str, path: &str) -> Option<&'a Route> {
@@ -280,7 +404,7 @@ mod tests {
                 .collect();
             routes.push(route("a.test:8080", "/api/", routes.len()));
             for routes in [&routes[..], &routes[..1], &routes[..0]] {
-                let index = Routes::compile(routes);
+                let index = Routes::compile(routes).unwrap();
                 for host in ["a.test", "a.test:8080", "other.test"] {
                     for path in paths {
                         assert_eq!(
@@ -305,7 +429,7 @@ mod tests {
             route("*.example.test:8080", "/", 5),
             route("*.example.test", "/api", 6),
         ];
-        let compiled = Routes::compile(&routes);
+        let compiled = Routes::compile(&routes).unwrap();
         let resolve = |host, path| compiled.find(&routes, host, path).map(|r| r.id.as_str());
         assert_eq!(resolve("a.example.test", "/exact"), Some("r4"));
         assert_eq!(resolve("a.example.test", "/api"), None);
@@ -327,9 +451,11 @@ mod tests {
         }
         let single = &routes[1..2];
         assert!(Routes::compile(single)
+            .unwrap()
             .find(single, "a.example.test", "/")
             .is_some());
         assert!(Routes::compile(single)
+            .unwrap()
             .find(single, "example.test", "/")
             .is_none());
     }
@@ -371,6 +497,7 @@ mod tests {
         routes[1].path_match = PathMatch::Exact;
         let resolve = |routes: &[Route], path| {
             Routes::compile(routes)
+                .unwrap()
                 .find(routes, "x.example.test", path)
                 .map(|r| r.id.clone())
         };
@@ -402,7 +529,7 @@ mod tests {
                         route(&host, &format!("/api/{id:04}/"), id)
                     })
                     .collect();
-                let index = Routes::compile(&routes);
+                let index = Routes::compile(&routes).unwrap();
                 let queries: Vec<_> = routes
                     .iter()
                     .map(|r| (r.host.as_str(), format!("{}resource", r.path_prefix)))
