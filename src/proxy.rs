@@ -586,9 +586,98 @@ pub async fn handle(
         };
         return Ok(completion.wrap(response, limits, deadline));
     }
+    // Local and cached responses use the same generation, policy and permit.
+    macro_rules! send_cached {
+        ($response:expr) => {{
+            let mut response = $response;
+            if let Some(policy) = &route.headers {
+                policy.response.apply(response.headers_mut());
+            }
+            if headers_exceed_limits(response.headers(), limits) {
+                reject!(BAD_GATEWAY, "cache_header_policy_limit");
+            }
+            response
+                .headers_mut()
+                .insert(X_REQUEST_ID, HeaderValue::from_str(&id).unwrap());
+            *response.version_mut() = inbound_version;
+            if let Some((policy, choice)) = compression {
+                response = policy.apply(choice, response, &slot, head);
+            }
+            let completion = crate::content::Completion {
+                event,
+                started,
+                slot,
+                logger: state.logger.clone(),
+            };
+            return Ok(completion.wrap(response, limits, deadline));
+        }};
+    }
+    let cache = route.cache.is_some().then(|| &generation.caches[&route.id]);
+    let mut fill = None;
+    let mut invalidate = None;
+    if let Some(cache) = cache {
+        let authority = req
+            .uri()
+            .authority()
+            .map(|value| value.as_str())
+            .or_else(|| {
+                req.headers()
+                    .get(HOST)
+                    .and_then(|value| value.to_str().ok())
+            })
+            .expect("validated request authority");
+        invalidate = cache.invalidation(&req, authority, secure);
+        use crate::cache::Probe;
+        match cache.probe(&req, authority, secure, deadline).await {
+            Probe::Hit(response) => {
+                state
+                    .logger
+                    .metrics
+                    .cache_hits
+                    .fetch_add(1, Ordering::Relaxed);
+                send_cached!(response);
+            }
+            Probe::Fill(ticket) => {
+                state
+                    .logger
+                    .metrics
+                    .cache_misses
+                    .fetch_add(1, Ordering::Relaxed);
+                fill = Some(ticket);
+            }
+            Probe::Bypass => {
+                state
+                    .logger
+                    .metrics
+                    .cache_bypasses
+                    .fetch_add(1, Ordering::Relaxed);
+            }
+            Probe::OnlyIfCached => reject!(GATEWAY_TIMEOUT, "cache_only_miss"),
+            Probe::Deadline => reject!(GATEWAY_TIMEOUT, "cache_wait_deadline"),
+        }
+    }
+    let revalidating = fill
+        .as_ref()
+        .is_some_and(|fill| fill.conditional(req.headers_mut()));
+    macro_rules! stale_on_error {
+        ($status:expr) => {
+            if tokio::time::Instant::now() < deadline {
+                if let Some(response) = fill.as_ref().and_then(|fill| fill.stale_on_error($status))
+                {
+                    state
+                        .logger
+                        .metrics
+                        .cache_hits
+                        .fetch_add(1, Ordering::Relaxed);
+                    send_cached!(response);
+                }
+            }
+        };
+    }
     let endpoint = match generation.select(route, client_ip) {
         Some(e) => e,
         None => {
+            stale_on_error!(StatusCode::SERVICE_UNAVAILABLE);
             reject!(SERVICE_UNAVAILABLE, "no_healthy_upstream");
         }
     };
@@ -675,6 +764,7 @@ pub async fn handle(
             if grpc && reason == "request_deadline" {
                 return Ok(record_grpc_deadline(&state, event, started));
             }
+            stale_on_error!(status);
             return Ok(record_error(&state, event, started, status, reason));
         }
     };
@@ -848,6 +938,11 @@ pub async fn handle(
                 attempt.outcome = "headers_failed";
             }
             let timed_out = other.is_err();
+            stale_on_error!(if timed_out {
+                StatusCode::GATEWAY_TIMEOUT
+            } else {
+                StatusCode::BAD_GATEWAY
+            });
             return Ok(record_error(
                 &state,
                 event,
@@ -920,6 +1015,42 @@ pub async fn handle(
         return Ok(response.map(|_| body::full("")));
     }
     strip_hop(response.headers_mut());
+    if let (Some(cache), Some(family)) = (cache, invalidate) {
+        if response.status().is_success() || response.status().is_redirection() {
+            cache.invalidate(&family);
+        }
+    }
+    if response.status().is_server_error() {
+        stale_on_error!(response.status());
+    }
+    if revalidating && response.status() == StatusCode::NOT_MODIFIED {
+        let ticket = fill.take().expect("revalidating cache fill");
+        if let Some(cached) = ticket.refreshed(response.headers()) {
+            lease.complete(uploaded.load(Ordering::Acquire));
+            send_cached!(cached);
+        }
+        reject!(BAD_GATEWAY, "invalid_cache_revalidation");
+    }
+    let capturing = if let Some(ticket) = fill.take() {
+        let capture = ticket.capture(
+            response.status(),
+            response.headers(),
+            response.body().is_end_stream(),
+        );
+        response.headers_mut().insert(
+            "cache-status",
+            HeaderValue::from_static("Cauce; fwd=uri-miss"),
+        );
+        capture
+    } else {
+        if cache.is_some() {
+            response.headers_mut().insert(
+                "cache-status",
+                HeaderValue::from_static("Cauce; fwd=bypass"),
+            );
+        }
+        None
+    };
     *response.version_mut() = inbound_version;
     response
         .headers_mut()
@@ -943,7 +1074,10 @@ pub async fn handle(
         request_bytes,
         exchange,
     };
-    let response = response.map(|b| body::download(b, limits, deadline, completion, grpc));
+    let mut response = response.map(|b| body::download(b, limits, deadline, completion, grpc));
+    if let Some(capture) = capturing {
+        response = response.map(|body| capture.wrap(body));
+    }
     Ok(match (compression, compression_slot) {
         (Some((policy, choice)), Some(slot)) => policy.apply(choice, response, &slot, head),
         _ => response,

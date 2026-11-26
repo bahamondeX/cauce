@@ -13,6 +13,9 @@ use std::{
 #[derive(Default)]
 pub struct Metrics {
     pub requests: AtomicU64,
+    pub cache_hits: AtomicU64,
+    pub cache_misses: AtomicU64,
+    pub cache_bypasses: AtomicU64,
     pub rejected: AtomicU64,
     pub new_connections: AtomicU64,
     pub reused: AtomicU64,
@@ -33,6 +36,9 @@ impl Metrics {
         let mut s = String::new();
         for (label, value) in [
             ("requests", &self.requests),
+            ("cache_hits", &self.cache_hits),
+            ("cache_misses", &self.cache_misses),
+            ("cache_bypasses", &self.cache_bypasses),
             ("rejected", &self.rejected),
             ("upstream_connections_created", &self.new_connections),
             ("upstream_reused", &self.reused),

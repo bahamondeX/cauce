@@ -122,6 +122,14 @@ impl From<Edits> for RawEdits {
 }
 
 impl Edits {
+    pub fn touches(&self, names: &[&str]) -> bool {
+        self.set
+            .iter()
+            .map(|(name, _)| name)
+            .chain(&self.remove)
+            .any(|name| names.contains(&name.as_str()))
+    }
+
     pub fn apply(&self, headers: &mut HeaderMap) -> bool {
         for name in &self.remove {
             headers.remove(name);

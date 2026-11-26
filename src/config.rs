@@ -401,6 +401,8 @@ pub struct Route {
     pub(crate) content: Option<Box<crate::content::Handler>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) compression: Option<Box<crate::compression::Policy>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) cache: Option<Box<crate::cache::Spec>>,
     #[serde(default)]
     pub balance: Balance,
     #[serde(default)]
@@ -710,6 +712,7 @@ impl Config {
                 <= 128,
             "compression generation quota exceeded"
         );
+        let mut cache_budget = 0;
         let mut ticket_budget = 0;
         ensure!(
             self.rate_zones.len() <= 32
@@ -796,6 +799,23 @@ impl Config {
                 matches.insert((&r.host, path, match_kind)),
                 "duplicate route match"
             );
+            if let Some(spec) = &r.cache {
+                spec.validate()?;
+                ensure!(
+                    r.content.is_none() && !r.upstreams.is_empty(),
+                    "cache requires a proxy route"
+                );
+                if let Some(headers) = &r.headers {
+                    ensure!(!headers.request.touches(&["cookie", "authorization", "range", "if-range", "if-match", "if-none-match", "if-modified-since", "if-unmodified-since"])
+                        && !headers.response.touches(&["cache-control", "vary", "set-cookie", "set-cookie2", "expires", "etag", "last-modified", "age", "cache-status"]),
+                        "cache route headers cannot change authentication, conditionals or cache controls");
+                }
+                cache_budget += spec.max_size;
+                ensure!(
+                    cache_budget <= 512 * 1024 * 1024,
+                    "generation cache byte quota exceeded"
+                );
+            }
             if let Some(handler) = &r.content {
                 handler.validate(r)?;
                 ensure!(

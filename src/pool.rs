@@ -79,6 +79,7 @@ pub struct Generation {
     pub endpoints: HashMap<String, Arc<Endpoint>>,
     pub draining: AtomicBool,
     groups: HashMap<String, crate::balance::Group>,
+    pub caches: HashMap<String, Arc<crate::cache::Cache>>,
 }
 impl Generation {
     #[cfg(test)]
@@ -138,6 +139,16 @@ impl Generation {
                 )
             })
             .collect();
+        let caches = config
+            .routes
+            .iter()
+            .filter_map(|route| {
+                route
+                    .cache
+                    .as_ref()
+                    .map(|spec| (route.id.clone(), crate::cache::Cache::new(spec)))
+            })
+            .collect();
         Arc::new(Self {
             version,
             routes,
@@ -145,6 +156,7 @@ impl Generation {
             endpoints,
             draining: AtomicBool::new(false),
             groups,
+            caches,
         })
     }
     pub fn route(&self, host: &str, path: &str) -> Option<&Route> {
@@ -1569,6 +1581,7 @@ mod pool_tests {
                 action: None,
                 content: None,
                 compression: None,
+                cache: None,
                 allow_clients: None,
                 rate_zone: None,
                 balance: crate::config::Balance::RoundRobin,

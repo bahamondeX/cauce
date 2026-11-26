@@ -338,6 +338,7 @@ mod tests {
             action: None,
             content: None,
             compression: None,
+            cache: None,
             allow_clients: None,
             rate_zone: None,
             balance: Balance::RoundRobin,

@@ -837,6 +837,28 @@
         "mime": {"type": "array", "minItems": 1, "maxItems": 32, "items": {"type": "string", "maxLength": 80}}
       }
     },
+    "memoryCache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_size": {"anyOf": [{"type": "integer", "minimum": 4096, "maximum": 268435456}, {"$ref": "#/$defs/sizeString"}, {"$ref": "#/$defs/environment"}]},
+        "max_entry_size": {"anyOf": [{"type": "integer", "minimum": 1, "maximum": 4194304}, {"$ref": "#/$defs/sizeString"}, {"$ref": "#/$defs/environment"}]},
+        "max_entries": {"type": "integer", "minimum": 1, "maximum": 32768},
+        "max_fills": {"type": "integer", "minimum": 1, "maximum": 128},
+        "max_waiters": {"type": "integer", "minimum": 1, "maximum": 256},
+        "ttl": {"$ref": "#/$defs/cacheDuration"},
+        "stale_if_error": {"$ref": "#/$defs/cacheDuration"},
+        "stale_while_revalidate": {"$ref": "#/$defs/cacheDuration"},
+        "coalesce": {"type": "boolean"},
+        "invalidate_on_write": {"type": "boolean"},
+        "vary": {"type": "array", "maxItems": 8, "items": {"type": "string", "minLength": 1, "maxLength": 64}},
+        "bypass_header": {"type": "string", "minLength": 1, "maxLength": 64},
+        "statuses": {"type": "array", "minItems": 1, "maxItems": 7, "items": {"enum": [200, 203, 204, 301, 308, 404, 410]}}
+      }
+    },
+    "cacheDuration": {
+      "anyOf": [{"type": "integer", "minimum": 0, "maximum": 604800000}, {"$ref": "#/$defs/durationString"}, {"$ref": "#/$defs/environment"}]
+    },
     "route": {
       "type": "object",
       "additionalProperties": false,
@@ -868,6 +890,7 @@
         }
       ],
       "properties": {
+        "cache": {"$ref": "#/$defs/memoryCache"},
         "compression": {"$ref": "#/$defs/compression"},
         "content": {"$ref": "#/$defs/contentHandler"},
         "id": {

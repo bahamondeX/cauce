@@ -2,6 +2,7 @@ mod actions;
 mod admission;
 mod balance;
 mod body;
+mod cache;
 mod compression;
 mod config;
 mod content;
@@ -142,11 +143,12 @@ async fn run() -> Result<()> {
                 match prepared {
                     Some(Ok(Ok((next, server)))) => {
                         let version = next.version;
-                        {
+                        let old = {
                             let mut current = state.generation.write().unwrap();
                             current.draining.store(true, Ordering::Release);
-                            *current = next;
-                        }
+                            std::mem::replace(&mut *current, next)
+                        };
+                        for cache in old.caches.values() { cache.drain(); }
                         if let Some(health) = health.take() {
                             health.abort();
                         }
