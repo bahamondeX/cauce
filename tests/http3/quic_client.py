@@ -21,7 +21,7 @@ class Client(QuicConnectionProtocol):
         if isinstance(event, StreamReset) and event.stream_id in self.inbox:
             self.inbox[event.stream_id].put_nowait(event)
         for message in self.http.handle_event(event):
-            if message.stream_id in self.inbox:
+            if isinstance(message, (HeadersReceived, DataReceived)) and message.stream_id in self.inbox:
                 self.inbox[message.stream_id].put_nowait(message)
 
     def stream(self):

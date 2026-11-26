@@ -54,3 +54,7 @@ uv sync --locked --project "$PWD/tests/compatibility" --python "$(command -v pyt
 "$UV_PROJECT_ENVIRONMENT/bin/python" -IB -m unittest discover \
   -s "$PWD/tests" -p test_nginx_migration.py -v
 ```
+
+Select `--extra quic` for local Pebble and HTTP/3 fixtures,
+`--extra content` for the independent Brotli decoder, or `--extra grpc`
+for the standard gRPC health service.

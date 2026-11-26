@@ -266,6 +266,8 @@ at load time. Literal response header additions and explicit origin SNI
 settings have pinned NGINX differential evidence. The registry contains
 137 partial OSS registrations, two mapped gaps and 615 unmapped registrations.
 The runtime's patched collector links SQLite 3.54.1.
+Both Linux architectures have checksummed Full and Core executable pairs
+and OCI layouts. Native competitive qualification remains open.
 [Milestone evidence](docs/PERFORMANCE-MILESTONE-10.md)
 [Compatibility tooling](docs/COMPATIBILITY-TOOLING.md)
 [SQLite remediation](docs/SQLITE-SECURITY.md).

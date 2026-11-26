@@ -1,0 +1,14 @@
+test_auth_http_rejection_failure_allowlist_redaction_and_reload (__main__.MailTests.test_auth_http_rejection_failure_allowlist_redaction_and_reload) ... ok
+test_backend_tls_precedes_credential_transmission (__main__.MailTests.test_backend_tls_precedes_credential_transmission) ... ok
+test_connection_admission_auth_deadline_and_protocol_bounds (__main__.MailTests.test_connection_admission_auth_deadline_and_protocol_bounds) ... ok
+test_dns_rotation_preserves_authenticated_pop3_session (__main__.MailTests.test_dns_rotation_preserves_authenticated_pop3_session) ... ok
+test_implicit_tls_to_real_origins (__main__.MailTests.test_implicit_tls_to_real_origins) ... skipped 'build tests/mail/Dockerfile and set CAUCE_MAIL_FIXTURE=1'
+test_postfix_dovecot_and_optional_nginx (__main__.MailTests.test_postfix_dovecot_and_optional_nginx) ... skipped 'build tests/mail/Dockerfile and set CAUCE_MAIL_FIXTURE=1'
+test_reload_adds_and_removes_listeners_with_authenticated_pop3 (__main__.MailTests.test_reload_adds_and_removes_listeners_with_authenticated_pop3) ... ok
+test_sigterm_drains_authenticated_sessions (__main__.MailTests.test_sigterm_drains_authenticated_sessions) ... ok
+test_tls_gate_relay_denial_and_fragmented_transition (__main__.MailTests.test_tls_gate_relay_denial_and_fragmented_transition) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 3.013s
+
+OK (skipped=2)

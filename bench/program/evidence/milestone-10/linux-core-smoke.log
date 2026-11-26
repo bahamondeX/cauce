@@ -1,0 +1,16 @@
+Linux arm64 Core
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+Error: HTTP cache requires the web build feature
+time="2026-11-26T18:47:49-05:00" level=fatal msg="exit status 1"
+3.54.1
+fdbeba24b64a580b4a75cb5179254b5f407bc97327546f608203aa096a2d69ca  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/core/linux_arm64/cauce
+06e2dc44fc3a00f3d8070a9335671fb93ce7437e57d91086e38ff8052ac14e29  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/core/linux_arm64/cauce-collector
+Linux amd64 Core
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+Error: HTTP cache requires the web build feature
+time="2026-11-26T18:47:51-05:00" level=fatal msg="exit status 1"
+3.54.1
+db6939cf4f19a0f8bd147a93ea0f7087b3ca171f010ba2002903e05fce398370  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/core/linux_amd64/cauce
+e565fd14b3c63a6bc76f9bd58ce26a2f24275fea2f36143245964977c17e910d  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/core/linux_amd64/cauce-collector

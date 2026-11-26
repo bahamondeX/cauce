@@ -1,0 +1,14 @@
+test_bidi_trailers_multiplexing_and_cache (__main__.Interop.test_bidi_trailers_multiplexing_and_cache) ... ok
+test_cancellation_releases_stalled_origin (__main__.Interop.test_cancellation_releases_stalled_origin) ... ok
+test_decoded_qpack_section_budget (__main__.Interop.test_decoded_qpack_section_budget) ... ok
+test_encoded_qpack_section_budget (__main__.Interop.test_encoded_qpack_section_budget) ... ok
+test_graceful_quic_shutdown_drains_open_response (__main__.Interop.test_graceful_quic_shutdown_drains_open_response) ... ok
+test_nginx_shared_http3_get (__main__.Interop.test_nginx_shared_http3_get) ... ok
+test_quic_connection_survives_udp_port_rebinding (__main__.Interop.test_quic_connection_survives_udp_port_rebinding) ... ok
+test_reload_rejects_invalid_tls_then_rotates_new_handshakes (__main__.Interop.test_reload_rejects_invalid_tls_then_rotates_new_handshakes) ... ok
+test_tls_sni_direct_response_and_alt_svc (__main__.Interop.test_tls_sni_direct_response_and_alt_svc) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 3.362s
+
+OK

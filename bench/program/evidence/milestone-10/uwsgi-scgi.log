@@ -1,0 +1,9 @@
+test_native_scgi_wire (__main__.GatewayTests.test_native_scgi_wire) ... ok
+test_native_uwsgi_wire (__main__.GatewayTests.test_native_uwsgi_wire) ... ok
+test_scgi_reference (__main__.GatewayTests.test_scgi_reference) ... skipped 'build tests/application/Dockerfile and set CAUCE_WSGI_FIXTURE=1'
+test_uwsgi_reference (__main__.GatewayTests.test_uwsgi_reference) ... skipped 'build tests/application/Dockerfile and set CAUCE_WSGI_FIXTURE=1'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.623s
+
+OK (skipped=2)

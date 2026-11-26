@@ -1,0 +1,15 @@
+Linux ARM64 functional smoke in the existing guest
+aarch64
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+3.54.1
+021fb5d29a4f67a7c43849fb5402908232b9af0fe4b6915394acb3dd6834d81e  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/full/linux_arm64/cauce
+731e318cf99f0ceb87a20c47c9ca8bdb6eab122a2c0d3fc33f001b100295fccf  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/full/linux_arm64/cauce-collector
+Linux AMD64 functional smoke with existing QEMU binfmt and pinned Debian loader
+qemu-x86_64 version 7.0.0 (v7.0.0)
+Copyright (c) 2003-2022 Fabrice Bellard and the QEMU Project developers
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+3.54.1
+3d3d5b6dbeb0ec6dc1a12b7a2d2a80ccb382051cb5d3bfc6d7f37da99117ac3b  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/full/linux_amd64/cauce
+30cee8462b15deadbd5decd4ce059754bbcb09cd55b09d979b6bf9f4ba984c46  /Users/oscarbahamonde/Desktop/cauce/work/increment10/linux/full/linux_amd64/cauce-collector

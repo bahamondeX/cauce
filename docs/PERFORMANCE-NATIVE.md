@@ -320,3 +320,18 @@ exact artifact and scenario identities in the workload reports.
 
 [Staging script](../scripts/stage-native-release.sh)
 [Milestone 9 report](PERFORMANCE-MILESTONE-9.md).
+
+## Milestone 10 preparation
+
+The `6aa4c26` runtime matrix has four checksummed Linux executable pairs
+and separate Full and Core multi-architecture OCI layouts. The artifact
+ledger binds the Cargo lock, source tree, ELF files and image manifests.
+The exact Full and Core executables passed functional smoke on ARM64
+and under AMD64 user-mode emulation. The OCI layouts have digest
+verification. The Linux ARM64 loopback compression comparison is a local
+guest diagnostic. Competitive native benchmarks still require the
+existing pinned NGINX 1.30.8, HAProxy 3.4.8 and Pingora 0.9.1 workloads on
+matched ARM64 and AMD64 hardware under the established authorization policy.
+
+[Milestone 10 report](PERFORMANCE-MILESTONE-10.md)
+[Artifact identities](../bench/program/evidence/milestone-10/artifact-identities.json).

@@ -8,6 +8,7 @@ from contextlib import ExitStack, contextmanager
 import hashlib
 import http.client
 import json
+import os
 from pathlib import Path
 import re
 import socket
@@ -84,6 +85,7 @@ def available_ports(count):
 @contextmanager
 def launch(binary, args, port, folder):
     stderr = folder / "stderr.log"
+    began = time.monotonic()
     with stderr.open("wb") as log:
         process = subprocess.Popen([binary, *args], cwd=folder, stdout=log, stderr=log)
     lifecycle = {"started": False, "forced_kill": False}
@@ -93,6 +95,7 @@ def launch(binary, args, port, folder):
             try:
                 with socket.create_connection(("127.0.0.1", port), 0.1):
                     lifecycle["started"] = True
+                    lifecycle["ready_seconds"] = time.monotonic() - began
                     break
             except OSError:
                 time.sleep(0.025)
@@ -118,7 +121,21 @@ def resource_sample(process):
     fields = result.stdout.split()
     if len(fields) != 2:
         return None
-    return {"rss_kib": int(fields[0]), "cpu_time_ps": fields[1]}
+    resources = {"rss_kib": int(fields[0]), "cpu_time_ps": fields[1]}
+    if sys.platform.startswith("linux"):
+        proc = Path("/proc") / str(process.pid)
+        per_process = {"Rss:": "smaps_rss_kib", "Pss:": "pss_kib", "Private_Dirty:": "private_dirty_kib"}
+        try:
+            for line in (proc / "smaps_rollup").read_text().splitlines():
+                key, _, value = line.partition(" ")
+                if key in per_process:
+                    resources[per_process[key]] = int(value.split()[0])
+            stats = (proc / "stat").read_text().rpartition(")")[2].split()
+            ticks = int(stats[11]) + int(stats[12])
+            resources["cpu_seconds"] = ticks / os.sysconf("SC_CLK_TCK")
+        except OSError:
+            pass
+    return resources
 
 
 def observe(port, case):
@@ -244,9 +261,14 @@ def main():
     compare.add_argument("--work", type=local_output, default=ROOT / "work/compatibility")
     args = cli.parse_args()
     if args.command == "audit":
-        return subprocess.run([sys.executable, str(ROOT / "scripts/nginx-gap-audit.py"), "--check",
-                               "--tarball", args.tarball.resolve(), "--njs-tarball", args.njs_tarball.resolve(),
-                               "--acme-tarball", args.acme_tarball.resolve()], cwd=ROOT, check=False).returncode
+        archive_args = ["--tarball", args.tarball.resolve(), "--njs-tarball", args.njs_tarball.resolve(),
+                        "--acme-tarball", args.acme_tarball.resolve()]
+        for script in ("nginx-inventory.py", "nginx-gap-audit.py"):
+            status = subprocess.run([sys.executable, "-IB", ROOT / "scripts" / script, "--check", *archive_args],
+                                    cwd=ROOT, check=False).returncode
+            if status:
+                return status
+        return 0
     if args.command == "queue":
         tasks = queue(json.loads(line) for line in REGISTRY.read_text().splitlines())
         for item in sorted(tasks, key=lambda item: (item["priority"], item["module"], item["directive"])):

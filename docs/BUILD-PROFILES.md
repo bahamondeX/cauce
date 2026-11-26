@@ -40,8 +40,14 @@ Linux checkpoint reduced the executable by 26.8% on ARM64 and 26.0% on
 AMD64. The feature checks, process samples, Mach-O sections and binary
 identities are in the milestone evidence.
 
+The matched Milestone 10 runtime produced Core ELF reductions of 26.55%
+on Linux ARM64 and 25.75% on Linux AMD64. OCI compressed layer totals
+also fell for both platforms. All six profiles passed host checks, and
+both staged Linux Core executables explicitly rejected disk cache.
+
 [Profile smoke checks](../scripts/check-build-profiles.sh)
 [Checksummed Linux staging](../scripts/stage-native-release.sh)
 [Darwin cross-link staging](../scripts/stage-zig-linux.sh)
 [OCI layout staging](../scripts/stage-oci-layout.py)
-[Measured profile comparison](PERFORMANCE-MILESTONE-9.md#distribution-checks).
+[Milestone 9 profile comparison](PERFORMANCE-MILESTONE-9.md#distribution-checks)
+[Milestone 10 profile comparison](PERFORMANCE-MILESTONE-10.md#performance-scope).

@@ -61,6 +61,12 @@ unmapped registrations.
   response finished after its disk file was evicted. Real ENOSPC on a
   dedicated HFS+ test image preserved memory-cache reads and allowed disk
   writes to resume after space returned.
+- The local protocol rerun passed independent HTTP/3, gRPC health,
+  Stream and Stream TLS, synthetic application and mail, compression, and
+  Pebble renewal cases. Five optional cases requiring PHP-FPM, application
+  reference servers or Postfix/Dovecot containers were skipped in this
+  rerun. The pinned HTTP/3 client receives connection-level GOAWAY apart
+  from request data and trailers.
 
 [Pinned differential cases](../bench/program/evidence/milestone-10/differential-final.json)
 [SQLite security evidence](SQLITE-SECURITY.md)
@@ -68,12 +74,50 @@ unmapped registrations.
 
 ## Performance scope
 
-The compatibility harness records process RSS, cumulative CPU time and
-shutdown behavior around loopback fixtures. These observations describe the
-test processes. The original Milestone 9 binary-size result remains scoped
-to its matched source and toolchain. Native throughput, CPU per success,
-tail latency and multicore qualification require matched runs on native
-Linux equipment. No AWS infrastructure was provisioned.
+The tested runtime is `6aa4c261939ffcb04b8b17e101fd5aedac4dae9e`. The
+Full and Core Linux ELFs are paired by architecture and use Rust 1.89.0,
+Zig 0.15.2 and glibc 2.36. All six profiles also passed host configuration
+checks. Functional smoke tests used the existing Linux ARM64 guest and
+QEMU user-mode AMD64. All four collectors reported SQLite 3.54.1.
+
+| Architecture | Full gateway bytes | Core gateway bytes | Core ELF reduction | Full OCI layer bytes | Core OCI layer bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Linux ARM64 | 13,902,256 | 10,211,688 | 26.55% | 37,359,812 | 35,680,558 |
+| Linux AMD64 | 15,817,184 | 11,745,024 | 25.75% | 38,010,426 | 36,278,246 |
+
+OCI values sum compressed layers for one platform, including the Debian
+base and both executables. The layouts passed index, manifest, config,
+layer, and embedded binary digest verification. Linux smoke tests ran the
+staged executables directly. The OCI layouts have package-integrity evidence
+and await container runtime checks.
+
+A single-client HTTP/1 diagnostic in the Linux ARM64 guest made three
+rounds of 2,048 validated requests to each profile/configuration after
+64 warm-up requests per run. The payload was a repeating 4 KiB body.
+The ARM64 figures describe this loopback fixture and virtual machine.
+
+| Case | Wire body bytes | Startup RSS / PSS / private dirty, median KiB | Range of p50 across runs, µs | Range of p99 across runs, µs |
+| --- | ---: | ---: | ---: | ---: |
+| Full, gzip disabled | 4,096 | 7,868 / 6,493 / 876 | 45–78 | 84–100 |
+| Full, gzip enabled | 45 | 7,872 / 6,497 / 880 | 88–126 | 149–152 |
+| Core, compression excluded | 4,096 | 7,000 / 5,625 / 756 | 46–83 | 92–97 |
+
+The gzip-disabled Full and Core timing ranges overlap. Readiness samples
+use 25 ms polling. Raw startup, CPU and shutdown samples are preserved.
+The Darwin fixture verified the same responses with nested routing and
+literal header additions toggled. Across three rounds of 1,024 requests
+per case its individual p50 values ranged from 44–60 μs with the features
+disabled, 44–60 μs with nested routing and 61–62 μs with response additions.
+The diagnostics leave the allocation and physical-footprint comparisons
+open. Native CPU per successful request, workload tail latency,
+sustainable goodput and multicore qualification still require matched
+Linux hardware. No AWS infrastructure was provisioned.
+
+[Artifact identities](../bench/program/evidence/milestone-10/artifact-identities.json)
+[OCI manifests](../bench/program/evidence/milestone-10/oci-identities.json)
+[ARM64 diagnostic samples](../bench/program/evidence/milestone-10/overhead-linux-arm64.jsonl)
+[Darwin diagnostic samples](../bench/program/evidence/milestone-10/overhead-darwin-final.jsonl)
+[Evidence SHA-256 manifest](../bench/program/evidence/milestone-10/SHA256SUMS).
 
 [Native preparation](PERFORMANCE-NATIVE.md)
 [Remaining compatibility and release gates](CAUCE-1.0-GAP-ANALYSIS.md).

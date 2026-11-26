@@ -1,0 +1,13 @@
+test_application_response_uses_shared_http_cache (__main__.FastCGITests.test_application_response_uses_shared_http_cache) ... ok
+test_bad_and_truncated_response_cannot_reenter_pool (__main__.FastCGITests.test_bad_and_truncated_response_cannot_reenter_pool) ... ok
+test_bounded_chunked_request_and_opt_out (__main__.FastCGITests.test_bounded_chunked_request_and_opt_out) ... ok
+test_cancellation_closes_application_connection (__main__.FastCGITests.test_cancellation_closes_application_connection) ... ok
+test_php_fpm_and_optional_nginx (__main__.FastCGITests.test_php_fpm_and_optional_nginx) ... skipped 'set CAUCE_PHP_FIXTURE=1 to run pinned PHP-FPM'
+test_reload_rejects_path_escape (__main__.FastCGITests.test_reload_rejects_path_escape) ... ok
+test_unix_reuse_environment_and_request_header_injection (__main__.FastCGITests.test_unix_reuse_environment_and_request_header_injection) ... ok
+test_unknown_length_fails_before_app_connect (__main__.FastCGITests.test_unknown_length_fails_before_app_connect) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.857s
+
+OK (skipped=1)

@@ -1,0 +1,100 @@
+{
+  "source_commit": "6aa4c261939ffcb04b8b17e101fd5aedac4dae9e",
+  "source_tree": "fac0e15f0dcb64165a41acb000a3d74e51ce7149",
+  "cargo_lock_sha256": "6d35b2121668f7b1287216ed5a45a487a7cc47bd04a053c0fd880b38185c12ae",
+  "pinned_archives_sha256": {
+    "nginx-1.30.8.tar.gz": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+    "njs-1.0.2.tar.gz": "93043e263131feadfd664356b989d86aa009a0e453e33c246ee08e39d96ca45c",
+    "nginx-acme-0.4.2.tar.gz": "c8b1d5abe878e8233a4cdc710614d8114fd94bc7ebf1f4ece720180f794ff836"
+  },
+  "sbom_sha256": "6093e5d0ed8def66ab6949d677b345d736b3bc9034115da6ac70c2c72a25cbd8",
+  "darwin_arm64": {
+    "bytes": 13509776,
+    "sha256": "b20105c39524598cb6de0dd25622aef31cfdc6b33b89311824f1a351f6458c54",
+    "host": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+    "path": "work/increment10/release-host/target/release/cauce"
+  },
+  "linux": [
+    {
+      "profile": "full",
+      "architecture": "arm64",
+      "executables": {
+        "cauce": {
+          "bytes": 13902256,
+          "sha256": "021fb5d29a4f67a7c43849fb5402908232b9af0fe4b6915394acb3dd6834d81e",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 2.0.0, stripped"
+        },
+        "cauce-collector": {
+          "bytes": 5796912,
+          "sha256": "731e318cf99f0ceb87a20c47c9ca8bdb6eab122a2c0d3fc33f001b100295fccf",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 2.0.0, stripped"
+        }
+      },
+      "elf_directory": "work/increment10/linux/full/linux_arm64",
+      "oci_directory": "work/increment10/oci/full",
+      "oci_compressed_layer_bytes": 37359812,
+      "oci_manifest_digest": "sha256:010b1058a4606ac1cbd7ad6b8e7ed569e73ad9cc6dea60f766b634a732982452"
+    },
+    {
+      "profile": "full",
+      "architecture": "amd64",
+      "executables": {
+        "cauce": {
+          "bytes": 15817184,
+          "sha256": "3d3d5b6dbeb0ec6dc1a12b7a2d2a80ccb382051cb5d3bfc6d7f37da99117ac3b",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.0.0, stripped"
+        },
+        "cauce-collector": {
+          "bytes": 6402360,
+          "sha256": "30cee8462b15deadbd5decd4ce059754bbcb09cd55b09d979b6bf9f4ba984c46",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.0.0, stripped"
+        }
+      },
+      "elf_directory": "work/increment10/linux/full/linux_amd64",
+      "oci_directory": "work/increment10/oci/full",
+      "oci_compressed_layer_bytes": 38010426,
+      "oci_manifest_digest": "sha256:1d8601ee29edc6f4f0efa426fc411c7478ef8b96930bf69806b7ecd5cc524978"
+    },
+    {
+      "profile": "core",
+      "architecture": "arm64",
+      "executables": {
+        "cauce": {
+          "bytes": 10211688,
+          "sha256": "fdbeba24b64a580b4a75cb5179254b5f407bc97327546f608203aa096a2d69ca",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 2.0.0, stripped"
+        },
+        "cauce-collector": {
+          "bytes": 5796912,
+          "sha256": "06e2dc44fc3a00f3d8070a9335671fb93ce7437e57d91086e38ff8052ac14e29",
+          "format": "ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, for GNU/Linux 2.0.0, stripped"
+        }
+      },
+      "elf_directory": "work/increment10/linux/core/linux_arm64",
+      "oci_directory": "work/increment10/oci/core",
+      "oci_compressed_layer_bytes": 35680558,
+      "oci_manifest_digest": "sha256:449af595256926cf1ba90cbdec0fcb7ed5863ec01ed585c45ee7a7e2d36ec32f"
+    },
+    {
+      "profile": "core",
+      "architecture": "amd64",
+      "executables": {
+        "cauce": {
+          "bytes": 11745024,
+          "sha256": "db6939cf4f19a0f8bd147a93ea0f7087b3ca171f010ba2002903e05fce398370",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.0.0, stripped"
+        },
+        "cauce-collector": {
+          "bytes": 6402360,
+          "sha256": "e565fd14b3c63a6bc76f9bd58ce26a2f24275fea2f36143245964977c17e910d",
+          "format": "ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 2.0.0, stripped"
+        }
+      },
+      "elf_directory": "work/increment10/linux/core/linux_amd64",
+      "oci_directory": "work/increment10/oci/core",
+      "oci_compressed_layer_bytes": 36278246,
+      "oci_manifest_digest": "sha256:b85d3a55ab000e3c12e0de3bc81abb582db589a1e252528667a87caa5dd96051"
+    }
+  ],
+  "qualification": "Local functional and package-integrity evidence. Native competitive qualification pending."
+}

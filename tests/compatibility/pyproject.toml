@@ -3,3 +3,8 @@ name = "cauce-compatibility-fixtures"
 version = "0.1.0"
 requires-python = ">=3.11,<3.15"
 dependencies = ["PyYAML==6.0.3", "jsonschema==4.26.0"]
+
+[project.optional-dependencies]
+content = ["Brotli==1.2.1"]
+grpc = ["grpcio==1.85.3", "grpcio-health-checking==1.85.3"]
+quic = ["aioquic==1.9.2"]

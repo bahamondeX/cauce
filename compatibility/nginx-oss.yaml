@@ -9,9 +9,12 @@ reference:
   separately_versioned_add_ons: ["nginx-acme", "njs"]
 status_values:
   unsupported: No mapped Cauce equivalent.
+  mapped_unimplemented: The Cauce implementation gap has been identified.
   partial: Cauce covers a documented subset or uses different semantics.
   implemented: Cauce implements the stated behavior without current verification.
   verified: Cauce implements the stated standalone behavior with test evidence.
+  verified_equivalent: Full registration equivalence established by the backlog evidence checks.
+  platform_or_build_scope: The counterpart is a build or platform capability.
 defaults:
   module_status: unsupported
   directive_status: unsupported
@@ -248,12 +251,12 @@ modules:
         directives:
           - {"name": "google_perftools_profiles", "flags": ["NGX_MAIN_CONF", "NGX_DIRECT_CONF", "NGX_CONF_TAKE1"]}
   ngx_http_access_module:
-    coverage: {"status": "partial", "notes": "Final-route IPv4/IPv6 allowlist with implicit denial. Ordered allow/deny rules and inheritance differ."}
+    coverage: {"status": "partial", "notes": "Final-route IPv4/IPv6 allowlist with implicit denial and nearest route inheritance. Ordered allow/deny, Unix peers and method-scoped access contexts remain gaps."}
     definitions:
       - source: src/http/modules/ngx_http_access_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "allow", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LMT_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Route-local CIDR allowlist with resolved client address."}
+          - {"name": "allow", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LMT_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Inherited route CIDR allowlist with resolved client address matches the address-rule subset followed by deny all."}
           - {"name": "deny", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LMT_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Implicit denial outside a configured allowlist. Ordered deny rules differ."}
   ngx_http_addition_filter_module:
     definitions:
@@ -359,7 +362,7 @@ modules:
           - {"name": "keepalive_time", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "keepalive_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE12"]}
           - {"name": "large_client_header_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE2"]}
-          - {"name": "limit_except", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_1MORE"]}
+          - {"name": "limit_except", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_1MORE"], "status": "mapped_unimplemented", "notes": "No method-specific context for swapping in a different set of location policies. Existing method gates in individual handlers do not provide this behavior."}
           - {"name": "limit_rate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "limit_rate_after", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "lingering_close", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
@@ -389,7 +392,7 @@ modules:
           - {"name": "resolver", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Optional shared Hickory recursive resolver with TTL, negative cache and address retirements. Configuration is process-wide."}
           - {"name": "resolver_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Shared configurable query deadline including refresh and concurrency admission."}
           - {"name": "root", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Route-local absolute document root with descriptor confinement and conservative symlink handling."}
-          - {"name": "satisfy", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "satisfy", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "mapped_unimplemented", "notes": "Route address admission is mandatory when configured. There is no way to combine independently configured authentication and address handlers with NGINX any or all semantics."}
           - {"name": "send_lowat", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "send_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "sendfile", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_FLAG"]}

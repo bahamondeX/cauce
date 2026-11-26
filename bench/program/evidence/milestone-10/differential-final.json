@@ -126,35 +126,37 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.004876832997979363,
+          "ready_seconds": 0.0320421249998617,
+          "shutdown_seconds": 0.003835833998891758,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.002053750002232846,
+          "ready_seconds": 0.034766042001137976,
+          "shutdown_seconds": 0.0013225420007074717,
           "started": true
         }
       },
       "module": "ngx_http_access_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.03",
-          "rss_kib": 15248
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 15120
         },
         "nginx": {
           "cpu_time_ps": "0:00.01",
-          "rss_kib": 5664
+          "rss_kib": 5552
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.03",
-          "rss_kib": 13904
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 13824
         },
         "nginx": {
           "cpu_time_ps": "0:00.01",
-          "rss_kib": 5632
+          "rss_kib": 5456
         }
       }
     },
@@ -613,35 +615,37 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.004172458000539336,
+          "ready_seconds": 0.03243258400107152,
+          "shutdown_seconds": 0.0013335420007933863,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.004661041002691491,
+          "ready_seconds": 0.03196887499871082,
+          "shutdown_seconds": 0.0038292079989332706,
           "started": true
         }
       },
       "module": "ngx_http_core_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.03",
-          "rss_kib": 17072
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 16736
         },
         "nginx": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 5952
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5728
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 15728
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 15472
         },
         "nginx": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 5792
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5600
         }
       }
     },
@@ -860,35 +864,37 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0016473750001750886,
+          "ready_seconds": 0.029507792001822963,
+          "shutdown_seconds": 0.0012890420002804603,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0021879589985474013,
+          "ready_seconds": 0.031816875001823064,
+          "shutdown_seconds": 0.001268542000616435,
           "started": true
         }
       },
       "module": "ngx_http_headers_filter_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 15136
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 14976
         },
         "nginx": {
           "cpu_time_ps": "0:00.01",
-          "rss_kib": 5696
+          "rss_kib": 5424
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 13808
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 13616
         },
         "nginx": {
           "cpu_time_ps": "0:00.01",
-          "rss_kib": 5680
+          "rss_kib": 5392
         }
       }
     },
@@ -1047,35 +1053,37 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.002217291999841109,
+          "ready_seconds": 0.03236204200220527,
+          "shutdown_seconds": 0.0012798749994544778,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.00510750000103144,
+          "ready_seconds": 0.03160541699980968,
+          "shutdown_seconds": 0.0012664999994740356,
           "started": true
         }
       },
       "module": "ngx_http_proxy_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.04",
-          "rss_kib": 19392
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 19200
         },
         "nginx": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 7120
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 7296
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 15472
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 15344
         },
         "nginx": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 5184
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 6096
         }
       }
     }
