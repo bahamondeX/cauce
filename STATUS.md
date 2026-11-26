@@ -185,3 +185,19 @@ Native capacity, profiling and comparative work carried into Milestone 3.
   upstream client certificates and configurable versions and resumption.
   [Health YAML](examples/http2-health.yaml)
   [Mutual TLS YAML](examples/gateway-mtls.yaml).
+
+## Milestone 6 checkpoint
+
+- Typed routes serve static content and direct responses alongside the
+  reverse proxy. Static delivery confines file opens to a document directory
+  and supports conditional GET, HEAD and bounded byte ranges.
+  [Static file guide](docs/STATIC-FILES.md).
+- Public proxy routes can enable a bounded memory cache with per-key
+  request collapse, revalidation and stale policies. Gzip, Brotli and
+  precompressed static files are opt-in. [Cache guide](docs/HTTP-CACHE.md)
+  [Compression guide](docs/COMPRESSION.md).
+- STS confirmed the authorized account and verification found the prior
+  benchmark instance, volumes and interfaces absent. The remaining lab
+  security group, role and profile were removed and verified absent.
+  Billing attribution still blocks additional AWS provisioning.
+  [Milestone 6 evidence](docs/PERFORMANCE-MILESTONE-6.md).

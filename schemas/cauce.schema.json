@@ -710,8 +710,10 @@
     },
     "cidrs": {"type":"array","minItems":1,"maxItems":256,"uniqueItems":true,"items":{"type":"string","minLength":3,"maxLength":49}},
     "localPath": {
-      "type": "string",
-      "pattern": "^/"
+      "anyOf": [
+        {"type": "string", "pattern": "^/"},
+        {"$ref": "#/$defs/environment"}
+      ]
     },
     "contentHandler": {
       "oneOf": [

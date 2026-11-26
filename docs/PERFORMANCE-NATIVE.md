@@ -248,3 +248,20 @@ rejections. The observed 41.663 ms gap between adjacent completions
 remains unattributed. Native throughput and scaling for the new gateway
 still require qualification.
 [Milestone 5 results](PERFORMANCE-MILESTONE-5.md).
+
+## Milestone 6 lifecycle reconciliation
+
+STS verified the authorized account ending in 6271. EC2 returned no
+reservation for the prior AMD64 instance and no campaign-tagged volumes
+or interfaces. The campaign's security group, role and instance profile
+were removed and independently verified absent. The cost allocation
+tags were inactive. Resource-level Cost Explorer data was unavailable
+because the payer account had not enabled it. The tag-filtered zero
+estimate cannot reconcile actual charges or the remaining campaign
+budget. No resources were provisioned.
+[Reconciliation evidence](../bench/program/evidence/milestone-6/aws-reconciliation.json).
+
+Static, range and cache fixtures use the native Rust load generator.
+The local diagnostic runs and their limits are recorded separately
+from qualified native evidence.
+[Milestone 6 evidence](PERFORMANCE-MILESTONE-6.md).

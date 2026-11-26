@@ -7,6 +7,7 @@ import http.server
 import json
 from pathlib import Path
 import signal
+import socket
 import subprocess
 import tempfile
 import threading
@@ -81,6 +82,8 @@ class Origin(http.server.BaseHTTPRequestHandler):
                 self.server.entered.set()
                 self.server.release.wait(timeout=3)
                 body = b"updated"
+        if path.startswith("/weighted/"):
+            body = b"x" * 4096
         if path == "/broken":
             self.close_connection = True
             self.reply(200, b"incomplete", Cache_Control=rules, Content_Length="2048", Connection="close")
@@ -219,6 +222,27 @@ class CacheTests(unittest.TestCase):
             self.get(f"/eviction?row={i}")
         self.assertEqual(self.get("/eviction?row=0", {"Cache-Control":"only-if-cached"})[0], 504)
         self.hit(self.get("/eviction?row=3"))
+
+    def test_byte_quota_evicts_below_entry_count_limit(self):
+        self.data["routes"][0]["cache"].update(max_size="16KiB", max_entry_size="4KiB", max_entries=64, max_fills=2)
+        self.write()
+        self.proxy.send_signal(signal.SIGHUP)
+        wait(self.log, '"reloaded"', self.proxy)
+        for number in range(4):
+            self.assertEqual(len(self.get(f"/weighted/{number}")[2]), 4096)
+        self.assertEqual(self.get("/weighted/0", {"Cache-Control":"only-if-cached"})[0], 504)
+        self.hit(self.get("/weighted/3"))
+
+    def test_cancelled_leader_releases_fill_ownership(self):
+        with ThreadPoolExecutor(max_workers=1) as worker:
+            with socket.create_connection(("127.0.0.1", self.listen), timeout=3) as leader:
+                leader.sendall(b"GET /cancel HTTP/1.1\r\nHost: a.example.test\r\n\r\n")
+                self.assertTrue(self.origin.entered.wait(timeout=2))
+                waiter = worker.submit(self.get, "/cancel")
+            self.origin.release.set()
+            self.assertEqual(waiter.result(timeout=3)[2], b"response 1")
+        self.hit(self.get("/cancel"))
+        self.assertLessEqual(self.origin.calls["/cancel"], 2)
 
     def test_invalidation_prevents_stale_inflight_publication(self):
         with ThreadPoolExecutor(max_workers=1) as worker:

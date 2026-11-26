@@ -61,3 +61,11 @@ silently inherit a prior campaign's expanded corpus.
 Dependency notices for this separate test crate are in `third-party/manifest.json`.
 The bundled C++ libFuzzer sources also carry the LLVM exception license; its
 original text is preserved alongside the Rust wrapper notices.
+
+## Content policy observer
+
+The `content_policy` target shares the production range parser, static path
+decoder and cache selector encoding. It checks bounds, disjoint ranges,
+legal filename components and unambiguous bounded field encoding. The
+same pinned toolchain and AddressSanitizer can run it with
+`cargo +nightly-2025-10-01 fuzz run -s address content_policy -- -runs=100000`.

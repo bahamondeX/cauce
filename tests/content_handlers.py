@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import socket
 import subprocess
 import tempfile
 import time
@@ -148,6 +149,25 @@ class ContentTests(unittest.TestCase):
         self.assertNotIn("content-encoding", headers)
         self.assertNotIn("content-encoding", self.query("/large.txt", headers={"Cookie":"session=secret","Accept-Encoding":"gzip"})[1])
         self.assertEqual(self.query("/large.txt", headers={"Accept-Encoding": "*;q=0"})[0], 406)
+
+    def test_slow_reader_holds_one_descriptor_and_recovers_on_disconnect(self):
+        self.data["routes"][1]["content"]["max_open"] = 1
+        with (self.public / "held.txt").open("wb") as file:
+            file.truncate(32 * 1024 * 1024)
+        self.write()
+        self.process.send_signal(signal.SIGHUP)
+        wait(self.log, '"reloaded"', self.process)
+        with socket.socket() as peer:
+            peer.settimeout(3)
+            peer.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4096)
+            peer.connect(("127.0.0.1", self.listen))
+            peer.sendall(b"GET /files/held.txt HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            self.assertIn(b"200 OK", peer.recv(4096))
+            self.assertEqual(self.query("/files/sample.txt")[0], 503)
+        until = time.monotonic() + 4
+        while self.query("/files/sample.txt")[0] != 200:
+            self.assertLess(time.monotonic(), until)
+            time.sleep(.025)
 
     def test_access_alias_listing_and_rollback(self):
         self.assertEqual(self.query("/files/sample.txt")[2], b"0123456789")

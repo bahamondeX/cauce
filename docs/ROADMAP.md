@@ -137,3 +137,11 @@ request-transmission and replay-safety gates.
 Native capacity and feature-overhead qualification resumes after AWS
 identity, previous resources and charges are verified.
 [Performance and lifecycle](PERFORMANCE-MILESTONE-5.md).
+
+## Milestone 6
+
+Static delivery, direct responses, bounded memory caching and streaming
+gzip and Brotli use the compiled route pipeline. The remaining extensions
+include disk durability and quotas, background cache revalidation,
+authoritative DNS, upstream resilience and ACME.
+[Content validation and limits](PERFORMANCE-MILESTONE-6.md).

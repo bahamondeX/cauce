@@ -278,11 +278,12 @@ modules:
           - {"name": "auth_request", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "auth_request_set", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
   ngx_http_autoindex_module:
+    coverage: {"status": "partial", "notes": "Bounded opt-in HTML directory listings. Formats and rendering differ."}
     definitions:
       - source: src/http/modules/ngx_http_autoindex_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "autoindex", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "autoindex", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Bounded opt-in HTML listing with conservative hidden-file and symlink policy."}
           - {"name": "autoindex_exact_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "autoindex_format", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "autoindex_localtime", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
@@ -325,7 +326,7 @@ modules:
           - {"name": "absolute_redirect", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "aio", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "aio_write", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "alias", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "alias", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Route-local literal prefix replacement with a confined absolute directory."}
           - {"name": "auth_delay", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "chunked_transfer_encoding", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "client_body_buffer_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
@@ -344,11 +345,11 @@ modules:
           - {"name": "early_hints", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "error_log", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "error_page", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_2MORE"]}
-          - {"name": "etag", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "etag", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Weak metadata ETags with conditional request support. NGINX strong validator format differs."}
           - {"name": "gzip_disable", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "gzip_http_version", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "gzip_proxied", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "gzip_vary", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "gzip_vary", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Vary: Accept-Encoding added on eligible representations."}
           - {"name": "if_modified_since", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ignore_invalid_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "internal", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_NOARGS"]}
@@ -387,7 +388,7 @@ modules:
           - {"name": "reset_timedout_connection", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "resolver", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "resolver_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "root", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "root", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Route-local absolute document root with descriptor confinement and conservative symlink handling."}
           - {"name": "satisfy", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "send_lowat", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "send_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
@@ -549,31 +550,34 @@ modules:
           - {"name": "gunzip", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "gunzip_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
   ngx_http_gzip_filter_module:
+    coverage: {"status": "partial", "notes": "Route-local negotiated streaming gzip; Cauce also supports Brotli."}
     definitions:
       - source: src/http/modules/ngx_http_gzip_filter_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "gzip", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "gzip", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Opt-in streaming gzip with separately configured preference and safety policy."}
           - {"name": "gzip_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
-          - {"name": "gzip_comp_level", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "gzip_comp_level", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Configurable gzip level. Codec and buffering differ."}
           - {"name": "gzip_hash", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "gzip_min_length", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "gzip_min_length", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Minimum required size and configurable unknown-length handling."}
           - {"name": "gzip_no_buffer", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "gzip_types", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "gzip_types", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Exact or type wildcard MIME policy."}
           - {"name": "gzip_window", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "postpone_gzipping", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
   ngx_http_gzip_static_module:
+    coverage: {"status": "partial", "notes": "Opt-in precompressed sibling selection. Cauce also supports .br."}
     definitions:
       - source: src/http/modules/ngx_http_gzip_static_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "gzip_static", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "gzip_static", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Fresh .gz variants with negotiation and confined lookup. Always mode differs."}
   ngx_http_header_filter_module:
     definitions:
       - source: src/http/ngx_http_header_filter_module.c
         type: NGX_HTTP_MODULE
         directives: []
   ngx_http_headers_filter_module:
+    coverage: {"status": "partial", "notes": "Static response Cache-Control and Expires plus existing header policy."}
     definitions:
       - source: src/http/modules/ngx_http_headers_filter_module.c
         type: NGX_HTTP_MODULE
@@ -582,7 +586,7 @@ modules:
           - {"name": "add_header_inherit", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "add_trailer", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE23"]}
           - {"name": "add_trailer_inherit", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "expires", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE12"]}
+          - {"name": "expires", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Static route expires_seconds generates a relative expiry. NGINX modifications and status rules differ."}
   ngx_http_image_filter_module:
     definitions:
       - source: src/http/modules/ngx_http_image_filter_module.c
@@ -596,11 +600,12 @@ modules:
           - {"name": "image_filter_transparency", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "image_filter_webp_quality", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
   ngx_http_index_module:
+    coverage: {"status": "partial", "notes": "Bounded literal index names within the selected directory."}
     definitions:
       - source: src/http/modules/ngx_http_index_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "index", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "index", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Literal filenames. Variables and location re-selection differ."}
   ngx_http_limit_conn_module:
     coverage: {"status": "partial", "notes": "Concurrent requests or streams per configured admission key and a separate physical peer socket cap."}
     definitions:
@@ -679,6 +684,7 @@ modules:
           - {"name": "mp4_max_buffer_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "mp4_start_key_frame", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
   ngx_http_not_modified_filter_module:
+    coverage: {"status": "partial", "notes": "Static and cached GET and HEAD evaluate conditional requests using selected metadata."}
     definitions:
       - source: src/http/modules/ngx_http_not_modified_filter_module.c
         type: NGX_HTTP_MODULE
@@ -708,21 +714,21 @@ modules:
           - {"name": "proxy_buffering", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Streams responses with bounded protocol buffers. Configurable buffering and disk spooling are unavailable."}
           - {"name": "proxy_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
           - {"name": "proxy_busy_buffers_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Bounded shared memory cache for explicitly public origin representations."}
           - {"name": "proxy_cache_background_update", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_cache_bypass", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "proxy_cache_bypass", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Explicit bypass header and conservative request privacy policy."}
           - {"name": "proxy_cache_convert_head", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_cache_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_cache_lock", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_cache_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Fixed scheme, authority, effective URI and configured representation selectors."}
+          - {"name": "proxy_cache_lock", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Bounded client-deadline single flight with complete-body publication."}
           - {"name": "proxy_cache_lock_age", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_cache_lock_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_cache_max_range_offset", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_cache_methods", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "proxy_cache_min_uses", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_cache_path", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_CONF_2MORE"]}
-          - {"name": "proxy_cache_revalidate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_cache_use_stale", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "proxy_cache_valid", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "proxy_cache_revalidate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Conditional cache revalidation with restricted 304 metadata."}
+          - {"name": "proxy_cache_use_stale", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Configured stale-on-error and stale followers while a leader revalidates."}
+          - {"name": "proxy_cache_valid", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Configurable cacheable status codes and a route freshness cap."}
           - {"name": "proxy_connect_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Global timeout applied to DNS and socket connect phases separately."}
           - {"name": "proxy_cookie_domain", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE12"]}
           - {"name": "proxy_cookie_flags", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1234"]}
@@ -785,11 +791,13 @@ modules:
         directives:
           - {"name": "random_index", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
   ngx_http_range_body_filter_module:
+    coverage: {"status": "partial", "notes": "Bounded single and multipart range streaming from validated descriptors."}
     definitions:
       - source: src/http/modules/ngx_http_range_filter_module.c
         type: NGX_HTTP_MODULE
         directives: []
   ngx_http_range_header_filter_module:
+    coverage: {"status": "partial", "notes": "Bounded single, suffix and multipart byte-range parsing with date If-Range."}
     definitions:
       - source: src/http/modules/ngx_http_range_filter_module.c
         type: NGX_HTTP_MODULE
@@ -943,6 +951,7 @@ modules:
           - {"name": "ssl_verify_client", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Require a client certificate on the TLS listener when a client CA bundle is configured."}
           - {"name": "ssl_verify_depth", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_http_static_module:
+    coverage: {"status": "partial", "notes": "Descriptor-confined GET and HEAD, MIME metadata, weak ETags and bounded streaming."}
     definitions:
       - source: src/http/modules/ngx_http_static_module.c
         type: NGX_HTTP_MODULE
@@ -964,11 +973,12 @@ modules:
           - {"name": "sub_filter_once", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "sub_filter_types", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
   ngx_http_try_files_module:
+    coverage: {"status": "partial", "notes": "Bounded static $uri, $uri/ and relative candidates."}
     definitions:
       - source: src/http/modules/ngx_http_try_files_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "try_files", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_2MORE"]}
+          - {"name": "try_files", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_2MORE"], "status": "partial", "notes": "Shared literal candidates and =404 subset. Other statuses, scripts and cross-route fallback differ."}
   ngx_http_upstream_hash_module:
     definitions:
       - source: src/http/modules/ngx_http_upstream_hash_module.c
@@ -1675,18 +1685,19 @@ behaviors:
   - {"id": "quic", "status": "unsupported"}
   - {"id": "mtls", "status": "partial", "scope": "Listener-wide downstream client authentication and upstream client certificates; optional authentication and per-SNI trust policies differ", "tests": ["tests/tls_gateway.py"]}
   - {"id": "acme", "status": "unsupported"}
-  - {"id": "static-files", "status": "unsupported"}
-  - {"id": "http-cache", "status": "unsupported"}
+  - {"id": "static-files", "status": "verified", "scope": "Shared root, alias, index, literal try_files, GET, HEAD, conditional metadata and single, suffix, multipart and date If-Range responses. Filesystem policy and weak ETag representation differ.", "tests": ["tests/compare_nginx_content.py", "tests/content_handlers.py"], "evidence": ["bench/program/evidence/milestone-6/nginx-content.jsonl"]}
+  - {"id": "http-cache", "status": "partial", "scope": "Conservative bounded shared memory cache, conditional revalidation, stale windows and single-flight. Disk storage and complete NGINX proxy_cache semantics unavailable.", "tests": ["tests/http_cache.py"]}
   - {"id": "tcp-proxy", "status": "unsupported"}
   - {"id": "udp-proxy", "status": "unsupported"}
   - {"id": "fastcgi", "status": "unsupported"}
   - {"id": "uwsgi", "status": "unsupported"}
   - {"id": "scgi", "status": "unsupported"}
   - {"id": "mail-proxy", "status": "unsupported"}
-  - {"id": "content-compression", "status": "unsupported"}
+  - {"id": "content-compression", "status": "partial", "scope": "Negotiated streaming gzip and Brotli, static precompressed siblings and range bypass.", "tests": ["tests/compare_nginx_content.py", "tests/content_handlers.py"], "evidence": ["bench/program/evidence/milestone-6/nginx-content.jsonl"]}
   - {"id": "authentication", "status": "unsupported"}
   - {"id": "authorization", "status": "partial", "scope": "Client-IP allowlists on final routes."}
   - {"id": "rate-limiting", "status": "partial", "scope": "Shared bounded zones with rate, burst, bounded delay and concurrency policies."}
   - {"id": "rewriting", "status": "partial", "scope": "Bounded route actions with numbered captures and internal jumps. Nested and PCRE-only semantics remain open."}
   - {"id": "filters", "status": "unsupported"}
   - {"id": "programmable-extensions", "status": "unsupported"}
+  - {"id": "gzip-static-socket-equivalence", "status": "verified", "scope": "Decoded output and negotiated headers match pinned NGINX on the shared static gzip workload.", "tests": ["tests/compare_nginx_content.py"], "evidence": ["bench/program/evidence/milestone-6/nginx-content.jsonl"]}

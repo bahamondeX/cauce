@@ -121,3 +121,21 @@ NGINX OSS capability. Per-SNI trust, optional client authentication,
 DNS-based endpoint retirement, retry budgets and ACME remain open.
 [TLS configuration](CONFIGURATION.md#tls-certificates-and-mutual-authentication)
 [Active health configuration](CONFIGURATION.md#active-upstream-health).
+
+## Milestone 6 content delivery
+
+The pinned NGINX 1.30.8 socket fixture verifies shared static GET, HEAD,
+root, alias, index, literal try_files and direct-response behaviors.
+Conditional requests and bounded single, suffix, multipart and date
+If-Range responses also match in the tested subset. Gzip comparisons
+check decoded content and negotiated headers. Cauce uses weak static
+validators and a different directory-listing format. Brotli is available
+through Cauce's own configuration.
+[Socket fixture](../tests/compare_nginx_content.py)
+[Raw outcomes](../bench/program/evidence/milestone-6/nginx-content.jsonl).
+
+Memory proxy caching remains partial relative to proxy_cache. Its
+verified local behavior includes public-response caching, bounded
+collapse, freshness, revalidation, stale serving and invalidation.
+NGINX disk storage and the Cauce memory policy have distinct resource
+and lifecycle contracts. [Machine-readable coverage](../bench/program/evidence/milestone-6/compatibility.json).

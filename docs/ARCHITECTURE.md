@@ -257,3 +257,16 @@ planificador limitado por generación. El modo gRPC verifica el mensaje
 y el estado de cierre dentro del plazo de la comprobación. No se
 inicia un planificador sin comprobaciones configuradas.
 [Configuración de salud](CONFIGURATION.md#active-upstream-health).
+
+## Contenido estático, caché y codificación
+
+La ruta compilada selecciona contenido local o el proxy. Los controles
+de acceso y admisión preceden al contenido. Los descriptores de directorio
+confinan la entrega estática y la lectura conserva el permiso hasta
+terminar, incluso si se cancela la solicitud.
+
+Cada generación posee las cachés de sus rutas. La política HTTP evalúa
+privacidad, frescura y variantes. El almacén publica únicamente cuerpos
+completos y comparte su contenido entre respuestas. La codificación
+se aplica después de seleccionar la representación.
+[ADR 0013](adr/0013-content-and-cache.md).
