@@ -91,8 +91,8 @@ in-flight HTTP/2 stream and physical per-peer socket admission.
 | Inventory scope | Verified | Implemented | Partial | Unsupported or unmapped |
 | --- | ---: | ---: | ---: | ---: |
 | NGINX OSS module definitions | 0 | 0 | 13 | 107 |
-| Directive registrations | 0 | 0 | 43 | 711 |
-| Recorded observable behaviors | 10 | 0 | 11 | 16 |
+| Directive registrations | 0 | 0 | 51 | 703 |
+| Recorded observable behaviors | 10 | 0 | 12 | 15 |
 | Configure option patterns | 0 | 0 | 0 | 149 |
 | njs 1.0.2 registrations | 0 | 0 | 0 | 55 |
 | nginx-acme 0.4.2 registrations | 0 | 0 | 0 | 15 |
@@ -109,3 +109,15 @@ origin-relative static returns within its existing configuration subset.
 [Machine-readable coverage](../bench/program/evidence/milestone-5/compatibility.json)
 [Scope and evidence registry](../compatibility/nginx-oss.yaml)
 [Production YAML](../examples/production-gateway.yaml).
+
+The gateway also supports exact SNI certificate selection, mandatory
+listener-wide mTLS, upstream client certificates, TLS 1.2/1.3 policies
+and session resumption controls. The single-server migration preview
+maps literal certificate paths, protocol selections, and mandatory
+client verification. Active HTTP/2 and standard gRPC readiness probes
+are Cauce extensions. The compatibility totals include partial TLS
+directive mappings. They do not count active upstream probes as an
+NGINX OSS capability. Per-SNI trust, optional client authentication,
+DNS-based endpoint retirement, retry budgets and ACME remain open.
+[TLS configuration](CONFIGURATION.md#tls-certificates-and-mutual-authentication)
+[Active health configuration](CONFIGURATION.md#active-upstream-health).

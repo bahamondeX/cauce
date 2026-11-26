@@ -130,8 +130,8 @@ def native_spec(args, port):
     }
 
 
-def proxy_config(args, listen, admin, backend_port, path, logs_on):
-    source = (LAB / "configs" / "cauce-clear.toml" if args.protocol == "http1"
+def proxy_config(args, listen, admin, backend_port, path, logs_on, template=None):
+    source = template or (LAB / "configs" / "cauce-clear.toml" if args.protocol == "http1"
               else H2_LAB / "configs" / "cauce-h2-clear.toml")
     config = source.read_text().replace('name="bench8-h2-clear"', 'name="bench-cauce"')
     for old, new in {

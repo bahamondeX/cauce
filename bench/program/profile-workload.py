@@ -37,6 +37,7 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--protocol", choices=("http1", "http2"), required=True)
     parser.add_argument("--logs", action="store_true")
+    parser.add_argument("--proxy-template", type=Path, help="Use a proxy TOML template with the standard fixture placeholders")
     parser.add_argument("--perf", default="perf")
     parser.add_argument("--sudo", action="store_true")
     parser.add_argument("--frequency", type=int, default=99)
@@ -67,7 +68,8 @@ def main():
     env = {**os.environ, "PORT": str(backend_port), "TLS": "0", "BENCH_H2_TLS": "0",
            "BENCH_BIND": "127.0.0.1", "BENCH_STATS_PORT": str(stats_port)}
     config = root / "proxy.toml"
-    config.write_text(proxy_config(args, listen, admin, backend_port, root / "access.jsonl", args.logs))
+    config.write_text(proxy_config(args, listen, admin, backend_port, root / "access.jsonl",
+                                   args.logs, args.proxy_template))
     warm, resume = root / "warm", root / "resume"
     spec = native_spec(args, listen) | {
         "warmup_done_file": str(warm), "resume_file": str(resume), "seconds": args.seconds + 3,

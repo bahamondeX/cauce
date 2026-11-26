@@ -1,0 +1,128 @@
+{
+  "classification": "Colima diagnostic only",
+  "proxy_runtime": "2a2ea8b",
+  "previous_runtime": "d20c509",
+  "protocol": "http1",
+  "offered_per_second": 100,
+  "warmup_seconds": 2,
+  "measured_seconds": 11,
+  "proxy_workers": 1,
+  "proxy_cpu": 0,
+  "backend_cpu": 1,
+  "generator_cpu": 2,
+  "process_sampler_cpu": 3,
+  "cpu_clock_ticks_per_second": 100,
+  "repetitions_per_cell": 1,
+  "logs_enabled": false,
+  "measurements": {
+    "allocations": {
+      "checkpoint": {
+        "warmup_successes": 200,
+        "successes": 1100,
+        "observed_goodput_per_s": 100.0,
+        "scheduled_latency_ns": {
+          "p50": 3502496,
+          "p95": 5329020,
+          "p99": 9731147,
+          "p99.9": 57752148
+        },
+        "allocation_calls": 35394,
+        "peak_heap_as_printed": "539.57K",
+        "allocated_bytes": 23381672,
+        "allocations_per_success_including_warmup": 27.226
+      },
+      "disabled": {
+        "warmup_successes": 200,
+        "successes": 1100,
+        "observed_goodput_per_s": 100.0,
+        "scheduled_latency_ns": {
+          "p50": 3580337,
+          "p95": 5508523,
+          "p99": 9089851,
+          "p99.9": 35174444
+        },
+        "allocation_calls": 35138,
+        "peak_heap_as_printed": "451.15K",
+        "allocated_bytes": 22366452,
+        "allocations_per_success_including_warmup": 27.029
+      },
+      "enabled": {
+        "warmup_successes": 200,
+        "successes": 1100,
+        "observed_goodput_per_s": 100.0,
+        "scheduled_latency_ns": {
+          "p50": 3451831,
+          "p95": 5348598,
+          "p99": 6837481,
+          "p99.9": 24441822
+        },
+        "allocation_calls": 41856,
+        "peak_heap_as_printed": "413.08K",
+        "allocated_bytes": 22548705,
+        "allocations_per_success_including_warmup": 32.197
+      }
+    },
+    "process": {
+      "checkpoint": {
+        "warmup_successes": 200,
+        "successes": 1100,
+        "observed_goodput_per_s": 100.0,
+        "scheduled_latency_ns": {
+          "p50": 3499682,
+          "p95": 5442704,
+          "p99": 7957025,
+          "p99.9": 45076059
+        },
+        "cpu_ticks_approximate_eight_second_sample": 19,
+        "after": {
+          "rss_kib": 5376,
+          "pss_kib": 3934
+        }
+      },
+      "disabled": {
+        "warmup_successes": 200,
+        "successes": 1100,
+        "observed_goodput_per_s": 100.0,
+        "scheduled_latency_ns": {
+          "p50": 3552149,
+          "p95": 5464491,
+          "p99": 7675857,
+          "p99.9": 22350214
+        },
+        "cpu_ticks_approximate_eight_second_sample": 18,
+        "after": {
+          "rss_kib": 5476,
+          "pss_kib": 4031
+        }
+      },
+      "enabled": {
+        "warmup_successes": 200,
+        "successes": 1100,
+        "observed_goodput_per_s": 100.0,
+        "scheduled_latency_ns": {
+          "p50": 3514010,
+          "p95": 5347312,
+          "p99": 8234502,
+          "p99.9": 31941218
+        },
+        "cpu_ticks_approximate_eight_second_sample": 21,
+        "after": {
+          "rss_kib": 6096,
+          "pss_kib": 4662
+        }
+      }
+    }
+  },
+  "excluded": [
+    "active upstream health",
+    "TLS",
+    "multi-endpoint balancing"
+  ],
+  "enabled_configuration": [
+    "trusted peer resolution without a forwarded address",
+    "route CIDR allowlist",
+    "capture-based internal rewrite",
+    "per-client rate and concurrency zone",
+    "per-peer TCP admission"
+  ]
+}

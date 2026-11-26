@@ -1,14 +1,15 @@
 {
-  "artifact": "work/milestone-5/native-arm64-stage.tar.gz",
-  "bytes": 94565644,
-  "sha256": "948d743f00708b9275b364fa39b56662ccb1ad60bb7af1262eea17100b47360d",
+  "artifact": "work/milestone-5/native-arm64-final-stage.tar.gz",
+  "bytes": 87320072,
+  "sha256": "b59b9864a48dba17a167e4b83eafdf2ae0d9b22c4c81f4c47c35cdb6cabb6906",
   "architecture": "aarch64-unknown-linux-gnu",
   "qualification": "unexecuted",
-  "cauce": "89b0632",
+  "cauce": "2a2ea8b",
   "published": "ba6f952",
   "checkpoint": "47da8fe",
   "nginx": "1.30.8",
   "haproxy": "3.4.8",
   "pingora": "0.9.1",
-  "entrypoint": "bench/program/native-run-staged.sh"
+  "entrypoint": "bench/program/native-run-staged.sh",
+  "cauce_binary_sha256": "3329b4cdfd2bbf2c175b746b24fce268890eb114973b470bfc8775602ec2340c"
 }

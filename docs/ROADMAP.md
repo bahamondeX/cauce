@@ -129,9 +129,11 @@ admission. Nested NGINX locations, full PCRE and variable semantics,
 directive inheritance, exact hash compatibility and combined admission
 zones remain open. [Gateway coverage](FUNCTIONAL-PARITY.md#milestone-5-production-gateway).
 
-The next functional increments cover DNS TTL and connection retirement,
-upstream backoff, active HTTP/2 and gRPC health, and SNI and mutual TLS.
-Retries require separate request-transmission and replay-safety gates.
+The checkpoint also adds active HTTP/2 and gRPC health probes, exact SNI
+selection and downstream and upstream mutual TLS. The next increments
+cover DNS TTL and connection retirement, upstream backoff, circuit
+breaking and certificate automation. Retries require separate
+request-transmission and replay-safety gates.
 Native capacity and feature-overhead qualification resumes after AWS
 identity, previous resources and charges are verified.
 [Performance and lifecycle](PERFORMANCE-MILESTONE-5.md).

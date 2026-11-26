@@ -244,3 +244,16 @@ Las zonas de admisión pertenecen al proceso y conservan su estado al
 recargar las rutas. La autorización concurrente dura hasta la finalización
 de la subida y de la respuesta, incluso para flujos HTTP/2 y túneles.
 [Orden y límites de las políticas](adr/0011-compiled-gateway-policies.md).
+
+## Identidad TLS y salud de upstreams
+
+Cada generación prepara sus certificados, raíces de confianza y estado
+de reanudación TLS antes de publicarse. SNI selecciona un certificado de
+nombre exacto o el certificado predeterminado. La identidad HTTP sigue
+determinando la ruta. [ADR 0012](adr/0012-gateway-tls-identity.md).
+
+Las comprobaciones activas usan conexiones independientes y un
+planificador limitado por generación. El modo gRPC verifica el mensaje
+y el estado de cierre dentro del plazo de la comprobación. No se
+inicia un planificador sin comprobaciones configuradas.
+[Configuración de salud](CONFIGURATION.md#active-upstream-health).

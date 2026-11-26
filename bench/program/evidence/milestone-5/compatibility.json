@@ -10,14 +10,14 @@
   "directive_registrations": {
     "verified": 0,
     "implemented": 0,
-    "partial": 43,
-    "unsupported": 711
+    "partial": 51,
+    "unsupported": 703
   },
   "behaviors": {
     "verified": 10,
     "implemented": 0,
-    "partial": 11,
-    "unsupported": 16
+    "partial": 12,
+    "unsupported": 15
   },
   "configure_patterns": {
     "inventoried": 149,

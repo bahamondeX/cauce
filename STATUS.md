@@ -173,9 +173,15 @@ Native capacity, profiling and comparative work carried into Milestone 3.
   [Policy ordering](docs/adr/0011-compiled-gateway-policies.md).
 - Both pool strategies passed the pinned NGINX gateway socket comparison and
   existing proxy regression. The registry records 10 verified observable
-  behaviors, 13 partial NGINX modules and 43 partial directive registrations.
+  behaviors, 13 partial NGINX modules and 51 partial directive registrations.
   [Compatibility report](docs/FUNCTIONAL-PARITY.md#milestone-5-production-gateway).
 - The 8,000/s warm-up lost 237 offers after the generator dispatch pipeline filled.
   The cause of the 41.663 ms completion gap remains unattributed. AWS
   reauthentication blocks prior lifecycle reconciliation and fresh native
   performance qualification. [Milestone 5 evidence](docs/PERFORMANCE-MILESTONE-5.md).
+- The independent health and TLS additions passed their socket tests with the
+  standard gRPC health service and real TLS peers. They add active HTTP/2 and
+  gRPC checks, exact SNI and a default certificate, listener-wide mTLS,
+  upstream client certificates and configurable versions and resumption.
+  [Health YAML](examples/http2-health.yaml)
+  [Mutual TLS YAML](examples/gateway-mtls.yaml).

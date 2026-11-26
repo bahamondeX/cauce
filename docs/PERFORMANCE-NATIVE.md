@@ -233,7 +233,8 @@ independent audit summaries are checked in.
 
 ## Milestone 5 staging and warm-up diagnosis
 
-The new ARM64 bundle includes the Milestone 5 gateway runtime and pinned
+The staged ARM64 bundle includes the Milestone 5 gateway runtime
+`2a2ea8b`, including active upstream health and mutual TLS, and pinned
 reference builds. Its local checksums were verified and the native
 campaign remains unexecuted. STS requires interactive sign-in for the
 authorized profile before AMD64 state, cleanup and charges can be
