@@ -60,6 +60,8 @@ struct Config {
     request_bytes: usize,
     response_bytes: usize,
     response_byte: u8,
+    #[serde(default)]
+    byte_range: Option<[u64; 2]>,
     #[serde(default = "default_timeout_ms")]
     timeout_ms: u64,
     #[serde(default = "default_lag_ms")]
@@ -103,7 +105,7 @@ impl Config {
             "invalid concurrency or queue capacity"
         );
         ensure!(
-            self.request_bytes <= 16 * 1024 * 1024 && self.response_bytes <= 64 * 1024 * 1024,
+            self.request_bytes <= 16 * 1024 * 1024 && self.response_bytes <= 128 * 1024 * 1024,
             "payload exceeds fixture limits"
         );
         ensure!(
@@ -112,6 +114,14 @@ impl Config {
                 && self.spin_us <= 500,
             "invalid scheduler or timeout settings"
         );
+        if let Some([start, end]) = self.byte_range {
+            ensure!(
+                self.request_bytes == 0
+                    && end.checked_sub(start).and_then(|n| n.checked_add(1))
+                        == Some(self.response_bytes as u64),
+                "invalid fixture range"
+            );
+        }
         Ok(url)
     }
 }
@@ -216,6 +226,7 @@ struct RequestTemplate {
     version: Version,
     host: Option<header::HeaderValue>,
     payload: Bytes,
+    range: Option<header::HeaderValue>,
 }
 
 impl RequestTemplate {
@@ -227,6 +238,9 @@ impl RequestTemplate {
         request
             .headers_mut()
             .insert(header::ACCEPT, header::HeaderValue::from_static("*/*"));
+        if let Some(range) = &self.range {
+            request.headers_mut().insert(header::RANGE, range.clone());
+        }
         if let Some(host) = &self.host {
             request.headers_mut().insert(header::HOST, host.clone());
         }
@@ -281,6 +295,7 @@ async fn transfer(
     expected_byte: u8,
     trace: bool,
 ) -> Result<()> {
+    let ranged = request.headers().contains_key(header::RANGE);
     let response = client.request(request).await?;
     row.status = Some(response.status().as_u16());
     if trace {
@@ -290,7 +305,9 @@ async fn transfer(
             .and_then(|value| value.to_str().ok())
             .map(str::to_owned);
     }
-    if !response.status().is_success() {
+    if !response.status().is_success()
+        || ranged && response.status() != hyper::StatusCode::PARTIAL_CONTENT
+    {
         row.outcome = "http_error";
         return Ok(());
     }
@@ -499,6 +516,10 @@ async fn main() -> Result<()> {
         },
         host: config.host.as_deref().map(str::parse).transpose()?,
         payload: Bytes::from(vec![b'x'; config.request_bytes]),
+        range: config
+            .byte_range
+            .map(|[start, end]| format!("bytes={start}-{end}").parse())
+            .transpose()?,
     };
     let warmup = if config.warmup_seconds > 0 {
         phase(&config, &client, &request, config.warmup_seconds, true).await?
