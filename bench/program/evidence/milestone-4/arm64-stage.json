@@ -1,0 +1,25 @@
+{
+  "path": "work/milestone-4/native-arm64-stage.tar.gz",
+  "architecture": "aarch64-unknown-linux-gnu",
+  "bytes": 96339947,
+  "sha256": "7868e901c1bfe7d0b57531a3f39ef84bd0dcbad93a7f85c80c29712aa20e919d",
+  "qualification": "unexecuted",
+  "cauce": "168ed82",
+  "cauce-checkpoint": "47da8fe",
+  "cauce-published": "ba6f952",
+  "nginx": "1.30.8",
+  "haproxy": "3.4.8",
+  "pingora": "0.9.1",
+  "harness_revision": "d20c509",
+  "entrypoint": "bench/program/native-run-staged.sh",
+  "binary_sha256": {
+    "cauce": "5ff257a2b96847f3f9f76d4fe1931b86463746ec5a04f3f127aa6f9c16e0a9d3",
+    "cauce-checkpoint": "9e5e3e0196be6893869f695769c4ba4a826238660b51426c84a47414f4be3963",
+    "cauce-published": "dc66922b2e87df98509dbcd4fe7c4e9a2ca82803545482d3d7a5992f8656f850",
+    "nginx": "5cce7c0b6e6f7ec948e3d5de8a1b123f05f25f6230a0774ead435719dd69e348",
+    "haproxy": "ddd179c83469904df292b12e078d16c805c66dcb82c4863ff79a24d80172a2b6",
+    "pingora": "1f15eb6b1d3f82ae09d82d1ed4ad03767df70e01668981f1e03f8b90b14e0d03",
+    "cauce-load": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+    "node": "9189756f81aa0d5c706826f2a7763227a5abba0b5ca8c770096a25f35cf10e55"
+  }
+}

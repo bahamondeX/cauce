@@ -316,7 +316,7 @@ modules:
         directives:
           - {"name": "output_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
   ngx_http_core_module:
-    coverage: {"status": "partial", "notes": "One data listener with exact and edge-wildcard host names, literal exact paths and segment-aware prefixes."}
+    coverage: {"status": "partial", "notes": "One data listener with exact and edge-wildcard host names, literal and segment-aware prefixes, exact paths and bounded flat regex locations."}
     definitions:
       - source: src/http/ngx_http_core_module.c
         type: NGX_HTTP_MODULE
@@ -364,7 +364,7 @@ modules:
           - {"name": "lingering_time", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "lingering_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "listen", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "One configured TCP data address. Listener options and per-server sockets are unavailable."}
-          - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Literal exact locations take precedence over the longest segment-aware prefix. Regex, named locations, internal redirects and other modifiers are unavailable."}
+          - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Verified flat exact, plain prefix, ^~, ~ and ~* precedence for the shared raw-path subset. Existing segment-aware matching remains the default. PCRE-only expressions, nested and named locations, internal redirects and URI normalization differ or are unavailable."}
           - {"name": "log_not_found", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "log_subrequest", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "max_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -727,7 +727,7 @@ modules:
           - {"name": "proxy_force_ranges", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_headers_hash_bucket_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_headers_hash_max_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_hide_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_hide_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Route-local removal of ordinary origin response headers. NGINX implicit defaults and inheritance differ."}
           - {"name": "proxy_http_version", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Per-endpoint HTTP/1.1 or HTTP/2."}
           - {"name": "proxy_ignore_client_abort", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_ignore_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
@@ -750,7 +750,7 @@ modules:
           - {"name": "proxy_send_lowat", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_send_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_set_body", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_set_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
+          - {"name": "proxy_set_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"], "status": "partial", "notes": "Static route-local replacements and removals after hop filtering. Dynamic values, inherited rules and proxy-owned protocol edits are unavailable."}
           - {"name": "proxy_socket_keepalive", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_ssl_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_certificate_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE123"]}
@@ -1654,6 +1654,8 @@ behaviors:
   - {"id": "grpc", "status": "partial", "scope": "Native gRPC cleartext and TLS, deadlines, trailers and backpressure", "tests": ["scripts/test-http2-docker.py", "bench/increment8/gate_h2.mjs"], "evidence": ["bench/program/evidence/candidate-http2-linux-arm64.json", "bench/program/evidence/milestone-2/http2-eos-candidate.json"]}
   - {"id": "websocket", "status": "partial", "scope": "HTTP/1.1 upgrade tunnel, bounded idle and lifetime, base RFC6455 framing passthrough", "tests": ["scripts/test-websocket-edges.py"]}
   - {"id": "routing", "status": "partial", "scope": "Exact and edge-wildcard authorities with exact path and segment-aware prefix routing", "tests": ["src/routing.rs", "tests/integration.py", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-3/routing-nginx.jsonl"]}
+  - {"id": "flat-location-precedence", "status": "verified", "scope": "Top-level exact, literal prefix, ^~, and first matching ASCII byte regex precedence on validated shared paths.", "tests": ["src/routing.rs", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-4/nginx-differential.jsonl"]}
+  - {"id": "static-route-header-edits", "status": "verified", "scope": "Static request replacement and removal and response header replacement and removal, route isolation, protected headers and rejected reload.", "tests": ["src/headers.rs", "tests/integration.py", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-4/nginx-differential.jsonl"]}
   - {"id": "tls", "status": "partial", "scope": "Inbound TLS, verified upstream TLS, no client certificate configuration", "tests": ["scripts/test-tls-lifecycle.py", "scripts/test-tls-docker.py"]}
   - {"id": "pooling", "status": "partial", "scope": "Global and endpoint budgets, HTTP/1 exclusive leases and HTTP/2 multiplexing. The experimental endpoint-sharded pool uses the same numeric endpoint and generation identity. The compact pool remains the default.", "tests": ["tests/integration.py", "tests/resilience/proxy_failures.py", "scripts/test-http2-stress-docker.py", "src/pool.rs", "bench/program/pool-transport.py"], "evidence": ["bench/program/evidence/milestone-2c/pool-matrix.json"]}
   - {"id": "reload", "status": "partial", "scope": "SIGHUP route/upstream and certificate reload with rejected candidate preservation", "tests": ["tests/integration.py", "scripts/test-tls-lifecycle.py"], "evidence": ["bench/program/evidence/candidate-integration-darwin-arm64.log"]}

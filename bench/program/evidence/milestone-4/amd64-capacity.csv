@@ -1,0 +1,10 @@
+run,status,confirmed_goodput_per_s,interpretation,first_failing_rate,control_limited_rate,unattributed_rate,upper_rate_evidence,cpu_us_per_success,p50,p95,p99,p99.9,rss_peak_bytes,pss_end_bytes
+cauce-1w,CONFIRMED,7500.0,confirmed_lower_bound,,,8000,warmup_loss,33.955555555555556,92746,99655,123270,246309,7696384,5720064
+cauce-2w,REJECTED_POSTFLIGHT,,,,,16000,warmup_loss,,,,,,,
+cauce-4w,CONFIRMATION_FAILED,,,,,,,,,,,,,
+cauce-8w,CONFIRMED,8000.0,confirmed_lower_bound,,16000,,,34.833333333333336,93484,99195,122204,252668,8060928,6662144
+cauce-h2-1w,CONFIRMED,2000.0,confirmed_lower_bound,,4000,,,61.0,133984,161640,171554,5777020,6549504,4615168
+nginx-1w,REJECTED_POSTFLIGHT,,,,,,,,,,,,,
+cauce-2w-conservative,REJECTED_PREFLIGHT,,,,8000,,,,,,,,,
+cauce-4w-conservative,REJECTED_PREFLIGHT,,,,8000,,,,,,,,,
+nginx-1w-conservative,CONFIRMED,8000.0,confirmed_lower_bound,,,,,41.208333333333336,93834,101103,110738,263317,6336512,6381568

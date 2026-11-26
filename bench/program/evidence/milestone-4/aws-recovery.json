@@ -1,0 +1,15 @@
+{
+  "expected_account_suffix": "6271",
+  "region": "us-east-1",
+  "checked_on_utc": "2026-11-26",
+  "aws_core_sts": "reauthentication_required",
+  "aws_mcp_sts": "connector unavailable",
+  "aws_cli_version": "2.40.3",
+  "browser_session_account_suffix": "5288",
+  "default_profile_overwrite": "declined",
+  "ec2_and_iam_reconciliation": "blocked pending STS in authorized account",
+  "prior_list_rate_estimate_usd": 2.14,
+  "invoiced_usd": null,
+  "new_benchmark_resources": 0,
+  "local_sdk_sts": "LoginRefreshRequired"
+}

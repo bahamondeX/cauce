@@ -146,3 +146,20 @@ Native capacity, profiling and comparative work carried into Milestone 3.
   poweroff. AWS reauthentication is required to verify its
   control-plane cleanup and start the staged ARM64 campaign.
   [Evidence, cost and cleanup](docs/PERFORMANCE-NATIVE.md#aws-controls).
+
+## Milestone 4 checkpoint
+
+- **Gateway.** Flat location precedence and compiled route-local header
+  policies passed 20 shared NGINX 1.30.8 cases. YAML and TOML validation,
+  reload and rollback cover the new options. [Functional parity](docs/FUNCTIONAL-PARITY.md).
+- **Dataplane.** Encoded-path validation removes one allocation per
+  call in both tested workloads and preserves the prior rejection rules.
+  [Performance evidence](docs/PERFORMANCE-MILESTONE-4.md).
+- **Capacity.** An audit of 8,487,500 measured offers preserved
+  Cauce's 7,500/s confirmation and reclassified it as a lower bound.
+  The 8,000/s ramp failed in warm-up. Multicore efficiency and a
+  comparable saturation boundary remain open.
+- **AWS.** The ARM64 suite is staged. The SDK reported
+  `LoginRefreshRequired` for the authorized profile. AMD64 cleanup
+  and the prior invoice still need control-plane verification, so
+  this checkpoint launched no new resources. [Lifecycle evidence](docs/PERFORMANCE-MILESTONE-4.md#aws-lifecycle).

@@ -107,3 +107,16 @@ the corrected compact and sharded implementations with seven
 paired repetitions. The production-readiness queue includes richer
 migration diagnostics, supply-chain inventory and protocol-boundary
 validation. [Production status](../STATUS.md).
+
+## Milestone 4
+
+The gateway supports flat location precedence and static route-level
+request and response header policies. The compatibility queue continues
+with rewrites, redirects, trusted forwarding, weighted balancing and
+traffic limits. Certificate selection and mutual TLS precede the next
+web serving and caching slice. [Functional coverage](FUNCTIONAL-PARITY.md).
+
+The revised auditor distinguishes warm-up and generator queue loss from
+an attributable saturation boundary. The ARM64 artifacts are staged.
+Control-plane reconciliation remains the prerequisite for any new
+AWS run. [Performance and lifecycle](PERFORMANCE-MILESTONE-4.md).

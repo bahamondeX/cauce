@@ -45,3 +45,34 @@ and atomic reload operate on normalized byte counts.
 | Additional protocols | HTTP/3, FastCGI, uWSGI, SCGI, mail and remaining modules. |
 
 [Adoption backlog](NGINX-COMPATIBILITY-BACKLOG.md).
+
+## Milestone 4 gateway slice
+
+The flat location table now supports exact, literal prefix, `^~`, `~`
+and `~*` precedence on validated raw paths. Regex declarations retain
+their configuration order. The migration preview translates flat
+literal locations and reports regex and named locations for manual
+review. [Advanced YAML example](../examples/advanced-locations.yaml).
+
+Route-local header policies set or remove request and response fields
+after hop filtering. Cauce protects forwarding, framing, tracing and
+protocol-owned headers. The migration preview translates fixed
+`proxy_set_header` values and `proxy_hide_header` on flat locations.
+The pinned NGINX differential passed 19 routing cases and one
+request/response header policy case over real Linux sockets.
+[Header policy YAML](../examples/header-policies.yaml)
+[Differential evidence](../bench/program/evidence/milestone-4/nginx-differential.jsonl).
+
+| Registry scope | Verified | Implemented | Partial | Unsupported or unmapped |
+| --- | ---: | ---: | ---: | ---: |
+| NGINX OSS module definitions | 0 | 0 | 8 | 112 |
+| Directive registrations across compiled and conditional variants | 0 | 0 | 26 | 728 |
+| Recorded observable behaviors | 6 | 0 | 8 | 19 |
+| Configure option patterns | 0 | 0 | 0 | 149 |
+| Official add-on directive registrations | 0 | 0 | 0 | 70 |
+
+The official add-on inventory is njs 1.0.2 with 55 registrations and
+nginx-acme 0.4.2 with 15. The registry counts registrations independently
+of directive names. Its six verified behaviors do not confer full
+coverage on any module or directive.
+[Machine-readable coverage counts](../bench/program/evidence/milestone-4/coverage-counts.json).

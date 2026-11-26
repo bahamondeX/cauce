@@ -31,6 +31,11 @@ Los patrones se compilan con límites antes de publicar la generación. Un host
 sin patrones omite la evaluación de expresiones regulares. La ruta única con
 prefijo segmentado conserva el acceso directo.
 
+Las políticas de encabezados se compilan por ruta. Se aplican después
+de retirar los campos de salto. La configuración protege los campos de
+identidad, framing, reenvío y negociación de protocolos. Tanto la política
+como el mapa resultante tienen presupuestos de tamaño.
+
 ## Pool y transporte
 
 Un pool global en memoria, semáforo global de conexiones y semáforo por endpoint.

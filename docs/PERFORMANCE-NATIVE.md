@@ -1,5 +1,11 @@
 # Milestone 3 native Linux performance
 
+The Milestone 4 re-audit establishes that the 7,500/s Cauce HTTP/1.1
+confirmation is a lower bound. The 8,000/s ramp had 237 generator queue
+rejections in warm-up and zero measured-phase errors. Use the newer
+report for capacity attribution and the AWS reconciliation status.
+[Milestone 4 audit](PERFORMANCE-MILESTONE-4.md).
+
 The native campaign uses `47da8fe` as the Cauce performance reference.
 Wildcard virtual hosts, exact locations and byte units are recorded separately
 in the functional checkpoint. Compact pooling remains the production
