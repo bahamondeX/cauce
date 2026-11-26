@@ -493,6 +493,17 @@ class StreamTests(unittest.TestCase):
         first.sendto(b"online", ("127.0.0.1", recover))
         self.assertEqual(first.recv(64), b"online")
 
+    def test_udp_drains_outstanding_reply(self):
+        origin = start_server(self.stack, ThreadUdp, Udp)
+        port = free_port(kind=socket.SOCK_DGRAM)
+        proc = self.serve(group("echo", endpoint(origin.server_address[1])) + udp_config(port, "echo"))
+        client = self.udp()
+        client.sendto(b"first", ("127.0.0.1", port))
+        eventual(lambda: self.metric("udp_sessions_active") == 1)
+        proc.terminate()
+        self.assertEqual(client.recv(128), b"first")
+        self.assertEqual(proc.wait(timeout=2), 0)
+
     def test_udp_dns_with_dig(self):
         origin = start_server(self.stack, ThreadUdp, Dns)
         port = free_port(kind=socket.SOCK_DGRAM)

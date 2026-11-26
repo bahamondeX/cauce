@@ -22,7 +22,10 @@ from quic_client import Client
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tests/stream"))
-from interop import CAUCE, NGINX, eventual, free_port, start_process, tcp  # noqa: E402
+from interop import (  # noqa: E402
+    CAUCE, NGINX, HalfClose, ThreadTcp, ThreadUdp, Udp, endpoint, eventual,
+    free_port, group, send_half_close, start_process, start_server, tcp, tcp_config, udp_config,
+)
 
 
 
@@ -54,7 +57,7 @@ class Interop(unittest.IsolatedAsyncioTestCase):
         self.origin = free_port()
         self.markers = self.tmp / "cancel.log"
 
-    def launch(self, explicit=False, path_migration=False):
+    def launch(self, explicit=False, path_migration=False, stream=""):
         start_process(self.stack, ["node", str(ROOT / "tests/http3/origin.mjs"), str(self.origin),
                                    str(self.markers)], self.tmp / "origin.log")
         base = (ROOT / "examples/cauce.toml").read_text().split("[limits]", 1)[1].split("[[upstreams]]", 1)[0]
@@ -136,6 +139,7 @@ max_entries = 8
 max_size = 65536
 max_entry_size = 4096
 ttl = "30s"
+{stream}
 ''')
         log = self.tmp / "cauce.log"
         self.proc = start_process(self.stack, [CAUCE, str(config)], log)
@@ -153,7 +157,19 @@ ttl = "30s"
             return True
 
     async def test_tls_sni_direct_response_and_alt_svc(self):
-        self.launch(explicit=True)
+        tcp_origin = start_server(self.stack, ThreadTcp, HalfClose)
+        tcp_origin.marker = b"raw:"
+        udp_origin = start_server(self.stack, ThreadUdp, Udp)
+        tcp_port = free_port()
+        udp_port = free_port(kind=socket.SOCK_DGRAM)
+        stream = group("tcp", endpoint(tcp_origin.server_address[1])) + tcp_config(tcp_port, "tcp")
+        stream += group("udp", endpoint(udp_origin.server_address[1])) + udp_config(udp_port, "udp")
+        self.launch(explicit=True, stream=stream)
+        self.assertEqual(send_half_close(tcp_port, b"bytes"), b"raw:bytes")
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp:
+            udp.settimeout(2)
+            udp.sendto(b"datagram", ("127.0.0.1", udp_port))
+            self.assertEqual(udp.recv(32), b"datagram")
         with tcp(self.cleartext) as plain:
             plain.sendall(b"GET /hello HTTP/1.1\r\nHost: route.test\r\nConnection: close\r\n\r\n")
             response = bytearray()

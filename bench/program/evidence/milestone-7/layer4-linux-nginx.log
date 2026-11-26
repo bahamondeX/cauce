@@ -1,0 +1,12 @@
+test_nginx_shared_stream_behaviors (__main__.StreamTests.test_nginx_shared_stream_behaviors) ... nginx version: nginx/1.30.8
+built by gcc 12.2.0 (Debian 12.2.0-14+deb12u1)
+built with OpenSSL 3.0.16 11 Feb 2025
+TLS SNI support enabled
+configure arguments: --with-stream --with-stream_ssl_preread_module --with-stream_realip_module --with-stream_ssl_module --with-http_ssl_module --with-http_realip_module --with-http_gzip_static_module --with-http_v3_module
+ok
+test_udp_drains_outstanding_reply (__main__.StreamTests.test_udp_drains_outstanding_reply) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.513s
+
+OK

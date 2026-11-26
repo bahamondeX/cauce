@@ -145,3 +145,19 @@ The pinned inventory records 23 partial modules out of 120 and
 observable behaviors. The 149 configure option patterns remain
 inventoried separately. The njs and nginx-acme inventories remain
 separate from the core counts.
+
+## Milestone 7 multiprotocol gateway
+
+The pinned inventory contains 120 modules, 754 directive registrations,
+149 configure option patterns and 70 separately scoped add-on directive
+registrations. The new differential cases cover TCP half-close and
+weight distribution, UDP echo boundaries, TLS ClientHello SNI and
+default routing, trusted PROXY v1 source and payload propagation, and
+an HTTP/3 response over QUIC. [Layer 4 tests](../tests/stream/interop.py)
+[HTTP/3 tests](../tests/http3/interop.py).
+
+Cauce also verifies its own IPv6 and Unix transport, ALPN-based preread,
+PROXY v2 framing and policies, UDP limits and cancellation. NGINX's
+Stream SSL termination, resolver semantics, dynamic upstream areas,
+and remaining HTTP/3 behavior need separate implementation and
+differential evidence. [Registry](../compatibility/nginx-oss.yaml).

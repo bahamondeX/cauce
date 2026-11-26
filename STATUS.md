@@ -201,3 +201,19 @@ Native capacity, profiling and comparative work carried into Milestone 3.
   security group, role and profile were removed and verified absent.
   Billing attribution still blocks additional AWS provisioning.
   [Milestone 6 evidence](docs/PERFORMANCE-MILESTONE-6.md).
+
+## Milestone 7 checkpoint
+
+- **Layer 4.** Independent TCP and UDP listeners, TLS passthrough with
+  bounded SNI and ALPN preread, and trusted PROXY v1/v2 are implemented.
+  PostgreSQL, Redis, OpenSSH and DNS fixtures exercise real wire traffic.
+  [TCP](docs/TCP-PROXY.md) [UDP](docs/UDP-PROXY.md)
+  [TLS passthrough](docs/TLS-PASSTHROUGH.md).
+- **HTTP/3.** Quinn and h3 serve requests through Cauce's existing HTTP
+  policies. Independent HTTP, HTTPS and QUIC sockets support TLS
+  certificate reload on established bindings. [HTTP/3](docs/HTTP3.md).
+- **Compatibility and performance.** The source registry records the
+  verified NGINX Stream and HTTP/3 cases. Linux ARM64 and AMD64 artifacts
+  are available locally. The milestone report records regression gates,
+  benchmark qualifications and remaining DNS, resilience, cache and ACME
+  work. [Milestone report](docs/PERFORMANCE-MILESTONE-7.md).

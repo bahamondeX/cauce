@@ -1,0 +1,21 @@
+test_nginx_shared_stream_behaviors (__main__.StreamTests.test_nginx_shared_stream_behaviors) ... nginx version: nginx/1.30.8
+built by clang 17.0.0 (clang-1700.0.13.5)
+built with OpenSSL 3.6.4 25 Aug 2026
+TLS SNI support enabled
+configure arguments: --with-stream --with-stream_realip_module --with-stream_ssl_module --with-stream_ssl_preread_module --with-http_ssl_module --with-http_v3_module --without-http_rewrite_module --with-cc-opt=-I/opt/homebrew/opt/openssl@3/include --with-ld-opt=-L/opt/homebrew/opt/openssl@3/lib
+ok
+test_proxy_versions_tlvs_and_trust_boundary (__main__.StreamTests.test_proxy_versions_tlvs_and_trust_boundary) ... ok
+test_tcp_absolute_deadline_and_graceful_drain (__main__.StreamTests.test_tcp_absolute_deadline_and_graceful_drain) ... ok
+test_tcp_backpressure_and_cancellation (__main__.StreamTests.test_tcp_backpressure_and_cancellation) ... ok
+test_tcp_half_close_ipv6_unix (__main__.StreamTests.test_tcp_half_close_ipv6_unix) ... ok
+test_tcp_weighted_consistent_and_failure (__main__.StreamTests.test_tcp_weighted_consistent_and_failure) ... ok
+test_tls_preread_fragmented_records_alpn_and_default (__main__.StreamTests.test_tls_preread_fragmented_records_alpn_and_default) ... ok
+test_udp_dns_with_dig (__main__.StreamTests.test_udp_dns_with_dig) ... ok
+test_udp_drains_outstanding_reply (__main__.StreamTests.test_udp_drains_outstanding_reply) ... ok
+test_udp_ipv6_loss_order_and_amplification (__main__.StreamTests.test_udp_ipv6_loss_order_and_amplification) ... ok
+test_udp_peer_global_caps_expiration_and_origin_failure (__main__.StreamTests.test_udp_peer_global_caps_expiration_and_origin_failure) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 5.226s
+
+OK

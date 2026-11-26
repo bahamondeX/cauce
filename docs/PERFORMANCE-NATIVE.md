@@ -265,3 +265,20 @@ Static, range and cache fixtures use the native Rust load generator.
 The local diagnostic runs and their limits are recorded separately
 from qualified native evidence.
 [Milestone 6 evidence](PERFORMANCE-MILESTONE-6.md).
+
+## Milestone 7 native preparation
+
+A local OCI archive contains Linux ARM64 and AMD64 release images.
+Build IDs, SHA-256 digests and the runtime source tree are recorded with
+the checkpoint evidence. Colima testing qualifies local Linux behavior.
+The prior AMD64 CPU comparison is specific to its measured revisions
+and workload.
+
+For the next native campaign, use the network runner with a direct
+control, isolated CPU placement and identical fixtures. Preserve raw
+offer rows, independent audits and scheduler and application gates
+from the existing HTTP benchmark program. Record kernel and PMU
+support, process CPU and memory, syscall and context-switch counts,
+and the link delay and loss configuration. Native workloads require
+separate authorization and verified budget before provisioning.
+[Milestone 7 methods](PERFORMANCE-MILESTONE-7.md).

@@ -145,3 +145,19 @@ gzip and Brotli use the compiled route pipeline. The remaining extensions
 include disk durability and quotas, background cache revalidation,
 authoritative DNS, upstream resilience and ACME.
 [Content validation and limits](PERFORMANCE-MILESTONE-6.md).
+
+## Milestone 7
+
+Layer 4 is checkpointed independently of HTTP/3. TCP supports direct
+IP and Unix upstreams with half-close and configurable socket options.
+UDP uses bounded associations and response credit. TLS preread and
+trusted PROXY share the TCP listener. The HTTP/3 increment adds a
+QUIC listener and reuses the HTTP policies. Separate HTTP and HTTPS
+sockets can coexist with the original listener syntax.
+[Milestone report](PERFORMANCE-MILESTONE-7.md).
+
+The next increments cover shared authoritative DNS and address retirement,
+protocol-specific upstream resilience, background stale revalidation,
+disk cache recovery and quotas, and ACME staging and renewal. Native
+Linux benchmarks must establish per-workload capacity, packet cost,
+and disabled-module overhead before promotion.

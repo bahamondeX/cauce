@@ -1,0 +1,47 @@
+{
+  "baseline": "1ff7f23229828a4326962536cc4dfcf0157bfd84",
+  "candidate": "22d6ac9399c6d7d84254dc4264a481592a0857d8",
+  "runtime_tree": "b236ed4f2881988ee575ce7bf6d46ba69139e578",
+  "toolchain": [
+    "rustc 1.88.0 (6b00bc388 2025-06-23) (Homebrew)",
+    "binary: rustc",
+    "commit-hash: 6b00bc3880198600130e1cf62b8f8a93494488cc",
+    "commit-date: 2025-06-23",
+    "host: aarch64-apple-darwin",
+    "release: 1.88.0",
+    "LLVM version: 20.1.7"
+  ],
+  "build_host": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+  "linux_execution_environment": "Colima ARM64 guest",
+  "sha256": {
+    "work/milestone-7/cauce-1ff7f23-darwin": "55234e40db2f5781504ae92900877f97ece9f3b6728541ccfd43884910cf1fc4",
+    "work/milestone-7/cauce-candidate-darwin": "6d5b3f86f48f7e040ee0a1545c3e101595f219cf0813ac6b2c4cca7d6ece572e",
+    "work/milestone-7/cauce-linux-multiarch.oci.tar": "02a2cc9a0623795ea76cf2aceb9cdce068b5bee865a43793809fe97c668707fe",
+    "work/milestone-7/nginx-1.30.8/objs/nginx": "8f9dcbb44b61afb09407575f04e1b344b055ef80bce4fdd6971d80ab8abf35e8",
+    "work/program/nginx-1.30.8.tar.gz": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+    "Cargo.lock": "df13b3b4e4e952dbed2587a68b6cfc146d2cdd1206e4b22f6236bdedd1915db5",
+    "Dockerfile": "e75fecf2f8b463771ed4fe31c056bb252442c84a8c7331dd7e3030f3a3dddfbd",
+    "work/milestone-7/nginx-linux-arm64-full": "632bc3108a8c5ddf1e60d60ee770e66bf3973d22899958d1742f5f042de95aaa",
+    "work/milestone-7/haproxy-3.2.27/haproxy": "8c29bfe9325f5ead014395e730a8906b7b25ac82025fd0508ba33336720a1af8",
+    "work/milestone-7/haproxy-3.2.27.tar.gz": "3363a337dcde55a871b0f63ac483a4476db647418b85dee069b35f39291ee177",
+    "work/milestone-6/bench-bin/cauce-load-darwin": "c5644ae7541c61aab995d49026c2f57d62c201d6cdad27644b14f9db180d45d3"
+  },
+  "oci_platforms": {
+    "arm64": {
+      "manifest": "sha256:c4897080978fb38bb0ef10959ee24839a1185296421c217924e7b64fbf8c0118",
+      "config": "sha256:9a1405b253daa422bedce806056447fd807b0b30712671b3e9cd2ea5bf01122e",
+      "binary_sha256": {
+        "cauce": "a5871af76f93817a1504461281e1e18330f9868d831eff81ae3c3b8986ffcaad",
+        "cauce-collector": "aa0c6eac3fe045181eb5eff40eb66b2f7fb7a1c8fd5b84b25f277f23f5916e95"
+      }
+    },
+    "amd64": {
+      "manifest": "sha256:60608116e8e2dd8167997b1d39e4cbcd64753c543c0db904d173478de90034fe",
+      "config": "sha256:20b9c2af58049894be32458d671f220121668de135d04bf077bbccb474903ab4",
+      "binary_sha256": {
+        "cauce": "48950038d5137fae0f684b6696bb416dfad5272a79bb6ba26c0868c4816b2d6e",
+        "cauce-collector": "47be0f44d717d02a850b3461bd468ef601e95dcb255ee3ad28aa5a0ef89b134f"
+      }
+    }
+  }
+}
