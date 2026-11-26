@@ -1,0 +1,6 @@
+test_dns_rotation_preserves_authenticated_pop3_session (test_mail.MailTests.test_dns_rotation_preserves_authenticated_pop3_session) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 3.141s
+
+OK

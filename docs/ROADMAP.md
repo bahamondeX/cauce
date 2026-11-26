@@ -201,3 +201,15 @@ and native release qualification remain open.
 
 [Open gates](CAUCE-1.0-GAP-ANALYSIS.md)
 [Milestone 9 evidence](PERFORMANCE-MILESTONE-9.md).
+
+## Milestone 10 compatibility checkpoint
+
+The pinned differential framework verifies nested routing, literal header
+filtering and upstream SNI. The compatibility queue prioritizes HTTP
+inheritance beyond literal policies, PCRE, variables and maps, followed by
+proxy buffering and filters. Stream and mail retained-socket lifecycle,
+DNS-01 and add-on semantics remain separate workstreams. The bundled SQLite
+advisory is resolved. Release qualification follows mandatory compatibility
+and native performance gates.
+[Compatibility evidence](PERFORMANCE-MILESTONE-10.md)
+[Source-derived queue](COMPATIBILITY-TOOLING.md).

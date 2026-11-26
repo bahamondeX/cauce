@@ -258,3 +258,14 @@ source audit records 134 of 754 directive registrations as partial and
 620 as unmapped. Current native throughput and multicore qualification,
 retained-socket TLS reload and the bundled SQLite advisory remain release
 gates. [Qualification evidence](docs/PERFORMANCE-MILESTONE-9.md).
+
+## Milestone 10 compatibility checkpoint
+
+Cauce now compiles scoped nested locations and inherits selected policies
+at load time. Literal response header additions and explicit origin SNI
+settings have pinned NGINX differential evidence. The registry contains
+137 partially implemented OSS registrations and 617 unmapped registrations.
+The runtime's patched collector links SQLite 3.54.1.
+[Milestone evidence](docs/PERFORMANCE-MILESTONE-10.md)
+[Compatibility tooling](docs/COMPATIBILITY-TOOLING.md)
+[SQLite remediation](docs/SQLITE-SECURITY.md).

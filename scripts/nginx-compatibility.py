@@ -49,6 +49,7 @@ def queue(rows):
             "context": row["context"],
             "priority": row["priority"],
             "status": row["status"],
+            "assessment": row.get("assessment", row["status"]),
             "source": row["source"],
             "steps": ["review_source", "compare_existing_behavior", "fill_missing_semantics",
                       "verify_differential_cases", "update_registry"],
@@ -59,12 +60,15 @@ def queue(rows):
 def report():
     rows = [json.loads(line) for line in REGISTRY.read_text().splitlines()]
     counts = Counter((r["reference"], r["kind"], r["status"]) for r in rows)
+    assessments = Counter((r["reference"], r["kind"], r.get("assessment", r["status"])) for r in rows)
     return {
         "reference_version": "1.30.8",
         "registry_sha256": digest(REGISTRY),
         "counts": [{"reference": reference, "kind": kind, "status": status, "count": count}
                    for (reference, kind, status), count in sorted(counts.items())],
         "verified_equivalent": sum(r["verified_equivalent"] for r in rows),
+        "assessments": [{"reference": ref, "kind": kind, "assessment": value, "count": count}
+                        for (ref, kind, value), count in sorted(assessments.items())],
         "fixture_modules": sorted(fixtures.MODULES),
     }
 
@@ -209,9 +213,14 @@ def test(args):
         raise ValueError("the differential runner requires NGINX OSS 1.30.8")
     args.work.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="nginx-differential-", dir=args.work) as tmp:
-        modules = [run_module(module, nginx, cauce, Path(tmp) / module)
-                   for module in args.module or sorted(fixtures.MODULES)]
-    passed = all(all(case["passed"] for case in module["cases"] + module["configuration_rejections"])
+        modules = []
+        for module in args.module or sorted(fixtures.MODULES):
+            try:
+                modules.append(run_module(module, nginx, cauce, Path(tmp) / module))
+            except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+                modules.append({"module": module, "fixture_error": str(error), "cases": []})
+    passed = all("fixture_error" not in module
+                 and all(case["passed"] for case in module["cases"] + module["configuration_rejections"])
                  and all(side["started"] and side["exit_status"] == 0 and not side["forced_kill"]
                          for side in module["lifecycle"].values()) for module in modules)
     return {"passed": passed, "nginx_version": build.strip(), "nginx_sha256": digest(nginx),

@@ -33,3 +33,23 @@ current fixture and do not establish capacity or performance parity.
 Fixture results qualify only the assertions and configuration interactions
 they exercise. The registry requires separate evidence for full arguments,
 contexts, defaults, inheritance, failures and interaction coverage.
+
+The machine-readable assessment distinguishes unmapped, mapped but
+unimplemented, partial, implemented but unverified, verified equivalent
+and platform or build scope. An exact classification requires all eight
+review criteria and a passing module differential report within Cauce.
+A module also requires exact classifications for every registration.
+
+Migration and JSON Schema fixtures use a repository-local lock. From the
+Cauce root, select an installed Python 3.11–3.14 interpreter explicitly.
+
+```sh
+mkdir -p "$PWD/work/compat-python/tmp"
+export UV_CACHE_DIR="$PWD/work/compat-python/cache"
+export UV_PROJECT_ENVIRONMENT="$PWD/work/compat-python/venv"
+export UV_PYTHON_INSTALL_DIR="$PWD/work/compat-python/interpreters"
+export UV_PYTHON_DOWNLOADS=never TMPDIR="$PWD/work/compat-python/tmp"
+uv sync --locked --project "$PWD/tests/compatibility" --python "$(command -v python3)"
+"$UV_PROJECT_ENVIRONMENT/bin/python" -IB -m unittest discover \
+  -s "$PWD/tests" -p test_nginx_migration.py -v
+```

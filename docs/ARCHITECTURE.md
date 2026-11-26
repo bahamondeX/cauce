@@ -116,9 +116,9 @@ Consultadas el 16-11-2026: [Hyper 1.12](https://docs.rs/hyper/1.12.0/hyper/clien
 [rustls 0.23.46](https://docs.rs/rustls/0.23.46/rustls/).
 Hyper es parser/transporte HTTP mantenido, no motor de proxy; se utiliza su API conn para
 controlar leases, apertura y pool. Tokio aporta runtime/IO. rustls implementa la
-terminación y conexiones TLS mediante tokio-rustls, proveedor criptográfico ring. Cargo.lock fija todas las versiones; `uuid=1.18.1` y
-`time=0.3.44` mantienen compatibilidad con Rust 1.88 del host. `time` y `toml` no son las
-últimas ramas disponibles; actualización pendiente de revisar MSRV, avisos y pruebas.
+terminación y conexiones TLS mediante tokio-rustls, proveedor criptográfico ring.
+Cargo.lock fija las versiones. El colector enlaza SQLite 3.54.1 y la compilación
+actual requiere Rust 1.89 o superior. [Auditoría del colector](SQLITE-SECURITY.md).
 
 El Dockerfile compila en BUILDPLATFORM y usa toolchain/linker cruzado para TARGETARCH.
 El primer intento de compilar todo bajo emulación amd64 falló por SIGSEGV de cc al

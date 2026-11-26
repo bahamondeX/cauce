@@ -38,6 +38,13 @@ HTTP, application or opaque Stream or mail traffic.
 [Resolver fixture](../src/dns.rs)
 [Socket tests](../tests/dns_upstream.py).
 
+The Milestone 10 fixtures verified DNS rotation from an IPv4 answer to
+an IPv6 answer for new HTTP/2 leases, Stream UDP associations, and TLS
+POP3 connections. Active HTTP/2 responses, prior UDP peers and an
+authenticated POP3 session continued on their original connections.
+[HTTP and Stream results](../bench/program/evidence/milestone-10/dns-rotation.log)
+[Authenticated mail result](../bench/program/evidence/milestone-10/mail-dns-rotation.log).
+
 ## Passive ejection and connection retries
 
 HTTP and application endpoints can set `resilience` with a consecutive

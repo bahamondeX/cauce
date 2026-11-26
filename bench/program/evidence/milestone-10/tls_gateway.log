@@ -1,0 +1,6 @@
+test_sni_rotation_mutual_tls_and_generation_rollback (tls_gateway.TlsGatewayTests.test_sni_rotation_mutual_tls_and_generation_rollback) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 7.111s
+
+OK

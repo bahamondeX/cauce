@@ -1,0 +1,91 @@
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 9.51s
+     Running unittests src/main.rs (work/increment10/target/debug/deps/cauce-1cd4a3ff0be23b2a)
+
+running 63 tests
+test application::fastcgi::tests::record_direction_request_id_and_lengths ... ok
+test application::envelope::tests::native_prefix_and_netstring_bounds ... ok
+test application::response::tests::fragmented_head_boundary ... ok
+test admission::tests::peer_cap_uses_canonical_address_and_recovers_on_drop ... ok
+test admission::tests::burst_delay_and_live_entry_budget_fail_closed ... ok
+test admission::tests::disabled_admission_reuses_the_baseline_permit_allocation ... ok
+test balance::tests::smooth_order_and_weights ... ok
+test application::response::tests::response_rejects_ambiguous_framing_and_origins ... ok
+test actions::tests::query_modes_and_capture_safety ... ok
+test config::tests::a_nested_leaf_inherits_nearest_access_and_rate_policy ... ok
+test config::tests::yaml_and_toml_compile_to_the_same_configuration ... ok
+test headers::tests::additions_use_the_same_protocol_ownership_and_value_guards ... ok
+test config::tests::h2_defaults_caps_and_reload ... ok
+test headers::tests::policies_protect_protocol_identity_and_budgets ... ok
+test config::tests::yaml_expands_whole_values_and_redacts_failed_substitutions ... ok
+test admission::tests::capture_rewrite_allocation_sample ... ok
+test health::tests::invalid_config_rejected ... ok
+test config::tests::example_and_fail_closed ... ok
+test health::tests::thresholds_and_disabled_default ... ok
+test identity::tests::recursive_trust_stops_at_first_untrusted_address ... ok
+test mail::wire::tests::bounded_credentials_and_imap_quoting ... ok
+test config::tests::yaml_rejects_invalid_fields_versions_and_durations ... ok
+test config::tests::byte_units_compile_to_native_limits_and_reject_overflow ... ok
+test pool::pool_tests::cancelled_opening_wakes_capacity_waiters ... ok
+test pool::pool_tests::reused_http1_sender_waits_for_the_driver_after_complete_response ... ok
+test pool::pool_tests::sharded_eviction_preserves_a_live_lease_and_endpoint_identity ... ok
+test health::tests::actual_http_status_and_timeout ... ok
+test pool::pool_tests::weighted_groups_balance_concurrently_and_preserve_hashes_on_recovery ... ok
+test proxy::tests::framing_and_hop_headers ... ok
+test proxy::tests::grpc_deadlines_and_trailer_header ... ok
+test proxy::tests::percent_encoded_path_filter_is_ascii_case_insensitive ... ok
+test proxy::tests::rejects_ambiguous_paths ... ok
+test resilience::tests::cancelled_recovery_delays_and_releases_probe ... ok
+test resilience::tests::stale_completions_cannot_close_breaker_and_only_one_probe_enters ... ok
+test routing::tests::exact_location_precedes_prefix_only_for_the_identical_path ... ok
+test routing::tests::flat_locations_order_exact_longest_prefix_and_first_regex ... ok
+test routing::tests::lookup_benchmark ... ignored, release-mode route lookup measurement
+test routing::tests::preserves_linear_match_semantics ... ok
+test routing::tests::regex_location_count_and_diagnostics_are_bounded ... ok
+test routing::tests::wildcard_config_accepts_a_complete_edge_label_only ... ok
+test routing::tests::wildcard_hosts_use_nginx_name_precedence_before_path_lookup ... ok
+test stream::proxy_protocol::tests::validated_tlvs_and_checksum ... ok
+test telemetry::tests::failed_buffer_is_discarded_without_a_drop_flush_retry ... ok
+test telemetry::tests::failed_rotation_after_tail_repair_still_hands_off_inode_on_retry ... ok
+test telemetry::tests::reopen_preserves_complete_records_and_removes_only_unterminated_tail ... ok
+test telemetry::tests::trace_validation ... ok
+test telemetry::tests::typed_log_fields_keep_the_wire_encoding ... ok
+test transport::tests::absolute_deadline_covers_fragments_and_continuation_gaps ... ok
+test transport::tests::coalesced_frames_and_fragmented_preface_keep_next_block_deadline ... ok
+test transport::tests::connection_guard_cancels_stream_tasks_and_rejects_late_tasks ... ok
+test transport::tests::data_and_idle_are_not_header_timed_but_partial_frame_headers_are ... ok
+test transport::tests::end_headers_waits_for_all_payload_including_padding ... ok
+test pool::pool_tests::multiplexes_two_leases_over_one_h2_socket ... ok
+test transport::tests::http1_passthrough_and_preface_have_separate_lifetimes ... ok
+test transport::tests::invalid_interleaving_does_not_disarm_or_reset_deadline ... ok
+test websocket::tests::rfc6455_handshake_and_rejections ... ok
+test transport::tests::header_watch_expires_without_further_io_polls ... ok
+test health::tests::http2_and_grpc_probes_validate_responses_over_real_sockets ... ok
+test pool::pool_tests::absent_peer_stream_limit_releases_initial_zero_gate ... ok
+test pool::pool_tests::initial_peer_settings_bound_cold_start_streams ... ok
+test pool::pool_tests::watchdog_retires_stalled_early_response_without_leaking_pool_capacity ... ok
+test health::tests::scheduler_ejects_recovers_and_stops ... ok
+test dns::tests::resolves_dual_stack_aliases_rotates_and_recovers_from_negative_answers ... ok
+
+test result: ok. 62 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.62s
+
+     Running unittests src/bin/cauce-collector.rs (work/increment10/target/debug/deps/cauce_collector-a026704e104a8b03)
+
+running 14 tests
+test collector::tests::invalid_ack_error_does_not_echo_untrusted_field_names ... ok
+test collector::tests::export_retains_queued_batches_and_lock_is_exclusive ... ok
+test collector::tests::checkpoint_and_spool_commit_together_then_resume ... ok
+test collector::tests::observed_frontier_shrink_after_resume_is_rejected ... ok
+test collector::tests::partial_line_is_not_checkpointed_until_complete ... ok
+test collector::tests::schema_rejects_unknown_missing_and_bad_values ... ok
+test collector::tests::observed_frontier_shrink_while_full_is_rejected ... ok
+test collector::tests::a_present_inode_resets_missing_debounce_before_early_return ... ok
+test collector::tests::lost_unread_log_fails_even_when_spool_is_full ... ok
+test collector::tests::spool_quota_pauses_at_a_durable_checkpoint ... ok
+test collector::tests::same_inode_same_size_rewrite_is_rejected ... ok
+test collector::tests::rename_rotation_follows_inode_and_truncation_stops ... ok
+test collector::tests::rotated_tail_repair_accepts_only_a_scanned_fragment ... ok
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.85s
+

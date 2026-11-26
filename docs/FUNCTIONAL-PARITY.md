@@ -199,3 +199,13 @@ gateway cases per pool layout and 15 content cases. The Stream TLS
 fixture checks SNI selection, mutual authentication and verified backend
 hostnames. The registry retains partial status for the corresponding
 directive registrations. [Pinned differential evidence](../bench/program/evidence/milestone-9/linux-nginx/).
+
+## Milestone 10 compatibility batches
+
+The new fixtures establish nested location precedence for the shared raw URI
+subset, literal response header additions with repeated values and status
+rules, and explicit upstream SNI toggles with verification intact. The
+migration preview expands literal child locations with explicit handlers and
+tracks their output route IDs. This evidence adds three partial registrations.
+The fixed denominator and exact-equivalence count remain unchanged.
+[Coverage and observed differences](PERFORMANCE-MILESTONE-10.md).

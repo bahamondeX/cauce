@@ -16,6 +16,7 @@ import ssl
 import subprocess
 import sys
 import tempfile
+import time
 import tomllib
 import unittest
 from urllib.parse import unquote
@@ -337,6 +338,59 @@ mail {{
             client.pass_(PASSWORD)
         self.assertIn(b"SYS/TEMP", result.exception.args[0])
         self.assertEqual(len(origin.commands), 3)
+
+    def test_dns_rotation_preserves_authenticated_pop3_session(self):
+        class Origin(socketserver.StreamRequestHandler):
+            def handle(self):
+                self.wfile.write(b"+OK fixture\r\n")
+                for credential in (f"USER {USER}", f"PASS {PASSWORD}"):
+                    if self.rfile.readline(2048) != (credential + "\r\n").encode():
+                        return
+                    self.wfile.write(b"+OK accepted\r\n")
+                while command := self.rfile.readline(2048):
+                    if command == b"STAT\r\n":
+                        self.wfile.write(f"+OK {self.server.marker} 0\r\n".encode())
+                    else:
+                        return
+
+        class ThreadTcp6(ThreadTcp):
+            address_family = socket.AF_INET6
+
+            def server_bind(self):
+                self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+                super().server_bind()
+
+        ipv4 = start_server(self.stack, ThreadTcp, Origin)
+        backend_port = ipv4.server_address[1]
+        ipv6 = start_server(self.stack, ThreadTcp6, Origin, host="::1", port=backend_port)
+        tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        tls.load_cert_chain(self.cert, self.key)
+        for origin, marker in [(ipv4, 4), (ipv6, 6)]:
+            origin.marker = marker
+            origin.socket = tls.wrap_socket(origin.socket, server_side=True)
+        self.auth.ports["pop3"] = backend_port
+        dns = start_server(self.stack, socketserver.UDPServer, Dns)
+        dns.family = socket.AF_INET
+        config = self.configuration("implicit")
+        config["proxy"]["dns"] = {"servers": [f"127.0.0.1:{dns.server_address[1]}"]}
+        backend = config["proxy"]["mail"][2]["backends"][0]
+        backend["dns_address"] = f"origin.test:{backend_port}"
+        backend["tls"] = {"server_name": "localhost", "ca_file": str(self.cert)}
+        self.start(configuration=config)
+
+        def authenticate():
+            client = poplib.POP3_SSL("127.0.0.1", self.ports["pop3"], context=self.tls, timeout=4)
+            self.stack.callback(client.close)
+            client.user(USER)
+            client.pass_(PASSWORD)
+            return client
+
+        existing = authenticate()
+        self.assertEqual(existing.stat(), (4, 0))
+        dns.family = socket.AF_INET6
+        time.sleep(1.15)
+        self.assertEqual(authenticate().stat(), (6, 0))
+        self.assertEqual(existing.stat(), (4, 0))
 
     def test_reload_adds_and_removes_listeners_with_authenticated_pop3(self):
         class Origin(socketserver.StreamRequestHandler):

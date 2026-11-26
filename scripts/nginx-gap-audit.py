@@ -137,6 +137,8 @@ PLATFORM_FLAGS = {
     "--without-poll_module": "platform-specific poll implementation",
     "--without-quic_bpf_module": "Linux eBPF",
 }
+VERIFICATION_CRITERIA = {"arguments", "contexts", "defaults", "inheritance", "observable_behavior",
+                         "negative_and_boundary_cases", "interactions", "documented_limits"}
 SUBSTITUTE = {
     "--with-openssl": "rustls with ring",
     "--with-openssl-opt": "rustls compile and runtime TLS policy",
@@ -196,10 +198,22 @@ def configure(option, modules, mappings):
         "kind": "configure", "reference": "oss", "option": option, "source": "auto/options",
         "category": category, "module": module, "cauce_equivalent": equivalent,
         "status": "mapped" if equivalent else "unmapped",
+        "assessment": "platform_or_build_scope" if equivalent else "unmapped",
         "migration": "deployment review", "platform": PLATFORM_FLAGS.get(name),
         "semantic_differences": "Build-time option. Runtime compatibility is tracked in module and directive rows.",
         "verified_equivalent": False, "evidence": [], "priority": priority(module or ""),
     }
+
+
+def verify_claim(module, mapping):
+    proof = mapping.get("verification", {})
+    assert set(proof.get("criteria", ())) == VERIFICATION_CRITERIA, (module, "incomplete equivalence review")
+    path = (ROOT / proof["differential_report"]).resolve()
+    assert ROOT in path.parents, (module, "evidence must be within the repository")
+    report = json.loads(path.read_text())
+    assert report.get("passed") and any(item["module"] == module and item["cases"]
+                                        for item in report["modules"]), (module, "missing passing differential cases")
+    return {"scope": "equivalence review", "path": str(path.relative_to(ROOT))}
 
 
 def coverage(module, directive, mapping, reference):
@@ -217,10 +231,15 @@ def coverage(module, directive, mapping, reference):
     # registration on that basis.
     if status in {"verified", "implemented"}:
         status = "partial"
+    if status == "verified_equivalent":
+        sources.append(verify_claim(module, mapping))
+    assessment = {"unsupported": "unmapped", "partial": "partially_implemented"}.get(status, status)
+    assert assessment in {"unmapped", "mapped_unimplemented", "partially_implemented",
+                          "implemented_unverified", "verified_equivalent", "platform_or_build_scope"}
     return {
-        "status": status, "cauce_equivalent": notes,
+        "status": status, "assessment": assessment, "cauce_equivalent": notes,
         "semantic_differences": notes or "No Cauce behavior mapping established.",
-        "migration": migrations, "evidence": sources, "verified_equivalent": False,
+        "migration": migrations, "evidence": sources, "verified_equivalent": status == "verified_equivalent",
         "platform": PLATFORMS.get(module),
         "priority": priority(module, directive or "") if reference == "oss" else "add-on",
     }
@@ -243,10 +262,14 @@ def accepted_arity(flags):
 
 def semantic_rows(modules, mappings, reference, provenance, build_options):
     for module, definitions in sorted(modules.items()):
+        module_status = coverage(module, None, mappings.get(module, {}), reference)
+        if module_status["verified_equivalent"]:
+            assert all(mappings.get(f"{module}.{name}", {}).get("status") == "verified_equivalent"
+                       for _, _, commands in definitions for name, _ in commands), (module, "unverified registrations")
         yield {
             "kind": "module", "reference": reference, "module": module,
             "sources": [source for source, _, _ in definitions],
-            **coverage(module, None, mappings.get(module, {}), reference),
+            **module_status,
         }
         for source, module_type, directives in definitions:
             for order, (directive, flags) in enumerate(directives):

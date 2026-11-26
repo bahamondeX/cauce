@@ -1,0 +1,134 @@
+{
+  "assessments": [
+    {
+      "assessment": "unmapped",
+      "count": 15,
+      "kind": "directive",
+      "reference": "nginx-acme"
+    },
+    {
+      "assessment": "partially_implemented",
+      "count": 1,
+      "kind": "module",
+      "reference": "nginx-acme"
+    },
+    {
+      "assessment": "unmapped",
+      "count": 55,
+      "kind": "directive",
+      "reference": "njs"
+    },
+    {
+      "assessment": "unmapped",
+      "count": 4,
+      "kind": "module",
+      "reference": "njs"
+    },
+    {
+      "assessment": "platform_or_build_scope",
+      "count": 60,
+      "kind": "configure",
+      "reference": "oss"
+    },
+    {
+      "assessment": "unmapped",
+      "count": 89,
+      "kind": "configure",
+      "reference": "oss"
+    },
+    {
+      "assessment": "partially_implemented",
+      "count": 137,
+      "kind": "directive",
+      "reference": "oss"
+    },
+    {
+      "assessment": "unmapped",
+      "count": 617,
+      "kind": "directive",
+      "reference": "oss"
+    },
+    {
+      "assessment": "partially_implemented",
+      "count": 40,
+      "kind": "module",
+      "reference": "oss"
+    },
+    {
+      "assessment": "unmapped",
+      "count": 80,
+      "kind": "module",
+      "reference": "oss"
+    }
+  ],
+  "counts": [
+    {
+      "count": 15,
+      "kind": "directive",
+      "reference": "nginx-acme",
+      "status": "unmapped"
+    },
+    {
+      "count": 1,
+      "kind": "module",
+      "reference": "nginx-acme",
+      "status": "partial"
+    },
+    {
+      "count": 55,
+      "kind": "directive",
+      "reference": "njs",
+      "status": "unmapped"
+    },
+    {
+      "count": 4,
+      "kind": "module",
+      "reference": "njs",
+      "status": "unmapped"
+    },
+    {
+      "count": 60,
+      "kind": "configure",
+      "reference": "oss",
+      "status": "mapped"
+    },
+    {
+      "count": 89,
+      "kind": "configure",
+      "reference": "oss",
+      "status": "unmapped"
+    },
+    {
+      "count": 137,
+      "kind": "directive",
+      "reference": "oss",
+      "status": "partial"
+    },
+    {
+      "count": 617,
+      "kind": "directive",
+      "reference": "oss",
+      "status": "unmapped"
+    },
+    {
+      "count": 40,
+      "kind": "module",
+      "reference": "oss",
+      "status": "partial"
+    },
+    {
+      "count": 80,
+      "kind": "module",
+      "reference": "oss",
+      "status": "unmapped"
+    }
+  ],
+  "fixture_modules": [
+    "ngx_http_core_module",
+    "ngx_http_headers_filter_module",
+    "ngx_http_proxy_module"
+  ],
+  "reference_version": "1.30.8",
+  "registry_sha256": "918571800689c09c1bd2bcaef1750866ff75fe9f1fcc56ab75fb556c7fd26b82",
+  "verified_equivalent": 0
+}
