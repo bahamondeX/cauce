@@ -100,14 +100,24 @@ def state():
     return result
 
 
-def proc_sample(pid):
+def proc_sample(pid, details=False):
     proc = Path("/proc") / str(pid)
     fields = (proc / "stat").read_text().rsplit(")", 1)[1].split()
-    return {
+    sample = {
         "cpu_ticks": int(fields[11]) + int(fields[12]),
         "rss_bytes": int(fields[21]) * os.sysconf("SC_PAGE_SIZE"),
         "time_ns": time.monotonic_ns(),
     }
+    if details:
+        sample["pss_bytes"] = None
+        try:
+            for line in (proc / "smaps_rollup").read_text().splitlines():
+                if line.startswith("Pss:"):
+                    sample["pss_bytes"] = int(line.split()[1]) * 1024
+                    break
+        except OSError:
+            pass
+    return sample
 
 
 def measure_process(command, log, path, spec, pid):
@@ -122,12 +132,12 @@ def measure_process(command, log, path, spec, pid):
                 if now >= limit:
                     raise subprocess.TimeoutExpired(command, timeout)
                 if before is None and (path / "warmup.done").exists():
-                    before = proc_sample(pid)
+                    before = proc_sample(pid, details=True)
                     peak = before["rss_bytes"]
                     (path / "measure.start").touch()
                 if after is None and before is not None:
                     if (path / "measurement.done").exists():
-                        after = proc_sample(pid)
+                        after = proc_sample(pid, details=True)
                         peak = max(peak, after["rss_bytes"])
                         (path / "measure.release").touch()
                     elif now >= next_sample:
