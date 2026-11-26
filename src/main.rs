@@ -3,6 +3,7 @@ mod config;
 mod diagnostics;
 mod headers;
 mod health;
+mod identity;
 mod pool;
 mod proxy;
 mod routing;
@@ -196,7 +197,7 @@ async fn run() -> Result<()> {
                     let metrics = state.logger.metrics.clone();
                     let service_slot = _slot.clone();
                     let forwarded_for = hyper::header::HeaderValue::from_str(&peer.ip().to_string()).unwrap();
-                    let service = service_fn(move |req| proxy::handle(req, forwarded_for.clone(), state.clone(), secure, service_slot.clone(), downstream));
+                    let service = service_fn(move |req| proxy::handle(req, peer.ip(), forwarded_for.clone(), state.clone(), secure, service_slot.clone(), downstream));
                     let (socket, mut headers) = transport::PrefaceTimeout::new(diagnostics::Io::new(socket, "downstream", downstream), Duration::from_millis(l.client_headers_ms));
                     let (executor, _stream_guard) = transport::StreamExecutor::new(Duration::from_millis(l.request_ms));
                     let mut builder = auto::Builder::new(executor.with_active_counter(metrics.http2_tasks_active.clone()));

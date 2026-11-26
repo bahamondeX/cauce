@@ -1528,6 +1528,7 @@ mod pool_tests {
             },
             tls: None,
             http2: Http2Config::default(),
+            real_ip: None,
             upstreams: vec![Upstream {
                 health_check: None,
                 id: "backend".into(),

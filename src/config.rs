@@ -19,6 +19,8 @@ pub struct Config {
     pub tls: Option<InboundTls>,
     #[serde(default)]
     pub http2: Http2Config,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) real_ip: Option<Box<crate::identity::Policy>>,
     pub upstreams: Vec<Upstream>,
     pub routes: Vec<Route>,
 }

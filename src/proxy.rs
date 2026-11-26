@@ -15,6 +15,7 @@ use hyper::{
 use std::{
     borrow::Cow,
     convert::Infallible,
+    net::IpAddr,
     sync::{
         atomic::{AtomicBool, AtomicU64, AtomicU8, Ordering},
         Arc, RwLock,
@@ -228,6 +229,7 @@ fn record_grpc_deadline(
 }
 pub async fn handle(
     mut req: Request<Incoming>,
+    peer_ip: IpAddr,
     peer: HeaderValue,
     state: Arc<State>,
     secure: bool,
@@ -421,6 +423,17 @@ pub async fn handle(
     if !normal_path(req.uri().path()) {
         reject!(BAD_REQUEST, "ambiguous_path");
     }
+    let identity = generation
+        .config
+        .real_ip
+        .as_ref()
+        .map(|policy| policy.resolve(peer_ip, req.headers()));
+    if let Some(identity) = &identity {
+        diagnostics::emit(
+            "client_identity",
+            || serde_json::json!({"peer": peer_ip, "client": identity.client, "request_id": id}),
+        );
+    }
     let route = match generation.route(&host, req.uri().path()) {
         Some(route) => route,
         None => {
@@ -577,7 +590,7 @@ pub async fn handle(
         req.headers_mut().remove("sec-websocket-extensions");
         req.headers_mut().remove(CONTENT_LENGTH);
     }
-    // No forwarded identity is trusted in increment 1. Peers cannot select a destination.
+    // Convert trusted input to a canonical chain after stripping forwarding fields.
     let forwarded: Vec<_> = req
         .headers()
         .keys()
@@ -593,7 +606,11 @@ pub async fn handle(
         req.headers_mut().insert("traceparent", t);
     }
     req.headers_mut().insert(HOST, endpoint.host.clone());
-    req.headers_mut().insert(X_FORWARDED_FOR, peer);
+    req.headers_mut().remove("x-real-ip");
+    req.headers_mut().insert(
+        X_FORWARDED_FOR,
+        identity.and_then(|value| value.forwarded).unwrap_or(peer),
+    );
     req.headers_mut().insert(
         X_FORWARDED_PROTO,
         HeaderValue::from_static(if secure { "https" } else { "http" }),
