@@ -5,7 +5,7 @@ default-run = "cauce"
 edition = "2021"
 rust-version = "1.88"
 license = "Apache-2.0"
-description = "An independent bounded HTTP reverse proxy"
+description = "An independent bounded network gateway"
 
 [features]
 fuzzing = []
@@ -17,6 +17,8 @@ anyhow = "1"
 async-compression = { version = "0.4", default-features = false, features = ["tokio", "gzip", "brotli"] }
 bytes = "1"
 base64 = "0.22"
+h3 = "0.0.8"
+h3-quinn = "0.0.10"
 http-body-util = "0.1"
 hyper = { version = "1.12", features = ["client", "server", "http1", "http2"] }
 hyper-util = { version = "0.1", features = ["tokio", "server-auto", "http1", "http2"] }
@@ -25,6 +27,7 @@ libc = "0.2"
 ipnet = "2.12"
 prost = { version = "0.14", default-features = false, features = ["derive", "std"] }
 regex = { version = "1.13.2", default-features = false, features = ["std", "perf"] }
+quinn = { version = "0.11.12", default-features = false, features = ["runtime-tokio", "rustls-ring"] }
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
 rusqlite = { version = "0.37", features = ["bundled"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }

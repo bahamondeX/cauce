@@ -377,6 +377,16 @@
     "source": "https://github.com/danburkert/fs2-rs"
   },
   {
+    "name": "futures",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "source": "https://github.com/rust-lang/futures-rs"
+  },
+  {
     "name": "futures-channel",
     "version": "0.3.34",
     "license": "MIT OR Apache-2.0",
@@ -388,6 +398,16 @@
   },
   {
     "name": "futures-core",
+    "version": "0.3.34",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ],
+    "source": "https://github.com/rust-lang/futures-rs"
+  },
+  {
+    "name": "futures-executor",
     "version": "0.3.34",
     "license": "MIT OR Apache-2.0",
     "notices": [
@@ -493,6 +513,24 @@
       "LICENSE"
     ],
     "source": "https://github.com/hyperium/h2"
+  },
+  {
+    "name": "h3",
+    "version": "0.0.8",
+    "license": "MIT",
+    "notices": [
+      "LICENSE"
+    ],
+    "source": "https://github.com/hyperium/h3"
+  },
+  {
+    "name": "h3-quinn",
+    "version": "0.0.10",
+    "license": "MIT",
+    "notices": [
+      "LICENSE"
+    ],
+    "source": "https://github.com/hyperium/h3"
   },
   {
     "name": "hashbrown",

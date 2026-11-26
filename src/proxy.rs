@@ -6,7 +6,7 @@ use crate::{
     telemetry::{self, Attempt, Event, Logger},
 };
 use hyper::{
-    body::{Body, Incoming},
+    body::{Body, Bytes, Incoming},
     header::{
         HeaderMap, HeaderName, HeaderValue, CONNECTION, CONTENT_LENGTH, HOST, TRANSFER_ENCODING,
     },
@@ -230,21 +230,34 @@ fn record_grpc_deadline(
     );
     response
 }
-pub async fn handle(
-    mut req: Request<Incoming>,
+pub(crate) trait RequestBody: Body<Data = Bytes> + Send + Unpin + 'static {
+    const HTTP3: bool;
+}
+impl RequestBody for Incoming {
+    const HTTP3: bool = false;
+}
+
+pub async fn handle<B>(
+    mut req: Request<B>,
     peer_ip: IpAddr,
     peer: HeaderValue,
     state: Arc<State>,
     secure: bool,
     client_slot: Arc<OwnedSemaphorePermit>,
     downstream: Option<u64>,
-) -> Result<Response<ProxyBody>, Infallible> {
+) -> Result<Response<ProxyBody>, Infallible>
+where
+    B: RequestBody,
+    B::Error: std::error::Error + Send + Sync + 'static,
+{
     let started = Instant::now();
     let generation = state.generation.read().unwrap().clone();
     let limits = &generation.config.limits;
     let mut deadline = tokio::time::Instant::now() + Duration::from_millis(limits.request_ms);
     let inbound_version = req.version();
     let is_h2 = inbound_version == hyper::Version::HTTP_2;
+    let is_h3 = B::HTTP3;
+    let multiplexed = is_h2 || is_h3;
     let grpc = grpc_request(req.headers());
     let id = uuid::Uuid::new_v4().to_string();
     diagnostics::emit("request_started", || {
@@ -255,7 +268,7 @@ pub async fn handle(
             .and_then(|value| value.parse::<u64>().ok());
         serde_json::json!({
             "downstream": downstream, "request_id": id, "offer": offer,
-            "generation": generation.version, "protocol": if is_h2 { "http2" } else { "http1" },
+            "generation": generation.version, "protocol": if is_h3 { "http3" } else if is_h2 { "http2" } else { "http1" },
         })
     });
     let trace = req
@@ -287,7 +300,13 @@ pub async fn handle(
             _ => "OTHER",
         },
         path: None,
-        protocol: if is_h2 { "HTTP/2" } else { "HTTP/1.1" },
+        protocol: if is_h3 {
+            "HTTP/3"
+        } else if is_h2 {
+            "HTTP/2"
+        } else {
+            "HTTP/1.1"
+        },
         status: 0,
         duration_ms: 0.0,
         transfer_ms: None,
@@ -327,14 +346,14 @@ pub async fn handle(
         }
     };
     if req.method() == hyper::Method::CONNECT
-        || (!is_h2 && (req.uri().authority().is_some() || req.uri().scheme().is_some()))
+        || (!multiplexed && (req.uri().authority().is_some() || req.uri().scheme().is_some()))
     {
         reject!(BAD_REQUEST, "origin_form_required");
     }
-    if inbound_version != hyper::Version::HTTP_11 && !is_h2 {
+    if inbound_version != hyper::Version::HTTP_11 && !multiplexed {
         reject!(HTTP_VERSION_NOT_SUPPORTED, "http_11_or_2_required");
     }
-    if is_h2
+    if multiplexed
         && (req.uri().scheme_str() != Some(if secure { "https" } else { "http" })
             || [
                 "connection",
@@ -351,6 +370,9 @@ pub async fn handle(
                 .iter()
                 .any(|h| !h.as_bytes().eq_ignore_ascii_case(b"trailers")))
     {
+        if is_h3 {
+            reject!(BAD_REQUEST, "invalid_http3_headers");
+        }
         reject!(BAD_REQUEST, "invalid_http2_headers");
     }
     if grpc {
@@ -383,11 +405,11 @@ pub async fn handle(
         reject!(REQUEST_HEADER_FIELDS_TOO_LARGE, "header_limit");
     }
     let host_count = req.headers().get_all(HOST).iter().count();
-    if (!is_h2 && host_count != 1) || (is_h2 && host_count > 1) {
+    if (!multiplexed && host_count != 1) || (multiplexed && host_count > 1) {
         reject!(BAD_REQUEST, "single_host_required");
     }
     let header_host = req.headers().get(HOST).and_then(|h| h.to_str().ok());
-    let authority = if is_h2 {
+    let authority = if multiplexed {
         req.uri().authority().map(|a| a.as_str())
     } else {
         None
@@ -803,6 +825,11 @@ pub async fn handle(
         hyper::Version::HTTP_11
     };
     strip_hop(req.headers_mut());
+    if is_h3 {
+        // The receive adapter verifies the declared length at end of stream.
+        // Keep HTTP/1.1 uploads chunked so Hyper cannot stop before that check.
+        req.headers_mut().remove(CONTENT_LENGTH);
+    }
     if websocket.is_some() {
         req.headers_mut()
             .insert(CONNECTION, HeaderValue::from_static("upgrade"));

@@ -87,10 +87,29 @@ pub fn load_server(config: Option<&InboundTls>, http2: bool) -> Result<Option<Ar
     let Some(config) = config else {
         return Ok(None);
     };
+    let protocols = if http2 {
+        vec![b"h2".to_vec(), b"http/1.1".to_vec()]
+    } else {
+        vec![b"http/1.1".to_vec()]
+    };
+    build_server(config, versions(config.versions.as_deref()), protocols)
+        .map(|server| Some(Arc::new(server)))
+}
+
+pub(crate) fn load_quic(config: &InboundTls) -> Result<ServerConfig> {
+    let mut server = build_server(config, TLS13_ONLY, vec![b"h3".to_vec()])?;
+    server.max_early_data_size = 0;
+    Ok(server)
+}
+
+fn build_server(
+    config: &InboundTls,
+    versions: &[&'static SupportedProtocolVersion],
+    alpn_protocols: Vec<Vec<u8>>,
+) -> Result<ServerConfig> {
     let certs = cert_chain(&config.cert_file).context("default inbound TLS certificate")?;
     let key = private_key(&config.key_file).context("default inbound TLS private key")?;
-    let builder =
-        ServerConfig::builder_with_protocol_versions(versions(config.versions.as_deref()));
+    let builder = ServerConfig::builder_with_protocol_versions(versions);
     let builder = if let Some(ca) = &config.client_ca_file {
         let roots = trust_roots(ca).context("inbound client CA bundle")?;
         builder.with_client_cert_verifier(WebPkiClientVerifier::builder(Arc::new(roots)).build()?)
@@ -123,12 +142,8 @@ pub fn load_server(config: Option<&InboundTls>, http2: bool) -> Result<Option<Ar
         server.session_storage = Arc::new(NoServerSessionStorage {});
         server.send_tls13_tickets = 0;
     }
-    server.alpn_protocols = if http2 {
-        vec![b"h2".to_vec(), b"http/1.1".to_vec()]
-    } else {
-        vec![b"http/1.1".to_vec()]
-    };
-    Ok(Some(Arc::new(server)))
+    server.alpn_protocols = alpn_protocols;
+    Ok(server)
 }
 
 pub fn load_client(config: &UpstreamTls, protocol: UpstreamProtocol) -> Result<Arc<ClientConfig>> {

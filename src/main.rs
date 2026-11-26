@@ -9,6 +9,8 @@ mod content;
 mod diagnostics;
 mod headers;
 mod health;
+mod http3;
+mod http_tcp;
 mod identity;
 mod pool;
 mod proxy;
@@ -23,7 +25,7 @@ mod websocket;
 use anyhow::{Context, Result};
 use config::Config;
 use hyper::{server::conn::http1, service::service_fn};
-use hyper_util::{rt::TokioIo, server::conn::auto};
+use hyper_util::rt::TokioIo;
 use pool::{Generation, Pool, PoolStrategy};
 use proxy::State;
 use std::{
@@ -71,6 +73,8 @@ async fn run() -> Result<()> {
     let config = Arc::new(config);
     let tls_clients = prepare_tls_clients(&config).await?;
     let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
+    let extra_tls = prepare_explicit_listeners(&config).await?;
+    let quic_config = http3::prepare(&config).await?;
     if check {
         println!("configuration valid");
         return Ok(());
@@ -80,6 +84,13 @@ async fn run() -> Result<()> {
     } else {
         None
     };
+    let mut extra_listeners = Vec::with_capacity(config.listeners.len());
+    for listener in &config.listeners {
+        let bound = stream::socket(listener.listen, socket2::Type::STREAM, false)
+            .context("HTTP TCP bind")?;
+        bound.listen(1024)?;
+        extra_listeners.push(TcpListener::from_std(bound.into())?);
+    }
     let admin_listener = TcpListener::bind(config.admin)
         .await
         .context("admin listener")?;
@@ -88,6 +99,10 @@ async fn run() -> Result<()> {
         .as_ref()
         .map(|spec| stream::Listeners::bind((**spec).clone()))
         .transpose()?;
+    let endpoint = quic_config
+        .map(|quic| http3::bind(config.http3.as_deref().unwrap(), quic))
+        .transpose()?;
+    let alt_svc = config.http3.as_ref().and_then(|spec| spec.alt_svc());
     let metrics = Arc::new(
         stream
             .as_ref()
@@ -100,7 +115,6 @@ async fn run() -> Result<()> {
         metrics,
         strategy,
     );
-    let clients = Arc::new(Semaphore::new(config.limits.clients));
     let state = Arc::new(State {
         rate_zones: config
             .rate_zones
@@ -120,7 +134,7 @@ async fn run() -> Result<()> {
         pool,
         logger,
         requests: Arc::new(Semaphore::new(config.limits.requests)),
-        clients: clients.clone(),
+        clients: Arc::new(Semaphore::new(config.limits.clients)),
         ready: AtomicBool::new(true),
         instance_id: uuid::Uuid::new_v4().to_string(),
         admin_token: std::env::var("CAUCE_ADMIN_TOKEN")
@@ -135,13 +149,45 @@ async fn run() -> Result<()> {
     let mut interrupt = signal(SignalKind::interrupt())?;
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let (generation_tx, generation_rx) = watch::channel(1);
-    let maintenance = listener
-        .as_ref()
-        .map(|_| tokio::spawn(maintain_pool(state.pool.clone(), generation_rx)));
+    let maintenance = (listener.is_some() || endpoint.is_some() || !extra_listeners.is_empty())
+        .then(|| tokio::spawn(maintain_pool(state.pool.clone(), generation_rx)));
     let mut tasks = JoinSet::new();
     let mut stream = stream
         .map(|stream| stream.start(&shutdown_rx, &state.logger.metrics))
         .unwrap_or_default();
+    let web = http_tcp::Runtime {
+        config: config.clone(),
+        state: state.clone(),
+        alt_svc,
+    };
+    let explicit = if extra_listeners.is_empty() {
+        None
+    } else {
+        let certificates = Arc::new(RwLock::new(extra_tls));
+        let runtime = Arc::new(http_tcp::Runtime {
+            config: config.clone(),
+            state: state.clone(),
+            alt_svc: web.alt_svc.clone(),
+        });
+        for (index, listener) in extra_listeners.into_iter().enumerate() {
+            stream.spawn(runtime.clone().serve(
+                listener,
+                certificates.clone(),
+                index,
+                shutdown_rx.clone(),
+            ));
+        }
+        Some(certificates)
+    };
+    if let Some(endpoint) = &endpoint {
+        stream.spawn(http3::serve(
+            endpoint.clone(),
+            config.http3.as_deref().unwrap().clone(),
+            config.clone(),
+            state.clone(),
+            shutdown_rx.clone(),
+        ));
+    }
     let mut stream_failure = Ok(());
     let mut reload = JoinSet::new();
     eprintln!(
@@ -171,7 +217,7 @@ async fn run() -> Result<()> {
             },
             prepared = reload.join_next(), if !reload.is_empty() => {
                 match prepared {
-                    Some(Ok(Ok((next, server)))) => {
+                    Some(Ok(Ok(Prepared { generation: next, legacy_tls, explicit_tls, quic }))) => {
                         let version = next.version;
                         let old = {
                             let mut current = state.generation.write().unwrap();
@@ -183,7 +229,13 @@ async fn run() -> Result<()> {
                             health.abort();
                         }
                         health = health::start(&state.generation.read().unwrap());
-                        server_tls = server;
+                        server_tls = legacy_tls;
+                        if let Some(certificates) = &explicit {
+                            *certificates.write().unwrap() = explicit_tls;
+                        }
+                        if let (Some(endpoint), Some(quic)) = (&endpoint, quic) {
+                            endpoint.set_server_config(Some(quic));
+                        }
                         generation_tx.send_replace(version);
                         eprintln!("{{\"event\":\"reloaded\",\"config_version\":{version}}}");
                     },
@@ -192,112 +244,7 @@ async fn run() -> Result<()> {
             },
             accepted = async { listener.as_ref().expect("HTTP listener enabled").accept().await }, if listener.is_some() => {
                 let (socket, peer) = accepted?;
-                let downstream = diagnostics::downstream_id();
-                diagnostics::emit("downstream_accept", || serde_json::json!({
-                    "connection": downstream, "peer_port": peer.port(), "tasks": tasks.len(),
-                    "client_permits_available": clients.available_permits(),
-                }));
-                if tasks.len() >= config.limits.clients + 16 {
-                    state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed);
-                    diagnostics::emit("downstream_rejected", || serde_json::json!({
-                        "connection": downstream, "tasks": tasks.len(),
-                        "client_permits_available": clients.available_permits(),
-                    }));
-                    drop(socket);
-                    continue;
-                }
-                let slot = match clients.clone().try_acquire_owned() { Ok(p) => Arc::new(p), Err(_) => {
-                    state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed);
-                    diagnostics::emit("downstream_rejected", || serde_json::json!({
-                        "connection": downstream, "tasks": tasks.len(),
-                        "client_permits_available": clients.available_permits(),
-                    }));
-                    drop(socket);
-                    continue;
-                }};
-                let peer_slot = if let Some(gate) = &state.peers {
-                    let Some(slot) = gate.enter(peer.ip()) else {
-                        state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed);
-                        continue;
-                    };
-                    Some(slot)
-                } else { None };
-                socket.set_nodelay(true)?;
-                let state = state.clone(); let mut shutdown = shutdown_rx.clone(); let l = config.limits.clone();
-                let h2 = config.http2.clone();
-                let acceptor = server_tls.clone();
-                let mut lifecycle = diagnostics::Task::new("downstream", downstream);
-                tasks.spawn(async move {
-                    let _peer_slot = peer_slot;
-                    let _slot = slot;
-                    let secure = acceptor.is_some();
-                    let mut negotiated_h2 = false;
-                    let socket: Box<dyn ClientIo> = if let Some(acceptor) = acceptor {
-                        match tokio::time::timeout(Duration::from_millis(l.tls_handshake_ms), acceptor.accept(socket)).await {
-                            Ok(Ok(stream)) => {
-                                negotiated_h2 = stream.get_ref().1.alpn_protocol() == Some(b"h2");
-                                Box::new(transport::WriteTimeout::new(stream, Duration::from_millis(l.stream_idle_ms)))
-                            },
-                            error => {
-                                if let Some(task) = &mut lifecycle {
-                                    match error {
-                                        Ok(Err(error)) => task.finish("tls_error", Some(&error)),
-                                        Err(error) => task.finish("tls_timeout", Some(&error)),
-                                        Ok(Ok(_)) => unreachable!(),
-                                    }
-                                }
-                                return;
-                            },
-                        }
-                    } else { Box::new(transport::WriteTimeout::new(socket, Duration::from_millis(l.stream_idle_ms))) };
-                    let metrics = state.logger.metrics.clone();
-                    let service_slot = _slot.clone();
-                    let forwarded_for = hyper::header::HeaderValue::from_str(&peer.ip().to_string()).unwrap();
-                    let service = service_fn(move |req| proxy::handle(req, peer.ip(), forwarded_for.clone(), state.clone(), secure, service_slot.clone(), downstream));
-                    let (socket, mut headers) = transport::PrefaceTimeout::new(diagnostics::Io::new(socket, "downstream", downstream), Duration::from_millis(l.client_headers_ms));
-                    let (executor, _stream_guard) = transport::StreamExecutor::new(Duration::from_millis(l.request_ms));
-                    let mut builder = auto::Builder::new(executor.with_active_counter(metrics.http2_tasks_active.clone()));
-                    builder.http1().timer(hyper_util::rt::TokioTimer::new()).header_read_timeout(Duration::from_millis(l.client_headers_ms))
-                        .max_headers(l.max_headers).max_buf_size(l.max_header_bytes).half_close(false);
-                    builder.http2().timer(hyper_util::rt::TokioTimer::new())
-                        .max_concurrent_streams(h2.max_concurrent_streams)
-                        .initial_stream_window_size(h2.initial_stream_window_bytes)
-                        .initial_connection_window_size(h2.initial_connection_window_bytes)
-                        .max_send_buf_size(h2.max_send_buffer_bytes)
-                        .max_header_list_size(l.max_header_bytes as u32)
-                        .max_pending_accept_reset_streams(h2.max_pending_accept_reset_streams)
-                        .max_local_error_reset_streams(h2.max_local_error_reset_streams)
-                        .adaptive_window(false);
-                    if secure {
-                        builder = if negotiated_h2 { builder.http2_only() } else { builder.http1_only() };
-                    } else if !h2.enabled {
-                        builder = builder.http1_only();
-                    }
-                    let connection = builder.serve_connection_with_upgrades(TokioIo::new(socket), service);
-                    tokio::pin!(connection);
-                    let (reason, error) = tokio::select! {
-                        result = &mut connection => ("connection_end", result.err()),
-                        _ = headers.expired() => ("header_deadline", None),
-                        _ = shutdown.changed() => {
-                            connection.as_mut().graceful_shutdown();
-                            tokio::select! {
-                                result = tokio::time::timeout(Duration::from_millis(l.shutdown_ms), &mut connection) => {
-                                    match result {
-                                        Ok(result) => ("shutdown", result.err()),
-                                        Err(_) => ("shutdown_deadline", None),
-                                    }
-                                },
-                                _ = headers.expired() => ("header_deadline", None),
-                            }
-                        }
-                    };
-                    if let Some(task) = &mut lifecycle {
-                        task.finish(reason, error.as_deref().map(|error| error as _));
-                    }
-                    if headers.http2_expired() {
-                        metrics.http2_header_timeouts.fetch_add(1, Ordering::Relaxed);
-                    }
-                });
+                web.accept(&mut tasks, (socket, peer), server_tls.clone(), &shutdown_rx);
             },
             accepted = admin_listener.accept() => {
                 let (socket, _) = accepted?;
@@ -341,10 +288,14 @@ async fn run() -> Result<()> {
         );
     })
     .await;
+    if let Some(endpoint) = endpoint {
+        endpoint.close(0u32.into(), b"gateway shutdown deadline");
+    }
     stream.shutdown().await;
     tasks.abort_all();
     while tasks.join_next().await.is_some() {}
     state.pool.sweep(u64::MAX);
+    drop(web);
     drop(state);
     if let Some(worker) = log_thread {
         let limit = tokio::time::Instant::now() + Duration::from_millis(500);
@@ -381,21 +332,58 @@ async fn maintain_pool(pool: Arc<Pool>, mut generations: watch::Receiver<u64>) {
     }
 }
 
+struct Prepared {
+    generation: Arc<Generation>,
+    legacy_tls: Option<tokio_rustls::TlsAcceptor>,
+    explicit_tls: Vec<Option<tokio_rustls::TlsAcceptor>>,
+    quic: Option<quinn::ServerConfig>,
+}
+
+async fn prepare_explicit_listeners(
+    config: &Config,
+) -> Result<Vec<Option<tokio_rustls::TlsAcceptor>>> {
+    if config.listeners.is_empty() {
+        return Ok(Vec::new());
+    }
+    let tls: Vec<_> = config
+        .listeners
+        .iter()
+        .map(|listener| listener.tls.clone())
+        .collect();
+    let h2 = config.http2.enabled;
+    tokio::task::spawn_blocking(move || {
+        tls.iter()
+            .map(|config| {
+                tls::load_server(config.as_ref(), h2)
+                    .map(|server| server.map(tokio_rustls::TlsAcceptor::from))
+            })
+            .collect()
+    })
+    .await?
+}
+
 async fn prepare_reload(
     path: PathBuf,
     baseline: Arc<Config>,
     version: u64,
     strategy: PoolStrategy,
-) -> Result<(Arc<Generation>, Option<tokio_rustls::TlsAcceptor>)> {
+) -> Result<Prepared> {
     let (candidate, routes) = Config::load(&path).await?;
     baseline.reload_compatible(&candidate)?;
     let clients = prepare_tls_clients(&candidate).await?;
-    let server = prepare_server_tls(candidate.tls.clone(), candidate.http2.enabled).await?;
+    let legacy_tls = prepare_server_tls(candidate.tls.clone(), candidate.http2.enabled).await?;
+    let explicit_tls = prepare_explicit_listeners(&candidate).await?;
+    let quic = http3::prepare(&candidate).await?;
     let generation = tokio::task::spawn_blocking(move || {
         Generation::with_strategy(candidate, routes, version, &clients, strategy)
     })
     .await?;
-    Ok((generation, server))
+    Ok(Prepared {
+        generation,
+        legacy_tls,
+        explicit_tls,
+        quic,
+    })
 }
 
 async fn prepare_tls_clients(

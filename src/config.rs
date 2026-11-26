@@ -13,6 +13,8 @@ pub struct Config {
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub listen: Option<SocketAddr>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) listeners: Vec<crate::http_tcp::Settings>,
     pub admin: SocketAddr,
     pub limits: Limits,
     pub logs: Logs,
@@ -20,6 +22,8 @@ pub struct Config {
     pub tls: Option<InboundTls>,
     #[serde(default)]
     pub http2: Http2Config,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) http3: Option<Box<crate::http3::Settings>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) real_ip: Option<Box<crate::identity::Policy>>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
@@ -183,6 +187,26 @@ pub struct InboundTls {
     pub versions: Option<Vec<TlsVersion>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_resumption: Option<bool>,
+}
+
+impl InboundTls {
+    pub(crate) fn validate(&self) -> Result<()> {
+        ensure!(self.sni.len() <= 32, "at most 32 SNI certificate entries");
+        let mut names = HashSet::new();
+        for name in self.sni.keys() {
+            ensure!(
+                !name.ends_with('.')
+                    && !name.contains('_')
+                    && matches!(
+                        rustls::pki_types::ServerName::try_from(name.as_str()),
+                        Ok(rustls::pki_types::ServerName::DnsName(_))
+                    )
+                    && names.insert(name.to_ascii_lowercase()),
+                "invalid or duplicate TLS SNI DNS name"
+            );
+        }
+        validate_tls_versions(self.versions.as_deref())
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
@@ -503,38 +527,50 @@ impl Config {
             Some(self.admin) != self.listen,
             "separate admin and data listeners"
         );
+        let http = self.listen.is_some() || self.http3.is_some() || !self.listeners.is_empty();
         ensure!(
-            self.listen.is_some()
-                || self
-                    .stream
-                    .as_ref()
-                    .is_some_and(|stream| stream.has_listeners()),
+            http || self
+                .stream
+                .as_ref()
+                .is_some_and(|stream| stream.has_listeners()),
             "at least one data listener is required"
         );
         ensure!(
-            self.listen.is_some()
-                || (self.tls.is_none() && self.routes.is_empty() && self.upstreams.is_empty()),
+            http || (self.tls.is_none() && self.routes.is_empty() && self.upstreams.is_empty()),
             "HTTP routes, upstreams and TLS require an HTTP listener"
         );
         if let Some(tls) = &self.tls {
-            ensure!(tls.sni.len() <= 32, "at most 32 SNI certificate entries");
-            let mut names = HashSet::new();
-            for name in tls.sni.keys() {
-                ensure!(
-                    !name.ends_with('.')
-                        && !name.contains('_')
-                        && matches!(
-                            rustls::pki_types::ServerName::try_from(name.as_str()),
-                            Ok(rustls::pki_types::ServerName::DnsName(_))
-                        )
-                        && names.insert(name.to_ascii_lowercase()),
-                    "invalid or duplicate TLS SNI DNS name"
-                );
+            ensure!(
+                self.listen.is_some() || self.http3.as_ref().is_some_and(|h3| h3.tls.is_none()),
+                "proxy.tls requires proxy.listen or an HTTP/3 listener using that TLS configuration"
+            );
+            tls.validate()?;
+        }
+        let mut tcp_addresses = Vec::new();
+        if !self.listeners.is_empty()
+            || self
+                .stream
+                .as_ref()
+                .is_some_and(|stream| !stream.tcp.is_empty() || !stream.tls_passthrough.is_empty())
+        {
+            tcp_addresses.push(self.admin);
+            tcp_addresses.extend(self.listen);
+        }
+        ensure!(
+            self.listeners.len() <= 16,
+            "at most 16 explicit HTTP TCP listeners"
+        );
+        for listener in &self.listeners {
+            crate::stream::config::add_address(&mut tcp_addresses, listener.listen)?;
+            if let Some(tls) = &listener.tls {
+                tls.validate()?;
             }
-            validate_tls_versions(tls.versions.as_deref())?;
+        }
+        if let Some(http3) = &self.http3 {
+            http3.validate(self)?;
         }
         if let Some(stream) = &self.stream {
-            stream.validate(self)?;
+            stream.validate(tcp_addresses)?;
         }
         let l = &self.limits;
         let h = &self.http2;
@@ -597,7 +633,7 @@ impl Config {
         ensure!(!self.logs.path.is_empty(), "missing log path");
         ensure!(
             self.upstreams.len() <= MAX_UPSTREAMS
-                && (self.listen.is_none() || !self.routes.is_empty())
+                && (!http || !self.routes.is_empty())
                 && self.routes.len() <= 1024,
             "invalid routing size"
         );
@@ -872,9 +908,20 @@ impl Config {
     pub fn reload_compatible(&self, next: &Self) -> Result<()> {
         if self.listen != next.listen
             || self.tls.is_some() != next.tls.is_some()
+            || self.listeners.len() != next.listeners.len()
+            || self
+                .listeners
+                .iter()
+                .zip(&next.listeners)
+                .any(|(a, b)| a.listen != b.listen || a.tls.is_some() != b.tls.is_some())
             || self.admin != next.admin
             || self.limits != next.limits
             || self.http2 != next.http2
+            || match (&self.http3, &next.http3) {
+                (Some(a), Some(b)) => !a.reload_compatible(b),
+                (None, None) => false,
+                _ => true,
+            }
             || self.logs != next.logs
             || self.rate_zones != next.rate_zones
             || self.max_connections_per_peer != next.max_connections_per_peer

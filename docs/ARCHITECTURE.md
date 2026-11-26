@@ -279,3 +279,12 @@ por dirección y admite upstreams Unix. UDP conserva límites de datagrama
 y usa un socket conectado por asociación. PROXY y ClientHello se procesan
 en el listener TCP antes de seleccionar el upstream. Las rutas HTTP
 siguen su propio dataplane. [ADR 0014](adr/0014-bounded-stream-listeners.md).
+
+## HTTP sobre TCP y QUIC
+
+`http_tcp.rs` concentra Hyper, TLS opcional y los límites HTTP/1.1 y
+HTTP/2. `http3/` adapta Quinn y h3 al mismo motor de políticas con cuerpos
+que conservan frames DATA y trailers. El listener QUIC comparte admisión
+y certificados con HTTP, y sus ventanas, sesiones, tareas y deadlines
+se controlan independientemente. La entrega Alt-Svc se decide al
+establecer una conexión TCP. [ADR 0015](adr/0015-quinn-http3-transport.md).

@@ -38,8 +38,8 @@ pub struct Completion {
     pub request_bytes: Arc<AtomicU64>,
     pub exchange: Option<diagnostics::Exchange>,
 }
-struct GuardBody {
-    inner: Incoming,
+struct GuardBody<B> {
+    inner: B,
     timer: Pin<Box<Sleep>>,
     idle: Duration,
     deadline: TokioInstant,
@@ -56,7 +56,7 @@ struct GuardBody {
     grpc: bool,
     finished: bool,
 }
-impl GuardBody {
+impl<B> GuardBody<B> {
     fn finish(&mut self, outcome: &'static str) {
         if self.finished {
             return;
@@ -133,12 +133,16 @@ impl GuardBody {
         }
     }
 }
-impl Drop for GuardBody {
+impl<B> Drop for GuardBody<B> {
     fn drop(&mut self) {
         self.finish("cancelled");
     }
 }
-impl Body for GuardBody {
+impl<B> Body for GuardBody<B>
+where
+    B: Body<Data = Bytes> + Unpin,
+    B::Error: Error + Send + Sync + 'static,
+{
     type Data = Bytes;
     type Error = BoxError;
     fn poll_frame(
@@ -236,12 +240,11 @@ pub struct UploadState {
     pub request_slot: crate::admission::RequestSlot,
     pub exchange: Option<diagnostics::Exchange>,
 }
-pub fn upload(
-    inner: Incoming,
-    limits: &Limits,
-    deadline: TokioInstant,
-    state: UploadState,
-) -> ProxyBody {
+pub fn upload<B>(inner: B, limits: &Limits, deadline: TokioInstant, state: UploadState) -> ProxyBody
+where
+    B: Body<Data = Bytes> + Send + Unpin + 'static,
+    B::Error: Error + Send + Sync + 'static,
+{
     let UploadState {
         count,
         done,

@@ -2,7 +2,7 @@ use anyhow::{ensure, Result};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashSet, net::SocketAddr, path::PathBuf};
 
-use crate::config::{identifier, milliseconds, Config};
+use crate::config::{identifier, milliseconds};
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(default, deny_unknown_fields)]
@@ -247,7 +247,7 @@ impl StreamConfig {
         !self.tcp.is_empty() || !self.tls_passthrough.is_empty() || !self.udp.is_empty()
     }
 
-    pub(crate) fn validate(&self, config: &Config) -> Result<()> {
+    pub(crate) fn validate(&self, mut tcp_addrs: Vec<SocketAddr>) -> Result<()> {
         let count = self.tcp.len() + self.tls_passthrough.len() + self.udp.len();
         ensure!(
             count <= 64 && self.upstreams.len() <= 256,
@@ -282,8 +282,6 @@ impl StreamConfig {
                 );
             }
         }
-        let mut tcp_addrs = vec![config.admin];
-        tcp_addrs.extend(config.listen);
         let mut udp_addrs = Vec::new();
         let mut memory = 0u64;
         let mut tcp = |address, options: &TcpOptions, preread: usize| -> Result<()> {

@@ -1,5 +1,9 @@
 {
   "mappings": {
+    "ngx_http_v3_module": {"status": "partial","notes": "Downstream h3 over Quinn. TLS 1.3, Retry, independent admission and streaming. WebTransport and upstream HTTP/3 are separate."},
+    "ngx_http_v3_module.http3": {"status": "partial","notes": "Dedicated QUIC UDP listener with TLS 1.3 and h3 ALPN."},
+    "ngx_http_v3_module.http3_max_concurrent_streams": {"status": "partial","notes": "Per-connection QUIC receive stream limit and explicit request task admission."},
+    "ngx_http_v3_module.quic_retry": {"status": "partial","notes": "QUIC address validation before admitting a handshake."},
     "ngx_stream_core_module": {"status": "partial","notes": "Independent IPv4/IPv6 TCP, UDP and TLS preread listeners. Stream syntax and lifecycle settings differ."},
     "ngx_stream_core_module.listen": {"status": "partial","notes": "Literal IP sockets, opt-in reuseport and inbound PROXY on TCP. Several NGINX socket options differ."},
     "ngx_stream_core_module.preread_buffer_size": {"status": "partial","notes": "Bounded rustls ClientHello parser and retained wire prefix."},
@@ -43,8 +47,8 @@
     "ngx_http_limit_conn_module.limit_conn": {"status": "partial", "notes": "Configurable active request/stream cap per admission key."},
     "ngx_http_limit_conn_module.limit_conn_zone": {"status": "partial", "notes": "Bounded per-key admission with cancellation-safe release."},
     "ngx_http_limit_conn_module.limit_conn_status": {"status": "partial", "notes": "Custom HTTP status on route concurrency rejection. The physical peer cap closes the socket."},
-    "ngx_http_core_module": {"status":"partial","notes":"One data listener with exact and edge-wildcard host names, literal and segment-aware prefixes, exact paths and bounded flat regex locations."},
-    "ngx_http_core_module.listen": {"status":"partial","notes":"One configured TCP data address. Listener options and per-server sockets are unavailable."},
+    "ngx_http_core_module": {"status":"partial","notes":"Independent HTTP TCP and QUIC sockets with exact or edge-wildcard hosts, literal and segment-aware prefixes, exact paths and bounded flat regex locations."},
+    "ngx_http_core_module.listen": {"status":"partial","notes":"Legacy or explicit cleartext/TLS TCP listeners with an independent QUIC UDP listener. Most NGINX socket options and per-server scoping differ."},
     "ngx_http_core_module.server_name": {"status":"partial","notes":"Exact names, complete leading and trailing wildcard labels, longest wildcard precedence and significant port. Default servers, shorthand names and regex are unavailable."},
     "ngx_http_core_module.location": {"status":"partial","notes":"Verified flat exact, plain prefix, ^~, ~ and ~* precedence for the shared raw-path subset. Existing segment-aware matching remains the default. Named locations and bounded internal redirects use the same authority declaration. Nested and PCRE-only rules and URI normalization differ."},
     "ngx_http_core_module.client_max_body_size": {"status":"partial","notes":"Global byte limit applies to upload and download. Streaming bodies exceeding it can be interrupted after headers."},
@@ -117,6 +121,7 @@
     "ngx_http_core_module.gzip_vary": {"status": "partial", "notes": "Vary: Accept-Encoding added on eligible representations."}
   },
   "behaviors": [
+    {"id": "http3-shared-static-response", "status": "verified", "scope": "An independent aioquic client validates HTTPS authority, QUIC Retry, TLS 1.3 and a shared 200 response body against NGINX 1.30.8.", "tests": ["tests/http3/interop.py"], "evidence": ["bench/program/evidence/milestone-7/http3-darwin.log"]},
     {"id": "stream-tcp-weight-and-half-close", "status": "verified", "scope": "Stream TCP half-close and weighted 3:1 distribution against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]},
     {"id": "stream-udp-echo", "status": "verified", "scope": "Stream UDP echo datagram boundaries against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]},
     {"id": "stream-tls-preread", "status": "verified", "scope": "Stream TLS visible SNI and default routing against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]},

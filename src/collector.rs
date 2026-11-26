@@ -1328,7 +1328,7 @@ fn validate_event(line: &[u8]) -> Result<Value> {
     ensure!(
         (event.schema_version == "1.0" && event.protocol == "HTTP/1.1")
             || (event.schema_version == "1.1"
-                && matches!(event.protocol.as_str(), "HTTP/1.1" | "HTTP/2")),
+                && matches!(event.protocol.as_str(), "HTTP/1.1" | "HTTP/2" | "HTTP/3")),
         "unsupported access-log schema_version or protocol"
     );
     for id in [&event.event_id, &event.instance_id, &event.request_id] {

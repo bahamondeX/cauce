@@ -1556,10 +1556,52 @@
       ],
       "anyOf": [
         { "required": ["listen", "routes"] },
+        { "required": ["listeners", "routes"] },
+        { "required": ["http3", "routes"] },
         { "required": ["stream"] }
       ],
       "properties": {
         "stream": { "$ref": "#/$defs/stream" },
+        "listeners": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["listen"],
+            "properties": {
+              "listen": { "$ref": "#/$defs/authority" },
+              "tls": { "$ref": "#/$defs/tls" }
+            }
+          }
+        },
+        "http3": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["listen"],
+          "properties": {
+            "listen": { "$ref": "#/$defs/authority" },
+            "tls": { "$ref": "#/$defs/tls" },
+            "advertise": { "type": "boolean" },
+            "path_migration": { "type": "boolean" },
+            "max_connections": { "type": "integer", "minimum": 1, "maximum": 1024 },
+            "max_streams": { "type": "integer", "minimum": 1, "maximum": 256 },
+            "max_requests_per_connection": { "type": "integer", "minimum": 1, "maximum": 16384 },
+            "max_field_bytes": { "type": "integer", "minimum": 1024, "maximum": 65536 },
+            "idle_timeout": {
+              "anyOf": [
+                { "$ref": "#/$defs/durationString" },
+                { "type": "integer", "minimum": 1, "maximum": 86400000 }
+              ]
+            },
+            "connection_timeout": {
+              "anyOf": [
+                { "$ref": "#/$defs/durationString" },
+                { "type": "integer", "minimum": 1, "maximum": 86400000 }
+              ]
+            }
+          }
+        },
         "name": {
           "$ref": "#/$defs/identifier"
         },

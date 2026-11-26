@@ -148,7 +148,7 @@ impl Group {
     }
 }
 
-fn socket(address: SocketAddr, kind: Type, reuse_port: bool) -> std::io::Result<Socket> {
+pub(crate) fn socket(address: SocketAddr, kind: Type, reuse_port: bool) -> std::io::Result<Socket> {
     let socket = Socket::new(Domain::for_address(address), kind, None)?;
     socket.set_nonblocking(true)?;
     if address.is_ipv6() {

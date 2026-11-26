@@ -318,7 +318,7 @@ modules:
         directives:
           - {"name": "output_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
   ngx_http_core_module:
-    coverage: {"status": "partial", "notes": "One data listener with exact and edge-wildcard host names, literal and segment-aware prefixes, exact paths and bounded flat regex locations."}
+    coverage: {"status": "partial", "notes": "Independent HTTP TCP and QUIC sockets with exact or edge-wildcard hosts, literal and segment-aware prefixes, exact paths and bounded flat regex locations."}
     definitions:
       - source: src/http/ngx_http_core_module.c
         type: NGX_HTTP_MODULE
@@ -365,7 +365,7 @@ modules:
           - {"name": "lingering_close", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "lingering_time", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "lingering_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "listen", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "One configured TCP data address. Listener options and per-server sockets are unavailable."}
+          - {"name": "listen", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Legacy or explicit cleartext/TLS TCP listeners with an independent QUIC UDP listener. Most NGINX socket options and per-server scoping differ."}
           - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Verified flat exact, plain prefix, ^~, ~ and ~* precedence for the shared raw-path subset. Existing segment-aware matching remains the default. Named locations and bounded internal redirects use the same authority declaration. Nested and PCRE-only rules and URI normalization differ."}
           - {"name": "log_not_found", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "log_subrequest", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
@@ -1146,18 +1146,19 @@ modules:
         type: NGX_HTTP_MODULE
         directives: []
   ngx_http_v3_module:
+    coverage: {"status": "partial", "notes": "Downstream h3 over Quinn. TLS 1.3, Retry, independent admission and streaming. WebTransport and upstream HTTP/3 are separate."}
     definitions:
       - source: src/http/v3/ngx_http_v3_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "http3", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "http3", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Dedicated QUIC UDP listener with TLS 1.3 and h3 ALPN."}
           - {"name": "http3_hq", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "http3_max_concurrent_streams", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "http3_max_concurrent_streams", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Per-connection QUIC receive stream limit and explicit request task admission."}
           - {"name": "http3_stream_buffer_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "quic_active_connection_id_limit", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "quic_gso", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "quic_host_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "quic_retry", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "quic_retry", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "QUIC address validation before admitting a handshake."}
   ngx_http_write_filter_module:
     definitions:
       - source: src/http/ngx_http_write_filter_module.c
@@ -1668,6 +1669,7 @@ add_ons:
               - {"name": "state_path", "flags": ["NGX_CONF_TAKE1"], "within": "acme_issuer"}
               - {"name": "accept_terms_of_service", "flags": ["NGX_CONF_NOARGS"], "within": "acme_issuer"}
 behaviors:
+  - {"id": "http3-shared-static-response", "status": "verified", "scope": "An independent aioquic client validates HTTPS authority, QUIC Retry, TLS 1.3 and a shared 200 response body against NGINX 1.30.8.", "tests": ["tests/http3/interop.py"], "evidence": ["bench/program/evidence/milestone-7/http3-darwin.log"]}
   - {"id": "stream-tcp-weight-and-half-close", "status": "verified", "scope": "Stream TCP half-close and weighted 3:1 distribution against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
   - {"id": "stream-udp-echo", "status": "verified", "scope": "Stream UDP echo datagram boundaries against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
   - {"id": "stream-tls-preread", "status": "verified", "scope": "Stream TLS visible SNI and default routing against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
