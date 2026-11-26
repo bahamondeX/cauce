@@ -152,36 +152,43 @@ fn render(
     mode: Query,
     validating: bool,
 ) -> Result<PathAndQuery, ()> {
-    let mut target = String::new();
-    for part in parts {
-        let value = match part {
-            Part::Text(text) => text,
-            Part::Capture(_) if validating => "x",
+    fn value<'a>(
+        part: &'a Part,
+        captures: Option<&Captures<'a>>,
+        validating: bool,
+    ) -> Result<&'a str, ()> {
+        match part {
+            Part::Text(text) => Ok(text),
+            Part::Capture(_) if validating => Ok("x"),
             Part::Capture(index) => std::str::from_utf8(
                 captures
-                    .and_then(|c| c.get(*index))
-                    .map_or(b"", |c| c.as_bytes()),
+                    .and_then(|captures| captures.get(*index))
+                    .map_or(b"", |item| item.as_bytes()),
             )
-            .map_err(|_| ())?,
-        };
-        if target.len() + value.len() > MAX_DESTINATION {
-            return Err(());
+            .map_err(|_| ()),
         }
-        target.push_str(value);
     }
-    if let Some(query) = query.filter(|query| mode == Query::Preserve && !query.is_empty()) {
-        if target.len() + query.len() + 1 > MAX_DESTINATION {
-            return Err(());
-        }
+    let query = query.filter(|query| mode == Query::Preserve && !query.is_empty());
+    let size = parts
+        .iter()
+        .try_fold(query.map_or(0, |query| 1 + query.len()), |size, part| {
+            let total = size + value(part, captures, validating)?.len();
+            (total <= MAX_DESTINATION).then_some(total).ok_or(())
+        })?;
+    // Allocate the exact size and transfer ownership to the URI buffer.
+    let mut target = String::with_capacity(size);
+    for part in parts {
+        target.push_str(value(part, captures, validating)?);
+    }
+    if let Some(query) = query {
         target.push(if target.contains('?') { '&' } else { '?' });
         target.push_str(query);
     }
-    let parsed: PathAndQuery = target.parse().map_err(|_| ())?;
-    if !parsed.path().starts_with('/') || !crate::proxy::normal_path(parsed.path()) {
-        return Err(());
-    }
-    // Do not allow parser normalization to hide a fragment or other discarded text.
-    if parsed.as_str() != target {
+    let parsed = PathAndQuery::try_from(target).map_err(|_| ())?;
+    if parsed.as_str().len() != size
+        || !parsed.path().starts_with('/')
+        || !crate::proxy::normal_path(parsed.path())
+    {
         return Err(());
     }
     Ok(parsed)

@@ -309,6 +309,29 @@ mod tests {
     }
 
     #[test]
+    fn capture_rewrite_allocation_sample() {
+        let action: crate::actions::Action = serde_json::from_str(
+            r#"{"kind":"rewrite","pattern":"^/echo/(.*)$","target":"/internal/$1"}"#,
+        )
+        .unwrap();
+        let path = "/echo/capture-that-needs-more-than-one-string-allocation";
+        let _ = action.apply(path, Some("q=value")).unwrap();
+        ALLOCATIONS.with(|count| count.set(Some((0, 0))));
+        for _ in 0..100 {
+            let output = std::hint::black_box(action.apply(path, Some("q=value")).unwrap());
+            let Some(crate::actions::Outcome::Rewrite(uri)) = output else {
+                panic!("expected rewrite");
+            };
+            assert_eq!(
+                uri.as_str(),
+                "/internal/capture-that-needs-more-than-one-string-allocation?q=value"
+            );
+        }
+        let (calls, bytes) = ALLOCATIONS.with(|count| count.replace(None).unwrap());
+        println!("capture_rewrite iterations=100 allocations={calls} allocated_bytes={bytes}");
+    }
+
+    #[test]
     fn burst_delay_and_live_entry_budget_fail_closed() {
         let zone = Arc::new(Zone::new(Spec {
             key: KeyMode::ClientIp,
