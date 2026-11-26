@@ -187,6 +187,10 @@ verification. Set `client_certificate` on an upstream TLS policy to present
 a client chain and private key to that origin. Each side accepts an optional
 `versions` list with `tls1.2`, `tls1.3` or both. Session resumption is enabled
 by default and can be disabled with `session_resumption: false`.
+Set `send_sni: false` on an upstream TLS policy to omit the DNS name from
+ClientHello. Certificate verification still uses `server_name` and the
+explicit CA bundle. Cauce sends SNI by default for DNS names. The NGINX
+`proxy_ssl_server_name` setting defaults to `off`.
 
 Replace credentials using distinct paths and publish a complete candidate on
 reload. New handshakes use the new credentials and a new session cache.

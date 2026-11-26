@@ -20,6 +20,7 @@ import tomllib
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "compatibility/nginx-gap-backlog.jsonl"
 sys.path.insert(0, str(ROOT / "tests/compatibility"))
+sys.path.insert(1, str(ROOT / "tests"))
 import fixtures
 
 
@@ -143,7 +144,7 @@ def run_module(module, nginx, cauce, folder):
     config.update(listen=f"127.0.0.1:{cauce_port}", admin=f"127.0.0.1:{admin}", upstreams=[], routes=[])
     config["logs"]["enabled"] = False
     with ExitStack() as resources:
-        reference, cases, rejected = fixtures.MODULES[module](config, nginx_port, resources)
+        reference, cases, rejected = fixtures.MODULES[module](config, nginx_port, resources, folder)
         folders = {key: folder / key for key in ("nginx", "cauce")}
         for runtime in folders.values():
             runtime.mkdir(parents=True)

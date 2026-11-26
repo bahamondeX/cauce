@@ -471,6 +471,10 @@
         "ca_file"
       ],
       "properties": {
+        "send_sni": {
+          "type": "boolean",
+          "description": "Send the configured DNS name in the TLS ClientHello. Certificate verification always uses server_name."
+        },
         "client_certificate": {"$ref": "#/$defs/certificateFiles"},
         "versions": {"$ref": "#/$defs/tlsVersions"},
         "session_resumption": {"type": "boolean"},

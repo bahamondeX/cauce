@@ -39,6 +39,7 @@ EVIDENCE = {
     "disk-cache": ("ngx_http_proxy_module", "proxy_cache_path"),
     "nested-locations": ("ngx_http_core_module", "location"),
     "header-inheritance": ("ngx_http_headers_filter_module", "add_header add_header_inherit"),
+    "http-origin-sni": ("ngx_http_proxy_module", "proxy_ssl_server_name"),
 }
 FILES = {
     "routing": ("shared cases", "bench/program/evidence/milestone-4/nginx-differential.jsonl"),
@@ -52,9 +53,15 @@ FILES = {
     "disk-cache": ("Cauce fixture", "bench/program/evidence/milestone-9/disk-sockets.log"),
     "nested-locations": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
     "header-inheritance": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
+    "http-origin-sni": ("shared cases", "bench/program/evidence/milestone-10/differential-http-sni.json"),
 }
 
 REVIEWED = {
+    ("ngx_http_proxy_module", "proxy_ssl_server_name"): {
+        "arguments": ["on or off"], "default": "off",
+        "inheritance": "An unset value inherits from the enclosing HTTP, server or location configuration.",
+        "source_functions": ["ngx_http_proxy_merge_loc_conf", "ngx_http_upstream_ssl_name"],
+    },
     ("ngx_http_core_module", "location"): {
         "arguments": ["optional =, ^~, ~ or ~* modifier", "URI prefix, regex or named location"],
         "default": "The server's root location configuration is used when no location matches.",

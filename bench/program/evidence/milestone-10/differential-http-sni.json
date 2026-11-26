@@ -1,0 +1,682 @@
+{
+  "cauce_sha256": "63f3362f44c8ea6e94b48abf832b777b63c58501ab5b40274ff630ea577d9a95",
+  "modules": [
+    {
+      "cases": [
+        {
+          "case": "prefix-default",
+          "cauce": {
+            "body_base64": "b3V0ZXI=",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "b3V0ZXI=",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "literal-prefix-without-segment-boundary",
+          "cauce": {
+            "body_base64": "b3V0ZXI=",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "b3V0ZXI=",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nested",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "longest-child-and-header-override",
+          "cauce": {
+            "body_base64": "ZGVlcA==",
+            "headers": {
+              "x-scope": [
+                "overridden"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "ZGVlcA==",
+            "headers": {
+              "x-scope": [
+                "overridden"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest/deep/relative",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "grandchild-inherits-nearest-override",
+          "cauce": {
+            "body_base64": "ZGVlcC1leGFjdA==",
+            "headers": {
+              "x-scope": [
+                "overridden"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "ZGVlcC1leGFjdA==",
+            "headers": {
+              "x-scope": [
+                "overridden"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest/deep/fixed",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "nested-exact-beats-server-regex",
+          "cauce": {
+            "body_base64": "bmVzdGVkLWV4YWN0",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "bmVzdGVkLWV4YWN0",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest/exact.outer?fixture=1",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "nested-regex-beats-server-regex",
+          "cauce": {
+            "body_base64": "bG9jYWwtcmVnZXg=",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "bG9jYWwtcmVnZXg=",
+            "headers": {
+              "x-scope": [
+                "inherited"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest/file.near",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "nested-no-regex-suppresses-same-depth-regex",
+          "cauce": {
+            "body_base64": "dG9wLXJlZ2V4",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "dG9wLXJlZ2V4",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest/quiet/file.near",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "server-regex-can-override-nested-prefix",
+          "cauce": {
+            "body_base64": "dG9wLXJlZ2V4",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "dG9wLXJlZ2V4",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/nest/deep/file.outer",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "server-no-regex-protects-included-child",
+          "cauce": {
+            "body_base64": "cHJvdGVjdGVkLWNoaWxk",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "cHJvdGVjdGVkLWNoaWxk",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/shield/child/file.outer",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "nested-location-below-regex",
+          "cauce": {
+            "body_base64": "cmVnZXgtY2hpbGQ=",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "cmVnZXgtY2hpbGQ=",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/reg/exact",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "regex-parent-fallback",
+          "cauce": {
+            "body_base64": "cmVnZXgtcGFyZW50",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "cmVnZXgtcGFyZW50",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/reg/fallback",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "nested-regex-out-of-scope",
+          "cauce": {
+            "body_base64": "dG9wLXJlZ2V4",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "dG9wLXJlZ2V4",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/other/file.near",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "unrelated-fallback",
+          "cauce": {
+            "body_base64": "cm9vdA==",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "cm9vdA==",
+            "headers": {
+              "x-scope": []
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/other",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        }
+      ],
+      "configuration_rejections": [
+        {
+          "case": "outside-enclosing-path",
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            },
+            "nginx": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            }
+          },
+          "passed": true
+        },
+        {
+          "case": "exact-parent-forbidden",
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            },
+            "nginx": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            }
+          },
+          "passed": true
+        },
+        {
+          "case": "cross-authority-parent",
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            }
+          },
+          "passed": true
+        },
+        {
+          "case": "literal-location-below-regex-is-rejected-by-cauce",
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            }
+          },
+          "passed": true
+        },
+        {
+          "case": "cycle-in-location-graph",
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            }
+          },
+          "passed": true
+        }
+      ],
+      "lifecycle": {
+        "cauce": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "shutdown_seconds": 0.003980040997703327,
+          "started": true
+        },
+        "nginx": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "shutdown_seconds": 0.003915582998160971,
+          "started": true
+        }
+      },
+      "module": "ngx_http_core_module",
+      "resources_after": {
+        "cauce": {
+          "cpu_time_ps": "0:00.04",
+          "rss_kib": 17184
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 5936
+        }
+      },
+      "resources_before": {
+        "cauce": {
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 15600
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5856
+        }
+      }
+    },
+    {
+      "cases": [
+        {
+          "case": "override-client-header-and-hide-response-header",
+          "cauce": {
+            "body_base64": "Zml4dHVyZQ==",
+            "headers": {
+              "content-length": [
+                "7"
+              ],
+              "x-hidden": [],
+              "x-repeated": [
+                "first",
+                "second"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "Zml4dHVyZQ==",
+            "headers": {
+              "content-length": [
+                "7"
+              ],
+              "x-hidden": [],
+              "x-repeated": [
+                "first",
+                "second"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "target": "/",
+          "uncompared_headers": [
+            "connection",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "filter-upstream-error-and-retain-multiplicity",
+          "cauce": {
+            "body_base64": "Zml4dHVyZQ==",
+            "headers": {
+              "content-length": [
+                "7"
+              ],
+              "x-hidden": [],
+              "x-repeated": [
+                "first",
+                "second"
+              ]
+            },
+            "status": 404
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "Zml4dHVyZQ==",
+            "headers": {
+              "content-length": [
+                "7"
+              ],
+              "x-hidden": [],
+              "x-repeated": [
+                "first",
+                "second"
+              ]
+            },
+            "status": 404
+          },
+          "passed": true,
+          "target": "/missing",
+          "uncompared_headers": [
+            "connection",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "sni-on",
+          "cauce": {
+            "body_base64": "YmFja2VuZC50ZXN0",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "YmFja2VuZC50ZXN0",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "target": "/sni-on",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "sni-off",
+          "cauce": {
+            "body_base64": "bm8tc25p",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "bm8tc25p",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "target": "/sni-off",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "sni-invalid-name",
+          "cauce": {
+            "headers": {},
+            "status": 502
+          },
+          "compared_body": false,
+          "nginx": {
+            "headers": {},
+            "status": 502
+          },
+          "passed": true,
+          "target": "/sni-invalid-name",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server"
+          ]
+        }
+      ],
+      "configuration_rejections": [],
+      "lifecycle": {
+        "cauce": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "shutdown_seconds": 0.0036199579990352504,
+          "started": true
+        },
+        "nginx": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "shutdown_seconds": 0.004289041997253662,
+          "started": true
+        }
+      },
+      "module": "ngx_http_proxy_module",
+      "resources_after": {
+        "cauce": {
+          "cpu_time_ps": "0:00.04",
+          "rss_kib": 19680
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 7424
+        }
+      },
+      "resources_before": {
+        "cauce": {
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 15472
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 6416
+        }
+      }
+    }
+  ],
+  "nginx_sha256": "4f1e7975ebdc1eaa3d00fad3b0033185fb12d69b8aca5b0baf41b1bc7d829a20",
+  "nginx_version": "nginx version: nginx/1.30.8\nbuilt by clang 17.0.0 (clang-1700.0.13.5)\nbuilt with OpenSSL 3.6.4 25 Aug 2026\nTLS SNI support enabled\nconfigure arguments: --with-stream --with-stream_realip_module --with-stream_ssl_module --with-stream_ssl_preread_module --with-http_ssl_module --with-http_v3_module --with-http_gzip_static_module --with-cc-opt='-I/opt/homebrew/opt/openssl@3/include -I/opt/homebrew/opt/pcre2/include' --with-ld-opt='-L/opt/homebrew/opt/openssl@3/lib -L/opt/homebrew/opt/pcre2/lib'",
+  "passed": true
+}

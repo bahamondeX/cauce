@@ -118,6 +118,7 @@
     "ngx_http_proxy_module.proxy_request_buffering": {"status":"partial","notes":"Streams requests with bounded protocol buffers."},
     "ngx_http_proxy_module.proxy_ssl_verify": {"status":"partial","notes":"Configured upstream TLS always verifies peer identity and chain."},
     "ngx_http_proxy_module.proxy_ssl_name": {"status":"partial","notes":"Explicit upstream TLS name."},
+    "ngx_http_proxy_module.proxy_ssl_server_name": {"status":"partial","notes":"Upstream TLS send_sni controls ClientHello DNS name transmission. Explicit on and off match the verified HTTP fixtures. Cauce defaults to sending SNI, verifies the configured name in either mode, and places this setting on the endpoint."},
     "ngx_http_proxy_module.proxy_ssl_trusted_certificate": {"status":"partial","notes":"One explicit CA bundle per TLS-enabled upstream."},
     "ngx_http_proxy_module.proxy_ssl_certificate": {"status":"partial","notes":"One explicit client certificate chain per TLS-enabled upstream."},
     "ngx_http_proxy_module.proxy_ssl_certificate_key": {"status":"partial","notes":"One explicit client private key per TLS-enabled upstream."},

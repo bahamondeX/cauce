@@ -209,6 +209,7 @@ fn build_client(config: &UpstreamTls) -> Result<ClientConfig> {
     } else {
         builder.with_no_client_auth()
     };
+    client.enable_sni = config.send_sni.unwrap_or(true);
     if config.session_resumption == Some(false) {
         client.resumption = Resumption::disabled();
     }

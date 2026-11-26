@@ -1,10 +1,14 @@
 """Per-module request data and independently rendered loopback configurations."""
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import json
+import ssl
 import threading
 
+from tls_gateway import issue, openssl
 
-def proxy(config, reference_port, resources):
+
+def proxy(config, reference_port, resources, folder):
     class Origin(BaseHTTPRequestHandler):
         def do_GET(self):
             body = self.headers.get("X-Tenant", "missing").encode()
@@ -29,19 +33,72 @@ def proxy(config, reference_port, resources):
     config["routes"] = [{"id": "proxy", "host": "compat.test", "path_prefix": "/", "upstreams": ["backend"],
                          "headers": {"request": {"set": {"X-Tenant": "fixture"}},
                                      "response": {"remove": ["X-Hidden"]}}}]
+    tls_locations, tls_cases = proxy_sni(config, resources, folder)
     reference = f"""server {{ listen 127.0.0.1:{reference_port}; server_name compat.test;
     location / {{ proxy_pass http://{address}; proxy_set_header X-Tenant fixture;
-                  proxy_hide_header X-Hidden; }} }}"""
+                  proxy_hide_header X-Hidden; }}
+    {tls_locations} }}"""
     return reference, [
         {"name": "override-client-header-and-hide-response-header", "target": "/", "status": 200,
          "request_headers": {"X-Tenant": "client"}, "expected_body": "fixture",
          "headers": ["x-hidden", "x-repeated", "content-length"]},
         {"name": "filter-upstream-error-and-retain-multiplicity", "target": "/missing", "status": 404,
          "expected_body": "fixture", "headers": ["x-hidden", "x-repeated", "content-length"]},
-    ], []
+    ] + tls_cases, []
 
 
-def nested(config, reference_port, _resources):
+def proxy_sni(config, resources, folder):
+    class TlsOrigin(BaseHTTPRequestHandler):
+        def do_GET(self):
+            body = (self.connection.fixture_sni or "no-sni").encode()
+            self.send_response(200)
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *_):
+            pass
+
+    certificates = folder / "origin-tls"
+    certificates.mkdir(parents=True)
+    openssl(certificates, "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "1",
+            "-subj", "/CN=compatibility-ca", "-addext", "basicConstraints=critical,CA:TRUE",
+            "-addext", "keyUsage=critical,keyCertSign,cRLSign", "-addext", "subjectKeyIdentifier=hash",
+            "-keyout", "ca-key.pem", "-out", "ca.pem")
+    issue(certificates, 1, "backend", "ca", "serverAuth", "backend.test")
+    tls = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    tls.load_cert_chain(certificates / "backend.pem", certificates / "backend-key.pem")
+    tls.set_servername_callback(lambda sock, name, _: setattr(sock, "fixture_sni", name))
+    backend = resources.enter_context(ThreadingHTTPServer(("127.0.0.1", 0), TlsOrigin))
+    backend.socket = tls.wrap_socket(backend.socket, server_side=True)
+    threading.Thread(target=backend.serve_forever, daemon=True).start()
+    resources.callback(backend.shutdown)
+    address = f"127.0.0.1:{backend.server_port}"
+    ca = str(certificates / "ca.pem")
+    locations, cases = [], []
+    for suffix, tls_name, sni in (("on", "backend.test", True), ("off", "backend.test", False),
+                                  ("invalid-name", "wrong.test", False)):
+        name = f"sni-{suffix}"
+        path = f"/{name}"
+        option = "on" if sni else "off"
+        locations.append(f"""location = {path} {{ proxy_pass https://{address};
+          proxy_ssl_name {tls_name}; proxy_ssl_trusted_certificate {json.dumps(ca)};
+          proxy_ssl_verify on; proxy_ssl_server_name {option}; }}""")
+        config["upstreams"].append({"id": name, "address": address, "host": "backend.test",
+                                  "isolation": "fixture", "connections": 4, "idle_connections": 2,
+                                  "failure_backoff_ms": 100,
+                                  "tls": {"server_name": tls_name, "ca_file": ca, "send_sni": sni}})
+        config["routes"].append({"id": name, "host": "compat.test", "path_match": "exact",
+                                 "path_prefix": path, "upstreams": [name]})
+        if suffix == "invalid-name":
+            cases.append({"name": name, "target": path, "status": 502, "compare_body": False})
+        else:
+            cases.append({"name": name, "target": path, "status": 200,
+                          "expected_body": tls_name if sni else "no-sni"})
+    return "\n".join(locations), cases
+
+
+def nested(config, reference_port, _resources, _folder):
     config["routes"] = []
 
     def route(id_, selector, literal, body, parent=None, scope=None):

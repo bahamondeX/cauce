@@ -421,6 +421,8 @@ pub struct UpstreamTls {
     pub server_name: String,
     pub ca_file: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub send_sni: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub client_certificate: Option<CertificateFiles>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub versions: Option<Vec<TlsVersion>>,
@@ -1220,6 +1222,7 @@ mod tests {
         bad.upstreams[0].tls = Some(UpstreamTls {
             server_name: "backend.test".into(),
             ca_file: "/tmp/ca.pem".into(),
+            send_sni: None,
             client_certificate: None,
             versions: None,
             session_resumption: None,
