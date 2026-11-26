@@ -1,8 +1,8 @@
 use crate::config::{InboundTls, TlsVersion, UpstreamProtocol, UpstreamTls};
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use rustls::{
     client::Resumption,
-    pki_types::{CertificateDer, PrivateKeyDer},
+    pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer},
     server::{
         ClientHello, NoServerSessionStorage, ResolvesServerCert, ResolvesServerCertUsingSni,
         WebPkiClientVerifier,
@@ -36,8 +36,7 @@ fn pem(path: &str) -> Result<Vec<u8>> {
 
 fn cert_chain(path: &str) -> Result<Vec<CertificateDer<'static>>> {
     let bytes = pem(path)?;
-    let certificates =
-        rustls_pemfile::certs(&mut bytes.as_slice()).collect::<std::io::Result<Vec<_>>>()?;
+    let certificates = CertificateDer::pem_slice_iter(&bytes).collect::<Result<Vec<_>, _>>()?;
     if certificates.is_empty() {
         bail!("TLS certificate chain is empty")
     }
@@ -46,8 +45,7 @@ fn cert_chain(path: &str) -> Result<Vec<CertificateDer<'static>>> {
 
 fn private_key(path: &str) -> Result<PrivateKeyDer<'static>> {
     let bytes = pem(path)?;
-    rustls_pemfile::private_key(&mut bytes.as_slice())?
-        .ok_or_else(|| anyhow!("TLS private key is missing or unsupported"))
+    PrivateKeyDer::from_pem_slice(&bytes).context("TLS private key is missing or unsupported")
 }
 
 fn trust_roots(path: &str) -> Result<RootCertStore> {
@@ -73,17 +71,33 @@ fn versions(config: Option<&[TlsVersion]>) -> &[&'static SupportedProtocolVersio
 struct SniDefault {
     named: ResolvesServerCertUsingSni,
     default: Arc<CertifiedKey>,
+    managed: ManagedCertificates,
 }
 
 impl ResolvesServerCert for SniDefault {
     fn resolve(&self, hello: ClientHello<'_>) -> Option<Arc<CertifiedKey>> {
+        if let Some(managed) = &self.managed {
+            if let Some(certified) = managed.resolve_managed(&hello) {
+                return Some(certified);
+            }
+        }
         self.named
             .resolve(hello)
             .or_else(|| Some(self.default.clone()))
     }
 }
 
-pub fn load_server(config: Option<&InboundTls>, http2: bool) -> Result<Option<Arc<ServerConfig>>> {
+pub(crate) trait ManagedResolver: std::fmt::Debug + Send + Sync {
+    fn resolve_managed(&self, hello: &ClientHello<'_>) -> Option<Arc<CertifiedKey>>;
+}
+
+pub(crate) type ManagedCertificates = Option<Arc<dyn ManagedResolver>>;
+
+pub fn load_server(
+    config: Option<&InboundTls>,
+    http2: bool,
+    managed: ManagedCertificates,
+) -> Result<Option<Arc<ServerConfig>>> {
     let Some(config) = config else {
         return Ok(None);
     };
@@ -92,16 +106,28 @@ pub fn load_server(config: Option<&InboundTls>, http2: bool) -> Result<Option<Ar
     } else {
         vec![b"http/1.1".to_vec()]
     };
-    build_server(config, versions(config.versions.as_deref()), protocols)
-        .map(|server| Some(Arc::new(server)))
+    build_server(
+        config,
+        versions(config.versions.as_deref()),
+        protocols,
+        managed,
+    )
+    .map(|server| Some(Arc::new(server)))
 }
 
 pub(crate) fn load_raw_server(config: &InboundTls) -> Result<Arc<ServerConfig>> {
-    build_server(config, versions(config.versions.as_deref()), Vec::new()).map(Arc::new)
+    build_server(
+        config,
+        versions(config.versions.as_deref()),
+        Vec::new(),
+        None,
+    )
+    .map(Arc::new)
 }
 
-pub(crate) fn load_quic(config: &InboundTls) -> Result<ServerConfig> {
-    let mut server = build_server(config, TLS13_ONLY, vec![b"h3".to_vec()])?;
+#[cfg(feature = "quic")]
+pub(crate) fn load_quic(config: &InboundTls, managed: ManagedCertificates) -> Result<ServerConfig> {
+    let mut server = build_server(config, TLS13_ONLY, vec![b"h3".to_vec()], managed)?;
     server.max_early_data_size = 0;
     Ok(server)
 }
@@ -110,6 +136,7 @@ fn build_server(
     config: &InboundTls,
     versions: &[&'static SupportedProtocolVersion],
     alpn_protocols: Vec<Vec<u8>>,
+    managed: ManagedCertificates,
 ) -> Result<ServerConfig> {
     let certs = cert_chain(&config.cert_file).context("default inbound TLS certificate")?;
     let key = private_key(&config.key_file).context("default inbound TLS private key")?;
@@ -120,7 +147,7 @@ fn build_server(
     } else {
         builder.with_no_client_auth()
     };
-    let mut server = if config.sni.is_empty() {
+    let mut server = if config.sni.is_empty() && managed.is_none() {
         builder
             .with_single_cert(certs, key)
             .context("TLS certificate and private key do not match or are invalid")?
@@ -140,7 +167,11 @@ fn build_server(
                 .add(name, certified)
                 .context("SNI certificate does not cover its DNS name")?;
         }
-        builder.with_cert_resolver(Arc::new(SniDefault { named, default }))
+        builder.with_cert_resolver(Arc::new(SniDefault {
+            named,
+            default,
+            managed,
+        }))
     };
     if config.session_resumption == Some(false) {
         server.session_storage = Arc::new(NoServerSessionStorage {});

@@ -18,6 +18,8 @@ pub struct Config {
     pub admin: SocketAddr,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) dns: Option<crate::dns::Settings>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) acme: Option<crate::acme_config::Settings>,
     pub limits: Limits,
     pub logs: Logs,
     #[serde(default)]
@@ -544,7 +546,11 @@ impl Config {
         .await?
     }
     pub fn validate(&self) -> Result<()> {
+        crate::capabilities::validate(self)?;
         ensure!(identifier(&self.name), "invalid product name");
+        if let Some(acme) = &self.acme {
+            acme.validate(self)?;
+        }
         if let Some(dns) = &self.dns {
             dns.validate()?;
         }
@@ -858,6 +864,8 @@ impl Config {
                 )
             })
             .collect();
+        let mut disk_quota = 0;
+        let mut disk_directories = HashSet::new();
         let mut route_ids = HashSet::new();
         let mut matches = HashSet::new();
         for r in &self.routes {
@@ -926,6 +934,15 @@ impl Config {
             );
             if let Some(spec) = &r.cache {
                 spec.validate()?;
+                if let Some(disk) = &spec.disk {
+                    disk_quota += disk.max_size;
+                    ensure!(
+                        disk_directories.insert(&disk.directory)
+                            && disk_directories.len() <= 16
+                            && disk_quota <= 64 * (1 << 30),
+                        "invalid aggregate disk cache quota or duplicate directory"
+                    );
+                }
                 ensure!(
                     r.content.is_none() && !r.upstreams.is_empty(),
                     "cache requires a proxy route"
@@ -1003,6 +1020,13 @@ impl Config {
         Ok(())
     }
     pub fn reload_compatible(&self, next: &Self) -> Result<()> {
+        ensure!(
+            !self.routes.iter().chain(&next.routes).any(|route| route
+                .cache
+                .as_ref()
+                .is_some_and(|cache| cache.disk.is_some())),
+            "disk cache requires a process restart for configuration changes"
+        );
         if self.listen != next.listen
             || self.tls.is_some() != next.tls.is_some()
             || self.listeners.len() != next.listeners.len()
@@ -1015,6 +1039,7 @@ impl Config {
             || self.limits != next.limits
             || self.http2 != next.http2
             || self.dns != next.dns
+            || self.acme != next.acme
             || match (&self.http3, &next.http3) {
                 (Some(a), Some(b)) => !a.reload_compatible(b),
                 (None, None) => false,
@@ -1027,7 +1052,7 @@ impl Config {
             || self.stream != next.stream
             || self.mail != next.mail
         {
-            bail!("reload supports routes/upstreams only; listener, stream, mail, DNS, limits, log, name and admission zone changes require restart");
+            bail!("reload supports routes/upstreams only; listener, stream, mail, DNS, ACME, limits, log, name and admission zone changes require restart");
         }
         Ok(())
     }

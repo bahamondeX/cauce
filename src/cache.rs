@@ -1,4 +1,5 @@
 //! Shared HTTP response cache policy, independent of the bounded memory store.
+mod disk;
 mod epoch;
 mod selectors;
 mod store;
@@ -32,6 +33,8 @@ const MAX_KEY_BYTES: usize = 8192;
 pub(crate) struct Spec {
     #[serde(deserialize_with = "bytes")]
     pub max_size: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) disk: Option<disk::Settings>,
     #[serde(deserialize_with = "bytes")]
     max_entry_size: u64,
     max_entries: usize,
@@ -65,6 +68,7 @@ impl Default for Spec {
     fn default() -> Self {
         Self {
             max_size: 64 * 1024 * 1024,
+            disk: None,
             max_entry_size: 256 * 1024,
             max_entries: 4096,
             max_fills: 16,
@@ -83,6 +87,9 @@ impl Default for Spec {
 }
 impl Spec {
     pub fn validate(&self) -> Result<()> {
+        if let Some(disk) = &self.disk {
+            disk.validate(self.max_entry_size)?;
+        }
         ensure!(
             (4096..=256 * 1024 * 1024).contains(&self.max_size)
                 && (1..=4 * 1024 * 1024).contains(&self.max_entry_size)
@@ -136,9 +143,26 @@ pub(crate) struct Cache {
     fields: Vec<HeaderName>,
     bypass: Option<HeaderName>,
     store: Arc<Store>,
+    disk: Option<Arc<disk::Disk>>,
 }
 impl Cache {
-    pub fn new(spec: &Spec) -> Arc<Self> {
+    pub(crate) fn fingerprint(config: &crate::config::Config) -> Result<String> {
+        Ok(disk::fingerprint(&serde_json::to_vec(config)?))
+    }
+
+    pub fn new(spec: &Spec, fingerprint: &str) -> Result<Arc<Self>> {
+        let disk = spec
+            .disk
+            .as_ref()
+            .map(|settings| {
+                disk::Disk::open(
+                    settings,
+                    fingerprint.to_owned(),
+                    spec.max_entry_size as usize,
+                    spec.max_entries,
+                )
+            })
+            .transpose()?;
         let fields = spec
             .vary
             .iter()
@@ -153,12 +177,13 @@ impl Cache {
             spec.max_fills,
             if spec.coalesce { spec.max_waiters } else { 0 },
         );
-        Arc::new(Self {
+        Ok(Arc::new(Self {
             spec: spec.clone(),
             fields,
             bypass,
             store,
-        })
+            disk,
+        }))
     }
 
     pub fn invalidation<B>(
@@ -181,8 +206,21 @@ impl Cache {
         self.store.drain();
     }
 
-    pub fn invalidate(&self, family: &Family) {
+    pub(crate) async fn close_disk(&self) {
+        if let Some(disk) = &self.disk {
+            disk.clone().close().await;
+        }
+    }
+
+    pub async fn invalidate(&self, family: &Family) {
+        let removing = self
+            .disk
+            .as_ref()
+            .and_then(|disk| disk.invalidate(family.clone(), None));
         self.store.invalidate(family);
+        if let Some(job) = removing {
+            let _ = job.await;
+        }
     }
 
     pub async fn probe<B: Body>(
@@ -236,6 +274,7 @@ impl Cache {
         let could_fill =
             !controls.only_if_cached && request.method() == Method::GET && !conditional;
         loop {
+            let disk = self.disk.as_ref().map(|disk| (disk.clone(), disk.fence()));
             // The hit check and flight registration share the publication lock.
             let now = Instant::now();
             let result = self.store.select(&key, |entry, filling| {
@@ -271,7 +310,7 @@ impl Cache {
                         }
                     }
                 }
-                if could_fill {
+                if could_fill || (disk.is_some() && entry.is_none()) {
                     Read::Fill
                 } else {
                     Read::Bypass
@@ -306,16 +345,40 @@ impl Cache {
                         cache: self.clone(),
                         ticket,
                         stale: Some(entry),
+                        disk,
                         started: now,
                         can_serve_stale: false,
                     });
                     return Probe::Background(response, revalidation);
                 }
                 Selection::Fill(ticket, stale) => {
+                    if stale.is_none() {
+                        if let Some((disk, fence)) = &disk {
+                            match tokio::time::timeout_at(
+                                deadline,
+                                disk.load(ticket.key().clone(), *fence),
+                            )
+                            .await
+                            {
+                                Ok(Some(entry)) => {
+                                    if ticket.publish(entry) {
+                                        continue;
+                                    }
+                                    return miss();
+                                }
+                                Ok(None) => {}
+                                Err(_) => return Probe::Deadline,
+                            }
+                        }
+                        if !could_fill {
+                            return miss();
+                        }
+                    }
                     return Probe::Fill(Box::new(Fill {
                         cache: self.clone(),
                         ticket,
                         stale,
+                        disk,
                         started: now,
                         can_serve_stale: !force
                             && controls.min_fresh.is_none()
@@ -453,7 +516,7 @@ impl Cache {
 }
 const SET_COOKIE2: HeaderName = HeaderName::from_static("set-cookie2");
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
 pub(crate) struct Family {
     authority: String,
     uri: String,
@@ -472,7 +535,7 @@ impl Family {
         })
     }
 }
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, Deserialize, Serialize, PartialEq, Eq, Hash)]
 struct Key {
     family: Family,
     selectors: Vec<u8>,
@@ -660,6 +723,7 @@ pub(crate) struct Fill {
     cache: Arc<Cache>,
     ticket: Ticket,
     stale: Option<Arc<Entry>>,
+    disk: Option<(Arc<disk::Disk>, disk::Fence)>,
     started: Instant,
     can_serve_stale: bool,
 }
@@ -708,7 +772,20 @@ impl Fill {
                 response
             })
     }
-    pub fn refreshed(self, headers: &HeaderMap) -> Option<Response<ProxyBody>> {
+    async fn invalidate(&self) {
+        let removing = self.disk.as_ref().and_then(|(disk, fence)| {
+            self.ticket
+                .current()
+                .then(|| disk.invalidate(self.ticket.key().family.clone(), Some(*fence)))
+                .flatten()
+        });
+        self.ticket.invalidate();
+        if let Some(job) = removing {
+            let _ = job.await;
+        }
+    }
+
+    pub async fn refreshed(self, headers: &HeaderMap) -> Option<Response<ProxyBody>> {
         let old = self.stale.as_ref()?;
         let previous = &old.meta.headers;
         if [SET_COOKIE, SET_COOKIE2, TRAILER]
@@ -726,7 +803,7 @@ impl Fill {
                 .get(CONTENT_ENCODING)
                 .is_some_and(|new| previous.get(CONTENT_ENCODING) != Some(new))
         {
-            self.ticket.invalidate();
+            self.invalidate().await;
             return None;
         }
         let mut merged = previous.clone();
@@ -744,7 +821,7 @@ impl Fill {
             }
         }
         let Some(meta) = self.cache.metadata(old.meta.status, &merged, self.started) else {
-            self.ticket.invalidate();
+            self.invalidate().await;
             return None;
         };
         let entry = Arc::new(Entry {
@@ -753,13 +830,13 @@ impl Fill {
             body: old.body.clone(),
             capacity: old.capacity,
         });
-        if !self.ticket.publish(entry.clone()) {
+        if !publish(self.ticket, entry.clone(), self.disk) {
             return None;
         }
         Some(entry.response(false, Instant::now(), "Cauce; fwd=stale; fwd-status=304"))
     }
 
-    pub fn capture(
+    pub async fn capture(
         self,
         status: StatusCode,
         headers: &HeaderMap,
@@ -769,7 +846,7 @@ impl Fill {
             // A definitive replacement that is not cacheable revokes the
             // previous representation. Server errors may retain stale data.
             if !status.is_server_error() && self.stale.is_some() {
-                self.ticket.invalidate();
+                self.invalidate().await;
             }
             return None;
         };
@@ -778,13 +855,14 @@ impl Fill {
             header(headers, CONTENT_LENGTH).map(|value| value.parse::<u64>().unwrap_or(u64::MAX));
         if expected.is_some_and(|size| size > limit as u64) {
             if self.stale.is_some() {
-                self.ticket.invalidate();
+                self.invalidate().await;
             }
             return None;
         }
         let capture = Capture {
             meta,
             ticket: self.ticket,
+            disk: self.disk,
             bytes: Vec::new(),
             limit,
             expected,
@@ -800,6 +878,7 @@ impl Fill {
 pub(crate) struct Capture {
     meta: Meta,
     ticket: Ticket,
+    disk: Option<(Arc<disk::Disk>, disk::Fence)>,
     bytes: Vec<u8>,
     limit: usize,
     expected: Option<u64>,
@@ -810,12 +889,13 @@ impl Capture {
             .expected
             .is_none_or(|length| length == self.bytes.len() as u64)
         {
-            return self.ticket.publish(Arc::new(Entry {
+            let entry = Arc::new(Entry {
                 background_after: Mutex::new(None),
                 meta: self.meta,
                 capacity: self.bytes.capacity(),
                 body: Bytes::from(self.bytes),
-            }));
+            });
+            return publish(self.ticket, entry, self.disk);
         }
         false
     }
@@ -849,6 +929,22 @@ impl Capture {
             capture: Some(self),
         }
         .boxed_unsync()
+    }
+}
+fn publish(
+    ticket: Ticket,
+    entry: Arc<Entry>,
+    disk: Option<(Arc<disk::Disk>, disk::Fence)>,
+) -> bool {
+    if let Some((disk, fence)) = disk {
+        let key = ticket.key().clone();
+        if !ticket.publish(entry.clone()) {
+            return false;
+        }
+        disk.enqueue(key, entry, fence);
+        true
+    } else {
+        ticket.publish(entry)
     }
 }
 struct CaptureBody {

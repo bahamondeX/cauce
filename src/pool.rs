@@ -102,6 +102,7 @@ impl Generation {
             PoolStrategy::Compact,
             None,
         )
+        .unwrap()
     }
 
     pub fn with_strategy(
@@ -111,7 +112,7 @@ impl Generation {
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
         strategy: PoolStrategy,
         resolver: Option<Arc<dns::Resolver>>,
-    ) -> Arc<Self> {
+    ) -> Result<Arc<Self>> {
         let endpoints: HashMap<_, _> = config
             .upstreams
             .iter()
@@ -175,19 +176,31 @@ impl Generation {
                     .map(|settings| (route.id.clone(), resilience::RetryBudget::new(settings)))
             })
             .collect();
-        let caches = config
+        let fingerprint = if config
             .routes
             .iter()
+            .any(|route| route.cache.as_ref().is_some_and(|spec| spec.disk.is_some()))
+        {
+            crate::cache::Cache::fingerprint(&config)?
+        } else {
+            String::new()
+        };
+        let caches: Result<HashMap<_, _>> = config
+            .routes
+            .iter()
+            .filter(|_| cfg!(feature = "web"))
             .filter_map(|route| {
-                route
-                    .cache
-                    .as_ref()
-                    .map(|spec| (route.id.clone(), crate::cache::Cache::new(spec)))
+                route.cache.as_ref().map(|spec| {
+                    crate::cache::Cache::new(spec, &fingerprint)
+                        .map(|cache| (route.id.clone(), cache))
+                })
             })
             .collect();
+        let caches = caches?;
         let applications: HashMap<_, _> = config
             .routes
             .iter()
+            .filter(|_| cfg!(feature = "application"))
             .filter_map(|r| {
                 r.application.as_ref().map(|settings| {
                     (
@@ -206,7 +219,7 @@ impl Generation {
             .collect();
         let application_buffers = (!applications.is_empty())
             .then(|| Arc::new(Semaphore::new(crate::application::TOTAL_BUFFER_BYTES)));
-        Arc::new(Self {
+        Ok(Arc::new(Self {
             version,
             routes,
             config,
@@ -217,7 +230,7 @@ impl Generation {
             caches,
             applications,
             application_buffers,
-        })
+        }))
     }
     pub fn route(&self, host: &str, path: &str) -> Option<&Route> {
         self.routes.find(&self.config.routes, host, path)
@@ -1519,7 +1532,9 @@ impl Pool {
     ) -> Result<Connection> {
         let duration = Duration::from_millis(self.limits.connect_ms);
         let mut address = None;
-        let transport = if e.config.protocol.application().is_some() {
+        let transport = if cfg!(feature = "application")
+            && e.config.protocol.application().is_some()
+        {
             let socket: crate::application::Socket =
                 if let Some(path) = e.config.address.strip_prefix("unix:") {
                     Box::new(
@@ -1761,6 +1776,7 @@ mod pool_tests {
     fn config(address: String) -> Config {
         Config {
             dns: None,
+            acme: None,
             name: "pooltest".into(),
             stream: None,
             mail: Vec::new(),
@@ -1894,7 +1910,8 @@ mod pool_tests {
                 cfg.upstreams[0].protocol = protocol;
                 let routes = Routes::compile(&cfg.routes).unwrap();
                 let generation =
-                    Generation::with_strategy(cfg, routes, 1, &HashMap::new(), strategy, None);
+                    Generation::with_strategy(cfg, routes, 1, &HashMap::new(), strategy, None)
+                        .unwrap();
                 let pool = Pool::with_strategy(
                     generation.config.limits.clone(),
                     generation.config.http2.clone(),
@@ -1969,7 +1986,8 @@ mod pool_tests {
                 &HashMap::new(),
                 PoolStrategy::Sharded,
                 None,
-            );
+            )
+            .unwrap();
             let a = generation.endpoints["backend"].clone();
             let b = generation.endpoints["second"].clone();
             let (mut first, _) = pool

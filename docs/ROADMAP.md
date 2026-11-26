@@ -189,3 +189,15 @@ Cauce 1.0 requiere los siguientes incrementos independientes.
    memoria/allocaciones. La distribución completa sigue siendo el valor
    predeterminado. La calificación nativa exige artefactos checksummed,
    controles directos, objetivos de carga y autorización de presupuesto.
+
+## Milestone 9 checkpoint
+
+Shared DNS and address retirement, HTTP and application resilience,
+background revalidation, a disk cache tier, local ACME, Stream TLS,
+bounded include migration and optional distribution profiles have
+implementation and test coverage in this tree. Atomic Stream/mail
+reconfiguration, broader NGINX semantics, programmable extensions,
+and native release qualification remain open.
+
+[Open gates](CAUCE-1.0-GAP-ANALYSIS.md)
+[Milestone 9 evidence](PERFORMANCE-MILESTONE-9.md).

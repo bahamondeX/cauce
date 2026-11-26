@@ -231,3 +231,17 @@ application gateways, active HTTP health checks, Stream and mail auth HTTP.
 Both pool strategies retire removed IPs while existing sessions finish.
 Mail backend selection retains its literal authorization allowlist.
 [DNS reference and evidence](docs/DNS-AND-RESILIENCE.md).
+
+## Milestone 9 infrastructure candidate
+
+- HTTP and application endpoints support passive ejection, jittered
+  backoff, single half-open recovery and opt-in bounded pre-send failover.
+  [DNS and resilience](docs/DNS-AND-RESILIENCE.md).
+- HTTP cache adds detached revalidation, invalidation fences and a bounded
+  disk tier. [HTTP cache](docs/HTTP-CACHE.md) [Disk cache](docs/DISK-CACHE.md).
+- Stream TCP supports verified TLS on either side. ACME can rotate
+  shared HTTPS and QUIC certificates using HTTP-01. [Stream TLS](docs/TCP-PROXY.md#stream-tls)
+  [ACME](docs/ACME.md).
+- Six Cargo profiles and a redacted CLI summary support distribution
+  tests. The source-derived backlog tracks OSS and add-ons separately.
+  [Profiles](docs/BUILD-PROFILES.md) [1.0 gaps](docs/CAUCE-1.0-GAP-ANALYSIS.md).

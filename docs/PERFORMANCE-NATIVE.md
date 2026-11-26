@@ -297,3 +297,15 @@ reasons. Compare CPU per success, tails, RSS/PSS/private pages, allocation
 calls and connection reuse. Run the two HTTP references `1ff7f23` and
 `e612f84` with the new protocols disabled before promotion. Any new AWS
 resources require a confirmed budget and authorization. [Milestone 8](PERFORMANCE-MILESTONE-8.md).
+
+## Milestone 9 preparation
+
+The release runner can stage full and Core binaries for Linux ARM64 and
+AMD64 from a committed snapshot. The historical `ba6f952`, `47da8fe`,
+`1ff7f23`, `e612f84` and `35616a0` references remain available.
+The original 13% AMD64 CPU result applies to its specific historical
+HTTP/1.1 comparison. Native ARM64, current AMD64 and multicore capacity
+remain release gates. This checkpoint uses local infrastructure.
+
+[Staging script](../scripts/stage-native-release.sh)
+[Milestone 9 report](PERFORMANCE-MILESTONE-9.md).

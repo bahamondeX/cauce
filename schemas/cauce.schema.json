@@ -861,6 +861,13 @@
         "max_waiters": {"type": "integer", "minimum": 1, "maximum": 256},
         "ttl": {"$ref": "#/$defs/cacheDuration"},
         "stale_if_error": {"$ref": "#/$defs/cacheDuration"},
+        "disk": {
+          "type": "object", "additionalProperties": false, "required": ["directory", "max_size"],
+          "properties": {
+            "directory": {"type": "string", "pattern": "^/"},
+            "max_size": {"anyOf": [{"$ref": "#/$defs/sizeString"}, {"type": "integer", "minimum": 1, "maximum": 68719476736}]}
+          }
+        },
         "background_revalidate_ms": {
           "anyOf": [{"$ref": "#/$defs/durationString"}, {"type": "integer", "minimum": 10, "maximum": 60000}]
         },
@@ -1328,6 +1335,25 @@
         }
       }
     },
+    "acme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "state_dir", "accept_terms", "certificates"],
+      "properties": {
+        "directory": {"type": "string", "pattern": "^https://", "maxLength": 2048},
+        "directory_ca_file": {"type": "string", "minLength": 1},
+        "state_dir": {"type": "string", "pattern": "^/"},
+        "accept_terms": {"const": true},
+        "contact": {"type": "string", "pattern": "^mailto:", "maxLength": 256},
+        "certificates": {
+          "type": "array", "minItems": 1, "maxItems": 16,
+          "items": {"type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true,
+                    "items": {"type": "string", "minLength": 3, "maxLength": 253}}
+        },
+        "renew_before_seconds": {"type": "integer", "minimum": 1, "maximum": 7776000},
+        "check_interval_seconds": {"type": "integer", "minimum": 1, "maximum": 86400}
+      }
+    },
     "dns": {
       "type": "object",
       "additionalProperties": false,
@@ -1660,6 +1686,7 @@
       "properties": {
         "stream": { "$ref": "#/$defs/stream" },
         "dns": { "$ref": "#/$defs/dns" },
+        "acme": { "$ref": "#/$defs/acme" },
         "mail": { "type": "array", "maxItems": 16, "items": { "$ref": "#/$defs/mailListener" } },
         "listeners": {
           "type": "array",

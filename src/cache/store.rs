@@ -130,6 +130,9 @@ pub(super) struct Ticket {
     epoch: u64,
 }
 impl Ticket {
+    pub(super) fn key(&self) -> &Arc<Key> {
+        &self.key
+    }
     pub fn publish(self, entry: Arc<Entry>) -> bool {
         let mut state = self.store.inner.lock().unwrap();
         let weight = self.key.bytes() + entry.bytes();

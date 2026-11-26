@@ -1,0 +1,8 @@
+test_corrupt_entry_and_ungraceful_restart_are_safe (__main__.DiskCache.test_corrupt_entry_and_ungraceful_restart_are_safe) ... ok
+test_disk_miss_memory_eviction_and_clean_restart (__main__.DiskCache.test_disk_miss_memory_eviction_and_clean_restart) ... ok
+test_write_invalidates_disk_and_fifo_eviction_respects_quota (__main__.DiskCache.test_write_invalidates_disk_and_fifo_eviction_respects_quota) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 1.694s
+
+OK

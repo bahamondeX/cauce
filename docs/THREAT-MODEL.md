@@ -28,3 +28,21 @@ archivos, operadores del host. Connectivity es un servicio separado todavía no 
 | Dependencias / supply chain | Cargo.lock, lista de licencias, versiones registradas, no shell remoto en runtime, sin GitHub Actions | No se ejecutó auditoría externa de vulnerabilidades; imágenes base por tags pueden cambiar |
 
 Las pruebas locales son evidencia de casos concretos, no una certificación de seguridad.
+
+## DNS, cache persistence and certificate management
+
+Configure a trusted recursive DNS service. DNS answers select an IP while
+the original TLS hostname and trust store define backend identity.
+Applications that permit configured DNS upstreams should constrain origin
+network reachability at the deployment boundary.
+
+Cache disk directories and ACME state must reside under service-owned or
+operator-controlled parents. Keep directory access private and separate
+these files from static document roots. A disk cache starts cold after an
+unclean shutdown, preventing a previously persisted object from bypassing
+interrupted invalidation. ACME account and certificate private keys are
+stored separately from ordinary request data and logs.
+
+The ACME HTTP-01 exception serves only an active order's token for its
+exact authorized host. It runs after HTTP framing and path checks.
+Managed renewal uses the configured HTTPS directory trust policy.

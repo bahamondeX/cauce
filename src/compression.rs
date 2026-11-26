@@ -1,34 +1,44 @@
 //! Streaming response coding, with per-route quotas and bounded work per poll.
-use crate::{
-    admission::RequestSlot,
-    body::{self, BoxError, ProxyBody},
-    config::bytes,
-};
+#[cfg(feature = "web")]
+use crate::body::{self, BoxError};
+use crate::{admission::RequestSlot, body::ProxyBody, config::bytes};
 use anyhow::{ensure, Result};
+#[cfg(feature = "web")]
 use async_compression::{
     tokio::bufread::{BrotliEncoder, GzipEncoder},
     Level,
 };
+#[cfg(feature = "web")]
 use bytes::Bytes;
+#[cfg(feature = "web")]
 use http_body_util::BodyExt;
+#[cfg(feature = "web")]
 use hyper::{
     body::{Body, Frame},
-    header::*,
-    Method, Request, Response, StatusCode,
+    StatusCode,
 };
+use hyper::{header::*, Method, Request, Response};
 use serde::{Deserialize, Serialize};
+#[cfg(feature = "web")]
 use std::{
     io,
     pin::Pin,
-    sync::Arc,
     task::{Context, Poll},
 };
+#[cfg(feature = "web")]
 use tokio::{
     io::{AsyncRead, BufReader, ReadBuf},
-    sync::{OwnedSemaphorePermit, Semaphore},
+    sync::OwnedSemaphorePermit,
 };
 
+#[cfg(feature = "web")]
+use std::sync::Arc;
+#[cfg(feature = "web")]
+use tokio::sync::Semaphore;
+
+#[cfg(feature = "web")]
 const BLOCK: usize = 16 * 1024;
+#[cfg(feature = "web")]
 const REPRESENTATION_INTEGRITY: &[&str] = &[
     "content-md5",
     "digest",
@@ -95,6 +105,7 @@ impl Default for Spec {
 #[serde(try_from = "Spec", into = "Spec")]
 pub(crate) struct Policy {
     spec: Spec,
+    #[cfg(feature = "web")]
     quota: Arc<Semaphore>,
 }
 impl From<Policy> for Spec {
@@ -130,6 +141,7 @@ impl TryFrom<Spec> for Policy {
             "invalid compression algorithms, levels or limits"
         );
         Ok(Self {
+            #[cfg(feature = "web")]
             quota: Arc::new(Semaphore::new(spec.max_inflight)),
             spec,
         })
@@ -139,7 +151,9 @@ impl TryFrom<Spec> for Policy {
 #[derive(Clone, Copy)]
 pub(crate) struct Choice {
     pub coding: Option<Coding>,
+    #[cfg(feature = "web")]
     eligible: bool,
+    #[cfg(feature = "web")]
     identity_allowed: bool,
 }
 
@@ -160,6 +174,7 @@ impl Policy {
         let weight = |coding: &str| coding_quality(headers, coding);
         let wildcard = weight("*");
         let identity = weight("identity");
+        #[cfg(feature = "web")]
         let identity_allowed = identity
             .or(wildcard.filter(|quality| *quality == 0))
             .unwrap_or(1000)
@@ -183,7 +198,9 @@ impl Policy {
             coding: eligible
                 .then_some(candidate.map(|(coding, _)| coding))
                 .flatten(),
+            #[cfg(feature = "web")]
             eligible,
+            #[cfg(feature = "web")]
             identity_allowed,
         }
     }
@@ -206,6 +223,18 @@ impl Policy {
         })
     }
 
+    #[cfg(not(feature = "web"))]
+    pub fn apply(
+        &self,
+        _choice: Choice,
+        response: Response<ProxyBody>,
+        _slot: &RequestSlot,
+        _head: bool,
+    ) -> Response<ProxyBody> {
+        response
+    }
+
+    #[cfg(feature = "web")]
     pub fn apply(
         &self,
         choice: Choice,
@@ -298,6 +327,7 @@ pub(crate) fn vary(headers: &mut HeaderMap) {
         headers.append(VARY, HeaderValue::from_static("Accept-Encoding"));
     }
 }
+#[cfg(feature = "web")]
 fn encode_headers(headers: &mut HeaderMap, coding: Coding) {
     headers.insert(CONTENT_ENCODING, HeaderValue::from_static(coding.name()));
     headers.remove(CONTENT_LENGTH);
@@ -361,12 +391,14 @@ fn quality_value(parameter: &str) -> Option<u16> {
     }
 }
 
+#[cfg(feature = "web")]
 struct Source {
     body: ProxyBody,
     pending: Bytes,
     trailers: Option<HeaderMap>,
     budget: usize,
 }
+#[cfg(feature = "web")]
 impl AsyncRead for Source {
     fn poll_read(
         mut self: Pin<&mut Self>,
@@ -408,11 +440,14 @@ impl AsyncRead for Source {
         Poll::Pending
     }
 }
+#[cfg(feature = "web")]
 type Input = BufReader<Source>;
+#[cfg(feature = "web")]
 enum Encoder {
     Gzip(Box<GzipEncoder<Input>>),
     Br(Box<BrotliEncoder<Input>>),
 }
+#[cfg(feature = "web")]
 impl Encoder {
     fn source(&mut self) -> &mut Source {
         match self {
@@ -421,11 +456,13 @@ impl Encoder {
         }
     }
 }
+#[cfg(feature = "web")]
 struct EncoderBody {
     encoder: Encoder,
     scratch: Box<[u8; BLOCK]>,
     hold: Option<(OwnedSemaphorePermit, RequestSlot)>,
 }
+#[cfg(feature = "web")]
 impl EncoderBody {
     fn new(
         body: ProxyBody,
@@ -455,6 +492,7 @@ impl EncoderBody {
         }
     }
 }
+#[cfg(feature = "web")]
 impl Body for EncoderBody {
     type Data = Bytes;
     type Error = BoxError;

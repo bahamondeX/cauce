@@ -2,6 +2,7 @@
 FROM --platform=$BUILDPLATFORM rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0 AS builder
 ARG TARGETARCH
 ARG BUILDARCH
+ARG CAUCE_PROFILE=full
 RUN case "$TARGETARCH" in \
       amd64) cauce_target=x86_64-unknown-linux-gnu ;; \
       arm64) cauce_target=aarch64-unknown-linux-gnu ;; \
@@ -26,9 +27,13 @@ RUN --mount=type=cache,id=cauce-registry,target=/usr/local/cargo/registry,sharin
     && if [ "$TARGETARCH" = "$BUILDARCH" ]; then \
       unset CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER; fi \
     && cargo clean --release --target "$cauce_target" -p cauce \
-    && cargo build --release --locked --target "$cauce_target" \
+    && cargo build --release --locked --no-default-features --features "$CAUCE_PROFILE" --target "$cauce_target" \
     && cp "/src/target/$cauce_target/release/cauce" /usr/local/bin/cauce-built \
     && cp "/src/target/$cauce_target/release/cauce-collector" /usr/local/bin/cauce-collector-built
+
+FROM scratch AS release-artifacts
+COPY --from=builder /usr/local/bin/cauce-built /cauce
+COPY --from=builder /usr/local/bin/cauce-collector-built /cauce-collector
 
 FROM debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 RUN groupadd --gid 10001 cauce && useradd --uid 10001 --gid 10001 --no-create-home cauce \

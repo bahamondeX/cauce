@@ -31,6 +31,8 @@ pub struct State {
     pub generation: RwLock<Arc<Generation>>,
     pub pool: Arc<Pool>,
     pub(crate) revalidators: Arc<Semaphore>,
+    #[cfg(feature = "acme")]
+    pub(crate) acme: Option<Arc<crate::acme::Runtime>>,
     pub logger: Logger,
     pub requests: Arc<Semaphore>,
     pub clients: Arc<Semaphore>,
@@ -390,7 +392,7 @@ impl Revalidation {
         let header_deadline =
             deadline.min(tokio::time::Instant::now() + Duration::from_millis(limits.headers_ms));
         let response = tokio::time::timeout_at(header_deadline, async {
-            if route.application.is_some() {
+            if cfg!(feature = "application") && route.application.is_some() {
                 let authority = authority.take().expect("validated request authority");
                 let upload_error = AtomicU8::new(0);
                 let context = crate::application::Contextual {
@@ -435,11 +437,11 @@ impl Revalidation {
         }
         if conditional && parts.status == StatusCode::NOT_MODIFIED {
             lease.complete(body.is_end_stream());
-            return Ok(fill.refreshed(&parts.headers).is_some());
+            return Ok(fill.refreshed(&parts.headers).await.is_some());
         }
 
         // Use the same storage policy and completeness checks as foreground fills.
-        if let Some(capture) = fill.capture(parts.status, &parts.headers, false) {
+        if let Some(capture) = fill.capture(parts.status, &parts.headers, false).await {
             let published = match body {
                 OriginBody::Http(body) => capture.collect(body).await,
                 OriginBody::Application(body) => capture.collect(body).await,
@@ -669,6 +671,24 @@ where
     if !normal_path(req.uri().path()) {
         reject!(BAD_REQUEST, "ambiguous_path");
     }
+    #[cfg(feature = "acme")]
+    if !secure && req.method() == hyper::Method::GET && req.body().is_end_stream() {
+        if let Some(token) = state
+            .acme
+            .as_ref()
+            .and_then(|acme| acme.challenge(&host, req.uri().path()))
+        {
+            let mut response = reply(StatusCode::OK, "");
+            *response.body_mut() = body::full(token);
+            response
+                .headers_mut()
+                .insert("content-type", HeaderValue::from_static("text/plain"));
+            response
+                .headers_mut()
+                .insert("cache-control", HeaderValue::from_static("no-store"));
+            return Ok(response);
+        }
+    }
     let identity = generation
         .config
         .real_ip
@@ -801,6 +821,7 @@ where
     let compression = route
         .compression
         .as_deref()
+        .filter(|_| cfg!(feature = "web"))
         .map(|policy| (policy, policy.choice(&req, grpc, websocket.is_some())));
     if let Some(handler) = &route.content {
         let Ok(mut response) =
@@ -855,7 +876,8 @@ where
             return Ok(completion.wrap(response, limits, deadline));
         }};
     }
-    let cache = route.cache.is_some().then(|| &generation.caches[&route.id]);
+    let cache =
+        (cfg!(feature = "web") && route.cache.is_some()).then(|| &generation.caches[&route.id]);
     let mut fill = None;
     let mut invalidate = None;
     if let Some(cache) = cache {
@@ -988,7 +1010,7 @@ where
     if let Some(event) = &mut event {
         event.upstream_id = Some(endpoint.config.id.clone());
     }
-    let application = if route.application.is_some() {
+    let application = if cfg!(feature = "application") && route.application.is_some() {
         let route = &generation.applications[&route.id];
         let length = match crate::application::length(&req) {
             Ok(length) => length,
@@ -1390,7 +1412,7 @@ where
     strip_hop(response.headers_mut());
     if let (Some(cache), Some(family)) = (cache, invalidate) {
         if response.status().is_success() || response.status().is_redirection() {
-            cache.invalidate(&family);
+            cache.invalidate(&family).await;
         }
     }
     if response.status().is_server_error() {
@@ -1398,18 +1420,20 @@ where
     }
     if revalidating && response.status() == StatusCode::NOT_MODIFIED {
         let ticket = fill.take().expect("revalidating cache fill");
-        if let Some(cached) = ticket.refreshed(response.headers()) {
+        if let Some(cached) = ticket.refreshed(response.headers()).await {
             lease.complete(uploaded.load(Ordering::Acquire));
             send_cached!(cached);
         }
         reject!(BAD_GATEWAY, "invalid_cache_revalidation");
     }
     let capturing = if let Some(ticket) = fill.take() {
-        let capture = ticket.capture(
-            response.status(),
-            response.headers(),
-            response.body().is_end_stream(),
-        );
+        let capture = ticket
+            .capture(
+                response.status(),
+                response.headers(),
+                response.body().is_end_stream(),
+            )
+            .await;
         response.headers_mut().insert(
             "cache-status",
             HeaderValue::from_static("Cauce; fwd=uri-miss"),
@@ -1486,6 +1510,13 @@ pub fn admin(req: Request<Incoming>, state: &State) -> Response<ProxyBody> {
             let generation = state.generation.read().unwrap();
             let prefix = generation.config.name.replace('-', "_");
             let mut text = state.logger.metrics.prometheus(&prefix);
+            #[cfg(feature = "acme")]
+            if let Some(acme) = &state.acme {
+                text.push_str(&format!(
+                    "{prefix}_acme_next_expiration_timestamp_seconds {}\n",
+                    acme.next_expiration()
+                ));
+            }
             text.push_str(&format!("{prefix}_upstream_connections_in_use {}\n{prefix}_upstream_connections_idle {}\n{prefix}_request_slots_available {}\n{prefix}_config_version {}\n",
                 generation.config.limits.connections - state.pool.available(), state.pool.idle_count(), state.requests.available_permits(), generation.version));
             text.push_str(&format!("# TYPE {prefix}_clients_active gauge\n{prefix}_clients_active {}\n# TYPE {prefix}_requests_active gauge\n{prefix}_requests_active {}\n",

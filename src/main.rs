@@ -1,9 +1,13 @@
+#[cfg(feature = "acme")]
+mod acme;
+mod acme_config;
 mod actions;
 mod admission;
 mod application;
 mod balance;
 mod body;
 mod cache;
+mod capabilities;
 mod compression;
 mod config;
 mod content;
@@ -53,6 +57,10 @@ trait ClientIo: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send {}
 impl<T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send> ClientIo for T {}
 
 fn main() -> Result<()> {
+    if std::env::args().nth(1).as_deref() == Some("capabilities") {
+        println!("{}", capabilities::report());
+        return Ok(());
+    }
     diagnostics::init();
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -66,7 +74,8 @@ fn main() -> Result<()> {
 }
 async fn run() -> Result<()> {
     let args: Vec<_> = std::env::args().collect();
-    let check = args.get(1).is_some_and(|a| a == "check");
+    let explain = args.get(1).is_some_and(|a| a == "explain");
+    let check = explain || args.get(1).is_some_and(|a| a == "check");
     let path = PathBuf::from(
         args.get(if check { 2 } else { 1 })
             .map(String::as_str)
@@ -75,15 +84,43 @@ async fn run() -> Result<()> {
     let strategy = PoolStrategy::from_environment()?;
     let (config, routes) = Config::load(&path).await?;
     let config = Arc::new(config);
+    #[cfg(feature = "acme")]
+    let acme = match (check, config.acme.clone()) {
+        (false, Some(settings)) => Some(acme::Runtime::prepare(settings).await?),
+        _ => None,
+    };
+    let managed: tls::ManagedCertificates = {
+        #[cfg(feature = "acme")]
+        let resolver = acme
+            .as_ref()
+            .map(|runtime| runtime.clone() as Arc<dyn tls::ManagedResolver>);
+        #[cfg(not(feature = "acme"))]
+        let resolver = None;
+        resolver
+    };
     let tls_clients = prepare_tls_clients(&config).await?;
-    let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
-    let extra_tls = prepare_explicit_listeners(&config).await?;
-    let quic_config = http3::prepare(&config).await?;
+    let mut server_tls =
+        prepare_server_tls(config.tls.clone(), config.http2.enabled, managed.clone()).await?;
+    let extra_tls = prepare_explicit_listeners(&config, managed.clone()).await?;
+    #[cfg(feature = "quic")]
+    let quic_config = http3::prepare(&config, managed.clone()).await?;
     let resolver = config.dns.as_ref().map(dns::Resolver::new).transpose()?;
-    let mail = mail::prepare(&config.mail, resolver.clone()).await?;
-    let stream_tls = stream::prepare_tls(config.stream.as_deref()).await?;
+    let mail = if cfg!(feature = "mail") {
+        mail::prepare(&config.mail, resolver.clone()).await?
+    } else {
+        Vec::new()
+    };
+    let stream_tls = if cfg!(feature = "stream") {
+        stream::prepare_tls(config.stream.as_deref()).await?
+    } else {
+        stream::TlsMaterial::default()
+    };
     if check {
-        println!("configuration valid");
+        if explain {
+            println!("{}", capabilities::explain(&config));
+        } else {
+            println!("configuration valid");
+        }
         return Ok(());
     }
     let listener = if let Some(address) = config.listen {
@@ -101,11 +138,15 @@ async fn run() -> Result<()> {
     let admin_listener = TcpListener::bind(config.admin)
         .await
         .context("admin listener")?;
-    let stream = config
-        .stream
-        .as_ref()
-        .map(|spec| stream::Listeners::bind((**spec).clone(), resolver.clone(), stream_tls))
-        .transpose()?;
+    let stream = if cfg!(feature = "stream") {
+        config
+            .stream
+            .as_ref()
+            .map(|spec| stream::Listeners::bind((**spec).clone(), resolver.clone(), stream_tls))
+            .transpose()?
+    } else {
+        None
+    };
     let mail = mail
         .into_iter()
         .map(|runtime| {
@@ -113,6 +154,7 @@ async fn run() -> Result<()> {
             Ok((runtime, listener))
         })
         .collect::<Result<Vec<_>>>()?;
+    #[cfg(feature = "quic")]
     let endpoint = quic_config
         .map(|quic| http3::bind(config.http3.as_deref().unwrap(), quic))
         .transpose()?;
@@ -130,6 +172,14 @@ async fn run() -> Result<()> {
         metrics,
         strategy,
     );
+    let generation = {
+        let config = (*config).clone();
+        let resolver = resolver.clone();
+        tokio::task::spawn_blocking(move || {
+            Generation::with_strategy(config, routes, 1, &tls_clients, strategy, resolver)
+        })
+        .await??
+    };
     let state = Arc::new(State {
         rate_zones: config
             .rate_zones
@@ -139,16 +189,11 @@ async fn run() -> Result<()> {
         peers: config
             .max_connections_per_peer
             .map(|cap| Arc::new(admission::PeerGate::new(cap))),
-        generation: RwLock::new(Generation::with_strategy(
-            (*config).clone(),
-            routes,
-            1,
-            &tls_clients,
-            strategy,
-            resolver.clone(),
-        )),
+        generation: RwLock::new(generation),
         pool,
         revalidators: Arc::new(Semaphore::new(32)),
+        #[cfg(feature = "acme")]
+        acme: acme.clone(),
         logger,
         requests: Arc::new(Semaphore::new(config.limits.requests)),
         clients: Arc::new(Semaphore::new(config.limits.clients)),
@@ -166,7 +211,7 @@ async fn run() -> Result<()> {
     let mut interrupt = signal(SignalKind::interrupt())?;
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let (generation_tx, generation_rx) = watch::channel(1);
-    let maintenance = (listener.is_some() || endpoint.is_some() || !extra_listeners.is_empty())
+    let maintenance = (listener.is_some() || config.http3.is_some() || !extra_listeners.is_empty())
         .then(|| tokio::spawn(maintain_pool(state.pool.clone(), generation_rx)));
     let mut tasks = JoinSet::new();
     let mut stream = stream
@@ -201,6 +246,7 @@ async fn run() -> Result<()> {
         }
         Some(certificates)
     };
+    #[cfg(feature = "quic")]
     if let Some(endpoint) = &endpoint {
         stream.spawn(http3::serve(
             endpoint.clone(),
@@ -210,6 +256,8 @@ async fn run() -> Result<()> {
             shutdown_rx.clone(),
         ));
     }
+    #[cfg(feature = "acme")]
+    let acme_task = acme.map(|runtime| tokio::spawn(runtime.serve()));
     let mut stream_failure = Ok(());
     let mut reload = JoinSet::new();
     eprintln!(
@@ -235,11 +283,11 @@ async fn run() -> Result<()> {
             _ = tasks.join_next(), if !tasks.is_empty() => {},
             _ = hup.recv(), if reload.is_empty() => {
                 let version = state.generation.read().unwrap().version + 1;
-                reload.spawn(prepare_reload(path.clone(), config.clone(), version, strategy, resolver.clone()));
+                reload.spawn(prepare_reload(path.clone(), config.clone(), version, strategy, resolver.clone(), managed.clone()));
             },
             prepared = reload.join_next(), if !reload.is_empty() => {
                 match prepared {
-                    Some(Ok(Ok(Prepared { generation: next, legacy_tls, explicit_tls, quic }))) => {
+                    Some(Ok(Ok(Prepared { generation: next, legacy_tls, explicit_tls, #[cfg(feature = "quic")] quic }))) => {
                         let version = next.version;
                         {
                             let mut current = state.generation.write().unwrap();
@@ -255,6 +303,7 @@ async fn run() -> Result<()> {
                         if let Some(certificates) = &explicit {
                             *certificates.write().unwrap() = explicit_tls;
                         }
+                        #[cfg(feature = "quic")]
                         if let (Some(endpoint), Some(quic)) = (&endpoint, quic) {
                             endpoint.set_server_config(Some(quic));
                         }
@@ -284,6 +333,11 @@ async fn run() -> Result<()> {
             }
         }
     }
+    #[cfg(feature = "acme")]
+    if let Some(task) = acme_task {
+        task.abort();
+        let _ = task.await;
+    }
     reload.abort_all();
     if let Some(maintenance) = maintenance {
         maintenance.abort();
@@ -310,18 +364,17 @@ async fn run() -> Result<()> {
         );
     })
     .await;
+    #[cfg(feature = "quic")]
     if let Some(endpoint) = endpoint {
         endpoint.close(0u32.into(), b"gateway shutdown deadline");
     }
     stream.shutdown().await;
     tasks.abort_all();
     while tasks.join_next().await.is_some() {}
-    {
-        let generation = state.generation.read().unwrap();
-        generation.draining.store(true, Ordering::Release);
-        for cache in generation.caches.values() {
-            cache.drain();
-        }
+    let generation = state.generation.read().unwrap().clone();
+    for cache in generation.caches.values() {
+        cache.drain();
+        let _ = tokio::time::timeout_at(deadline, cache.close_disk()).await;
     }
     state.pool.sweep(u64::MAX);
     drop(web);
@@ -365,11 +418,13 @@ struct Prepared {
     generation: Arc<Generation>,
     legacy_tls: Option<tokio_rustls::TlsAcceptor>,
     explicit_tls: Vec<Option<tokio_rustls::TlsAcceptor>>,
+    #[cfg(feature = "quic")]
     quic: Option<quinn::ServerConfig>,
 }
 
 async fn prepare_explicit_listeners(
     config: &Config,
+    managed: tls::ManagedCertificates,
 ) -> Result<Vec<Option<tokio_rustls::TlsAcceptor>>> {
     if config.listeners.is_empty() {
         return Ok(Vec::new());
@@ -383,7 +438,7 @@ async fn prepare_explicit_listeners(
     tokio::task::spawn_blocking(move || {
         tls.iter()
             .map(|config| {
-                tls::load_server(config.as_ref(), h2)
+                tls::load_server(config.as_ref(), h2, managed.clone())
                     .map(|server| server.map(tokio_rustls::TlsAcceptor::from))
             })
             .collect()
@@ -397,21 +452,29 @@ async fn prepare_reload(
     version: u64,
     strategy: PoolStrategy,
     resolver: Option<Arc<dns::Resolver>>,
+    managed: tls::ManagedCertificates,
 ) -> Result<Prepared> {
     let (candidate, routes) = Config::load(&path).await?;
     baseline.reload_compatible(&candidate)?;
     let clients = prepare_tls_clients(&candidate).await?;
-    let legacy_tls = prepare_server_tls(candidate.tls.clone(), candidate.http2.enabled).await?;
-    let explicit_tls = prepare_explicit_listeners(&candidate).await?;
-    let quic = http3::prepare(&candidate).await?;
+    let legacy_tls = prepare_server_tls(
+        candidate.tls.clone(),
+        candidate.http2.enabled,
+        managed.clone(),
+    )
+    .await?;
+    let explicit_tls = prepare_explicit_listeners(&candidate, managed.clone()).await?;
+    #[cfg(feature = "quic")]
+    let quic = http3::prepare(&candidate, managed).await?;
     let generation = tokio::task::spawn_blocking(move || {
         Generation::with_strategy(candidate, routes, version, &clients, strategy, resolver)
     })
-    .await?;
+    .await??;
     Ok(Prepared {
         generation,
         legacy_tls,
         explicit_tls,
+        #[cfg(feature = "quic")]
         quic,
     })
 }
@@ -436,9 +499,10 @@ async fn prepare_tls_clients(
 async fn prepare_server_tls(
     config: Option<config::InboundTls>,
     http2: bool,
+    managed: tls::ManagedCertificates,
 ) -> Result<Option<tokio_rustls::TlsAcceptor>> {
     tokio::task::spawn_blocking(move || {
-        tls::load_server(config.as_ref(), http2)
+        tls::load_server(config.as_ref(), http2, managed)
             .map(|server| server.map(tokio_rustls::TlsAcceptor::from))
     })
     .await?

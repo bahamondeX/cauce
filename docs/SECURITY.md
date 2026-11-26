@@ -9,3 +9,15 @@ Global, per-endpoint and per-connection quotas bound accepted clients, requests,
 Reload candidates must pass parse and transport configuration validation before activation. Existing workers continue using the last valid generation after a rejected reload. Configuration changes that require restart are checked by `Config::reload_compatible`. The collector has separate local storage, authentication, and egress contracts. [Collector operations](COLLECTOR.md).
 
 Review proxy framing, path and header policy, TLS lifecycle, cross-generation pool isolation, and resource limits when changing the request path. Baseline and regression outcomes are tracked in [program status](../STATUS.md).
+
+## Milestone 9 deployment boundaries
+
+Use an explicit CA for private ACME directories and an operator-controlled
+recursive DNS server. Keep disk cache and ACME state outside document roots
+and writable solely by the gateway service. The collector spool is likewise
+trusted state. Do not expose its SQLite file or WAL to less-trusted writers.
+
+The release audit records the bundled SQLite advisory and the versions
+that address the Rust URL parser and time advisories. Advisory data
+does not replace functional or operational qualification.
+[Threat model](THREAT-MODEL.md).
