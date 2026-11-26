@@ -30,7 +30,9 @@ class MigrationTests(unittest.TestCase):
             config = yaml.safe_load(destination.read_text()) if destination.is_file() else None
             if config:
                 self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
-            if config and not config["proxy"].get("tls") and (ROOT / "target/debug/cauce").is_file():
+            if (config and not config["proxy"].get("tls")
+                    and not any(route.get("content",{}).get("type")=="static" for route in config["proxy"]["routes"])
+                    and (ROOT / "target/debug/cauce").is_file()):
                 validation = subprocess.run([str(ROOT / "target/debug/cauce"), "check", str(destination)],
                                             capture_output=True, check=False)
                 self.assertEqual(validation.returncode, 0, validation.stderr)
@@ -103,6 +105,24 @@ class MigrationTests(unittest.TestCase):
         ):
             with self.subTest(options=options, listener=listener):
                 code, _, config = self.run_preview("api.example.org", location, options, listener)
+                self.assertEqual(code, 1)
+                self.assertIsNone(config)
+
+    def test_explicit_static_root_alias_and_direct_preview(self):
+        code, report, config = self.run_preview("example.org",
+            "location / { root /srv/web; index index.html home.html; try_files $uri $uri/ =404; } "
+            "location /assets/ { alias /srv/assets/; } location = /probe { return 200 ready; }")
+        self.assertEqual(code, 0)
+        self.assertEqual(report["preview"]["confidence"], "manual_review")
+        self.assertFalse(config["proxy"]["upstreams"])
+        rows = {route["path_prefix"]:route["content"] for route in config["proxy"]["routes"]}
+        self.assertEqual(rows["/"]["try_files"], ["$uri", "$uri/"])
+        self.assertEqual(rows["/assets/"]["alias"], "/srv/assets/")
+        self.assertEqual(rows["/probe"]["body"], "ready")
+        for directive in ("root /srv/web; autoindex on;", "root /srv/web; try_files $uri @application;",
+                          "alias /srv/assets;", "root $base;"):
+            with self.subTest(directive=directive):
+                code, _, config = self.run_preview("example.org", "location /static/ { " + directive + " }")
                 self.assertEqual(code, 1)
                 self.assertIsNone(config)
 

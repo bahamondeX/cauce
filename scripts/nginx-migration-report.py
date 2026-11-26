@@ -215,6 +215,48 @@ def real_ip_preview(items):
             "recursive": recursive == ["on"], "forwarding":"replace"}
 
 
+def direct_preview(nodes):
+    if len(nodes) != 1 or nodes[0].name != "return":
+        return None
+    node = nodes[0]
+    if (node.children is None and len(node.args) == 2
+            and node.args[0] == "200"
+            and re.fullmatch(r"[ -~]{0,4096}", node.args[1])
+            and "$" not in node.args[1]):
+        return {"type": "direct", "status": 200, "body": node.args[1], "content_type": "text/plain"}
+    return None
+
+
+def static_preview(nodes, location_mode, location_path):
+    fields = {node.name for node in nodes}
+    base = fields.intersection({"root", "alias"})
+    if not base:
+        return None
+    if len(base) != 1 or not fields.issubset({"root", "alias", "index", "try_files"}):
+        raise ValueError("static preview covers a literal root or alias, index and try_files ending in =404")
+    field, = base
+    path = one_value(nodes, field)
+    if not re.fullmatch(r"/[A-Za-z0-9_./-]+", path) or any(part in {".", ".."} for part in path.split("/")):
+        raise ValueError("static preview requires an absolute literal directory")
+    if field == "alias" and (location_mode != "literal_prefix" or not location_path.endswith("/") or not path.endswith("/")):
+        raise ValueError("alias preview requires a literal prefix and directory with trailing slashes")
+    content = {"type": "static", field: path}
+    index = [node for node in nodes if node.name == "index"]
+    if index:
+        if (len(index) != 1 or index[0].children is not None or not index[0].args
+                or len(index[0].args) > 16
+                or any(not re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9_.-]{0,254}", value) for value in index[0].args)):
+            raise ValueError("static preview requires literal index filenames")
+        content["index"] = index[0].args
+    tries = [node for node in nodes if node.name == "try_files"]
+    if tries:
+        if (len(tries) != 1 or tries[0].children is not None
+                or tries[0].args not in (["$uri", "=404"], ["$uri/", "=404"], ["$uri", "$uri/", "=404"])):
+            raise ValueError("try_files preview supports only $uri and $uri/ ending in =404")
+        content["try_files"] = tries[0].args[:-1]
+    return content
+
+
 def redirect_preview(nodes):
     if len(nodes) != 1 or nodes[0].name != "return":
         return None
@@ -319,10 +361,11 @@ def preview(directives):
         if key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
             raise ValueError("preview requires unique and unambiguous paths")
         paths.add(key)
-        action = redirect_preview(location.children)
+        content = direct_preview(location.children) or static_preview(location.children, mode, path)
+        action = None if content else redirect_preview(location.children)
         policy = None
         upstreams = []
-        if action is None:
+        if action is None and content is None:
             target = one_value(location.children, "proxy_pass")
             policy = header_preview(location.children)
             if not target.startswith("http://"):
@@ -342,13 +385,13 @@ def preview(directives):
                     raise ValueError("preview exceeds Cauce route capacity")
                 row = dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
                            path_match=mode, balance="round_robin", upstreams=upstreams)
+                if content:
+                    row["content"] = content
                 if action:
                     row["action"] = action
                 if policy:
                     row["headers"] = policy
                 proxy["routes"].append(row)
-    if not proxy["upstreams"]:
-        raise ValueError("preview requires at least one proxied location")
     return config
 
 
@@ -376,6 +419,7 @@ def main():
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Static proxy header policies omit NGINX inheritance and implicit hide rules.",
+                  "Static file previews bind literal directories with symlinks and hidden files denied by default. Index handling stays inside the selected document root.",
                   "Local return redirects use origin-relative Location. Check NGINX absolute_redirect behavior.",
                   "TLS previews use one server certificate and rustls defaults for chain verification and resumption. Review SNI mappings and required client certificates.",
                   "Review socket exposure and the loopback admin listener before deployment.",
