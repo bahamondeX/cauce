@@ -214,19 +214,28 @@ struct Idle {
     h2: HashMap<Key, Vec<Arc<H2Connection>>>,
 }
 impl Idle {
-    fn pop_any_h1(&mut self) -> Option<Connection> {
-        let socket = self.connections.values_mut().find_map(Vec::pop)?;
+    fn pop_any_h1(&mut self, protected: Option<Key>) -> Option<Connection> {
+        let socket = self
+            .connections
+            .iter_mut()
+            .filter(|(key, _)| Some(*key) != protected.as_ref())
+            .find_map(|(_, sockets)| sockets.pop())?;
         self.h1_count -= 1;
         Some(socket)
     }
 
-    fn reclaim_h2(&mut self) -> bool {
-        let Some((key, index)) = self.h2.iter().find_map(|(k, sockets)| {
-            sockets
-                .iter()
-                .position(|socket| socket.streams.available_permits() == socket.capacity)
-                .map(|i| (*k, i))
-        }) else {
+    fn reclaim_h2(&mut self, protected: Option<Key>) -> bool {
+        let Some((key, index)) = self
+            .h2
+            .iter()
+            .filter(|(key, _)| Some(*key) != protected.as_ref())
+            .find_map(|(key, sockets)| {
+                sockets
+                    .iter()
+                    .position(|socket| socket.streams.available_permits() == socket.capacity)
+                    .map(|index| (*key, index))
+            })
+        else {
             return false;
         };
         let sockets = self.h2.get_mut(&key).unwrap();
@@ -813,7 +822,7 @@ impl Pool {
             })
             .sum::<usize>();
         while idle_total > self.limits.idle_connections {
-            if !idle.reclaim_h2() && idle.pop_any_h1().is_none() {
+            if !idle.reclaim_h2(None) && idle.pop_any_h1(None).is_none() {
                 break;
             }
             idle_total -= 1;
@@ -888,9 +897,9 @@ impl Pool {
                         if let Ok(ep) = endpoint.slots.clone().try_acquire_owned() {
                             if self.sharded.is_none()
                                 && self.global.available_permits() == 0
-                                && idle.pop_any_h1().is_none()
+                                && idle.pop_any_h1(None).is_none()
                             {
-                                idle.reclaim_h2();
+                                idle.reclaim_h2(None);
                             }
                             if let Ok(global) = self.global.clone().try_acquire_owned() {
                                 return (None, Some((global, ep, opening)));
@@ -898,7 +907,7 @@ impl Pool {
                             drop(ep);
                             drop(idle);
                             if self.sharded.is_some() && self.global.available_permits() == 0 {
-                                self.reclaim_idle_connection();
+                                self.reclaim_idle_connection(key);
                             }
                         }
                     }
@@ -1028,7 +1037,7 @@ impl Pool {
                     && reserved.is_none()
                     && self.global.available_permits() == 0
                 {
-                    self.reclaim_idle_connection();
+                    self.reclaim_idle_connection(key);
                 }
             }
             if let Some(capacity) = reserved.take() {
@@ -1292,22 +1301,25 @@ impl Pool {
             executor,
         }))
     }
-    fn reclaim_idle_connection(&self) {
+    fn reclaim_idle_connection(&self, requester: Key) {
         if let Some(shards) = &self.sharded {
             let first = shards.next_victim.fetch_add(1, Ordering::Relaxed);
             let used = shards.used_buckets.load(Ordering::Acquire);
             for offset in 0..used {
                 let index = first.wrapping_add(offset) % used;
                 let mut bucket = shards.buckets[index].lock().unwrap();
-                if bucket.pop_any_h1().is_some() || bucket.reclaim_h2() {
+                // An idle return can win the race after acquisition checked
+                // its bucket. Leave that socket available to the waiter.
+                let protected = (index == requester.upstream).then_some(requester);
+                if bucket.pop_any_h1(protected).is_some() || bucket.reclaim_h2(protected) {
                     break;
                 }
             }
             return;
         }
         let mut idle = self.idle.lock().unwrap();
-        if !idle.reclaim_h2() {
-            idle.pop_any_h1();
+        if !idle.reclaim_h2(None) {
+            idle.pop_any_h1(None);
         }
     }
     async fn connect(
@@ -1662,6 +1674,13 @@ mod pool_tests {
             );
             replacement.complete(true);
             drop(replacement);
+            assert_eq!(pool.idle_count(), 1);
+            // Reclaim after a same-generation return reproduces the
+            // interleaving between a cold lookup and a pressure scan.
+            pool.reclaim_idle_connection(Key {
+                generation: generation.version,
+                upstream: b.pool_index,
+            });
             assert_eq!(pool.idle_count(), 1);
             pool.sweep(2);
             assert_eq!(pool.idle_count(), 0);
