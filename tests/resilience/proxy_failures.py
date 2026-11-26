@@ -8,7 +8,8 @@ TOKEN = "increment9-proxy-test-token-0123456789abcdef"
 HERE = Path(__file__).resolve().parent
 
 class Docker:
-    def __init__(self): self.owned=[]; self.network=None; self.commands=[]
+    def __init__(self):
+        self.owned=[]; self.network=None; self.commands=[]; self.probes={}
     def run(self,*args,check=True,timeout=30):
         cmd=["docker",*map(str,args)]; self.commands.append(cmd)
         p=subprocess.run(cmd,text=True,capture_output=True,timeout=timeout)
@@ -21,12 +22,21 @@ class Docker:
           "-v",f"{HERE}/proxy_backend.mjs:/proxy_backend.mjs:ro","-v",f"{work}:/control:ro",NODE,"node","/proxy_backend.mjs").stdout.strip()
         self.owned.append(cid); return cid
     def node(self,net,js,timeout=8,pidns=None):
-        name="i9-probe-"+uuid.uuid4().hex[:10]
-        self.owned.append(name)
-        args=["run","--rm","--name",name,"--network",net,"--memory=96m","--cpus=.25","--pids-limit=24",
-              "--label","cauce.increment9.proxy=true","--log-opt","max-size=1m","--log-opt","max-file=2"]
-        if pidns: args += ["--pid",f"container:{pidns}","--user","10001:10001"]
-        return self.run(*args,NODE,"node","-e",js,timeout=timeout).stdout.strip()
+        # Keep Compose/engine startup outside the bounded HTTP and reload probes.
+        key = (net, pidns)
+        if key not in self.probes:
+            name = "i9-probe-" + uuid.uuid4().hex[:10]
+            self.owned.append(name)
+            # Two probes can overlap during a held request. Preserve the
+            # aggregate limits previously available to two probe containers.
+            args = ["run", "-d", "--name", name, "--network", net, "--memory=192m",
+                    "--cpus=.5", "--pids-limit=48", "--label", "cauce.increment9.proxy=true",
+                    "--log-opt", "max-size=1m", "--log-opt", "max-file=2"]
+            if pidns:
+                args += ["--pid", f"container:{pidns}", "--user", "10001:10001"]
+            self.run(*args, NODE, "node", "-e", "setInterval(() => {}, 60000)")
+            self.probes[key] = name
+        return self.run("exec", self.probes[key], "node", "-e", js, timeout=timeout).stdout.strip()
 
 def write_config(path, main_ids, main_addresses, post=True, invalid=False, post_address="broken:8000"):
     if invalid: path.write_text('name = [ invalid\n'); return
@@ -103,9 +113,29 @@ def metrics(d,proxy):
             except ValueError: pass
     return out
 
-def request(d,net,path="/",method="GET",body=None):
-    js=f"""(async()=>{{try{{const r=await fetch('http://proxy:8080'+{json.dumps(path)},{{method:{json.dumps(method)},body:{json.dumps(body) if body is not None else 'undefined'},signal:AbortSignal.timeout(16000)}});let t='';try{{t=await r.text()}}catch(e){{t='BODY_ERROR:'+e}};console.log(JSON.stringify({{status:r.status,body:t,backend:r.headers.get('x-backend')}}))}}catch(e){{console.log(JSON.stringify({{error:String(e)}}))}}}})()"""
+def request_batch(d, net, count, path="/", method="GET", body=None):
+    js = f"""(async () => {{
+        const results = [];
+        for (let i = 0; i < {count}; i++) {{
+            try {{
+                const response = await fetch('http://proxy:8080' + {json.dumps(path)}, {{
+                    method: {json.dumps(method)},
+                    body: {json.dumps(body) if body is not None else 'undefined'},
+                    signal: AbortSignal.timeout(16000)
+                }});
+                let payload;
+                try {{ payload = await response.text(); }}
+                catch (error) {{ payload = 'BODY_ERROR:' + error; }}
+                results.push({{status: response.status, body: payload, backend: response.headers.get('x-backend')}});
+            }} catch (error) {{ results.push({{error: String(error)}}); }}
+        }}
+        console.log(JSON.stringify(results));
+    }})()"""
     return json.loads(d.node(net,js,timeout=20))
+
+
+def request(d, net, path="/", method="GET", body=None):
+    return request_batch(d, net, 1, path, method, body)[0]
 
 def backend_stats(d,net,name):
     js=f"fetch('http://{name}:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))"
@@ -161,7 +191,7 @@ def main():
         assert post.get("status") in (502,504) or "error" in post or "BODY_ERROR" in post.get("body",""),post
         assert len(json.dumps(post))<1200,post
         d.run("kill","--signal","KILL",broken);time.sleep(.2)
-        failover=[request(d,net) for _ in range(8)]
+        failover=request_batch(d,net,8)
         good=[x for x in failover if x.get("status")==200]
         bounded=[x for x in failover if x.get("status") in (502,504) or "error" in x]
         assert len(good)>=6 and all(json.loads(x["body"])["backend"]=="healthy" for x in good),failover
