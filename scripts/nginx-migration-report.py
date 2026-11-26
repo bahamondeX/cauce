@@ -229,6 +229,56 @@ def redirect_preview(nodes):
     return dict(kind="redirect", status=int(node.args[0]), target=target, query="replace")
 
 
+TLS_PREVIEW_DIRECTIVES = {
+    "ssl_certificate", "ssl_certificate_key", "ssl_protocols",
+    "ssl_client_certificate", "ssl_verify_client",
+}
+
+
+def listen_preview(items):
+    listeners = [node for node in items if node.name == "listen"]
+    if len(listeners) != 1 or listeners[0].children is not None:
+        raise ValueError("preview requires one explicit listener")
+    if not listeners[0].args:
+        raise ValueError("preview requires one explicit listener address")
+    address, *flags = listeners[0].args
+    if flags not in ([], ["ssl"]):
+        raise ValueError("preview supports only a plain or ssl IPv4 listener")
+    has_tls = any(node.name in TLS_PREVIEW_DIRECTIVES for node in items)
+    if not flags:
+        if has_tls:
+            raise ValueError("TLS preview requires listen with the ssl flag")
+        return ipv4_socket(address), None
+
+    def absolute_file(directive):
+        path = one_value(items, directive)
+        if not re.fullmatch(r"/[A-Za-z0-9_./-]+", path):
+            raise ValueError(f"preview requires an absolute literal {directive} file path")
+        return path
+
+    tls = {
+        "cert_file": absolute_file("ssl_certificate"),
+        "key_file": absolute_file("ssl_certificate_key"),
+    }
+    protocols = [node for node in items if node.name == "ssl_protocols"]
+    if protocols:
+        versions = {"TLSv1.2": "tls1.2", "TLSv1.3": "tls1.3"}
+        node = protocols[0]
+        if (len(protocols) != 1 or node.children is not None or not node.args
+                or len(set(node.args)) != len(node.args)
+                or any(value not in versions for value in node.args)):
+            raise ValueError("preview supports only TLSv1.2 and TLSv1.3 protocol policies")
+        tls["versions"] = [versions[version] for version in node.args]
+    verify = one_value(items, "ssl_verify_client") if any(
+        node.name == "ssl_verify_client" for node in items
+    ) else "off"
+    if verify == "on":
+        tls["client_ca_file"] = absolute_file("ssl_client_certificate")
+    elif verify != "off" or any(node.name == "ssl_client_certificate" for node in items):
+        raise ValueError("client authentication preview requires ssl_verify_client on and an explicit trust bundle")
+    return ipv4_socket(address), tls
+
+
 def preview(directives):
     http = [d for d in directives if d.name == "http" and d.children is not None and not d.args]
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
@@ -238,17 +288,19 @@ def preview(directives):
     if len(servers) != 1 or servers[0].name != "server" or servers[0].args or servers[0].children is None:
         raise ValueError("preview supports one HTTP server block")
     items = servers[0].children
-    listener = ipv4_socket(one_value(items, "listen"))
+    listener, tls = listen_preview(items)
     hosts = server_names(items)
     locations = [node for node in items if node.name == "location"]
-    allowed = {"listen", "server_name", "location", "set_real_ip_from", "real_ip_header", "real_ip_recursive"}
+    allowed = {"listen", "server_name", "location", "set_real_ip_from", "real_ip_header", "real_ip_recursive"} | TLS_PREVIEW_DIRECTIVES
     if not locations or any(item.name not in allowed for item in items):
-        raise ValueError("preview supports listen, server_name, flat locations and literal real-IP policy")
+        raise ValueError("preview supports listen, server_name, flat locations and literal real-IP or TLS policy")
     config = yaml.safe_load((ROOT / "examples/cauce.yaml").read_text())
     proxy = config["proxy"]
     if listener == proxy["admin"]:
         raise ValueError("preview listener conflicts with the default admin socket")
     proxy.update(listen=listener, routes=[], upstreams=[])
+    if tls is not None:
+        proxy["tls"] = tls
     if identity := real_ip_preview(items):
         proxy["real_ip"] = identity
     endpoints = {}
@@ -325,6 +377,7 @@ def main():
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Static proxy header policies omit NGINX inheritance and implicit hide rules.",
                   "Local return redirects use origin-relative Location. Check NGINX absolute_redirect behavior.",
+                  "TLS previews use one server certificate and rustls defaults for chain verification and resumption. Review SNI mappings and required client certificates.",
                   "Review socket exposure and the loopback admin listener before deployment.",
               ]}
     if args.preview:

@@ -387,6 +387,32 @@
         }
       }
     },
+    "certificateFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cert_file", "key_file"],
+      "properties": {
+        "cert_file": {
+          "anyOf": [
+            {"$ref": "#/$defs/environment"},
+            {"type": "string", "minLength": 1}
+          ]
+        },
+        "key_file": {
+          "anyOf": [
+            {"$ref": "#/$defs/environment"},
+            {"type": "string", "minLength": 1}
+          ]
+        }
+      }
+    },
+    "tlsVersions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": {"enum": ["tls1.2", "tls1.3"]}
+    },
     "tls": {
       "type": "object",
       "additionalProperties": false,
@@ -395,6 +421,24 @@
         "key_file"
       ],
       "properties": {
+        "sni": {
+          "type": "object",
+          "maxProperties": 32,
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 253,
+            "pattern": "^[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*$"
+          },
+          "additionalProperties": {"$ref": "#/$defs/certificateFiles"}
+        },
+        "client_ca_file": {
+          "anyOf": [
+            {"$ref": "#/$defs/environment"},
+            {"type": "string", "minLength": 1}
+          ]
+        },
+        "versions": {"$ref": "#/$defs/tlsVersions"},
+        "session_resumption": {"type": "boolean"},
         "cert_file": {
           "anyOf": [
             {
@@ -427,6 +471,9 @@
         "ca_file"
       ],
       "properties": {
+        "client_certificate": {"$ref": "#/$defs/certificateFiles"},
+        "versions": {"$ref": "#/$defs/tlsVersions"},
+        "session_resumption": {"type": "boolean"},
         "server_name": {
           "anyOf": [
             {

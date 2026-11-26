@@ -13,12 +13,12 @@ TOOL = ROOT / "scripts/nginx-migration-report.py"
 
 
 class MigrationTests(unittest.TestCase):
-    def run_preview(self, names, locations, server_extra=''):
+    def run_preview(self, names, locations, server_extra='', listener='127.0.0.1:8080'):
         with tempfile.TemporaryDirectory() as tmp:
             source, destination = (Path(tmp) / f for f in ("nginx.conf", "preview.yaml"))
             source.write_text(f"""http {{
               server {{
-                listen 127.0.0.1:8080;
+                listen {listener};
                 server_name {names};
                 {server_extra}
                 {locations}
@@ -30,7 +30,7 @@ class MigrationTests(unittest.TestCase):
             config = yaml.safe_load(destination.read_text()) if destination.is_file() else None
             if config:
                 self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
-            if config and (ROOT / "target/debug/cauce").is_file():
+            if config and not config["proxy"].get("tls") and (ROOT / "target/debug/cauce").is_file():
                 validation = subprocess.run([str(ROOT / "target/debug/cauce"), "check", str(destination)],
                                             capture_output=True, check=False)
                 self.assertEqual(validation.returncode, 0, validation.stderr)
@@ -84,6 +84,27 @@ class MigrationTests(unittest.TestCase):
         self.assertTrue(config["proxy"]["real_ip"]["recursive"])
         redirects = [route for route in config["proxy"]["routes"] if "action" in route]
         self.assertTrue(all(route["action"]["status"] == 308 and not route["upstreams"] for route in redirects))
+
+    def test_literal_tls_and_mandatory_client_auth_preview(self):
+        files = ("ssl_certificate /etc/tls/server.pem; ssl_certificate_key /etc/tls/key.pem; "
+                 "ssl_protocols TLSv1.3;")
+        location = "location / { proxy_pass http://127.0.0.1:2010; }"
+        auth = "ssl_verify_client on; ssl_client_certificate /etc/tls/clients.pem;"
+        code, _, config = self.run_preview("api.example.org", location, files + auth, "127.0.0.1:8443 ssl")
+        self.assertEqual(code, 0)
+        self.assertEqual(config["proxy"]["tls"], {
+            "cert_file": "/etc/tls/server.pem", "key_file": "/etc/tls/key.pem",
+            "versions": ["tls1.3"], "client_ca_file": "/etc/tls/clients.pem",
+        })
+        for options, listener in (
+            (files + auth, "127.0.0.1:8443"),
+            (files + auth.replace(" on;", " optional;"), "127.0.0.1:8443 ssl"),
+            (files.replace("TLSv1.3", "TLSv1.1"), "127.0.0.1:8443 ssl"),
+        ):
+            with self.subTest(options=options, listener=listener):
+                code, _, config = self.run_preview("api.example.org", location, options, listener)
+                self.assertEqual(code, 1)
+                self.assertIsNone(config)
 
     def test_unsupported_host_or_location_refuses_partial_preview(self):
         for names, locations in [

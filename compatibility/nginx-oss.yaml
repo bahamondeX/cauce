@@ -755,17 +755,17 @@ modules:
           - {"name": "proxy_set_body", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_set_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"], "status": "partial", "notes": "Static route-local replacements and removals after hop filtering. Dynamic values, inherited rules and proxy-owned protocol edits are unavailable."}
           - {"name": "proxy_socket_keepalive", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_ssl_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_ssl_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One explicit client certificate chain per TLS-enabled upstream."}
           - {"name": "proxy_ssl_certificate_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE123"]}
-          - {"name": "proxy_ssl_certificate_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_ssl_certificate_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One explicit client private key per TLS-enabled upstream."}
           - {"name": "proxy_ssl_ciphers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_conf_command", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
           - {"name": "proxy_ssl_crl", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_name", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Explicit upstream TLS name."}
           - {"name": "proxy_ssl_password_file", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_ssl_protocols", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "proxy_ssl_protocols", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "TLS 1.2 and 1.3 selection per TLS-enabled upstream."}
           - {"name": "proxy_ssl_server_name", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_ssl_session_reuse", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_ssl_session_reuse", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Enable or disable rustls session resumption per TLS-enabled upstream."}
           - {"name": "proxy_ssl_trusted_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One explicit CA bundle per TLS-enabled upstream."}
           - {"name": "proxy_ssl_verify", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Configured upstream TLS always verifies peer identity and chain."}
           - {"name": "proxy_ssl_verify_depth", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
@@ -906,18 +906,18 @@ modules:
           - {"name": "ssi_types", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "ssi_value_length", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
   ngx_http_ssl_module:
-    coverage: {"status": "partial", "notes": "Inbound TLS 1.2/1.3 via rustls with one certificate/key pair."}
+    coverage: {"status": "partial", "notes": "Inbound TLS 1.2/1.3 via rustls with exact SNI certificates, a default certificate, and listener-wide client authentication."}
     definitions:
       - source: src/http/modules/ngx_http_ssl_module.c
         type: NGX_HTTP_MODULE
         directives:
           - {"name": "ssl_buffer_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "ssl_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One configured PEM certificate chain."}
+          - {"name": "ssl_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One configured PEM certificate chain per exact SNI name and a default chain."}
           - {"name": "ssl_certificate_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE123"]}
           - {"name": "ssl_certificate_compression", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "ssl_certificate_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One configured PEM private key."}
+          - {"name": "ssl_certificate_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One PEM private key per configured certificate chain."}
           - {"name": "ssl_ciphers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "ssl_client_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "ssl_client_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One strict client trust bundle for the data listener."}
           - {"name": "ssl_conf_command", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE2"]}
           - {"name": "ssl_crl", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_dhparam", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -929,9 +929,9 @@ modules:
           - {"name": "ssl_ocsp_responder", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_password_file", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_prefer_server_ciphers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "ssl_protocols", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "ssl_protocols", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "TLS 1.2 and 1.3 selection at the data listener."}
           - {"name": "ssl_reject_handshake", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "ssl_session_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE12"]}
+          - {"name": "ssl_session_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Enable or disable rustls session resumption. Cache sizing and external sharing differ."}
           - {"name": "ssl_session_ticket_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_session_tickets", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "ssl_session_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -940,7 +940,7 @@ modules:
           - {"name": "ssl_stapling_responder", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_stapling_verify", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "ssl_trusted_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "ssl_verify_client", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "ssl_verify_client", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Require a client certificate on the TLS listener when a client CA bundle is configured."}
           - {"name": "ssl_verify_depth", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_http_static_module:
     definitions:
@@ -1665,7 +1665,7 @@ behaviors:
   - {"id": "routing", "status": "partial", "scope": "Exact and edge-wildcard authorities with exact path and segment-aware prefix routing", "tests": ["src/routing.rs", "tests/integration.py", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-3/routing-nginx.jsonl"]}
   - {"id": "flat-location-precedence", "status": "verified", "scope": "Top-level exact, literal prefix, ^~, and first matching ASCII byte regex precedence on validated shared paths.", "tests": ["src/routing.rs", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-4/nginx-differential.jsonl"]}
   - {"id": "static-route-header-edits", "status": "verified", "scope": "Static request replacement and removal and response header replacement and removal, route isolation, protected headers and rejected reload.", "tests": ["src/headers.rs", "tests/integration.py", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-4/nginx-differential.jsonl"]}
-  - {"id": "tls", "status": "partial", "scope": "Inbound TLS, verified upstream TLS, no client certificate configuration", "tests": ["scripts/test-tls-lifecycle.py", "scripts/test-tls-docker.py"]}
+  - {"id": "tls", "status": "partial", "scope": "Inbound exact SNI and default certificates, verified upstream connections, TLS versions and bounded session resumption", "tests": ["scripts/test-tls-lifecycle.py", "scripts/test-tls-docker.py", "tests/tls_gateway.py"]}
   - {"id": "pooling", "status": "partial", "scope": "Global and endpoint budgets, HTTP/1 exclusive leases and HTTP/2 multiplexing. The experimental endpoint-sharded pool uses the same numeric endpoint and generation identity. The compact pool remains the default.", "tests": ["tests/integration.py", "tests/resilience/proxy_failures.py", "scripts/test-http2-stress-docker.py", "src/pool.rs", "bench/program/pool-transport.py"], "evidence": ["bench/program/evidence/milestone-2c/pool-matrix.json"]}
   - {"id": "reload", "status": "partial", "scope": "SIGHUP route/upstream and certificate reload with rejected candidate preservation", "tests": ["tests/integration.py", "scripts/test-tls-lifecycle.py"], "evidence": ["bench/program/evidence/candidate-integration-darwin-arm64.log"]}
   - {"id": "health", "status": "partial", "scope": "Passive backoff and optional HTTP/1, HTTP/2 and standard unary gRPC active probes as Cauce extensions", "tests": ["tests/integration.py", "tests/http2_active_health.py"]}
@@ -1673,7 +1673,7 @@ behaviors:
   - {"id": "access-log-disabled", "status": "verified", "scope": "Disable JSONL output while preserving HTTP/1 request IDs, trace forwarding, pool reuse, rejection and response counters", "tests": ["tests/integration.py"], "evidence": ["bench/program/evidence/telemetry-integration-darwin-arm64.log"]}
   - {"id": "http-3", "status": "unsupported"}
   - {"id": "quic", "status": "unsupported"}
-  - {"id": "mtls", "status": "unsupported"}
+  - {"id": "mtls", "status": "partial", "scope": "Listener-wide downstream client authentication and upstream client certificates; optional authentication and per-SNI trust policies differ", "tests": ["tests/tls_gateway.py"]}
   - {"id": "acme", "status": "unsupported"}
   - {"id": "static-files", "status": "unsupported"}
   - {"id": "http-cache", "status": "unsupported"}

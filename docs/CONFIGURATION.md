@@ -151,3 +151,26 @@ uses the upstream trust configuration. A generation can configure up to
 A reload restarts the checks for the new generation. Probes use separate
 sockets from the user-data pools. [YAML example](../examples/http2-health.yaml)
 [gRPC health protocol](https://github.com/grpc/grpc-proto/blob/master/grpc/health/v1/health.proto).
+
+## TLS certificates and mutual authentication
+
+The inbound `cert_file` and `key_file` pair supplies the default certificate.
+Add up to 32 exact DNS entries under `tls.sni` to serve distinct certificate
+chains. A missing or unmatched SNI name uses the default pair. Each mapped
+certificate must cover its configured name. SNI selection occurs during the
+handshake. The HTTP Host or authority still selects the request route.
+
+Set `tls.client_ca_file` to require clients to present a trusted certificate
+on the listener. Upstreams retain explicit `server_name` and `ca_file`
+verification. Set `client_certificate` on an upstream TLS policy to present
+a client chain and private key to that origin. Each side accepts an optional
+`versions` list with `tls1.2`, `tls1.3` or both. Session resumption is enabled
+by default and can be disabled with `session_resumption: false`.
+
+Replace credentials using distinct paths and publish a complete candidate on
+reload. New handshakes use the new credentials and a new session cache.
+Existing connections retain their negotiated security context. New requests
+do not reuse upstream connections from the previous generation. An invalid
+candidate preserves the previous TLS configuration. Client trust on the
+data listener applies across its SNI names.
+[Mutual TLS YAML](../examples/gateway-mtls.yaml).

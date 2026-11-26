@@ -170,6 +170,39 @@ fn deserialize_yaml(data: &str, env: impl Fn(&str) -> Option<String>) -> Result<
 pub struct InboundTls {
     pub cert_file: String,
     pub key_file: String,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub sni: std::collections::BTreeMap<String, CertificateFiles>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_ca_file: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub versions: Option<Vec<TlsVersion>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_resumption: Option<bool>,
+}
+
+#[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct CertificateFiles {
+    pub cert_file: String,
+    pub key_file: String,
+}
+
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq, Eq, Debug)]
+pub enum TlsVersion {
+    #[serde(rename = "tls1.2")]
+    Tls12,
+    #[serde(rename = "tls1.3")]
+    Tls13,
+}
+
+fn validate_tls_versions(versions: Option<&[TlsVersion]>) -> Result<()> {
+    if let Some(versions) = versions {
+        ensure!(
+            matches!(versions, [_]) || matches!(versions, [first, second] if first != second),
+            "TLS versions must list TLS 1.2, TLS 1.3 or both without duplicates"
+        );
+    }
+    Ok(())
 }
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(default, deny_unknown_fields)]
@@ -334,6 +367,12 @@ pub enum UpstreamProtocol {
 pub struct UpstreamTls {
     pub server_name: String,
     pub ca_file: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub client_certificate: Option<CertificateFiles>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub versions: Option<Vec<TlsVersion>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_resumption: Option<bool>,
 }
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(deny_unknown_fields)]
@@ -450,6 +489,23 @@ impl Config {
             self.admin != self.listen,
             "separate admin and data listeners"
         );
+        if let Some(tls) = &self.tls {
+            ensure!(tls.sni.len() <= 32, "at most 32 SNI certificate entries");
+            let mut names = HashSet::new();
+            for name in tls.sni.keys() {
+                ensure!(
+                    !name.ends_with('.')
+                        && !name.contains('_')
+                        && matches!(
+                            rustls::pki_types::ServerName::try_from(name.as_str()),
+                            Ok(rustls::pki_types::ServerName::DnsName(_))
+                        )
+                        && names.insert(name.to_ascii_lowercase()),
+                    "invalid or duplicate TLS SNI DNS name"
+                );
+            }
+            validate_tls_versions(tls.versions.as_deref())?;
+        }
         let l = &self.limits;
         let h = &self.http2;
         ensure!(
@@ -577,6 +633,7 @@ impl Config {
                 "invalid/duplicate upstream id"
             );
             if let Some(tls) = &u.tls {
+                validate_tls_versions(tls.versions.as_deref())?;
                 ensure!(
                     !tls.server_name.is_empty() && tls.server_name.len() <= 253,
                     "invalid TLS server_name"
@@ -864,6 +921,9 @@ mod tests {
         bad.upstreams[0].tls = Some(UpstreamTls {
             server_name: "backend.test".into(),
             ca_file: "/tmp/ca.pem".into(),
+            client_certificate: None,
+            versions: None,
+            session_resumption: None,
         });
         assert!(bad.validate().is_err());
         let mut bad = c.clone();
@@ -878,6 +938,10 @@ mod tests {
         inbound_toggle.tls = Some(InboundTls {
             cert_file: "/tmp/cert.pem".into(),
             key_file: "/tmp/key.pem".into(),
+            sni: Default::default(),
+            client_ca_file: None,
+            versions: None,
+            session_resumption: None,
         });
         assert!(c.reload_compatible(&inbound_toggle).is_err());
     }
