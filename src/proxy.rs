@@ -153,11 +153,15 @@ fn normal_path(path: &str) -> bool {
     if path.contains(['\\', '#']) || path.contains("//") {
         return false;
     }
-    let lower = path.to_ascii_lowercase();
-    if ["%2f", "%5c", "%2e", "%25", "%00", "%0a", "%0d"]
-        .iter()
-        .any(|s| lower.contains(s))
-    {
+    if path.split('%').skip(1).any(|encoded| {
+        let Some([high, low]) = encoded.as_bytes().get(..2) else {
+            return false;
+        };
+        matches!(
+            (*high, low.to_ascii_lowercase()),
+            (b'2', b'f' | b'e' | b'5') | (b'5', b'c') | (b'0', b'0' | b'a' | b'd')
+        )
+    }) {
         return false;
     }
     !path
@@ -840,6 +844,23 @@ mod tests {
     fn rejects_ambiguous_paths() {
         assert!(!normal_path("/api/%2fsecret"));
         assert!(!normal_path("/a/../b"));
+    }
+    #[test]
+    fn percent_encoded_path_filter_is_ascii_case_insensitive() {
+        let blocked = [0x2f, 0x5c, 0x2e, 0x25, 0x00, 0x0a, 0x0d];
+        for octet in 0..=255 {
+            for path in [
+                format!("/ok/%{octet:02x}/path"),
+                format!("/ok/%{octet:02X}/path"),
+            ] {
+                assert_eq!(normal_path(&path), !blocked.contains(&octet), "{path}");
+            }
+        }
+        assert!(!normal_path("/ok/%aa%2E"));
+        assert!(!normal_path("/ok/%%5C"));
+        for path in ["/ok/a%2", "/ok/%%", "/café", "/a.b/.c"] {
+            assert!(normal_path(path), "{path}");
+        }
     }
     #[test]
     fn framing_and_hop_headers() {
