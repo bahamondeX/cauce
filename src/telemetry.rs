@@ -30,6 +30,8 @@ pub struct Metrics {
     pub http2_header_timeouts: AtomicU64,
     pub upstream_streams_active: AtomicU64,
     pub http2_tasks_active: Arc<AtomicU64>,
+    pub(crate) tcp: Option<Arc<crate::stream::Counters>>,
+    pub(crate) udp: Option<Arc<crate::stream::Counters>>,
 }
 impl Metrics {
     pub fn prometheus(&self, name: &str) -> String {
@@ -65,6 +67,27 @@ impl Metrics {
                 "# TYPE {name}_{label} gauge\n{name}_{label} {}\n",
                 value.load(Ordering::Relaxed)
             ));
+        }
+        for (protocol, counters) in [("tcp", &self.tcp), ("udp", &self.udp)] {
+            if let Some(counters) = counters {
+                s.push_str(&format!(
+                    "# TYPE {name}_{protocol}_sessions_active gauge\n{name}_{protocol}_sessions_active {}\n",
+                    counters.active.load(Ordering::Relaxed)
+                ));
+                for (label, value) in [
+                    ("sessions_accepted", &counters.accepted),
+                    ("sessions_rejected", &counters.rejected),
+                    ("upstream_failures", &counters.upstream_failures),
+                    ("datagrams_dropped", &counters.datagrams_dropped),
+                ] {
+                    if protocol == "udp" || label != "datagrams_dropped" {
+                        s.push_str(&format!(
+                            "# TYPE {name}_{protocol}_{label}_total counter\n{name}_{protocol}_{label}_total {}\n",
+                            value.load(Ordering::Relaxed)
+                        ));
+                    }
+                }
+            }
         }
         s
     }

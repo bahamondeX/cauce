@@ -270,3 +270,12 @@ privacidad, frescura y variantes. El almacén publica únicamente cuerpos
 completos y comparte su contenido entre respuestas. La codificación
 se aplica después de seleccionar la representación.
 [ADR 0013](adr/0013-content-and-cache.md).
+
+## Listeners de capa 4
+
+`stream/` prepara sockets y grupos TCP/UDP antes de aceptar tráfico.
+Cada listener controla sus sesiones y su drenaje. TCP preserva el cierre
+por dirección y admite upstreams Unix. UDP conserva límites de datagrama
+y usa un socket conectado por asociación. PROXY y ClientHello se procesan
+en el listener TCP antes de seleccionar el upstream. Las rutas HTTP
+siguen su propio dataplane. [ADR 0014](adr/0014-bounded-stream-listeners.md).

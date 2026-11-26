@@ -20,26 +20,26 @@ pub(crate) struct Group {
     cursor: AtomicUsize,
 }
 
-fn mix(mut value: u64) -> u64 {
+pub(crate) fn mix(mut value: u64) -> u64 {
     value = (value ^ (value >> 30)).wrapping_mul(0xbf58476d1ce4e5b9);
     value = (value ^ (value >> 27)).wrapping_mul(0x94d049bb133111eb);
     value ^ (value >> 31)
 }
 
-fn hash(bytes: &[u8]) -> u64 {
+pub(crate) fn hash(bytes: &[u8]) -> u64 {
     bytes.iter().fold(0xcbf29ce484222325, |state, byte| {
         (state ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
     })
 }
 
-fn key(ip: IpAddr) -> u64 {
+pub(crate) fn key(ip: IpAddr) -> u64 {
     match ip.to_canonical() {
         IpAddr::V4(ip) => hash(&ip.octets()),
         IpAddr::V6(ip) => hash(&ip.octets()),
     }
 }
 
-fn tickets(weights: &[u64]) -> Vec<usize> {
+pub(crate) fn tickets(weights: &[u64]) -> Vec<usize> {
     let sum = weights.iter().sum::<u64>() as i64;
     let mut debts = vec![0i64; weights.len()];
     (0..sum)

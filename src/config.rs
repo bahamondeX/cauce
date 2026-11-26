@@ -11,7 +11,8 @@ pub const MAX_UPSTREAMS: usize = 1024;
 #[serde(deny_unknown_fields)]
 pub struct Config {
     pub name: String,
-    pub listen: SocketAddr,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub listen: Option<SocketAddr>,
     pub admin: SocketAddr,
     pub limits: Limits,
     pub logs: Logs,
@@ -25,7 +26,11 @@ pub struct Config {
     pub(crate) rate_zones: std::collections::BTreeMap<String, crate::admission::Spec>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub max_connections_per_peer: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) stream: Option<Box<crate::stream::config::StreamConfig>>,
+    #[serde(default)]
     pub upstreams: Vec<Upstream>,
+    #[serde(default)]
     pub routes: Vec<Route>,
 }
 #[derive(Deserialize)]
@@ -495,8 +500,21 @@ impl Config {
             "admin must bind loopback; use an authenticated local tunnel"
         );
         ensure!(
-            self.admin != self.listen,
+            Some(self.admin) != self.listen,
             "separate admin and data listeners"
+        );
+        ensure!(
+            self.listen.is_some()
+                || self
+                    .stream
+                    .as_ref()
+                    .is_some_and(|stream| stream.has_listeners()),
+            "at least one data listener is required"
+        );
+        ensure!(
+            self.listen.is_some()
+                || (self.tls.is_none() && self.routes.is_empty() && self.upstreams.is_empty()),
+            "HTTP routes, upstreams and TLS require an HTTP listener"
         );
         if let Some(tls) = &self.tls {
             ensure!(tls.sni.len() <= 32, "at most 32 SNI certificate entries");
@@ -514,6 +532,9 @@ impl Config {
                 );
             }
             validate_tls_versions(tls.versions.as_deref())?;
+        }
+        if let Some(stream) = &self.stream {
+            stream.validate(self)?;
         }
         let l = &self.limits;
         let h = &self.http2;
@@ -576,7 +597,7 @@ impl Config {
         ensure!(!self.logs.path.is_empty(), "missing log path");
         ensure!(
             self.upstreams.len() <= MAX_UPSTREAMS
-                && !self.routes.is_empty()
+                && (self.listen.is_none() || !self.routes.is_empty())
                 && self.routes.len() <= 1024,
             "invalid routing size"
         );
@@ -858,8 +879,9 @@ impl Config {
             || self.rate_zones != next.rate_zones
             || self.max_connections_per_peer != next.max_connections_per_peer
             || self.name != next.name
+            || self.stream != next.stream
         {
-            bail!("reload supports routes/upstreams only; listener/limits/log/name and admission zone changes require restart");
+            bail!("reload supports routes/upstreams only; listener, stream, limits, log, name and admission zone changes require restart");
         }
         Ok(())
     }

@@ -7,7 +7,7 @@ use std::{
     net::{IpAddr, SocketAddr},
 };
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(try_from = "Vec<String>", into = "Vec<String>")]
 pub(crate) struct Networks(Vec<IpNet>);
 

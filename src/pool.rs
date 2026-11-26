@@ -1520,7 +1520,8 @@ mod pool_tests {
     fn config(address: String) -> Config {
         Config {
             name: "pooltest".into(),
-            listen: "127.0.0.1:19080".parse().unwrap(),
+            stream: None,
+            listen: Some("127.0.0.1:19080".parse().unwrap()),
             admin: "127.0.0.1:19081".parse().unwrap(),
             limits: Limits {
                 clients: 8,

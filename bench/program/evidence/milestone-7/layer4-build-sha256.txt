@@ -1,0 +1,3 @@
+7c2825d61ae278a045b707260a6f464b68537f9c296dce99cef7af064fc49ffc  target/debug/cauce
+f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1  work/program/nginx-1.30.8.tar.gz
+8f9dcbb44b61afb09407575f04e1b344b055ef80bce4fdd6971d80ab8abf35e8  work/milestone-7/nginx-1.30.8/objs/nginx

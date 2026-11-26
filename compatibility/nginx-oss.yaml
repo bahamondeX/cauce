@@ -1338,15 +1338,16 @@ modules:
           - {"name": "allow", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "deny", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_stream_core_module:
+    coverage: {"status": "partial", "notes": "Independent IPv4/IPv6 TCP, UDP and TLS preread listeners. Stream syntax and lifecycle settings differ."}
     definitions:
       - source: src/stream/ngx_stream_core_module.c
         type: NGX_STREAM_MODULE
         directives:
           - {"name": "error_log", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "listen", "flags": ["NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "preread_buffer_size", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "preread_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_protocol_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "listen", "flags": ["NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Literal IP sockets, opt-in reuseport and inbound PROXY on TCP. Several NGINX socket options differ."}
+          - {"name": "preread_buffer_size", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Bounded rustls ClientHello parser and retained wire prefix."}
+          - {"name": "preread_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Absolute TLS preread deadline under the session deadline."}
+          - {"name": "proxy_protocol_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Absolute header deadline on explicitly trusted stream TCP listeners."}
           - {"name": "resolver", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
           - {"name": "resolver_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "server", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_CONF_BLOCK", "NGX_CONF_NOARGS"]}
@@ -1408,24 +1409,25 @@ modules:
         directives:
           - {"name": "pass", "flags": ["NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_stream_proxy_module:
+    coverage: {"status": "partial", "notes": "Generic TCP and UDP socket relays. Stream TLS termination, rate directives and NGINX retry semantics remain open."}
     definitions:
       - source: src/stream/ngx_stream_proxy_module.c
         type: NGX_STREAM_MODULE
         directives:
           - {"name": "proxy_bind", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE12"]}
-          - {"name": "proxy_buffer_size", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_connect_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_buffer_size", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Two bounded configurable TCP buffers and bounded UDP datagrams."}
+          - {"name": "proxy_connect_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Per-listener TCP connect and preamble deadline."}
           - {"name": "proxy_download_rate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_downstream_buffer", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_half_close", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_half_close", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Directional FIN forwarding, enabled for TCP."}
           - {"name": "proxy_next_upstream", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_next_upstream_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_next_upstream_tries", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_pass", "flags": ["NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_protocol", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_pass", "flags": ["NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Configured literal IP groups for TCP and UDP, with Unix endpoints for TCP. Variable destinations remain open."}
+          - {"name": "proxy_protocol", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Outbound TCP v1 or v2, with optional trusted inbound TCP framing."}
           - {"name": "proxy_requests", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_responses", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_socket_keepalive", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_socket_keepalive", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Configurable TCP keepalive time for TCP endpoints."}
           - {"name": "proxy_ssl", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_ssl_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_certificate_cache", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE123"]}
@@ -1441,15 +1443,16 @@ modules:
           - {"name": "proxy_ssl_trusted_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_verify", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_ssl_verify_depth", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "TCP forwarding progress and UDP session inactivity, plus absolute lifetime."}
           - {"name": "proxy_upload_rate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_upstream_buffer", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_stream_realip_module:
+    coverage: {"status": "partial", "notes": "Trusted PROXY source and destination metadata used separately from socket peer admission."}
     definitions:
       - source: src/stream/ngx_stream_realip_module.c
         type: NGX_STREAM_MODULE
         directives:
-          - {"name": "set_real_ip_from", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "set_real_ip_from", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Explicit socket peer CIDRs for inbound TCP PROXY."}
   ngx_stream_return_module:
     definitions:
       - source: src/stream/ngx_stream_return_module.c
@@ -1505,17 +1508,18 @@ modules:
           - {"name": "ssl_verify_client", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_verify_depth", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_stream_ssl_preread_module:
+    coverage: {"status": "partial", "notes": "Routes by visible SNI and advertised ALPN without TLS termination."}
     definitions:
       - source: src/stream/ngx_stream_ssl_preread_module.c
         type: NGX_STREAM_MODULE
         directives:
-          - {"name": "ssl_preread", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "ssl_preread", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Bounded rustls ClientHello parsing across TLS records."}
   ngx_stream_upstream_hash_module:
     definitions:
       - source: src/stream/ngx_stream_upstream_hash_module.c
         type: NGX_STREAM_MODULE
         directives:
-          - {"name": "hash", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_TAKE12"]}
+          - {"name": "hash", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Weighted rendezvous using the canonical client IP. NGINX key expressions and hashing ring differ."}
   ngx_stream_upstream_least_conn_module:
     definitions:
       - source: src/stream/ngx_stream_upstream_least_conn_module.c
@@ -1523,14 +1527,15 @@ modules:
         directives:
           - {"name": "least_conn", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_NOARGS"]}
   ngx_stream_upstream_module:
+    coverage: {"status": "partial", "notes": "Weighted endpoints with per-transport passive cooldown and consistent IP-key hashing."}
     definitions:
       - source: src/stream/ngx_stream_upstream.c
         type: NGX_STREAM_MODULE
         directives:
           - {"name": "resolver", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_1MORE"]}
           - {"name": "resolver_timeout", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "server", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "upstream", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE1"]}
+          - {"name": "server", "flags": ["NGX_STREAM_UPS_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Literal TCP/UDP IP and TCP Unix endpoints with weights. Dynamic DNS and additional flags remain open."}
+          - {"name": "upstream", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Named declarative endpoint groups."}
   ngx_stream_upstream_random_module:
     definitions:
       - source: src/stream/ngx_stream_upstream_random_module.c
@@ -1663,6 +1668,10 @@ add_ons:
               - {"name": "state_path", "flags": ["NGX_CONF_TAKE1"], "within": "acme_issuer"}
               - {"name": "accept_terms_of_service", "flags": ["NGX_CONF_NOARGS"], "within": "acme_issuer"}
 behaviors:
+  - {"id": "stream-tcp-weight-and-half-close", "status": "verified", "scope": "Stream TCP half-close and weighted 3:1 distribution against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
+  - {"id": "stream-udp-echo", "status": "verified", "scope": "Stream UDP echo datagram boundaries against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
+  - {"id": "stream-tls-preread", "status": "verified", "scope": "Stream TLS visible SNI and default routing against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
+  - {"id": "stream-proxy-v1-identity", "status": "verified", "scope": "Trusted Stream PROXY v1 source identity and body preservation against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
   - {"id": "trusted-real-ip", "status": "verified", "scope": "Recursive IPv4 and IPv6 forwarding, X-Real-IP, rejection of spoofed chains and final-route CIDR authorization.", "tests": ["tests/compare_nginx_gateway.py"], "evidence": ["bench/program/evidence/milestone-5/gateway-compact.jsonl", "bench/program/evidence/milestone-5/gateway-sharded.jsonl"]}
   - {"id": "bounded-gateway-actions", "status": "verified", "scope": "Capture and query handling, local 308, named locations and internal hop exhaustion.", "tests": ["tests/compare_nginx_gateway.py"], "evidence": ["bench/program/evidence/milestone-5/gateway-compact.jsonl", "bench/program/evidence/milestone-5/gateway-sharded.jsonl"]}
   - {"id": "weighted-gateway-selection", "status": "verified", "scope": "3:1 weighted distribution and stable address selection in shared socket cases; algorithms remain partially mapped.", "tests": ["tests/compare_nginx_gateway.py"], "evidence": ["bench/program/evidence/milestone-5/gateway-compact.jsonl", "bench/program/evidence/milestone-5/gateway-sharded.jsonl"]}

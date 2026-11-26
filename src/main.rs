@@ -14,6 +14,7 @@ mod pool;
 mod proxy;
 mod routing;
 mod static_files;
+mod stream;
 mod telemetry;
 mod tls;
 mod transport;
@@ -74,13 +75,24 @@ async fn run() -> Result<()> {
         println!("configuration valid");
         return Ok(());
     }
-    let listener = TcpListener::bind(config.listen)
-        .await
-        .context("data listener")?;
+    let listener = if let Some(address) = config.listen {
+        Some(TcpListener::bind(address).await.context("data listener")?)
+    } else {
+        None
+    };
     let admin_listener = TcpListener::bind(config.admin)
         .await
         .context("admin listener")?;
-    let metrics = Arc::new(Metrics::default());
+    let stream = config
+        .stream
+        .as_ref()
+        .map(|spec| stream::Listeners::bind((**spec).clone()))
+        .transpose()?;
+    let metrics = Arc::new(
+        stream
+            .as_ref()
+            .map_or_else(Metrics::default, stream::Listeners::metrics),
+    );
     let (logger, log_thread) = Logger::start(config.logs.clone(), metrics.clone());
     let pool = Pool::with_strategy(
         config.limits.clone(),
@@ -123,17 +135,35 @@ async fn run() -> Result<()> {
     let mut interrupt = signal(SignalKind::interrupt())?;
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let (generation_tx, generation_rx) = watch::channel(1);
-    let maintenance = tokio::spawn(maintain_pool(state.pool.clone(), generation_rx));
+    let maintenance = listener
+        .as_ref()
+        .map(|_| tokio::spawn(maintain_pool(state.pool.clone(), generation_rx)));
     let mut tasks = JoinSet::new();
+    let mut stream = stream
+        .map(|stream| stream.start(&shutdown_rx, &state.logger.metrics))
+        .unwrap_or_default();
+    let mut stream_failure = Ok(());
     let mut reload = JoinSet::new();
     eprintln!(
         "{{\"event\":\"started\",\"data\":\"{}\",\"admin\":\"{}\"}}",
-        config.listen, config.admin
+        config
+            .listen
+            .map(|address| address.to_string())
+            .unwrap_or_default(),
+        config.admin
     );
     loop {
         tokio::select! {
             _ = term.recv() => break,
             _ = interrupt.recv() => break,
+            ended = stream.join_next(), if !stream.is_empty() => {
+                stream_failure = match ended {
+                    Some(Ok(Err(error))) => Err(error.context("stream listener failed")),
+                    Some(Err(error)) => Err(error.into()),
+                    _ => Err(anyhow::anyhow!("stream listener ended before shutdown")),
+                };
+                break;
+            },
             _ = tasks.join_next(), if !tasks.is_empty() => {},
             _ = hup.recv(), if reload.is_empty() => {
                 let version = state.generation.read().unwrap().version + 1;
@@ -160,7 +190,7 @@ async fn run() -> Result<()> {
                     _ => eprintln!("{{\"event\":\"reload_rejected\",\"reason\":\"invalid_or_restart_required\"}}"),
                 }
             },
-            accepted = listener.accept() => {
+            accepted = async { listener.as_ref().expect("HTTP listener enabled").accept().await }, if listener.is_some() => {
                 let (socket, peer) = accepted?;
                 let downstream = diagnostics::downstream_id();
                 diagnostics::emit("downstream_accept", || serde_json::json!({
@@ -286,7 +316,9 @@ async fn run() -> Result<()> {
         }
     }
     reload.abort_all();
-    maintenance.abort();
+    if let Some(maintenance) = maintenance {
+        maintenance.abort();
+    }
     state.ready.store(false, Ordering::Release);
     state
         .generation
@@ -303,9 +335,13 @@ async fn run() -> Result<()> {
     let deadline = tokio::time::Instant::now() + Duration::from_millis(config.limits.shutdown_ms);
     state.tunnels.wait_until(deadline).await;
     let _ = tokio::time::timeout_at(deadline, async {
-        while tasks.join_next().await.is_some() {}
+        tokio::join!(
+            async { while tasks.join_next().await.is_some() {} },
+            async { while stream.join_next().await.is_some() {} },
+        );
     })
     .await;
+    stream.shutdown().await;
     tasks.abort_all();
     while tasks.join_next().await.is_some() {}
     state.pool.sweep(u64::MAX);
@@ -319,7 +355,7 @@ async fn run() -> Result<()> {
             let _ = worker.join();
         }
     }
-    Ok(())
+    stream_failure
 }
 
 async fn maintain_pool(pool: Arc<Pool>, mut generations: watch::Receiver<u64>) {

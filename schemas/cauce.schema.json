@@ -1167,19 +1167,399 @@
         }
       }
     },
+    "streamTcpOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "idle_timeout": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            {
+              "$ref": "#/$defs/durationString"
+            }
+          ]
+        },
+        "session_timeout": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            {
+              "$ref": "#/$defs/durationString"
+            }
+          ]
+        },
+        "failure_cooldown": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            {
+              "$ref": "#/$defs/durationString"
+            }
+          ]
+        },
+        "max_sessions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "max_sessions_per_ip": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "reuse_port": {
+          "type": "boolean"
+        },
+        "connect_timeout": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            {
+              "$ref": "#/$defs/durationString"
+            }
+          ]
+        },
+        "buffer_bytes": {
+          "type": "integer",
+          "minimum": 512,
+          "maximum": 65536
+        },
+        "receive_buffer_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 4194304
+        },
+        "send_buffer_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 4194304
+        },
+        "nodelay": {
+          "type": "boolean"
+        },
+        "keepalive_secs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400
+        },
+        "proxy_in": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "trusted_peers"
+          ],
+          "properties": {
+            "trusted_peers": {
+              "$ref": "#/$defs/cidrs"
+            },
+            "header_timeout": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 86400000
+                },
+                {
+                  "$ref": "#/$defs/durationString"
+                }
+              ]
+            },
+            "max_header_bytes": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 4096
+            }
+          }
+        },
+        "proxy_out": {
+          "enum": [
+            "v1",
+            "v2"
+          ]
+        }
+      }
+    },
+    "stream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "upstreams": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "endpoints"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/identifier"
+              },
+              "balance": {
+                "enum": [
+                  "weighted_round_robin",
+                  "consistent_hash"
+                ]
+              },
+              "endpoints": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [],
+                  "properties": {
+                    "address": {
+                      "$ref": "#/$defs/authority"
+                    },
+                    "unix": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "weight": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 100
+                    }
+                  },
+                  "oneOf": [
+                    {
+                      "required": [
+                        "address"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "unix"
+                      ]
+                    }
+                  ]
+                },
+                "maxItems": 64,
+                "minItems": 1
+              }
+            }
+          },
+          "maxItems": 256
+        },
+        "tcp": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "listen",
+              "upstream"
+            ],
+            "properties": {
+              "listen": {
+                "$ref": "#/$defs/authority"
+              },
+              "upstream": {
+                "$ref": "#/$defs/identifier"
+              },
+              "options": {
+                "$ref": "#/$defs/streamTcpOptions"
+              }
+            }
+          },
+          "maxItems": 64
+        },
+        "tls_passthrough": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "listen",
+              "routes"
+            ],
+            "properties": {
+              "listen": {
+                "$ref": "#/$defs/authority"
+              },
+              "options": {
+                "$ref": "#/$defs/streamTcpOptions"
+              },
+              "default_upstream": {
+                "$ref": "#/$defs/identifier"
+              },
+              "routes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "upstream"
+                  ],
+                  "properties": {
+                    "upstream": {
+                      "$ref": "#/$defs/identifier"
+                    },
+                    "sni": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "alpn": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255
+                    }
+                  },
+                  "anyOf": [
+                    {
+                      "required": [
+                        "sni"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "alpn"
+                      ]
+                    }
+                  ]
+                },
+                "maxItems": 128
+              },
+              "preread_bytes": {
+                "type": "integer",
+                "minimum": 512,
+                "maximum": 65536
+              },
+              "preread_timeout": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 86400000
+                  },
+                  {
+                    "$ref": "#/$defs/durationString"
+                  }
+                ]
+              }
+            }
+          },
+          "maxItems": 64
+        },
+        "udp": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "listen",
+              "upstream"
+            ],
+            "properties": {
+              "listen": {
+                "$ref": "#/$defs/authority"
+              },
+              "upstream": {
+                "$ref": "#/$defs/identifier"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [],
+                "properties": {
+                  "idle_timeout": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 86400000
+                      },
+                      {
+                        "$ref": "#/$defs/durationString"
+                      }
+                    ]
+                  },
+                  "session_timeout": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 86400000
+                      },
+                      {
+                        "$ref": "#/$defs/durationString"
+                      }
+                    ]
+                  },
+                  "failure_cooldown": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 86400000
+                      },
+                      {
+                        "$ref": "#/$defs/durationString"
+                      }
+                    ]
+                  },
+                  "max_sessions": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  },
+                  "max_sessions_per_ip": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  },
+                  "reuse_port": {
+                    "type": "boolean"
+                  },
+                  "max_datagram_bytes": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 65507
+                  },
+                  "max_response_ratio": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3
+                  }
+                }
+              }
+            }
+          },
+          "maxItems": 64
+        }
+      }
+    },
     "proxy": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "name",
-        "listen",
         "admin",
         "limits",
-        "logs",
-        "upstreams",
-        "routes"
+        "logs"
+      ],
+      "anyOf": [
+        { "required": ["listen", "routes"] },
+        { "required": ["stream"] }
       ],
       "properties": {
+        "stream": { "$ref": "#/$defs/stream" },
         "name": {
           "$ref": "#/$defs/identifier"
         },
