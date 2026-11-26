@@ -1,9 +1,13 @@
 import importlib.util
 import json
+import os
 from pathlib import Path
+import shutil
+import socket
 import sys
 import tempfile
 import unittest
+from unittest.mock import Mock
 
 PROGRAM = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROGRAM))
@@ -36,6 +40,25 @@ class ReplayCorrelationTests(unittest.TestCase):
             self.assertIsNone(failure["request"])
             self.assertEqual(failure["downstream"], 7)
             self.assertEqual([event["seq"] for event in failure["events"]], [0, 2])
+
+    @unittest.skipUnless(sys.platform == "linux" and shutil.which("ss"), "requires Linux iproute2")
+    def test_kernel_sampler_matches_established_sockets(self):
+        with tempfile.TemporaryDirectory() as directory, socket.socket() as server, socket.socket() as client:
+            server.bind(("127.0.0.1", 0))
+            server.listen()
+            client.connect(server.getsockname())
+            connection, _ = server.accept()
+            with connection:
+                output = Path(directory) / "samples.jsonl"
+                stop = Mock()
+                stop.is_set.side_effect = [False, True]
+                ports = [server.getsockname()[1], client.getsockname()[1]]
+                replay.sample_sockets(os.getpid(), ports, output, stop)
+                [row] = [json.loads(line) for line in output.read_text().splitlines()]
+                self.assertEqual(row["exit"], 0, row["stderr"])
+                self.assertIn("ESTAB", row["ss"])
+                for port in ports:
+                    self.assertIn(f"127.0.0.1:{port}", row["ss"])
 
 
 if __name__ == "__main__":

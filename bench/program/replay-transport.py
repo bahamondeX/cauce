@@ -87,6 +87,8 @@ def correlate(proxy_log, offers, warmup):
 
 
 def sample_sockets(proxy, ports, output, stop):
+    terms = (f"{direction} = :{port}" for port in ports for direction in ("sport", "dport"))
+    predicate = f"( {' or '.join(terms)} )"
     with output.open("w") as stream:
         try:
             while not stop.is_set():
@@ -96,8 +98,6 @@ def sample_sockets(proxy, ports, output, stop):
                         stats[thread.name] = (thread / "schedstat").read_text().strip()
                     except FileNotFoundError:
                         pass
-                predicate = "(" + " or ".join(f"{key} = :{port}" for key in ("sport", "dport")
-                                             for port in ports) + ")"
                 result = subprocess.run(["ss", "-tinm", predicate], check=False, text=True,
                                         capture_output=True, timeout=2)
                 stream.write(json.dumps({"monotonic_ns": time.monotonic_ns(), "schedstat": stats,
