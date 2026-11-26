@@ -32,6 +32,8 @@ pub struct Config {
     pub max_connections_per_peer: Option<usize>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) stream: Option<Box<crate::stream::config::StreamConfig>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub(crate) mail: Vec<crate::mail::config::Settings>,
     #[serde(default)]
     pub upstreams: Vec<Upstream>,
     #[serde(default)]
@@ -224,7 +226,7 @@ pub enum TlsVersion {
     Tls13,
 }
 
-fn validate_tls_versions(versions: Option<&[TlsVersion]>) -> Result<()> {
+pub(crate) fn validate_tls_versions(versions: Option<&[TlsVersion]>) -> Result<()> {
     if let Some(versions) = versions {
         ensure!(
             matches!(versions, [_]) || matches!(versions, [first, second] if first != second),
@@ -547,10 +549,11 @@ impl Config {
         );
         let http = self.listen.is_some() || self.http3.is_some() || !self.listeners.is_empty();
         ensure!(
-            http || self
-                .stream
-                .as_ref()
-                .is_some_and(|stream| stream.has_listeners()),
+            http || !self.mail.is_empty()
+                || self
+                    .stream
+                    .as_ref()
+                    .is_some_and(|stream| stream.has_listeners()),
             "at least one data listener is required"
         );
         ensure!(
@@ -566,6 +569,7 @@ impl Config {
         }
         let mut tcp_addresses = Vec::new();
         if !self.listeners.is_empty()
+            || !self.mail.is_empty()
             || self
                 .stream
                 .as_ref()
@@ -583,6 +587,20 @@ impl Config {
             if let Some(tls) = &listener.tls {
                 tls.validate()?;
             }
+        }
+        ensure!(
+            self.mail.len() <= 16
+                && self
+                    .mail
+                    .iter()
+                    .map(|listener| listener.max_connections.saturating_add(1))
+                    .fold(0usize, usize::saturating_add)
+                    <= 16_384,
+            "mail listeners exceed aggregate capacity"
+        );
+        for listener in &self.mail {
+            crate::stream::config::add_address(&mut tcp_addresses, listener.listen)?;
+            listener.validate()?;
         }
         if let Some(http3) = &self.http3 {
             http3.validate(self)?;
@@ -977,8 +995,9 @@ impl Config {
             || self.max_connections_per_peer != next.max_connections_per_peer
             || self.name != next.name
             || self.stream != next.stream
+            || self.mail != next.mail
         {
-            bail!("reload supports routes/upstreams only; listener, stream, limits, log, name and admission zone changes require restart");
+            bail!("reload supports routes/upstreams only; listener, stream, mail, limits, log, name and admission zone changes require restart");
         }
         Ok(())
     }

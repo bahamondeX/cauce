@@ -96,6 +96,10 @@ pub fn load_server(config: Option<&InboundTls>, http2: bool) -> Result<Option<Ar
         .map(|server| Some(Arc::new(server)))
 }
 
+pub(crate) fn load_mail_server(config: &InboundTls) -> Result<Arc<ServerConfig>> {
+    build_server(config, versions(config.versions.as_deref()), Vec::new()).map(Arc::new)
+}
+
 pub(crate) fn load_quic(config: &InboundTls) -> Result<ServerConfig> {
     let mut server = build_server(config, TLS13_ONLY, vec![b"h3".to_vec()])?;
     server.max_early_data_size = 0;
@@ -147,6 +151,20 @@ fn build_server(
 }
 
 pub fn load_client(config: &UpstreamTls, protocol: UpstreamProtocol) -> Result<Arc<ClientConfig>> {
+    let mut client = build_client(config)?;
+    client.alpn_protocols = vec![match protocol {
+        UpstreamProtocol::Http1 => b"http/1.1".to_vec(),
+        UpstreamProtocol::Http2 => b"h2".to_vec(),
+        _ => anyhow::bail!("application TLS is unavailable"),
+    }];
+    Ok(Arc::new(client))
+}
+
+pub(crate) fn load_mail_client(config: &UpstreamTls) -> Result<Arc<ClientConfig>> {
+    build_client(config).map(Arc::new)
+}
+
+fn build_client(config: &UpstreamTls) -> Result<ClientConfig> {
     let roots = trust_roots(&config.ca_file).context("upstream CA bundle")?;
     let builder =
         ClientConfig::builder_with_protocol_versions(versions(config.versions.as_deref()))
@@ -163,12 +181,7 @@ pub fn load_client(config: &UpstreamTls, protocol: UpstreamProtocol) -> Result<A
     if config.session_resumption == Some(false) {
         client.resumption = Resumption::disabled();
     }
-    client.alpn_protocols = vec![match protocol {
-        UpstreamProtocol::Http1 => b"http/1.1".to_vec(),
-        UpstreamProtocol::Http2 => b"h2".to_vec(),
-        _ => anyhow::bail!("application TLS is unavailable"),
-    }];
-    Ok(Arc::new(client))
+    Ok(client)
 }
 
 pub fn server_name(config: &UpstreamTls) -> Result<rustls::pki_types::ServerName<'static>> {

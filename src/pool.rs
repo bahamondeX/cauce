@@ -1627,6 +1627,7 @@ mod pool_tests {
         Config {
             name: "pooltest".into(),
             stream: None,
+            mail: Vec::new(),
             http3: None,
             listeners: Vec::new(),
             listen: Some("127.0.0.1:19080".parse().unwrap()),

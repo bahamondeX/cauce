@@ -385,14 +385,14 @@ impl<Io: AsyncWrite + Unpin> AsyncWrite for Progress<'_, Io> {
     }
 }
 
-struct RelayError {
+pub(crate) struct RelayError {
     cause: io::Error,
     upstream: bool,
 }
 
-async fn relay(
-    client: TcpStream,
-    upstream: Box<dyn crate::ClientIo>,
+pub(crate) async fn relay(
+    client: impl crate::ClientIo,
+    upstream: impl crate::ClientIo,
     buffer: usize,
     idle: Duration,
     deadline: Instant,

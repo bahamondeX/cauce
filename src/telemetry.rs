@@ -32,6 +32,7 @@ pub struct Metrics {
     pub http2_tasks_active: Arc<AtomicU64>,
     pub(crate) tcp: Option<Arc<crate::stream::Counters>>,
     pub(crate) udp: Option<Arc<crate::stream::Counters>>,
+    pub(crate) mail: Option<Arc<crate::mail::Counters>>,
 }
 impl Metrics {
     pub fn prometheus(&self, name: &str) -> String {
@@ -87,6 +88,24 @@ impl Metrics {
                         ));
                     }
                 }
+            }
+        }
+        if let Some(counters) = &self.mail {
+            s.push_str(&format!(
+                "# TYPE {name}_mail_sessions_active gauge\n{name}_mail_sessions_active {}\n",
+                counters.active.load(Ordering::Relaxed)
+            ));
+            for (label, value) in [
+                ("sessions_accepted", &counters.accepted),
+                ("sessions_rejected", &counters.rejected),
+                ("authenticated", &counters.authenticated),
+                ("auth_denied", &counters.denied),
+                ("negotiation_failures", &counters.failures),
+            ] {
+                s.push_str(&format!(
+                    "# TYPE {name}_mail_{label}_total counter\n{name}_mail_{label}_total {}\n",
+                    value.load(Ordering::Relaxed)
+                ));
             }
         }
         s

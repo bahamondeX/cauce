@@ -2,7 +2,7 @@
 pub(crate) mod config;
 mod proxy_encode;
 mod proxy_protocol;
-mod tcp;
+pub(crate) mod tcp;
 mod udp;
 
 use anyhow::{Context, Result};

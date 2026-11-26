@@ -13,6 +13,7 @@ mod health;
 mod http3;
 mod http_tcp;
 mod identity;
+mod mail;
 mod pool;
 mod proxy;
 mod routing;
@@ -76,6 +77,7 @@ async fn run() -> Result<()> {
     let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
     let extra_tls = prepare_explicit_listeners(&config).await?;
     let quic_config = http3::prepare(&config).await?;
+    let mail = mail::prepare(&config.mail).await?;
     if check {
         println!("configuration valid");
         return Ok(());
@@ -100,15 +102,23 @@ async fn run() -> Result<()> {
         .as_ref()
         .map(|spec| stream::Listeners::bind((**spec).clone()))
         .transpose()?;
+    let mail = mail
+        .into_iter()
+        .map(|runtime| {
+            let listener = runtime.bind()?;
+            Ok((runtime, listener))
+        })
+        .collect::<Result<Vec<_>>>()?;
     let endpoint = quic_config
         .map(|quic| http3::bind(config.http3.as_deref().unwrap(), quic))
         .transpose()?;
     let alt_svc = config.http3.as_ref().and_then(|spec| spec.alt_svc());
-    let metrics = Arc::new(
-        stream
-            .as_ref()
-            .map_or_else(Metrics::default, stream::Listeners::metrics),
-    );
+    let mut metrics = stream
+        .as_ref()
+        .map_or_else(Metrics::default, stream::Listeners::metrics);
+    let mail_counters = (!mail.is_empty()).then(|| Arc::new(mail::Counters::default()));
+    metrics.mail = mail_counters.clone();
+    let metrics = Arc::new(metrics);
     let (logger, log_thread) = Logger::start(config.logs.clone(), metrics.clone());
     let pool = Pool::with_strategy(
         config.limits.clone(),
@@ -156,6 +166,11 @@ async fn run() -> Result<()> {
     let mut stream = stream
         .map(|stream| stream.start(&shutdown_rx, &state.logger.metrics))
         .unwrap_or_default();
+    if let Some(counters) = mail_counters {
+        for (runtime, listener) in mail {
+            stream.spawn(runtime.serve(listener, shutdown_rx.clone(), counters.clone()));
+        }
+    }
     let web = http_tcp::Runtime {
         config: config.clone(),
         state: state.clone(),
