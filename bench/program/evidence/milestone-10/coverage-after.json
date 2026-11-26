@@ -43,6 +43,12 @@
       "reference": "oss"
     },
     {
+      "assessment": "mapped_unimplemented",
+      "count": 2,
+      "kind": "directive",
+      "reference": "oss"
+    },
+    {
       "assessment": "partially_implemented",
       "count": 137,
       "kind": "directive",
@@ -50,7 +56,7 @@
     },
     {
       "assessment": "unmapped",
-      "count": 617,
+      "count": 615,
       "kind": "directive",
       "reference": "oss"
     },
@@ -111,13 +117,19 @@
       "status": "unmapped"
     },
     {
+      "count": 2,
+      "kind": "directive",
+      "reference": "oss",
+      "status": "mapped_unimplemented"
+    },
+    {
       "count": 137,
       "kind": "directive",
       "reference": "oss",
       "status": "partial"
     },
     {
-      "count": 617,
+      "count": 615,
       "kind": "directive",
       "reference": "oss",
       "status": "unmapped"
@@ -136,11 +148,12 @@
     }
   ],
   "fixture_modules": [
+    "ngx_http_access_module",
     "ngx_http_core_module",
     "ngx_http_headers_filter_module",
     "ngx_http_proxy_module"
   ],
   "reference_version": "1.30.8",
-  "registry_sha256": "76b7ffd1b17a4a211d8eb349dfb7dab157361784171036bbe044103cc1be7633",
+  "registry_sha256": "905b9939baaabb015da90e59f180bb3aab4b433f64b7a377e850e363b2ffc455",
   "verified_equivalent": 0
 }

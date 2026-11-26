@@ -242,5 +242,51 @@ def header_filter(config, reference_port, _resources, _folder):
     return reference, accepted, rejected
 
 
-MODULES = {"ngx_http_core_module": nested, "ngx_http_headers_filter_module": header_filter,
-           "ngx_http_proxy_module": proxy}
+def access(config, reference_port, _resources, folder):
+    content = folder / "access-content"
+    (content / "restricted").mkdir(parents=True)
+    for path in ("open", "allowed", "restricted/inherited", "restricted/overridden"):
+        (content / path).write_text("origin")
+
+    def route(name, path, allowed=None, parent=None):
+        result = {"id": name, "host": "compat.test", "path_prefix": path,
+                  "content": {"type": "direct", "status": 200, "body": "origin"}}
+        if allowed is not None:
+            result["allow_clients"] = [allowed]
+        if parent:
+            result["parent"] = parent
+        return result
+
+    config["routes"] = [
+        route("open", "/open"),
+        route("allowed", "/allowed", "127.0.0.1/32"),
+        route("restricted", "/restricted", "127.0.0.0/32"),
+        route("inherited", "/restricted/inherited", parent="restricted"),
+        route("overridden", "/restricted/overridden", "127.0.0.0/31", parent="restricted"),
+    ]
+    server = f"server {{ listen 127.0.0.1:{reference_port}; server_name compat.test;"
+    reference = server + f"""root {json.dumps(str(content))};
+      location = /open {{}}
+      location = /allowed {{ allow 127.0.0.1/32; deny all; }}
+      location /restricted {{
+        allow 127.0.0.0/32;
+        deny all;
+        location = /restricted/inherited {{}}
+        location = /restricted/overridden {{ allow 127.0.0.0/31; deny all; }}
+      }}
+    }}"""
+    return reference, [
+        {"name": "access-default-permits", "target": "/open", "status": 200, "expected_body": "origin"},
+        {"name": "access-host-cidr", "target": "/allowed", "status": 200, "expected_body": "origin"},
+        {"name": "access-inherited-denial", "target": "/restricted/inherited", "status": 403, "compare_body": False},
+        {"name": "access-child-replaces-rule-set", "target": "/restricted/overridden",
+         "status": 200, "expected_body": "origin"},
+    ], [
+        {"name": "access-rejects-out-of-range-prefix", "routes": [route("invalid", "/open", "127.0.0.1/33")],
+         "reference": server + "location / { allow 127.0.0.1/33; } }",
+         "error": {"nginx": "invalid parameter", "cauce": "invalid YAML configuration field, type or quantity"}},
+    ]
+
+
+MODULES = {"ngx_http_access_module": access, "ngx_http_core_module": nested,
+           "ngx_http_headers_filter_module": header_filter, "ngx_http_proxy_module": proxy}

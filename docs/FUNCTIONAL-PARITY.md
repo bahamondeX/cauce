@@ -206,6 +206,9 @@ The new fixtures establish nested location precedence for the shared raw URI
 subset, literal response header additions with repeated values and status
 rules, and explicit upstream SNI toggles with verification intact. The
 migration preview expands literal child locations with explicit handlers and
-tracks their output route IDs. This evidence adds three partial registrations.
+tracks their output route IDs. IPv4 access cases match the restricted
+allowlist subset, including inheritance and replacement. The audit adds
+three partial registrations and records two security-related implementation
+gaps for method-scoped policies and access-handler composition.
 The fixed denominator and exact-equivalence count remain unchanged.
 [Coverage and observed differences](PERFORMANCE-MILESTONE-10.md).

@@ -40,6 +40,7 @@ EVIDENCE = {
     "nested-locations": ("ngx_http_core_module", "location"),
     "header-inheritance": ("ngx_http_headers_filter_module", "add_header add_header_inherit"),
     "http-origin-sni": ("ngx_http_proxy_module", "proxy_ssl_server_name"),
+    "http-address-access": ("ngx_http_access_module", "allow deny"),
 }
 FILES = {
     "routing": ("shared cases", "bench/program/evidence/milestone-4/nginx-differential.jsonl"),
@@ -54,9 +55,22 @@ FILES = {
     "nested-locations": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
     "header-inheritance": ("shared cases", "bench/program/evidence/milestone-10/differential-final.json"),
     "http-origin-sni": ("shared cases", "bench/program/evidence/milestone-10/differential-http-sni.json"),
+    "http-address-access": ("shared cases", "bench/program/evidence/milestone-10/differential-final.json"),
 }
 
 REVIEWED = {
+    ("ngx_http_core_module", "satisfy"): {
+        "arguments": ["all or any"], "default": "all",
+        "inheritance": "Inherits the enclosing context's mode when unset.",
+        "source_functions": ["ngx_http_core_merge_loc_conf", "ngx_http_core_access_phase"],
+    },
+    ("ngx_http_core_module", "limit_except"): {
+        "arguments": ["one or more of GET HEAD POST PUT DELETE MKCOL COPY MOVE OPTIONS PROPFIND PROPPATCH LOCK UNLOCK PATCH",
+                      "block of method-scoped directives"],
+        "default": "The normal location configuration applies to every method.",
+        "inheritance": "Builds a separate configuration from this location through each module's merge callbacks. Listing GET also exempts HEAD.",
+        "source_functions": ["ngx_http_core_limit_except", "ngx_http_update_location_config"],
+    },
     ("ngx_http_proxy_module", "proxy_ssl_server_name"): {
         "arguments": ["on or off"], "default": "off",
         "inheritance": "An unset value inherits from the enclosing HTTP, server or location configuration.",
@@ -95,6 +109,13 @@ REVIEWED = {
         "source_functions": ["ngx_http_proxy_merge_loc_conf", "ngx_http_upstream_hide_headers_hash"],
     },
 }
+for rule in ("allow", "deny"):
+    REVIEWED["ngx_http_access_module", rule] = {
+        "arguments": ["IPv4 or IPv6 address or CIDR", "all", "unix: on Unix-domain-capable builds"],
+        "default": "No access-handler decision without a matching rule.",
+        "inheritance": "Inherit the complete parent rule sets only when this scope declares no allow or deny rules.",
+        "source_functions": ["ngx_http_access_rule", "ngx_http_access_merge_loc_conf", "ngx_http_access_handler"],
+    }
 
 ACME_REVIEW = {
     "acme_issuer": ("issuer name and block", "None", "partial", "One global proxy.acme issuer. The add-on can name multiple issuers."),
@@ -195,7 +216,8 @@ MODULE_ALIASES = {
 
 def priority(module, directive=""):
     if directive in {"resolver", "resolver_timeout", "proxy_cache_path", "proxy_cache_background_update",
-                     "proxy_next_upstream", "include"} or module in {"ngx_stream_ssl_module", "ngx_http_ssl_module"}:
+                     "proxy_next_upstream", "include", "satisfy", "limit_except"} or module in {
+                         "ngx_stream_ssl_module", "ngx_http_ssl_module"}:
         return "P0"
     if module.startswith(("ngx_http_core", "ngx_http_proxy", "ngx_http_upstream", "ngx_stream", "ngx_mail")):
         return "P1"

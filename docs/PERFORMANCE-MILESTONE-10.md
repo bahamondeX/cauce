@@ -10,7 +10,8 @@ and nginx-acme have independent counts.
 | Partially implemented modules | 40 | 40 |
 | Unmapped modules | 80 | 80 |
 | Partially implemented directive registrations | 134 | 137 |
-| Unmapped directive registrations | 620 | 617 |
+| Mapped directive registrations awaiting implementation | 0 | 2 |
+| Unmapped directive registrations | 620 | 615 |
 | Verified equivalent modules or registrations | 0 | 0 |
 | Mapped configure patterns | 60 | 60 |
 
@@ -29,10 +30,13 @@ unmapped registrations.
 
 ## Verified slices
 
-- The pinned NGINX loopback run passed 23 request cases and seven
-  configuration rejection checks across HTTP core, proxy and the response
-  header filter. Two configuration rejections compared both engines. Five
+- The pinned NGINX loopback run passed 27 request cases and eight
+  configuration rejection checks across HTTP core, proxy, the response
+  header filter and address access. Three configuration rejections compared both engines. Five
   exercised Cauce's explicit validation guards.
+- Address access cases matched default permission, CIDR admission, inherited
+  denial, child policy replacement and invalid CIDR rejection. A denied
+  response's error-page body was outside the compared fields.
 - Nested lookup verifies exact matches, the longest inclusive path,
   scoped regex order, the effects of `^~` at different levels, and nested
   policy inheritance. The pinned Darwin build accepted a literal child

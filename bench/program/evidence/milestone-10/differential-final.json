@@ -4,6 +4,163 @@
     {
       "cases": [
         {
+          "case": "access-default-permits",
+          "cauce": {
+            "body_base64": "b3JpZ2lu",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "b3JpZ2lu",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "target": "/open",
+          "uncompared_headers": [
+            "accept-ranges",
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "last-modified",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "access-host-cidr",
+          "cauce": {
+            "body_base64": "b3JpZ2lu",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "b3JpZ2lu",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "target": "/allowed",
+          "uncompared_headers": [
+            "accept-ranges",
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "last-modified",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "access-inherited-denial",
+          "cauce": {
+            "headers": {},
+            "status": 403
+          },
+          "compared_body": false,
+          "nginx": {
+            "headers": {},
+            "status": 403
+          },
+          "passed": true,
+          "target": "/restricted/inherited",
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server"
+          ]
+        },
+        {
+          "case": "access-child-replaces-rule-set",
+          "cauce": {
+            "body_base64": "b3JpZ2lu",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "nginx": {
+            "body_base64": "b3JpZ2lu",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "target": "/restricted/overridden",
+          "uncompared_headers": [
+            "accept-ranges",
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "etag",
+            "last-modified",
+            "server",
+            "x-request-id"
+          ]
+        }
+      ],
+      "configuration_rejections": [
+        {
+          "case": "access-rejects-out-of-range-prefix",
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            },
+            "nginx": {
+              "exit_status": 1,
+              "expected_diagnostic": true
+            }
+          },
+          "passed": true
+        }
+      ],
+      "lifecycle": {
+        "cauce": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "shutdown_seconds": 0.004876832997979363,
+          "started": true
+        },
+        "nginx": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "shutdown_seconds": 0.002053750002232846,
+          "started": true
+        }
+      },
+      "module": "ngx_http_access_module",
+      "resources_after": {
+        "cauce": {
+          "cpu_time_ps": "0:00.03",
+          "rss_kib": 15248
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5664
+        }
+      },
+      "resources_before": {
+        "cauce": {
+          "cpu_time_ps": "0:00.03",
+          "rss_kib": 13904
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5632
+        }
+      }
+    },
+    {
+      "cases": [
+        {
           "case": "prefix-default",
           "cauce": {
             "body_base64": "b3V0ZXI=",
@@ -456,35 +613,35 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0013107089980621822,
+          "shutdown_seconds": 0.004172458000539336,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0012809590007236693,
+          "shutdown_seconds": 0.004661041002691491,
           "started": true
         }
       },
       "module": "ngx_http_core_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 17024
+          "cpu_time_ps": "0:00.03",
+          "rss_kib": 17072
         },
         "nginx": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 5840
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 5952
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 15696
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 15728
         },
         "nginx": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 5696
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 5792
         }
       }
     },
@@ -703,35 +860,35 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.001288292001845548,
+          "shutdown_seconds": 0.0016473750001750886,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0012727499997708946,
+          "shutdown_seconds": 0.0021879589985474013,
           "started": true
         }
       },
       "module": "ngx_http_headers_filter_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 15120
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 15136
         },
         "nginx": {
           "cpu_time_ps": "0:00.01",
-          "rss_kib": 5552
+          "rss_kib": 5696
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 13824
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 13808
         },
         "nginx": {
           "cpu_time_ps": "0:00.01",
-          "rss_kib": 5504
+          "rss_kib": 5680
         }
       }
     },
@@ -890,35 +1047,35 @@
         "cauce": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0012917089989059605,
+          "shutdown_seconds": 0.002217291999841109,
           "started": true
         },
         "nginx": {
           "exit_status": 0,
           "forced_kill": false,
-          "shutdown_seconds": 0.0012705420012935065,
+          "shutdown_seconds": 0.00510750000103144,
           "started": true
         }
       },
       "module": "ngx_http_proxy_module",
       "resources_after": {
         "cauce": {
-          "cpu_time_ps": "0:00.02",
-          "rss_kib": 19552
+          "cpu_time_ps": "0:00.04",
+          "rss_kib": 19392
         },
         "nginx": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 7152
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 7120
         }
       },
       "resources_before": {
         "cauce": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 15456
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 15472
         },
         "nginx": {
-          "cpu_time_ps": "0:00.01",
-          "rss_kib": 6064
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 5184
         }
       }
     }
