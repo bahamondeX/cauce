@@ -96,7 +96,7 @@ pub fn load_server(config: Option<&InboundTls>, http2: bool) -> Result<Option<Ar
         .map(|server| Some(Arc::new(server)))
 }
 
-pub(crate) fn load_mail_server(config: &InboundTls) -> Result<Arc<ServerConfig>> {
+pub(crate) fn load_raw_server(config: &InboundTls) -> Result<Arc<ServerConfig>> {
     build_server(config, versions(config.versions.as_deref()), Vec::new()).map(Arc::new)
 }
 
@@ -160,7 +160,7 @@ pub fn load_client(config: &UpstreamTls, protocol: UpstreamProtocol) -> Result<A
     Ok(Arc::new(client))
 }
 
-pub(crate) fn load_mail_client(config: &UpstreamTls) -> Result<Arc<ClientConfig>> {
+pub(crate) fn load_raw_client(config: &UpstreamTls) -> Result<Arc<ClientConfig>> {
     build_client(config).map(Arc::new)
 }
 

@@ -81,6 +81,7 @@ async fn run() -> Result<()> {
     let quic_config = http3::prepare(&config).await?;
     let resolver = config.dns.as_ref().map(dns::Resolver::new).transpose()?;
     let mail = mail::prepare(&config.mail, resolver.clone()).await?;
+    let stream_tls = stream::prepare_tls(config.stream.as_deref()).await?;
     if check {
         println!("configuration valid");
         return Ok(());
@@ -103,7 +104,7 @@ async fn run() -> Result<()> {
     let stream = config
         .stream
         .as_ref()
-        .map(|spec| stream::Listeners::bind((**spec).clone(), resolver.clone()))
+        .map(|spec| stream::Listeners::bind((**spec).clone(), resolver.clone(), stream_tls))
         .transpose()?;
     let mail = mail
         .into_iter()

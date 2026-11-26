@@ -39,14 +39,23 @@ pub(super) struct Listener {
     options: TcpOptions,
     default: Option<Arc<Group>>,
     routes: Option<Routes>,
+    downstream_tls: Option<tokio_rustls::TlsAcceptor>,
+    handshake_timeout: Duration,
 }
 
 impl Listener {
-    pub(super) fn plain(group: Arc<Group>, options: TcpOptions) -> Self {
+    pub(super) fn plain(
+        group: Arc<Group>,
+        options: TcpOptions,
+        downstream_tls: Option<tokio_rustls::TlsAcceptor>,
+        handshake_timeout: Duration,
+    ) -> Self {
         Self {
             options,
             default: Some(group),
             routes: None,
+            downstream_tls,
+            handshake_timeout,
         }
     }
 
@@ -67,6 +76,8 @@ impl Listener {
             default: config
                 .default_upstream
                 .map(|name| groups[name.as_str()].clone()),
+            downstream_tls: None,
+            handshake_timeout: Duration::ZERO,
             routes: Some(Routes {
                 rules,
                 bytes: config.preread_bytes,
@@ -194,6 +205,12 @@ impl Listener {
         } else {
             (self.default.as_ref().unwrap(), Vec::new())
         };
+        let client = if let Some(acceptor) = &self.downstream_tls {
+            let handshake = deadline.min(Instant::now() + self.handshake_timeout);
+            Ok(timeout_at(handshake, acceptor.accept(client)).await??)
+        } else {
+            Err(client)
+        };
         let member = group
             .select(addresses.source.ip())
             .context("no eligible TCP upstream")?;
@@ -211,6 +228,12 @@ impl Listener {
                 upstream
                     .write_all(proxy_encode::encode(version, addresses).as_ref())
                     .await?;
+            }
+            if let Some((connector, name)) = &group.tls {
+                let handshake = deadline.min(Instant::now() + self.handshake_timeout);
+                upstream = Box::new(
+                    timeout_at(handshake, connector.connect(name.clone(), upstream)).await??,
+                );
             }
             upstream.write_all(&preread).await?;
             Ok::<_, io::Error>(upstream)
@@ -230,15 +253,12 @@ impl Listener {
             }
         };
         drop(preread);
-        if let Err(error) = relay(
-            client,
-            upstream,
-            opts.buffer_bytes,
-            ms(opts.idle_timeout),
-            deadline,
-        )
-        .await
-        {
+        let idle = ms(opts.idle_timeout);
+        let result = match client {
+            Ok(secure) => relay(secure, upstream, opts.buffer_bytes, idle, deadline).await,
+            Err(plain) => relay(plain, upstream, opts.buffer_bytes, idle, deadline).await,
+        };
+        if let Err(error) = result {
             if error.upstream {
                 group.fail(member, opts.failure_cooldown, counters);
             }

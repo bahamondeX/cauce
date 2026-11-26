@@ -7,6 +7,7 @@ mod udp;
 
 use anyhow::{Context, Result};
 use config::{Balance, Endpoint, StreamConfig, Upstream};
+use rustls::pki_types::ServerName;
 use socket2::{Domain, Socket, Type};
 use std::{
     collections::HashMap,
@@ -23,6 +24,7 @@ use tokio::{
     task::JoinSet,
     time::Instant,
 };
+use tokio_rustls::{TlsAcceptor, TlsConnector};
 
 #[derive(Default)]
 pub(crate) struct Counters {
@@ -56,7 +58,10 @@ struct Member {
     failed_until: AtomicU64,
 }
 
+type ClientTls = (TlsConnector, ServerName<'static>);
+
 struct Group {
+    tls: Option<ClientTls>,
     resolver: Option<Arc<crate::dns::Resolver>>,
     members: Vec<Member>,
     tickets: Vec<usize>,
@@ -66,7 +71,11 @@ struct Group {
 }
 
 impl Group {
-    fn compile(config: &Upstream, resolver: Option<Arc<crate::dns::Resolver>>) -> Self {
+    fn compile(
+        config: &Upstream,
+        resolver: Option<Arc<crate::dns::Resolver>>,
+        tls: Option<ClientTls>,
+    ) -> Self {
         use std::os::unix::ffi::OsStrExt;
         let members = config
             .endpoints
@@ -100,6 +109,7 @@ impl Group {
         };
         Self {
             resolver,
+            tls,
             members,
             tickets,
             cursor: AtomicUsize::new(0),
@@ -188,6 +198,48 @@ pub(crate) fn socket(address: SocketAddr, kind: Type, reuse_port: bool) -> std::
     Ok(socket)
 }
 
+#[derive(Default)]
+pub(crate) struct TlsMaterial {
+    upstream: HashMap<String, ClientTls>,
+    downstream: HashMap<SocketAddr, TlsAcceptor>,
+}
+
+pub(crate) async fn prepare_tls(config: Option<&StreamConfig>) -> Result<TlsMaterial> {
+    let Some(config) = config else {
+        return Ok(TlsMaterial::default());
+    };
+    let upstreams: Vec<_> = config
+        .upstreams
+        .iter()
+        .filter_map(|group| group.tls.clone().map(|tls| (group.id.clone(), tls)))
+        .collect();
+    let listeners: Vec<_> = config
+        .tcp
+        .iter()
+        .filter_map(|listener| listener.tls.clone().map(|tls| (listener.listen, tls)))
+        .collect();
+    tokio::task::spawn_blocking(move || {
+        let mut material = TlsMaterial::default();
+        for (id, tls) in upstreams {
+            material.upstream.insert(
+                id,
+                (
+                    TlsConnector::from(crate::tls::load_raw_client(&tls)?),
+                    crate::tls::server_name(&tls)?,
+                ),
+            );
+        }
+        for (listen, tls) in listeners {
+            material.downstream.insert(
+                listen,
+                TlsAcceptor::from(crate::tls::load_raw_server(&tls)?),
+            );
+        }
+        Ok(material)
+    })
+    .await?
+}
+
 pub(crate) struct Listeners {
     tcp: Vec<(TcpListener, tcp::Listener)>,
     udp: Vec<(Arc<UdpSocket>, Arc<Group>, config::UdpOptions)>,
@@ -197,6 +249,7 @@ impl Listeners {
     pub(crate) fn bind(
         config: StreamConfig,
         resolver: Option<Arc<crate::dns::Resolver>>,
+        mut tls: TlsMaterial,
     ) -> Result<Self> {
         let mut tcp_groups = HashMap::new();
         let mut udp_groups = HashMap::new();
@@ -204,7 +257,11 @@ impl Listeners {
         for group in &config.upstreams {
             tcp_groups.insert(
                 group.id.as_str(),
-                Arc::new(Group::compile(group, resolver.clone())),
+                Arc::new(Group::compile(
+                    group,
+                    resolver.clone(),
+                    tls.upstream.remove(&group.id),
+                )),
             );
         }
         let mut listeners = Self {
@@ -221,7 +278,12 @@ impl Listeners {
             let bound = bind_tcp(entry.listen, entry.options.reuse_port)?;
             listeners.tcp.push((
                 bound,
-                tcp::Listener::plain(tcp_groups[entry.upstream.as_str()].clone(), entry.options),
+                tcp::Listener::plain(
+                    tcp_groups[entry.upstream.as_str()].clone(),
+                    entry.options,
+                    tls.downstream.remove(&entry.listen),
+                    ms(entry.tls_handshake_timeout),
+                ),
             ));
         }
         for entry in config.tls_passthrough {
@@ -239,6 +301,7 @@ impl Listeners {
                         .find(|group| group.id == entry.upstream)
                         .unwrap(),
                     resolver.clone(),
+                    None,
                 ))
             });
             let socket = socket(entry.listen, Type::DGRAM, entry.options.reuse_port)

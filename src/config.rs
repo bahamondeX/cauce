@@ -178,7 +178,7 @@ fn deserialize_yaml(data: &str, env: impl Fn(&str) -> Option<String>) -> Result<
     );
     Ok(config.proxy)
 }
-#[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
+#[derive(Clone, Deserialize, Serialize, PartialEq, Eq, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct InboundTls {
     pub cert_file: String,
@@ -213,7 +213,7 @@ impl InboundTls {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
+#[derive(Clone, Deserialize, Serialize, PartialEq, Eq, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct CertificateFiles {
     pub cert_file: String,
@@ -413,7 +413,7 @@ impl UpstreamProtocol {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
+#[derive(Clone, Deserialize, Serialize, PartialEq, Eq, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct UpstreamTls {
     pub server_name: String,

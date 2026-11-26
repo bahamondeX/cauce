@@ -1361,6 +1361,7 @@
               "id": {
                 "$ref": "#/$defs/identifier"
               },
+              "tls": {"$ref": "#/$defs/upstreamTls"},
               "balance": {
                 "enum": [
                   "weighted_round_robin",
@@ -1429,6 +1430,8 @@
               "upstream": {
                 "$ref": "#/$defs/identifier"
               },
+              "tls": {"$ref": "#/$defs/tls"},
+              "tls_handshake_timeout": {"anyOf": [{"$ref": "#/$defs/durationString"}, {"type": "integer", "minimum": 1}]},
               "options": {
                 "$ref": "#/$defs/streamTcpOptions"
               }

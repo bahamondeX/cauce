@@ -48,3 +48,28 @@ forwarded addresses from a trusted header or the physical socket addresses
 and excludes TLVs. TCP admission uses the physical peer, stream hash
 selection uses the resolved source and HTTP identity uses its own policy.
 [HAProxy wire specification](https://www.haproxy.org/download/2.9/doc/proxy-protocol.txt).
+
+## Stream TLS
+
+Set `stream.tcp[].tls` to terminate downstream TLS. Its PEM default
+certificate, `sni` map, TLS versions, client CA and resumption settings
+use the same format as HTTP TLS. Set `stream.upstreams[].tls` to
+encrypt the upstream connection with an explicit `server_name` and
+`ca_file`. A client certificate is optional. DNS addresses keep the
+configured upstream hostname and trust policy.
+
+The per-listener `tls_handshake_timeout` defaults to five seconds.
+The connect and absolute session limits additionally bound the upstream
+handshake. When configured, trusted inbound PROXY is read before TLS
+termination and outbound PROXY is written before connecting with TLS.
+TLS passthrough remains a separate listener mode. TCP relay preserves
+directional shutdown and sends TLS close notifications when the relayed
+peer closes cleanly.
+
+The local NGINX OSS 1.30.8 comparison covers default and named
+certificates, downstream certificate requirements, upstream mTLS and
+upstream hostname rejection. A separate Cauce fixture covers an idle
+TLS handshake deadline.
+
+[Stream TLS fixture](../tests/stream_tls.py)
+[Listener lifecycle](LISTENER-LIFECYCLE.md).

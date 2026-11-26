@@ -28,6 +28,8 @@ pub(crate) struct Upstream {
     #[serde(default)]
     pub(super) balance: Balance,
     pub endpoints: Vec<Endpoint>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tls: Option<crate::config::UpstreamTls>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -52,6 +54,14 @@ pub(crate) struct Tcp {
     pub upstream: String,
     #[serde(default)]
     pub options: TcpOptions,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tls: Option<crate::config::InboundTls>,
+    #[serde(default = "tls_handshake_timeout", deserialize_with = "milliseconds")]
+    pub tls_handshake_timeout: u64,
+}
+
+fn tls_handshake_timeout() -> u64 {
+    5_000
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -265,6 +275,11 @@ impl StreamConfig {
                 groups.insert(upstream.id.as_str(), upstream).is_none(),
                 "duplicate stream upstream"
             );
+            if let Some(tls) = &upstream.tls {
+                crate::config::validate_tls_versions(tls.versions.as_deref())?;
+                crate::tls::server_name(tls)?;
+                ensure!(!tls.ca_file.is_empty(), "Stream TLS requires a trust store");
+            }
             let mut seen = HashSet::new();
             for endpoint in &upstream.endpoints {
                 ensure!(
@@ -300,6 +315,13 @@ impl StreamConfig {
         };
         for listener in &self.tcp {
             tcp(listener.listen, &listener.options, 0)?;
+            if let Some(tls) = &listener.tls {
+                tls.validate()?;
+            }
+            ensure!(
+                valid_duration(listener.tls_handshake_timeout),
+                "invalid Stream TLS handshake deadline"
+            );
             ensure!(
                 groups.contains_key(listener.upstream.as_str()),
                 "unknown TCP upstream"
@@ -325,7 +347,9 @@ impl StreamConfig {
             let mut routes = HashSet::new();
             if let Some(default) = &listener.default_upstream {
                 ensure!(
-                    groups.contains_key(default.as_str()),
+                    groups
+                        .get(default.as_str())
+                        .is_some_and(|group| group.tls.is_none()),
                     "unknown default TLS upstream"
                 );
             }
@@ -343,7 +367,9 @@ impl StreamConfig {
                             .as_ref()
                             .is_none_or(|p| !p.is_empty() && p.len() <= 255)
                         && (sni.is_some() || route.alpn.is_some())
-                        && groups.contains_key(route.upstream.as_str())
+                        && groups
+                            .get(route.upstream.as_str())
+                            .is_some_and(|group| group.tls.is_none())
                         && routes.insert((sni, &route.alpn)),
                     "invalid or duplicate TLS preread route"
                 );
@@ -369,10 +395,11 @@ impl StreamConfig {
             ensure!(
                 groups
                     .get(listener.upstream.as_str())
-                    .is_some_and(|group| group
-                        .endpoints
-                        .iter()
-                        .all(|endpoint| endpoint.unix.is_none())),
+                    .is_some_and(|group| group.tls.is_none()
+                        && group
+                            .endpoints
+                            .iter()
+                            .all(|endpoint| endpoint.unix.is_none())),
                 "UDP requires an IP upstream group"
             );
             memory +=

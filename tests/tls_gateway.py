@@ -27,7 +27,7 @@ def issue(directory, serial, name, ca, purpose, dns=None):
     extension = directory / f"{name}.ext"
     extension.write_text(
         f"basicConstraints=critical,CA:FALSE\nkeyUsage=critical,digitalSignature,keyEncipherment\n"
-        f"extendedKeyUsage={purpose}\n" + (f"subjectAltName=DNS:{dns}\n" if dns else "")
+        f"authorityKeyIdentifier=keyid,issuer\nsubjectKeyIdentifier=hash\nextendedKeyUsage={purpose}\n" + (f"subjectAltName=DNS:{dns}\n" if dns else "")
     )
     openssl(directory, "x509", "-req", "-in", f"{name}.csr", "-CA", f"{ca}.pem",
             "-CAkey", f"{ca}-key.pem", "-set_serial", str(serial), "-days", "2",

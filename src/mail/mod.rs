@@ -74,7 +74,7 @@ pub(crate) async fn prepare(
 
 impl Listener {
     fn prepare(config: Settings, resolver: Option<Arc<crate::dns::Resolver>>) -> Result<Self> {
-        let tls = TlsAcceptor::from(tls::load_mail_server(&config.tls)?);
+        let tls = TlsAcceptor::from(tls::load_raw_server(&config.tls)?);
         let auth = Service::new(
             config.auth_url()?,
             Duration::from_millis(config.auth_timeout_ms),
@@ -87,7 +87,7 @@ impl Listener {
                 .as_ref()
                 .map(|client| -> Result<_> {
                     let name = tls::server_name(client)?;
-                    let connector = TlsConnector::from(tls::load_mail_client(client)?);
+                    let connector = TlsConnector::from(tls::load_raw_client(client)?);
                     Ok((connector, name))
                 })
                 .transpose()?;
