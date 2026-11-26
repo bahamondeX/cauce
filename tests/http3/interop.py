@@ -54,7 +54,7 @@ class Interop(unittest.IsolatedAsyncioTestCase):
         self.origin = free_port()
         self.markers = self.tmp / "cancel.log"
 
-    def launch(self, explicit=False):
+    def launch(self, explicit=False, path_migration=False):
         start_process(self.stack, ["node", str(ROOT / "tests/http3/origin.mjs"), str(self.origin),
                                    str(self.markers)], self.tmp / "origin.log")
         base = (ROOT / "examples/cauce.toml").read_text().split("[limits]", 1)[1].split("[[upstreams]]", 1)[0]
@@ -92,6 +92,7 @@ admin = "127.0.0.1:{self.admin}"
 [http3]
 listen = "127.0.0.1:{self.quic}"
 advertise = true
+path_migration = {str(path_migration).lower()}
 max_streams = 8
 max_field_bytes = 4096
 idle_timeout = "3s"
@@ -208,6 +209,39 @@ ttl = "30s"
             _, data = await h3.response(h3.request("/hello"))
             self.assertEqual(data, b"hello over QUIC")
 
+    async def test_graceful_quic_shutdown_drains_open_response(self):
+        self.launch()
+        async with client(self.quic, self.named[1]) as h3:
+            stream = h3.request("/proxy/drain")
+            headers = await h3.event(stream)
+            self.assertEqual(dict(headers.headers)[b":status"], b"200")
+            prefix = await h3.event(stream)
+            self.assertEqual(prefix.data, b"before-")
+            self.proc.terminate()
+            _, data = await h3.response(stream)
+            self.assertEqual(data, b"after")
+            self.assertEqual(await asyncio.to_thread(self.proc.wait, 5), 0)
+
+    async def test_quic_connection_survives_udp_port_rebinding(self):
+        self.launch(path_migration=True)
+        async with client(self.quic, self.named[1]) as h3:
+            _, data = await h3.response(h3.request("/hello"))
+            self.assertEqual(data, b"hello over QUIC")
+            original = h3._transport
+            endpoint = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+            endpoint.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+            endpoint.bind(("::", 0))
+            endpoint.setblocking(False)
+            transport, _ = await asyncio.get_running_loop().create_datagram_endpoint(
+                lambda: h3, sock=endpoint)
+            try:
+                self.assertNotEqual(transport.get_extra_info("sockname")[1], original.get_extra_info("sockname")[1])
+                _, data = await h3.response(h3.request("/hello"))
+                self.assertEqual(data, b"hello over QUIC")
+            finally:
+                h3._transport = original
+                transport.close()
+
     async def test_encoded_qpack_section_budget(self):
         self.launch()
         async with client(self.quic, self.named[1]) as h3:
@@ -220,6 +254,20 @@ ttl = "30s"
                 event = await h3.event(stream)
                 self.assertIsInstance(event, StreamReset)
                 self.assertEqual(event.error_code, 0x107)
+            _, data = await h3.response(h3.request("/hello"))
+            self.assertEqual(data, b"hello over QUIC")
+
+    async def test_decoded_qpack_section_budget(self):
+        self.launch()
+        async with client(self.quic, self.named[1]) as h3:
+            large = h3.request("/hello", headers=[(b"x-many-bytes", b"a" * 2500), (b"x-more-bytes", b"b" * 2500)])
+            try:
+                headers, _ = await h3.response(large)
+            except ConnectionError as error:
+                self.assertIn("StreamReset", str(error))
+                self.assertIsNone(h3.closed_event)
+            else:
+                self.assertEqual(headers[b":status"], b"431")
             _, data = await h3.response(h3.request("/hello"))
             self.assertEqual(data, b"hello over QUIC")
 

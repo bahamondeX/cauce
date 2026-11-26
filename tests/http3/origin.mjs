@@ -12,6 +12,12 @@ server.on("stream", (stream, headers) => {
     stream.on("close", () => appendFileSync(process.argv[3], "closed\n"));
     return;
   }
+  if (path === "/proxy/drain") {
+    stream.respond({ ":status": 200, "content-type": "text/plain" });
+    stream.write("before-");
+    setTimeout(() => stream.end("after"), 200);
+    return;
+  }
   if (path === "/proxy/cache") {
     stream.respond({ ":status": 200, "content-type": "text/plain", "cache-control": "public, max-age=60" });
     stream.end(`origin ${++cacheRequests}`);
