@@ -4,6 +4,7 @@ mod cgi;
 pub(crate) mod config;
 mod envelope;
 mod fastcgi;
+mod response;
 
 use config::Protocol;
 
@@ -41,7 +42,7 @@ pub(crate) type Returned = Arc<Mutex<Option<Socket>>>;
 pub(crate) const TOTAL_BUFFER_BYTES: usize = 128 * 1024 * 1024;
 
 pub(crate) fn length<B: Body>(request: &Request<B>) -> Result<Option<u64>> {
-    let declared = cgi::content_length(request.headers())?;
+    let declared = response::content_length(request.headers())?;
     Ok(declared
         .or_else(|| request.body().size_hint().exact())
         .or_else(|| request.body().is_end_stream().then_some(0)))
@@ -202,7 +203,7 @@ pub(crate) async fn exchange(
     let ((), mut response) = tokio::try_join!(writing, reader.head(limits))?;
     drop(retained);
     let mut reader = reader.unsplit(write);
-    let remaining = cgi::content_length(response.headers())?;
+    let remaining = response::content_length(response.headers())?;
     let no_body = head
         || matches!(
             response.status(),
@@ -353,13 +354,13 @@ impl<T: AsyncRead + Unpin> Reader<T> {
         while let Some(data) = self.data().await? {
             let prev = headers.len();
             headers.extend_from_slice(&data);
-            if let Some(end) = cgi::header_end(&headers, prev) {
+            if let Some(end) = response::header_end(&headers, prev) {
                 ensure!(
                     end <= limits.max_header_bytes,
                     "CGI response headers exceed limit"
                 );
                 self.pending = headers.split_off(end).freeze();
-                return cgi::response(&headers, limits);
+                return response::response(&headers, limits.max_headers);
             }
             ensure!(
                 headers.len() < limits.max_header_bytes,
