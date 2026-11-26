@@ -6,7 +6,7 @@ use crate::{
 };
 use bytes::Bytes;
 use http_body_util::BodyExt;
-use hyper::body::{Body, Frame, Incoming, SizeHint};
+use hyper::body::{Body, Frame, SizeHint};
 use std::{
     error::Error,
     future::Future,
@@ -281,13 +281,17 @@ where
     }
     .boxed_unsync()
 }
-pub fn download(
-    inner: Incoming,
+pub fn download<B>(
+    inner: B,
     limits: &Limits,
     deadline: TokioInstant,
     completion: Completion,
     grpc: bool,
-) -> ProxyBody {
+) -> ProxyBody
+where
+    B: Body<Data = Bytes> + Send + Unpin + 'static,
+    B::Error: Error + Send + Sync + 'static,
+{
     let empty = inner.is_end_stream();
     let idle = Duration::from_millis(limits.stream_idle_ms);
     let mut body = GuardBody {

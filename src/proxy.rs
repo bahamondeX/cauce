@@ -230,6 +230,20 @@ fn record_grpc_deadline(
     );
     response
 }
+enum OriginBody {
+    Http(Incoming),
+    Application(crate::application::ResponseBody),
+}
+
+impl OriginBody {
+    fn is_end_stream(&self) -> bool {
+        match self {
+            Self::Http(body) => body.is_end_stream(),
+            Self::Application(body) => body.is_end_stream(),
+        }
+    }
+}
+
 pub(crate) trait RequestBody: Body<Data = Bytes> + Send + Unpin + 'static {
     const HTTP3: bool;
 }
@@ -712,11 +726,32 @@ where
     if let Some(event) = &mut event {
         event.upstream_id = Some(endpoint.config.id.clone());
     }
+    let application = if route.application.is_some() {
+        let route = &generation.applications[&route.id];
+        let length = match crate::application::length(&req) {
+            Ok(length) => length,
+            Err(_) => reject!(BAD_REQUEST, "invalid_application_length"),
+        };
+        if length.is_none() && route.settings.request_buffer_bytes.is_none() {
+            reject!(LENGTH_REQUIRED, "application_length_required");
+        }
+        let authority = req
+            .uri()
+            .authority()
+            .cloned()
+            .or_else(|| req.headers().get(HOST)?.to_str().ok()?.parse().ok());
+        let Some(authority) = authority else {
+            reject!(BAD_REQUEST, "invalid_application_authority");
+        };
+        Some((route, length, authority))
+    } else {
+        None
+    };
     let upstream_h2 = endpoint.config.protocol == UpstreamProtocol::Http2;
     if grpc && !upstream_h2 {
         reject!(BAD_GATEWAY, "grpc_upstream_requires_http2");
     }
-    if websocket.is_some() && upstream_h2 {
+    if websocket.is_some() && (upstream_h2 || application.is_some()) {
         reject!(NOT_IMPLEMENTED, "websocket_requires_http1_upstream");
     }
     diagnostics::emit("upstream_acquire_started", || {
@@ -825,7 +860,7 @@ where
         hyper::Version::HTTP_11
     };
     strip_hop(req.headers_mut());
-    if is_h3 {
+    if is_h3 && application.is_none() {
         // The receive adapter verifies the declared length at end of stream.
         // Keep HTTP/1.1 uploads chunked so Hyper cannot stop before that check.
         req.headers_mut().remove(CONTENT_LENGTH);
@@ -918,10 +953,33 @@ where
     let headers_at = Instant::now();
     let header_start = tokio::time::Instant::now();
     let header_deadline = (header_start + Duration::from_millis(limits.headers_ms)).min(deadline);
-    let response = tokio::time::timeout_at(
-        header_deadline,
-        lease.send_request(upstream_req, exchange.as_ref()),
-    )
+    let response = tokio::time::timeout_at(header_deadline, async {
+        if let Some((route, length, authority)) = &application {
+            let context = crate::application::Contextual {
+                route,
+                authority,
+                client: client_ip,
+                secure,
+                length: *length,
+                buffers: generation
+                    .application_buffers
+                    .as_ref()
+                    .expect("application buffer budget"),
+                limits,
+                upload_error: &upload_error,
+            };
+            lease
+                .application_request(upstream_req, context)
+                .await
+                .map(|res| res.map(OriginBody::Application))
+        } else {
+            lease
+                .send_request(upstream_req, exchange.as_ref())
+                .await
+                .map(|res| res.map(OriginBody::Http))
+                .map_err(anyhow::Error::from)
+        }
+    })
     .await;
     let mut response = match response {
         Ok(Ok(r)) => r,
@@ -931,7 +989,7 @@ where
                     "request_id": id, "connection": lease.connection_id(),
                     "budget_us": header_deadline.duration_since(header_start).as_micros() as u64,
                     "error": match &other {
-                        Ok(Err(error)) => diagnostics::chain(error),
+                        Ok(Err(error)) => diagnostics::chain(error.as_ref()),
                         Err(error) => diagnostics::chain(error),
                         Ok(Ok(_)) => unreachable!(),
                     },
@@ -951,6 +1009,14 @@ where
                 let (status, reason) = match client_error {
                     2 => (StatusCode::REQUEST_TIMEOUT, "request_body_timeout"),
                     3 => (StatusCode::PAYLOAD_TOO_LARGE, "request_body_limit"),
+                    5 => (
+                        StatusCode::SERVICE_UNAVAILABLE,
+                        "application_buffer_capacity",
+                    ),
+                    6 => (
+                        StatusCode::REQUEST_HEADER_FIELDS_TOO_LARGE,
+                        "application_params_limit",
+                    ),
                     _ => (StatusCode::BAD_REQUEST, "request_body_error"),
                 };
                 if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
@@ -1101,7 +1167,10 @@ where
         request_bytes,
         exchange,
     };
-    let mut response = response.map(|b| body::download(b, limits, deadline, completion, grpc));
+    let mut response = response.map(|body| match body {
+        OriginBody::Http(body) => body::download(body, limits, deadline, completion, grpc),
+        OriginBody::Application(body) => body::download(body, limits, deadline, completion, false),
+    });
     if let Some(capture) = capturing {
         response = response.map(|body| capture.wrap(body));
     }

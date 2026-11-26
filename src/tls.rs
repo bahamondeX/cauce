@@ -166,6 +166,7 @@ pub fn load_client(config: &UpstreamTls, protocol: UpstreamProtocol) -> Result<A
     client.alpn_protocols = vec![match protocol {
         UpstreamProtocol::Http1 => b"http/1.1".to_vec(),
         UpstreamProtocol::Http2 => b"h2".to_vec(),
+        _ => anyhow::bail!("application TLS is unavailable"),
     }];
     Ok(Arc::new(client))
 }

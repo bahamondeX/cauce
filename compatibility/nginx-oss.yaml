@@ -432,6 +432,7 @@ modules:
         directives:
           - {"name": "empty_gif", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_NOARGS"]}
   ngx_http_fastcgi_module:
+    coverage: {"status": "partial", "notes": "FastCGI responder over TCP or Unix sockets with fixed CGI mapping, bounded upload and response framing, and exclusive reuse."}
     definitions:
       - source: src/http/modules/ngx_http_fastcgi_module.c
         type: NGX_HTTP_MODULE
@@ -463,20 +464,20 @@ modules:
           - {"name": "fastcgi_ignore_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "fastcgi_index", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_intercept_errors", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "fastcgi_keep_conn", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "fastcgi_keep_conn", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Sequential keepalive after completed STDIN and END_REQUEST; bounded idle leases."}
           - {"name": "fastcgi_limit_rate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_max_temp_file_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_next_upstream", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "fastcgi_next_upstream_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_next_upstream_tries", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_no_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "fastcgi_param", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE23"]}
-          - {"name": "fastcgi_pass", "flags": ["NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "fastcgi_param", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE23"], "status": "partial", "notes": "Fixed CGI environment mapping. Arbitrary parameters and variable expansion require manual configuration review."}
+          - {"name": "fastcgi_pass", "flags": ["NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Typed literal TCP and Unix FastCGI upstreams with shared route selection."}
           - {"name": "fastcgi_pass_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_pass_request_body", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "fastcgi_pass_request_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "fastcgi_read_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "fastcgi_request_buffering", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "fastcgi_request_buffering", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Known-length streaming or bounded per-route memory buffering with a shared budget."}
           - {"name": "fastcgi_send_lowat", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_send_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "fastcgi_socket_keepalive", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
@@ -1669,6 +1670,7 @@ add_ons:
               - {"name": "state_path", "flags": ["NGX_CONF_TAKE1"], "within": "acme_issuer"}
               - {"name": "accept_terms_of_service", "flags": ["NGX_CONF_NOARGS"], "within": "acme_issuer"}
 behaviors:
+  - {"id": "fastcgi-php-fpm", "status": "verified", "scope": "Shared PHP-FPM GET, POST, multipart, redirect, cookie, large body and 500 response behavior against NGINX 1.30.8.", "tests": ["tests/application/test_application.py"], "evidence": ["bench/program/evidence/milestone-8/fastcgi-darwin.log"]}
   - {"id": "http3-shared-static-response", "status": "verified", "scope": "An independent aioquic client validates HTTPS authority, QUIC Retry, TLS 1.3 and a shared 200 response body against NGINX 1.30.8.", "tests": ["tests/http3/interop.py"], "evidence": ["bench/program/evidence/milestone-7/http3-darwin.log"]}
   - {"id": "stream-tcp-weight-and-half-close", "status": "verified", "scope": "Stream TCP half-close and weighted 3:1 distribution against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
   - {"id": "stream-udp-echo", "status": "verified", "scope": "Stream UDP echo datagram boundaries against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}

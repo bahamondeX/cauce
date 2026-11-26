@@ -696,7 +696,8 @@
             {
               "enum": [
                 "http1",
-                "http2"
+                "http2",
+                "fastcgi"
               ]
             }
           ]
@@ -861,6 +862,18 @@
     "cacheDuration": {
       "anyOf": [{"type": "integer", "minimum": 0, "maximum": 604800000}, {"$ref": "#/$defs/durationString"}, {"$ref": "#/$defs/environment"}]
     },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["document_root", "script", "script_name"],
+      "properties": {
+        "document_root": {"$ref": "#/$defs/localPath"},
+        "script": {"type": "string", "minLength": 5, "maxLength": 256},
+        "script_name": {"type": "string", "minLength": 1, "maxLength": 256},
+        "request_buffer_bytes": {"type": "integer", "minimum": 1, "maximum": 8388608},
+        "keep_connection": {"type": "boolean"}
+      }
+    },
     "route": {
       "type": "object",
       "additionalProperties": false,
@@ -893,6 +906,7 @@
       ],
       "properties": {
         "cache": {"$ref": "#/$defs/memoryCache"},
+        "application": {"$ref": "#/$defs/application"},
         "compression": {"$ref": "#/$defs/compression"},
         "content": {"$ref": "#/$defs/contentHandler"},
         "id": {

@@ -1,5 +1,10 @@
 {
   "mappings": {
+    "ngx_http_fastcgi_module": {"status": "partial", "notes": "FastCGI responder over TCP or Unix sockets with fixed CGI mapping, bounded upload and response framing, and exclusive reuse."},
+    "ngx_http_fastcgi_module.fastcgi_pass": {"status": "partial", "notes": "Typed literal TCP and Unix FastCGI upstreams with shared route selection."},
+    "ngx_http_fastcgi_module.fastcgi_param": {"status": "partial", "notes": "Fixed CGI environment mapping. Arbitrary parameters and variable expansion require manual configuration review."},
+    "ngx_http_fastcgi_module.fastcgi_keep_conn": {"status": "partial", "notes": "Sequential keepalive after completed STDIN and END_REQUEST; bounded idle leases."},
+    "ngx_http_fastcgi_module.fastcgi_request_buffering": {"status": "partial", "notes": "Known-length streaming or bounded per-route memory buffering with a shared budget."},
     "ngx_http_v3_module": {"status": "partial","notes": "Downstream h3 over Quinn. TLS 1.3, Retry, independent admission and streaming. WebTransport and upstream HTTP/3 are separate."},
     "ngx_http_v3_module.http3": {"status": "partial","notes": "Dedicated QUIC UDP listener with TLS 1.3 and h3 ALPN."},
     "ngx_http_v3_module.http3_max_concurrent_streams": {"status": "partial","notes": "Per-connection QUIC receive stream limit and explicit request task admission."},
@@ -121,6 +126,7 @@
     "ngx_http_core_module.gzip_vary": {"status": "partial", "notes": "Vary: Accept-Encoding added on eligible representations."}
   },
   "behaviors": [
+    {"id": "fastcgi-php-fpm", "status": "verified", "scope": "Shared PHP-FPM GET, POST, multipart, redirect, cookie, large body and 500 response behavior against NGINX 1.30.8.", "tests": ["tests/application/test_application.py"], "evidence": ["bench/program/evidence/milestone-8/fastcgi-darwin.log"]},
     {"id": "http3-shared-static-response", "status": "verified", "scope": "An independent aioquic client validates HTTPS authority, QUIC Retry, TLS 1.3 and a shared 200 response body against NGINX 1.30.8.", "tests": ["tests/http3/interop.py"], "evidence": ["bench/program/evidence/milestone-7/http3-darwin.log"]},
     {"id": "stream-tcp-weight-and-half-close", "status": "verified", "scope": "Stream TCP half-close and weighted 3:1 distribution against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]},
     {"id": "stream-udp-echo", "status": "verified", "scope": "Stream UDP echo datagram boundaries against NGINX 1.30.8.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]},
