@@ -14,6 +14,6 @@ test_stream_preview_validates_literal_listeners_and_requires_proxy_trust (test_n
 test_unsupported_host_or_location_refuses_partial_preview (test_nginx_migration.MigrationTests.test_unsupported_host_or_location_refuses_partial_preview) ... ok
 
 ----------------------------------------------------------------------
-Ran 14 tests in 17.133s
+Ran 14 tests in 10.310s
 
 OK

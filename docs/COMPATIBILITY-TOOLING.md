@@ -51,10 +51,13 @@ export UV_PROJECT_ENVIRONMENT="$PWD/work/compat-python/venv"
 export UV_PYTHON_INSTALL_DIR="$PWD/work/compat-python/interpreters"
 export UV_PYTHON_DOWNLOADS=never TMPDIR="$PWD/work/compat-python/tmp"
 uv sync --locked --project "$PWD/tests/compatibility" --python "$(command -v python3)"
+export CAUCE_TEST_BINARY="$PWD/target/debug/cauce"
 "$UV_PROJECT_ENVIRONMENT/bin/python" -IB -m unittest discover \
   -s "$PWD/tests" -p test_nginx_migration.py -v
 ```
 
+Set `CAUCE_TEST_BINARY` to the freshly built executable under test. This
+also enables runtime validation of generated configurations where applicable.
 Select `--extra quic` for local Pebble and HTTP/3 fixtures,
 `--extra content` for the independent Brotli decoder, or `--extra grpc`
 for the standard gRPC health service.
