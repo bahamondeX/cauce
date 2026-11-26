@@ -1,6 +1,7 @@
 //! Static files opened beneath a configured directory descriptor.
 use crate::{
     body::{self, BoxError, ProxyBody},
+    compression::{self, Coding},
     config::{PathMatch, Route},
 };
 use anyhow::{ensure, Context, Result};
@@ -43,6 +44,7 @@ struct Spec {
     hidden: bool,
     deny_suffixes: Vec<String>,
     etag: bool,
+    precompressed: bool,
     cache_control: Option<String>,
     expires_seconds: Option<u32>,
     max_open: usize,
@@ -60,6 +62,7 @@ impl Default for Spec {
                 .map(str::to_owned)
                 .into(),
             etag: true,
+            precompressed: false,
             cache_control: None,
             expires_seconds: None,
             max_open: 32,
@@ -150,7 +153,12 @@ impl Policy {
         );
         Ok(())
     }
-    pub async fn response<B>(&self, request: &Request<B>, route: &Route) -> Response<ProxyBody> {
+    pub async fn response<B>(
+        &self,
+        request: &Request<B>,
+        route: &Route,
+        compression: Option<(&compression::Policy, compression::Choice)>,
+    ) -> Response<ProxyBody> {
         if !matches!(*request.method(), Method::GET | Method::HEAD) {
             return Response::builder()
                 .status(405)
@@ -179,10 +187,25 @@ impl Policy {
             return empty(StatusCode::SERVICE_UNAVAILABLE);
         };
         let trailing_slash = request.uri().path().ends_with('/');
+        let encoding = compression
+            .and_then(|(_, choice)| choice.coding)
+            .filter(|_| {
+                self.spec.precompressed
+                    && self.cache_control.as_ref().is_none_or(|value| {
+                        value.to_str().is_ok_and(|value| {
+                            !value.split(',').any(|field| {
+                                let name = field.split('=').next().unwrap_or_default().trim();
+                                ["no-transform", "private", "no-store"]
+                                    .iter()
+                                    .any(|token| name.eq_ignore_ascii_case(token))
+                            })
+                        })
+                    })
+            });
         let policy = self.clone();
         let found = tokio::task::spawn_blocking(move || {
             policy
-                .lookup(parts, trailing_slash)
+                .lookup(parts, trailing_slash, encoding)
                 .map(|file| (file, permit))
         })
         .await;
@@ -218,8 +241,33 @@ impl Policy {
                 .header(CONTENT_LENGTH, data.len())
                 .body(body::full(if head { String::new() } else { data }))
                 .unwrap(),
-            Found::File(file, name, metadata) => {
-                self.file_response(request, file, &name, metadata, permit)
+            Found::File {
+                file,
+                name,
+                metadata,
+                variant,
+            } => {
+                let mut selected = (file, metadata, None);
+                if let (Some((compressed, coding)), Some((policy, choice))) = (variant, compression)
+                {
+                    if policy.precompressed(choice, selected.1.len(), mime(&name)) == Some(coding) {
+                        if let Ok(stat) = compressed.metadata() {
+                            selected = (compressed, stat, Some(coding));
+                        }
+                    }
+                }
+                let mut response =
+                    self.file_response(request, selected.0, &name, selected.1, permit);
+                if compression.is_some() {
+                    compression::vary(response.headers_mut());
+                }
+                if let Some(coding) = selected.2 {
+                    response
+                        .headers_mut()
+                        .insert(CONTENT_ENCODING, HeaderValue::from_static(coding.name()));
+                    response.headers_mut().remove(ACCEPT_RANGES);
+                }
+                response
             }
         }
     }
@@ -231,7 +279,12 @@ impl Policy {
                     .is_some_and(|end| end.eq_ignore_ascii_case(suffix.as_bytes()))
             })
     }
-    fn lookup(&self, parts: Vec<Vec<u8>>, slash: bool) -> io::Result<Found> {
+    fn lookup(
+        &self,
+        parts: Vec<Vec<u8>>,
+        slash: bool,
+        encoding: Option<Coding>,
+    ) -> io::Result<Found> {
         let original = || open_parts(&self.root, &parts);
         let file = if self.spec.try_files.is_empty() {
             original()?
@@ -261,7 +314,21 @@ impl Policy {
         };
         let metadata = file.0.metadata()?;
         if metadata.is_file() && (!slash || !self.spec.try_files.is_empty()) {
-            return Ok(Found::File(file.0, file.1, metadata));
+            let variant = encoding
+                .filter(|_| self.spec.try_files.is_empty())
+                .and_then(|coding| {
+                    let mut original = parts;
+                    original.pop();
+                    original.push(variant_name(&file.1, coding));
+                    let candidate = open_parts(&self.root, &original).ok()?.0;
+                    valid_variant(candidate, &metadata, coding)
+                });
+            return Ok(Found::File {
+                file: file.0,
+                name: file.1,
+                metadata,
+                variant,
+            });
         }
         if !metadata.is_dir() {
             return Err(not_found());
@@ -278,7 +345,18 @@ impl Policy {
             if let Ok(child) = open_child(&file.0, index.as_bytes(), false) {
                 let metadata = child.metadata()?;
                 if metadata.is_file() {
-                    return Ok(Found::File(child, index.as_bytes().to_vec(), metadata));
+                    let variant = encoding.and_then(|coding| {
+                        let candidate =
+                            open_child(&file.0, &variant_name(index.as_bytes(), coding), false)
+                                .ok()?;
+                        valid_variant(candidate, &metadata, coding)
+                    });
+                    return Ok(Found::File {
+                        file: child,
+                        name: index.as_bytes().to_vec(),
+                        metadata,
+                        variant,
+                    });
                 }
             }
         }
@@ -477,9 +555,24 @@ impl Policy {
 }
 
 enum Found {
-    File(File, Vec<u8>, Metadata),
+    File {
+        file: File,
+        name: Vec<u8>,
+        metadata: Metadata,
+        variant: Option<(File, Coding)>,
+    },
     Directory,
     Listing(String),
+}
+fn variant_name(name: &[u8], coding: Coding) -> Vec<u8> {
+    [name, coding.suffix().as_bytes()].concat()
+}
+fn valid_variant(file: File, original: &Metadata, coding: Coding) -> Option<(File, Coding)> {
+    let metadata = file.metadata().ok()?;
+    (metadata.is_file()
+        && metadata.len() > 0
+        && metadata.modified().ok()? >= original.modified().ok()?)
+    .then_some((file, coding))
 }
 fn not_found() -> io::Error {
     io::Error::from(io::ErrorKind::NotFound)

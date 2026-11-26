@@ -554,9 +554,14 @@ pub async fn handle(
         }
     }
     let slot = crate::admission::RequestSlot::new(global_slot, rule_guard);
+    let head = req.method() == hyper::Method::HEAD;
+    let compression = route
+        .compression
+        .as_deref()
+        .map(|policy| (policy, policy.choice(&req, grpc, websocket.is_some())));
     if let Some(handler) = &route.content {
         let Ok(mut response) =
-            tokio::time::timeout_at(deadline, handler.response(&req, route)).await
+            tokio::time::timeout_at(deadline, handler.response(&req, route, compression)).await
         else {
             reject!(GATEWAY_TIMEOUT, "content_deadline");
         };
@@ -570,6 +575,9 @@ pub async fn handle(
             .headers_mut()
             .insert(X_REQUEST_ID, HeaderValue::from_str(&id).unwrap());
         *response.version_mut() = inbound_version;
+        if let Some((policy, choice)) = compression {
+            response = policy.apply(choice, response, &slot, head);
+        }
         let completion = crate::content::Completion {
             event,
             started,
@@ -923,6 +931,7 @@ pub async fn handle(
             reject!(BAD_GATEWAY, "upstream_header_policy_limit");
         }
     }
+    let compression_slot = compression.map(|_| slot.clone());
     let completion = Completion {
         event,
         started,
@@ -934,7 +943,11 @@ pub async fn handle(
         request_bytes,
         exchange,
     };
-    Ok(response.map(|b| body::download(b, limits, deadline, completion, grpc)))
+    let response = response.map(|b| body::download(b, limits, deadline, completion, grpc));
+    Ok(match (compression, compression_slot) {
+        (Some((policy, choice)), Some(slot)) => policy.apply(choice, response, &slot, head),
+        _ => response,
+    })
 }
 pub fn admin(req: Request<Incoming>, state: &State) -> Response<ProxyBody> {
     if req.method() != hyper::Method::GET {

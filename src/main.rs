@@ -2,6 +2,7 @@ mod actions;
 mod admission;
 mod balance;
 mod body;
+mod compression;
 mod config;
 mod content;
 mod diagnostics;

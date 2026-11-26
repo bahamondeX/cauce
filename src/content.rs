@@ -86,9 +86,14 @@ impl Handler {
         }
         Ok(())
     }
-    pub async fn response<B>(&self, request: &Request<B>, route: &Route) -> Response<ProxyBody> {
+    pub async fn response<B>(
+        &self,
+        request: &Request<B>,
+        route: &Route,
+        compression: Option<(&crate::compression::Policy, crate::compression::Choice)>,
+    ) -> Response<ProxyBody> {
         match self {
-            Self::Static(policy) => policy.response(request, route).await,
+            Self::Static(policy) => policy.response(request, route, compression).await,
             Self::Direct(direct) => {
                 let status =
                     StatusCode::from_u16(direct.spec.status).expect("validated direct status");

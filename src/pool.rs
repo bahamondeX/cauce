@@ -1568,6 +1568,7 @@ mod pool_tests {
                 headers: None,
                 action: None,
                 content: None,
+                compression: None,
                 allow_clients: None,
                 rate_zone: None,
                 balance: crate::config::Balance::RoundRobin,

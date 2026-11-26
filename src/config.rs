@@ -399,6 +399,8 @@ pub struct Route {
     pub rate_zone: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) content: Option<Box<crate::content::Handler>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) compression: Option<Box<crate::compression::Policy>>,
     #[serde(default)]
     pub balance: Balance,
     #[serde(default)]
@@ -699,6 +701,15 @@ impl Config {
             .iter()
             .map(|upstream| (upstream.id.as_str(), usize::from(upstream.weight)))
             .collect();
+        ensure!(
+            self.routes
+                .iter()
+                .filter_map(|route| route.compression.as_ref())
+                .map(|policy| policy.max_inflight())
+                .sum::<usize>()
+                <= 128,
+            "compression generation quota exceeded"
+        );
         let mut ticket_budget = 0;
         ensure!(
             self.rate_zones.len() <= 32

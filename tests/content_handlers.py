@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real sockets for the compiled local content path and filesystem policy."""
 import email.utils
+import gzip
 import http.client
 import json
 import os
@@ -121,6 +122,32 @@ class ContentTests(unittest.TestCase):
         future = email.utils.formatdate(time.time() + 60, usegmt=True)
         self.assertEqual(self.query("/sample.txt", headers={"Range": "bytes=2-", "If-Range": future})[0], 200)
         self.assertEqual(self.query("/large.txt")[2], b"content\n" * 18000)
+
+    def test_compression_negotiates_both_codecs_and_preserves_ranges(self):
+        import brotli
+
+        self.data["routes"][0]["compression"] = {"algorithms": ["br", "gzip"], "min_size": 1}
+        self.data["routes"][0]["content"]["precompressed"] = True
+        contents = (self.public / "large.txt").read_bytes()
+        precompressed = gzip.compress(contents, mtime=12345)
+        (self.public / "large.txt.gz").write_bytes(precompressed)
+        self.write()
+        self.process.send_signal(signal.SIGHUP)
+        wait(self.log, '"reloaded"', self.process)
+        self.assertEqual(self.query("/large.txt")[2], contents)
+        status, headers, body = self.query("/large.txt", headers={"Accept-Encoding": "gzip;q=1, br;q=0.5"})
+        self.assertEqual((status, headers["content-encoding"], body), (200, "gzip", precompressed))
+        self.assertEqual(int(headers["content-length"]), len(precompressed))
+        self.assertIn("accept-encoding", headers["vary"].lower())
+        status, headers, body = self.query("/large.txt", headers={"Accept-Encoding": "gzip;q=0.5, br;q=1"})
+        self.assertEqual((status, headers["content-encoding"], brotli.decompress(body)), (200, "br", contents))
+        self.assertNotIn("content-length", headers)
+        self.assertTrue(headers["etag"].startswith("W/"))
+        status, headers, body = self.query("/large.txt", headers={"Accept-Encoding": "gzip", "Range": "bytes=0-2"})
+        self.assertEqual((status, body), (206, contents[:3]))
+        self.assertNotIn("content-encoding", headers)
+        self.assertNotIn("content-encoding", self.query("/large.txt", headers={"Cookie":"session=secret","Accept-Encoding":"gzip"})[1])
+        self.assertEqual(self.query("/large.txt", headers={"Accept-Encoding": "*;q=0"})[0], 406)
 
     def test_access_alias_listing_and_rollback(self):
         self.assertEqual(self.query("/files/sample.txt")[2], b"0123456789")
