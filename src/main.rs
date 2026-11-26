@@ -144,7 +144,9 @@ async fn run() -> Result<()> {
                             current.draining.store(true, Ordering::Release);
                             *current = next;
                         }
-                        health.abort();
+                        if let Some(health) = health.take() {
+                            health.abort();
+                        }
                         health = health::start(&state.generation.read().unwrap());
                         server_tls = server;
                         generation_tx.send_replace(version);
@@ -287,8 +289,10 @@ async fn run() -> Result<()> {
         .unwrap()
         .draining
         .store(true, Ordering::Release);
-    health.abort();
-    let _ = health.await;
+    if let Some(health) = health {
+        health.abort();
+        let _ = health.await;
+    }
     let _ = shutdown_tx.send(true);
     state.tunnels.close();
     let deadline = tokio::time::Instant::now() + Duration::from_millis(config.limits.shutdown_ms);

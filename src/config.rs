@@ -282,7 +282,16 @@ pub struct Upstream {
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct HealthCheck {
+    #[serde(
+        default,
+        deserialize_with = "nonempty_health_path",
+        skip_serializing_if = "String::is_empty"
+    )]
     pub path: String,
+    #[serde(default)]
+    pub mode: HealthMode,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub service: Option<String>,
     #[serde(deserialize_with = "milliseconds")]
     pub interval_ms: u64,
     #[serde(deserialize_with = "milliseconds")]
@@ -290,6 +299,22 @@ pub struct HealthCheck {
     pub rise: u32,
     pub fall: u32,
 }
+#[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum HealthMode {
+    #[default]
+    Http,
+    Grpc,
+}
+
+fn nonempty_health_path<'de, D: Deserializer<'de>>(value: D) -> Result<String, D::Error> {
+    let path = String::deserialize(value)?;
+    if path.is_empty() {
+        return Err(serde::de::Error::custom("health path cannot be empty"));
+    }
+    Ok(path)
+}
+
 fn default_weight() -> u16 {
     1
 }
@@ -506,20 +531,33 @@ impl Config {
                 "upstream weight must be 1 to 64"
             );
             if let Some(h) = &u.health_check {
-                ensure!(
-                    u.protocol == UpstreamProtocol::Http1,
-                    "active HTTP health requires HTTP/1 upstream"
-                );
-                let uri: hyper::Uri = h.path.parse().context("invalid health path")?;
-                ensure!(
-                    h.path.starts_with('/')
-                        && !h.path.starts_with("//")
-                        && h.path.len() <= 1024
-                        && uri.scheme().is_none()
-                        && uri.authority().is_none()
-                        && !h.path.contains('#'),
-                    "health path must be origin-form"
-                );
+                match h.mode {
+                    HealthMode::Http => {
+                        let uri: hyper::Uri = h.path.parse().context("invalid health path")?;
+                        ensure!(
+                            h.service.is_none()
+                                && h.path.starts_with('/')
+                                && !h.path.starts_with("//")
+                                && h.path.len() <= 1024
+                                && uri.scheme().is_none()
+                                && uri.authority().is_none()
+                                && !h.path.contains('#'),
+                            "HTTP health requires an origin-form path and no service"
+                        );
+                    }
+                    HealthMode::Grpc => {
+                        ensure!(
+                            u.protocol == UpstreamProtocol::Http2 && h.path.is_empty(),
+                            "gRPC health requires an HTTP/2 upstream and uses the standard Check path"
+                        );
+                        ensure!(
+                            h.service.as_ref().is_none_or(|service| {
+                                service.len() <= 256 && !service.chars().any(char::is_control)
+                            }),
+                            "invalid gRPC health service"
+                        );
+                    }
+                }
                 ensure!(
                     (100..=60_000).contains(&h.interval_ms)
                         && (10..=5_000).contains(&h.timeout_ms)

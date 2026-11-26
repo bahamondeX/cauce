@@ -456,13 +456,29 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "path",
         "interval_ms",
         "timeout_ms",
         "rise",
         "fall"
       ],
+      "if": {
+        "required": ["mode"],
+        "properties": {"mode": {"const": "grpc"}}
+      },
+      "then": {"not": {"required": ["path"]}},
+      "else": {
+        "required": ["path"],
+        "not": {"required": ["service"]}
+      },
       "properties": {
+        "mode": {
+          "enum": ["http", "grpc"],
+          "default": "http"
+        },
+        "service": {
+          "type": "string",
+          "maxLength": 256
+        },
         "path": {
           "anyOf": [
             {
@@ -530,6 +546,20 @@
         "idle_connections",
         "failure_backoff_ms"
       ],
+      "if": {
+        "required": ["health_check"],
+        "properties": {
+          "health_check": {
+            "type": "object",
+            "required": ["mode"],
+            "properties": {"mode": {"const": "grpc"}}
+          }
+        }
+      },
+      "then": {
+        "required": ["protocol"],
+        "properties": {"protocol": {"const": "http2"}}
+      },
       "properties": {
         "id": {
           "$ref": "#/$defs/identifier"

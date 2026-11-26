@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=../schemas/cauce.schema.json
+version: 1
+proxy:
+  name: cauce
+  listen: "127.0.0.1:8080"
+  admin: "127.0.0.1:9090"
+
+  limits:
+    clients: 1024
+    requests: 256
+    connections: 64
+    idle_connections: 32
+    connecting: 8
+    acquire_ms: 250ms
+    connect_ms: 1s
+    headers_ms: 5s
+    stream_idle_ms: 15s
+    request_ms: 2m
+    client_headers_ms: 5s
+    idle_connection_ms: 10s
+    max_connection_age_ms: 1m
+    dns_cache_ms: 5s
+    tcp_keepalive_secs: 30s
+    max_header_bytes: 32KiB
+    max_headers: 64
+    max_body_bytes: 16MiB
+    shutdown_ms: 5s
+
+  logs:
+    enabled: true
+    path: logs/access.jsonl
+    queue: 4096
+    rotate_bytes: 16MiB
+    retained_files: 3
+
+  upstreams:
+    - id: h2-api
+      address: "127.0.0.1:8000"
+      host: "localhost:8000"
+      isolation: default
+      protocol: http2
+      connections: 32
+      idle_connections: 16
+      failure_backoff_ms: 500ms
+      health_check:
+        path: /ready
+        interval_ms: 2s
+        timeout_ms: 500ms
+        rise: 2
+        fall: 3
+    - id: grpc-api
+      address: "127.0.0.1:8001"
+      host: "localhost:8001"
+      isolation: default
+      protocol: http2
+      connections: 32
+      idle_connections: 16
+      failure_backoff_ms: 500ms
+      health_check:
+        mode: grpc
+        service: example.v1.Api
+        interval_ms: 2s
+        timeout_ms: 500ms
+        rise: 2
+        fall: 3
+
+  routes:
+    - id: api
+      host: localhost:8080
+      path_prefix: /api
+      balance: round_robin
+      upstreams: [h2-api]
+    - id: grpc
+      host: localhost:8080
+      path_prefix: /example.v1.Api
+      balance: round_robin
+      upstreams: [grpc-api]

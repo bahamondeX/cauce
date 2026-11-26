@@ -131,3 +131,23 @@ origin-relative `return` redirects alongside proxied locations.
 Complex rewrites, inherited policies and NGINX-specific balancing
 and admission tables require review.
 [Policy ordering](adr/0011-compiled-gateway-policies.md).
+
+## Active upstream health
+
+Add `health_check` to an upstream to gate selection on probe results. The
+default `mode: http` sends GET to an origin-form `path` over that upstream's
+HTTP/1.1 or HTTP/2 transport and accepts 2xx headers. `mode: grpc` requires
+`protocol: http2` and uses the standard unary Health/Check RPC. Omit
+`service` to check the whole server. The probe requires an uncompressed
+SERVING message and successful gRPC trailers. Use `interval_ms`,
+`timeout_ms`, `rise` and `fall` to control cadence and state transitions.
+
+Upstreams with active checks start unavailable and become eligible after
+`rise` successes. HTTP checks finish on response headers. gRPC checks
+read at most a 1 KiB protobuf message, require successful trailers and
+use the same absolute probe timeout. Secure HTTP/2 requires h2 ALPN and
+uses the upstream trust configuration. A generation can configure up to
+64 active checks, with at most four sockets active in its probe scheduler.
+A reload restarts the checks for the new generation. Probes use separate
+sockets from the user-data pools. [YAML example](../examples/http2-health.yaml)
+[gRPC health protocol](https://github.com/grpc/grpc-proto/blob/master/grpc/health/v1/health.proto).
