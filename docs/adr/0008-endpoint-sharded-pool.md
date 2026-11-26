@@ -48,3 +48,16 @@ Keep compact until qualified native measurements show a practical
 benefit and no regression in quotas, tail latency, fairness, reuse or
 resource efficiency. Compare both strategies using the same binary.
 [Milestone 2C qualification plan](../PERFORMANCE-MILESTONE-2C.md).
+
+## Milestone 3 eviction correction
+
+A Linux-independent real-socket burst reproduced five generation-B
+connection IDs while a generation-A lease held one of four physical permits.
+Two returned generation-B sockets were retired during global pressure
+scans and replaced. All 98 requests completed. A sharded pressure scan now
+protects the exact requesting endpoint and generation while looking for
+victims. This leaves a concurrent same-key return available to waiting
+requests and still permits eviction of other endpoint or generation keys.
+A deterministic socket test checks both upstream protocols. Three traced
+burst runs preserved the reuse bound. Compact remains the default.
+[Before and after traces](../../bench/program/evidence/milestone-3/sharded-reuse-race.tar.gz).
