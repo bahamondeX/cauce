@@ -297,6 +297,7 @@ mod tests {
             path_prefix: path.into(),
             path_match: PathMatch::Prefix,
             path_pattern: None,
+            headers: None,
             balance: Balance::RoundRobin,
             upstreams: vec!["origin".into()],
         }

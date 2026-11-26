@@ -1,6 +1,7 @@
 mod body;
 mod config;
 mod diagnostics;
+mod headers;
 mod health;
 mod pool;
 mod proxy;

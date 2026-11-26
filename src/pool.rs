@@ -1547,6 +1547,7 @@ mod pool_tests {
                 path_prefix: "/".into(),
                 path_match: crate::config::PathMatch::Prefix,
                 path_pattern: None,
+                headers: None,
                 balance: Balance::RoundRobin,
                 upstreams: vec!["backend".into()],
             }],

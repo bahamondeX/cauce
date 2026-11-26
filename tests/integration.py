@@ -113,8 +113,12 @@ class Backend(http.server.BaseHTTPRequestHandler):
                 return
             data = json.dumps({'connection': self.connection_id, 'backend': self.server.label,
                                'forwarded': self.headers.get('X-Forwarded-For'),
-                               'secret': self.headers.get('X-Secret'), 'traceparent': self.headers.get('traceparent')}).encode()
+                               'secret': self.headers.get('X-Secret'), 'traceparent': self.headers.get('traceparent'),
+                               'drop_me': self.headers.get('X-Drop-Me')}).encode()
             self.send_response(200)
+            if self.path == '/policy':
+                self.send_header('X-Origin-Debug', 'private')
+                self.send_header('X-Policy', 'from-origin')
             if self.path.startswith('/connection-close'):
                 self.send_header('Connection', 'close')
                 self.close_connection = True
@@ -172,7 +176,7 @@ class ProxyTests(unittest.TestCase):
             config = config.replace('acquire_ms = 250', 'acquire_ms = 1000')
             config = config.replace('client_headers_ms = 200', 'client_headers_ms = 2000')
         self.path = self.base / 'config.toml'
-        if self._testMethodName == 'test_yaml_reload_routes_and_rollback':
+        if self._testMethodName in {'test_yaml_reload_routes_and_rollback', 'test_header_policies_are_route_scoped'}:
             self.path = self.base / 'config.yaml'
             config = (ROOT / 'examples/cauce.yaml').read_text()
             config = config.replace('127.0.0.1:8080', f'127.0.0.1:{self.listen}')
@@ -280,6 +284,47 @@ class ProxyTests(unittest.TestCase):
         self.assertIsNone(r['traceparent'])
         self.assertEqual(self.request('/', headers={'Upgrade': 'websocket'})[0], 400)
         self.assertEqual(self.request('/', headers={'Upgrade': 'unknown'})[0], 501)
+
+    def test_header_policies_are_route_scoped(self):
+        original = self.path.read_text()
+        candidate = original + f'''
+    - id: policy
+      host: "localhost:{self.listen}"
+      path_match: exact
+      path_prefix: /policy
+      balance: round_robin
+      upstreams: [python]
+      headers:
+        request:
+          set: {{x-secret: from-config}}
+          remove: [X-Drop-Me]
+        response:
+          set: {{x-policy: from-cauce}}
+          remove: [x-origin-debug]
+'''
+        def reload(text, event):
+            self.path.write_text(text)
+            self.proc.send_signal(signal.SIGHUP)
+            for _ in range(100):
+                if event in (self.base / 'stderr.jsonl').read_text():
+                    return
+                time.sleep(.02)
+            self.fail(f'Expected {event}')
+
+        reload(candidate, '"reloaded"')
+        incoming = {'X-Secret': 'from-client', 'X-Drop-Me': 'drop', 'X-Forwarded-For': '192.0.2.1'}
+        status, payload, headers = self.request('/policy', headers=incoming)
+        result = json.loads(payload)
+        self.assertEqual(status, 200)
+        self.assertEqual((result['secret'], result['drop_me'], result['forwarded']),
+                         ('from-config', None, '127.0.0.1'))
+        lower = {key.lower(): value for key, value in headers.items()}
+        self.assertEqual(lower['x-policy'], 'from-cauce')
+        self.assertNotIn('x-origin-debug', lower)
+        self.assertIn('x-request-id', lower)
+        self.assertEqual(json.loads(self.request('/', headers=incoming)[1])['secret'], 'from-client')
+        reload(candidate.replace('x-secret: from-config', 'content-length: "500"'), '"reload_rejected"')
+        self.assertEqual(json.loads(self.request('/policy', headers=incoming)[1])['secret'], 'from-config')
 
     def test_request_smuggling_rejected_or_canonicalized(self):
         host = f'Host: localhost:{self.listen}\r\n'.encode()

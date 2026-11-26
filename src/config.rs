@@ -313,6 +313,8 @@ pub struct Route {
     pub path_pattern: Option<String>,
     #[serde(default, skip_serializing_if = "PathMatch::is_prefix")]
     pub path_match: PathMatch,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub headers: Option<Box<crate::headers::Policy>>,
     pub balance: Balance,
     pub upstreams: Vec<String>,
 }

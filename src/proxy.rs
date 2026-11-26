@@ -1,6 +1,6 @@
 use crate::{
     body::{self, Completion, ProxyBody},
-    config::UpstreamProtocol,
+    config::{Limits, UpstreamProtocol},
     diagnostics,
     pool::{ms, Generation, Pool},
     telemetry::{self, Attempt, Event, Logger},
@@ -53,6 +53,15 @@ const CONTENT_TYPE: HeaderName = hyper::header::CONTENT_TYPE;
 const X_REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
 const X_FORWARDED_FOR: HeaderName = HeaderName::from_static("x-forwarded-for");
 const X_FORWARDED_PROTO: HeaderName = HeaderName::from_static("x-forwarded-proto");
+
+fn headers_exceed_limits(headers: &HeaderMap, limits: &Limits) -> bool {
+    headers.len() > limits.max_headers
+        || headers
+            .iter()
+            .map(|(key, value)| key.as_str().len() + value.len() + 4)
+            .sum::<usize>()
+            > limits.max_header_bytes
+}
 
 fn strip_hop(headers: &mut HeaderMap) {
     let named: Vec<_> = headers
@@ -361,14 +370,7 @@ pub async fn handle(
             Duration::ZERO
         };
     crate::transport::tighten_stream_deadline(hard_deadline);
-    if req.headers().len() > limits.max_headers
-        || req
-            .headers()
-            .iter()
-            .map(|(k, v)| k.as_str().len() + v.as_bytes().len() + 4)
-            .sum::<usize>()
-            > limits.max_header_bytes
-    {
+    if headers_exceed_limits(req.headers(), limits) {
         reject!(REQUEST_HEADER_FIELDS_TOO_LARGE, "header_limit");
     }
     let host_count = req.headers().get_all(HOST).iter().count();
@@ -607,6 +609,11 @@ pub async fn handle(
         req.headers_mut()
             .insert("te", HeaderValue::from_static("trailers"));
     }
+    if let Some(policy) = &route.headers {
+        if policy.request.apply(req.headers_mut()) && headers_exceed_limits(req.headers(), limits) {
+            reject!(REQUEST_HEADER_FIELDS_TOO_LARGE, "header_policy_limit");
+        }
+    }
     let uploaded = Arc::new(AtomicBool::new(false));
     let upload_error = Arc::new(AtomicU8::new(0));
     let request_bytes = Arc::new(AtomicU64::new(0));
@@ -714,15 +721,7 @@ pub async fn handle(
         }
         event.status = response.status().as_u16();
     }
-    if invalid_framing(response.headers())
-        || response.headers().len() > limits.max_headers
-        || response
-            .headers()
-            .iter()
-            .map(|(k, v)| k.as_str().len() + v.len() + 4)
-            .sum::<usize>()
-            > limits.max_header_bytes
-    {
+    if invalid_framing(response.headers()) || headers_exceed_limits(response.headers(), limits) {
         reject!(BAD_GATEWAY, "invalid_upstream_headers");
     }
     if response.status() == StatusCode::SWITCHING_PROTOCOLS {
@@ -772,6 +771,13 @@ pub async fn handle(
     response
         .headers_mut()
         .insert(X_REQUEST_ID, request_id_header);
+    if let Some(policy) = &route.headers {
+        if policy.response.apply(response.headers_mut())
+            && headers_exceed_limits(response.headers(), limits)
+        {
+            reject!(BAD_GATEWAY, "upstream_header_policy_limit");
+        }
+    }
     let completion = Completion {
         event,
         started,

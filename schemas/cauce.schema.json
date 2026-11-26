@@ -706,6 +706,14 @@
           "minLength": 1,
           "maxLength": 256
         },
+        "headers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request": {"$ref": "#/$defs/headerEdits"},
+            "response": {"$ref": "#/$defs/headerEdits"}
+          }
+        },
         "balance": {
           "anyOf": [
             {
@@ -729,6 +737,32 @@
           "uniqueItems": true
         }
       }
+    },
+    "headerEdits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "set": {
+          "type": "object",
+          "maxProperties": 16,
+          "propertyNames": {"$ref": "#/$defs/editableHeaderName"},
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 4096,
+            "pattern": "^[ -~]*$"
+          }
+        },
+        "remove": {
+          "type": "array",
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/editableHeaderName"}
+        }
+      }
+    },
+    "editableHeaderName": {
+      "type": "string",
+      "pattern": "^[!#$%&'*+.^_`|~0-9A-Za-z-]{1,64}$"
     },
     "http2": {
       "type": "object",

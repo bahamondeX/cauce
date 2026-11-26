@@ -5,6 +5,7 @@ import argparse
 from dataclasses import dataclass, field
 import ipaddress
 import json
+import os
 from pathlib import Path
 import re
 
@@ -21,6 +22,13 @@ IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9-]*\Z")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\Z")
 STRUCTURE = {("http",), ("events",), ("http", "server")}
 VALUE_BLOCKS = {"charset_map", "geo", "map", "split_clients", "types"}
+HEADER_NAME = re.compile(r"[!#$%&'*+.^_`|~0-9a-z-]{1,64}\Z")
+RESERVED_HEADERS = {
+    "host", "connection", "keep-alive", "proxy-connection", "transfer-encoding",
+    "content-length", "content-type", "content-encoding", "trailer", "te", "upgrade",
+    "proxy-authenticate", "proxy-authorization", "forwarded", "x-request-id",
+    "traceparent", "tracestate", "baggage",
+}
 
 
 @dataclass
@@ -149,6 +157,36 @@ def server_names(items):
     return names
 
 
+def header_preview(nodes):
+    policy = {}
+    seen = {"request": set(), "response": set()}
+    for node in nodes:
+        if node.name == "proxy_pass":
+            continue
+        if (node.children is not None or
+                (node.name, len(node.args)) not in {("proxy_set_header", 2), ("proxy_hide_header", 1)}):
+            raise ValueError("preview supports proxy_pass and literal proxy header policies only")
+        direction = "request" if node.name == "proxy_set_header" else "response"
+        name = node.args[0].lower()
+        if (not HEADER_NAME.fullmatch(name) or name in RESERVED_HEADERS
+                or name.startswith(("x-forwarded-", "grpc-", "sec-websocket-"))
+                or name in seen[direction] or len(seen[direction]) == 16):
+            raise ValueError("preview header name is invalid, protected, duplicate, or over budget")
+        seen[direction].add(name)
+        value = node.args[1] if direction == "request" else ""
+        if any(not 32 <= ord(byte) <= 126 or byte in "$\\" for byte in value):
+            raise ValueError("preview requires unescaped static proxy header values")
+        edits = policy.setdefault(direction, {})
+        if value:
+            edits.setdefault("set", {})[name] = value
+        else:
+            edits.setdefault("remove", []).append(name)
+    if sum(len(key) + len(value) + 4 for key, value in
+           policy.get("request", {}).get("set", {}).items()) > 4096:
+        raise ValueError("preview request header values exceed 4 KiB")
+    return policy
+
+
 def preview(directives):
     http = [d for d in directives if d.name == "http" and d.children is not None and not d.args]
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
@@ -176,15 +214,16 @@ def preview(directives):
             mode = "literal_prefix"
         elif len(location.args) == 2:
             mode = {"=": "exact", "^~": "prefix_no_regex"}.get(location.args[0])
-        if (mode is None or location.children is None or len(location.children) != 1
+        if (mode is None or location.children is None
                 or not re.fullmatch(r"/[A-Za-z0-9_~./-]{0,255}", location.args[-1])):
-            raise ValueError("preview requires a literal location with a single proxy_pass")
+            raise ValueError("preview requires a flat literal location")
         path = location.args[-1]
         key = (path, mode == "exact")
         if key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
             raise ValueError("preview requires unique and unambiguous paths")
         paths.add(key)
         target = one_value(location.children, "proxy_pass")
+        policy = header_preview(location.children)
         if not target.startswith("http://"):
             raise ValueError("preview requires clear HTTP IPv4 upstreams")
         address = ipv4_socket(target.removeprefix("http://"))
@@ -201,6 +240,8 @@ def preview(directives):
                     raise ValueError("preview exceeds Cauce route capacity")
                 row = dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
                            path_match=mode, balance="round_robin", upstreams=[endpoints[address]])
+                if policy:
+                    row["headers"] = policy
                 proxy["routes"].append(row)
     return config
 
@@ -228,12 +269,14 @@ def main():
                   "The preview matches explicit server names with the listener port or no port. NGINX also has default-server behavior.",
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
+                  "Static proxy header policies omit NGINX inheritance and implicit hide rules.",
                   "Review socket exposure and the loopback admin listener before deployment.",
               ]}
     if args.preview:
         try:
             config = preview(directives)
-            with args.preview.open("x", encoding="utf-8") as output:
+            fd = os.open(args.preview, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as output:
                 yaml.safe_dump(config, output, sort_keys=False)
             report["preview"] = {"status": "generated_for_review", "confidence": "manual_review",
                                  "validation": ["cauce", "check", str(args.preview)]}

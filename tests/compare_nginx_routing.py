@@ -55,8 +55,13 @@ class Origin(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def do_GET(self):
-        payload = self.headers["Host"].encode()
+        filtered = self.path == "/policy"
+        payload = (json.dumps([self.headers.get("X-Tenant"), self.headers.get("X-Remove")]).encode()
+                   if filtered else self.headers["Host"].encode())
         self.send_response(200)
+        if filtered:
+            self.send_header("X-Origin-Debug", "internal")
+            self.send_header("X-Policy", "upstream")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -77,6 +82,17 @@ def request(listen, host, path):
         response = conn.getresponse()
         content = response.read()
     return (response.status, content.decode() if response.status == 200 else None)
+
+
+def check_policy(listen):
+    with closing(http.client.HTTPConnection("127.0.0.1", listen, timeout=3)) as conn:
+        conn.request("GET", "/policy", headers={
+            "Host": "headers.example.test", "X-Tenant": "client", "X-Remove": "client",
+        })
+        response = conn.getresponse()
+        return {"status": response.status, "request": json.loads(response.read()),
+                "replacement": response.headers.get_all("X-Policy"),
+                "removed": response.headers.get_all("X-Origin-Debug")}
 
 
 def configure(work, cauce_port, nginx_port, backend):
@@ -117,6 +133,45 @@ upstreams = ["target{idx}"]
             locations.append("location / { return 404; }")
         nginx_http.append(f"server {{ listen 127.0.0.1:{nginx_port}; server_name {name}; "
                           + " ".join(locations) + " }")
+    template += f"""
+[[upstreams]]
+id = "header-origin"
+address = "127.0.0.1:{backend}"
+host = "origin.test"
+isolation = "routing-test"
+connections = 4
+idle_connections = 2
+failure_backoff_ms = 100
+
+[[routes]]
+id = "header-policy"
+host = "headers.example.test"
+path_prefix = "/policy"
+path_match = "exact"
+balance = "round_robin"
+upstreams = ["header-origin"]
+[routes.headers.request]
+remove = ["x-remove"]
+[routes.headers.request.set]
+x-tenant = "configured"
+[routes.headers.response]
+remove = ["x-origin-debug"]
+[routes.headers.response.set]
+x-policy = "configured"
+"""
+    nginx_http.append(f"""
+server {{ listen 127.0.0.1:{nginx_port}; server_name headers.example.test;
+    location = /policy {{
+        proxy_pass http://127.0.0.1:{backend};
+        proxy_http_version 1.1;
+        proxy_set_header X-Tenant configured;
+        proxy_set_header X-Remove "";
+        proxy_hide_header X-Origin-Debug;
+        proxy_hide_header X-Policy;
+        add_header X-Policy configured always;
+    }}
+}}
+""")
     (work / "cauce.toml").write_text(template)
     env = " ".join(f"{name}_temp_path {name};"
                    for name in ("client_body", "proxy", "fastcgi", "uwsgi", "scgi"))
@@ -160,6 +215,10 @@ def main():
                     reference = request(nginx_port, host, path)
                     assert actual == reference == wanted, (host, path, actual, reference)
                     print(json.dumps({"host": host, "path": path, "status": actual[0], "marker": actual[1]}))
+                actual, reference = check_policy(cauce_port), check_policy(nginx_port)
+                assert actual == reference == {"status": 200, "request": ["configured", None],
+                                               "replacement": ["configured"], "removed": None}
+                print(json.dumps({"host": "headers.example.test", "path": "/policy", **actual}))
             finally:
                 cauce.terminate()
                 nginx.terminate()

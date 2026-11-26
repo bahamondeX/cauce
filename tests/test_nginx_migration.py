@@ -27,6 +27,8 @@ class MigrationTests(unittest.TestCase):
                                      str(destination)], capture_output=True, check=False, text=True)
             report = json.loads(result.stdout)
             config = yaml.safe_load(destination.read_text()) if destination.is_file() else None
+            if config:
+                self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
             if config and (ROOT / "target/debug/cauce").is_file():
                 validation = subprocess.run([str(ROOT / "target/debug/cauce"), "check", str(destination)],
                                             capture_output=True, check=False)
@@ -52,6 +54,24 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertTrue(all(route["path_match"] == "prefix_no_regex"
                             for route in config["proxy"]["routes"]))
+
+    def test_literal_proxy_headers_are_previewed_without_reporting_values(self):
+        code, report, config = self.run_preview("example.org",
+            'location / { proxy_pass http://127.0.0.1:2010; '
+            'proxy_set_header x-tenant local-marker; proxy_set_header x-old ""; '
+            'proxy_hide_header X-Internal; }')
+        self.assertEqual(code, 0)
+        self.assertNotIn("local-marker", json.dumps(report))
+        self.assertEqual(config["proxy"]["routes"][0]["headers"], {
+            "request": {"set": {"x-tenant": "local-marker"}, "remove": ["x-old"]},
+            "response": {"remove": ["x-internal"]},
+        })
+        for directive in ["proxy_set_header X-Forwarded-For 192.0.2.1;", "proxy_set_header X-Tenant $host;"]:
+            with self.subTest(directive=directive):
+                code, _, config = self.run_preview("example.org",
+                    "location / { proxy_pass http://127.0.0.1:2010; " + directive + " }")
+                self.assertEqual(code, 1)
+                self.assertIsNone(config)
 
     def test_unsupported_host_or_location_refuses_partial_preview(self):
         for names, locations in [
