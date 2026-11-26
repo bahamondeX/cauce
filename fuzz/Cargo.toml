@@ -23,3 +23,10 @@ path = "fuzz_targets/header_observer.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "content_policy"
+path = "fuzz_targets/content_policy.rs"
+test = false
+doc = false
+bench = false

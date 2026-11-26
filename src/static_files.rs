@@ -1,4 +1,10 @@
 //! Static files opened beneath a configured directory descriptor.
+mod fs_path;
+mod ranges;
+use self::{
+    fs_path::{decode_path, safe_part},
+    ranges::{ranges, Ranges},
+};
 use crate::{
     body::{self, BoxError, ProxyBody},
     compression::{self, Coding},
@@ -30,7 +36,6 @@ use std::{
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 const CHUNK: usize = 64 * 1024;
-const MAX_RANGES: usize = 8;
 const MAX_LIST_ENTRIES: usize = 1024;
 const MAX_LIST_BYTES: usize = 256 * 1024;
 
@@ -583,39 +588,6 @@ fn empty(status: StatusCode) -> Response<ProxyBody> {
         .body(body::full(""))
         .unwrap()
 }
-fn safe_part(name: &[u8]) -> bool {
-    !name.is_empty()
-        && name != b"."
-        && name != b".."
-        && name.len() <= 255
-        && name
-            .iter()
-            .all(|byte| !matches!(*byte, 0..=31 | b'/' | b'\\' | 127))
-}
-fn decode_path(path: &str) -> Option<Vec<Vec<u8>>> {
-    let mut parts = Vec::new();
-    for component in path.split('/').filter(|s| !s.is_empty()) {
-        if parts.len() == 32 {
-            return None;
-        }
-        let mut bytes = Vec::with_capacity(component.len());
-        let mut input = component.as_bytes().iter().copied();
-        while let Some(byte) = input.next() {
-            if byte == b'%' {
-                let high = char::from(input.next()?).to_digit(16)?;
-                let low = char::from(input.next()?).to_digit(16)?;
-                bytes.push((high * 16 + low) as u8);
-            } else {
-                bytes.push(byte);
-            }
-        }
-        if !safe_part(&bytes) {
-            return None;
-        }
-        parts.push(bytes);
-    }
-    Some(parts)
-}
 fn open_child(parent: &File, name: &[u8], directory: bool) -> io::Result<File> {
     let name = CString::new(name).map_err(|_| not_found())?;
     let flags = libc::O_RDONLY
@@ -756,69 +728,6 @@ pub(crate) fn precondition(
     None
 }
 
-enum Ranges {
-    Ignore,
-    Unsatisfiable,
-    Parts(Vec<(u64, u64)>),
-}
-fn ranges(value: &str, length: u64) -> Ranges {
-    let Some(value) = value.strip_prefix("bytes=") else {
-        return Ranges::Ignore;
-    };
-    let mut ranges = Vec::new();
-    let parse = |s: &str| {
-        (!s.is_empty() && s.bytes().all(|byte| byte.is_ascii_digit()))
-            .then(|| s.parse::<u64>().unwrap_or(u64::MAX))
-    };
-    for (index, item) in value.split(',').enumerate() {
-        if index == MAX_RANGES {
-            return Ranges::Ignore;
-        }
-        let Some((low, high)) = item.trim().split_once('-') else {
-            return Ranges::Ignore;
-        };
-        let pair = if low.is_empty() {
-            let Some(suffix) = parse(high) else {
-                return Ranges::Ignore;
-            };
-            if length == 0 || suffix == 0 {
-                continue;
-            }
-            (length.saturating_sub(suffix), length - 1)
-        } else {
-            let Some(start) = parse(low) else {
-                return Ranges::Ignore;
-            };
-            let end = if high.is_empty() {
-                u64::MAX
-            } else if let Some(end) = parse(high) {
-                end
-            } else {
-                return Ranges::Ignore;
-            };
-            if end < start {
-                return Ranges::Ignore;
-            }
-            if start >= length {
-                continue;
-            }
-            (start, end.min(length - 1))
-        };
-        // Overlapping ranges can amplify work. Treat them as an ordinary GET.
-        if ranges
-            .iter()
-            .any(|&(first, last)| pair.0 <= last && first <= pair.1)
-        {
-            return Ranges::Ignore;
-        }
-        ranges.push(pair);
-    }
-    if ranges.is_empty() {
-        Ranges::Unsatisfiable
-    } else {
-        Ranges::Parts(ranges)
-    }
-}
 enum Segment {
     Literal(Bytes),
     File(u64, u64),

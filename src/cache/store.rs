@@ -1,5 +1,5 @@
 //! Route-local hard-bounded storage and cancellation-safe fill coordination.
-use super::{Entry, Family, Key};
+use super::{epoch::Epoch, Entry, Family, Key};
 use std::{
     collections::{HashMap, VecDeque},
     sync::{Arc, Mutex},
@@ -19,8 +19,7 @@ struct Inner {
     order: VecDeque<Arc<Key>>,
     flights: HashMap<Arc<Key>, watch::Sender<()>>,
     bytes: usize,
-    epoch: u64,
-    retired: bool,
+    epoch: Epoch,
 }
 pub(super) enum Selection {
     Hit(Arc<Entry>),
@@ -44,7 +43,7 @@ impl Store {
         decide: impl FnOnce(Option<&Entry>, bool) -> Read,
     ) -> Selection {
         let mut state = self.inner.lock().unwrap();
-        if state.retired {
+        if state.epoch.retired() {
             return Selection::Unavailable;
         }
         let entry = state.entries.get(key).map(|(entry, _)| entry);
@@ -69,17 +68,19 @@ impl Store {
         let ticket = Ticket {
             store: self.clone(),
             key: key.clone(),
-            epoch: state.epoch,
+            epoch: state.epoch.ticket(),
         };
         Selection::Fill(ticket, stale)
     }
     pub fn drain(&self) {
         let retired = {
             let mut state = self.inner.lock().unwrap();
+            let mut epoch = state.epoch;
+            epoch.retire();
             std::mem::replace(
                 &mut *state,
                 Inner {
-                    retired: true,
+                    epoch,
                     ..Inner::default()
                 },
             )
@@ -88,7 +89,7 @@ impl Store {
     }
     pub fn invalidate(&self, family: &Family) {
         let mut state = self.inner.lock().unwrap();
-        state.epoch = state.epoch.wrapping_add(1);
+        state.epoch.invalidate();
         let mut removed = 0;
         state.entries.retain(|key, (_, weight)| {
             let evict = &key.family == family;
@@ -116,7 +117,7 @@ impl Ticket {
     pub fn publish(self, entry: Arc<Entry>) -> bool {
         let mut state = self.store.inner.lock().unwrap();
         let weight = self.key.bytes() + entry.bytes();
-        if state.retired || state.epoch != self.epoch || weight > self.store.bytes {
+        if !state.epoch.current(self.epoch) || weight > self.store.bytes {
             return false;
         }
         if let Some((_, old_weight)) = state.entries.remove(&self.key) {
@@ -138,7 +139,7 @@ impl Ticket {
     }
     pub fn current(&self) -> bool {
         let state = self.store.inner.lock().unwrap();
-        !state.retired && state.epoch == self.epoch
+        state.epoch.current(self.epoch)
     }
     pub fn invalidate(&self) {
         self.store.invalidate(&self.key.family);

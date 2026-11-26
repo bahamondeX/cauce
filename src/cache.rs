@@ -1,4 +1,6 @@
 //! Shared HTTP response cache policy, independent of the bounded memory store.
+mod epoch;
+mod selectors;
 mod store;
 
 use crate::{
@@ -450,16 +452,9 @@ impl Key {
         let budget = MAX_KEY_BYTES - family.authority.len() - family.uri.len();
         for field in fields {
             for value in request.headers().get_all(field) {
-                if selectors.len() + value.as_bytes().len() + 4 > budget {
-                    return None;
-                }
-                selectors.extend_from_slice(&(value.as_bytes().len() as u32).to_le_bytes());
-                selectors.extend_from_slice(value.as_bytes());
+                self::selectors::append(&mut selectors, Some(value.as_bytes()), budget)?;
             }
-            if selectors.len() + 4 > budget {
-                return None;
-            }
-            selectors.extend_from_slice(&u32::MAX.to_le_bytes());
+            self::selectors::append(&mut selectors, None, budget)?;
         }
         Some(Self { family, selectors })
     }
