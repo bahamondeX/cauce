@@ -209,6 +209,15 @@ def passes(result, p99_ns, p999_ns, min_goodput, max_error):
     )
 
 
+def ramp_failure_reason(result):
+    if result["warmup_successes"] != result["warmup_offers"]:
+        return "warmup_loss"
+    if any(result.get("outcomes", {}).get(outcome, 0)
+           for outcome in ("queue_rejection", "queue_timeout")):
+        return "generator_queue_loss"
+    return "measured_slo"
+
+
 def campaign(run, report, target, control, rates, limits, confirm_seconds,
              refine_steps=0, stability_seconds=0):
     """Search an audited bracket and verify the candidate on a longer hold."""
@@ -236,13 +245,7 @@ def campaign(run, report, target, control, rates, limits, confirm_seconds,
             best = rate
             return True
         upper = rate
-        if result["warmup_successes"] != result["warmup_offers"]:
-            upper_evidence = "warmup_loss"
-        elif any(result.get("outcomes", {}).get(outcome, 0)
-                 for outcome in ("queue_rejection", "queue_timeout")):
-            upper_evidence = "generator_queue_loss"
-        else:
-            upper_evidence = "measured_slo"
+        upper_evidence = ramp_failure_reason(result)
         return False
 
     for rate in rates:

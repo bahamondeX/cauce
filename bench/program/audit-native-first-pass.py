@@ -6,7 +6,7 @@ import csv
 import json
 from pathlib import Path
 
-from capacity import audit, passes, write_json
+from capacity import audit, passes, ramp_failure_reason, write_json
 
 
 LIMITS = (20_000_000, 100_000_000, .99, 0)
@@ -31,7 +31,8 @@ def check_cell(path):
         raise ValueError(f"{path} disagrees with raw warm-up outcomes")
     return {"offers": raw["offered"], "qualified": passes(raw, *LIMITS),
             "invalid": raw["invalid_reasons"], "successful": raw["successful"],
-            "outcomes": raw["outcomes"], "warmup_outcomes": raw["warmup_outcomes"]}
+            "outcomes": raw["outcomes"], "warmup_outcomes": raw["warmup_outcomes"],
+            "warmup_offers": raw["warmup_offers"], "warmup_successes": raw["warmup_successes"]}
 
 
 def parse_campaign(folder, run):
@@ -52,7 +53,18 @@ def parse_campaign(folder, run):
            "confirmed_goodput_per_s": confirmed,
            "interpretation": report.get("interpretation"),
            "first_failing_rate": report.get("first_failing_rate"),
-           "control_limited_rate": report.get("control_limited_rate")}
+           "control_limited_rate": report.get("control_limited_rate"),
+           "unattributed_rate": report.get("unattributed_rate"),
+           "upper_rate_evidence": report.get("upper_rate_evidence")}
+    upper = row["first_failing_rate"]
+    if upper is not None:
+        rejected = cells.get(f"refine-{upper}") or cells[f"ramp-{upper}"]
+        reason = ramp_failure_reason(rejected)
+        row["upper_rate_evidence"] = reason
+        if reason != "measured_slo":
+            row.update(first_failing_rate=None, unattributed_rate=upper)
+            if confirmed is not None:
+                row["interpretation"] = "confirmed_lower_bound"
     if confirmed is not None:
         summary = read(confirm_path / "audit.json")
         row.update(cpu_us_per_success=summary["cpu_us_per_success"],
@@ -113,7 +125,8 @@ def main():
     write_json(args.output / "raw-audit.json", evidence)
     write_csv(args.output / "capacity.csv", rows, (
         "run", "status", "confirmed_goodput_per_s", "interpretation", "first_failing_rate",
-        "control_limited_rate", "cpu_us_per_success", "p50", "p95", "p99", "p99.9",
+        "control_limited_rate", "unattributed_rate", "upper_rate_evidence",
+        "cpu_us_per_success", "p50", "p95", "p99", "p99.9",
         "rss_peak_bytes", "pss_end_bytes",
     ))
     write_csv(args.output / "scaling.csv", fit_scaling(rows),
