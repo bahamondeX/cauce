@@ -101,7 +101,7 @@ impl Generation {
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
         strategy: PoolStrategy,
     ) -> Arc<Self> {
-        let endpoints = config
+        let endpoints: HashMap<_, _> = config
             .upstreams
             .iter()
             .enumerate()
@@ -158,7 +158,14 @@ impl Generation {
                 r.application.as_ref().map(|settings| {
                     (
                         r.id.clone(),
-                        crate::application::config::Route::compile(settings),
+                        crate::application::config::Route::compile(
+                            endpoints[&r.upstreams[0]]
+                                .config
+                                .protocol
+                                .application()
+                                .expect("validated application protocol"),
+                            settings,
+                        ),
                     )
                 })
             })
@@ -1429,7 +1436,7 @@ impl Pool {
         attempt: &mut Option<Attempt>,
     ) -> Result<Connection> {
         let duration = Duration::from_millis(self.limits.connect_ms);
-        let transport = if e.config.protocol.application() {
+        let transport = if e.config.protocol.application().is_some() {
             let socket: crate::application::Socket =
                 if let Some(path) = e.config.address.strip_prefix("unix:") {
                     Box::new(

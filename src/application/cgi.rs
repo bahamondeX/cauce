@@ -1,3 +1,4 @@
+use super::config::Protocol;
 use crate::config::Limits;
 use anyhow::{ensure, Context, Result};
 use hyper::{
@@ -34,17 +35,51 @@ pub(super) fn params<B>(
                 && encoded.len() + name.len() + value.len() + 8 <= MAX_PARAMS,
             "invalid or oversized CGI parameters"
         );
-        super::fastcgi::encode_length(name.len(), &mut encoded);
-        super::fastcgi::encode_length(value.len(), &mut encoded);
-        encoded.extend_from_slice(name);
-        encoded.extend_from_slice(value);
+        match route.protocol {
+            Protocol::Fastcgi => {
+                super::fastcgi::encode_length(name.len(), &mut encoded);
+                super::fastcgi::encode_length(value.len(), &mut encoded);
+                encoded.extend_from_slice(name);
+                encoded.extend_from_slice(value);
+            }
+            Protocol::Uwsgi => {
+                for field in [name, value] {
+                    encoded.extend_from_slice(&(field.len() as u16).to_le_bytes());
+                    encoded.extend_from_slice(field);
+                }
+            }
+            Protocol::Scgi => {
+                for field in [name, value] {
+                    encoded.extend_from_slice(field);
+                    encoded.push(0);
+                }
+            }
+        }
         Ok(())
     };
+    append(b"CONTENT_LENGTH", length.as_bytes())?;
+    if route.protocol == Protocol::Scgi {
+        append(b"SCGI", b"1")?;
+    }
+    let script_name = route.settings.script_name.as_deref().unwrap_or("");
+    if let Some(path) = &route.script_path {
+        append(b"SCRIPT_FILENAME", path.as_bytes())?;
+        append(
+            b"DOCUMENT_ROOT",
+            route.settings.document_root.as_deref().unwrap().as_bytes(),
+        )?;
+        append(b"REDIRECT_STATUS", b"200")?;
+    } else {
+        let uri_path = request.uri().path();
+        let path_info = uri_path
+            .strip_prefix(script_name)
+            .filter(|path| path.is_empty() || path.starts_with('/'))
+            .unwrap_or(uri_path);
+        append(b"PATH_INFO", path_info.as_bytes())?;
+    }
     for (name, value) in [
         ("GATEWAY_INTERFACE", "CGI/1.1"),
-        ("SCRIPT_FILENAME", &route.script_path),
-        ("SCRIPT_NAME", &route.settings.script_name),
-        ("DOCUMENT_ROOT", &route.settings.document_root),
+        ("SCRIPT_NAME", script_name),
         ("REQUEST_URI", request_uri),
         ("QUERY_STRING", request.uri().query().unwrap_or("")),
         ("REQUEST_METHOD", request.method().as_str()),
@@ -54,8 +89,6 @@ pub(super) fn params<B>(
         ("REMOTE_ADDR", &remote_addr),
         ("REQUEST_SCHEME", if secure { "https" } else { "http" }),
         ("HTTPS", if secure { "on" } else { "off" }),
-        ("REDIRECT_STATUS", "200"),
-        ("CONTENT_LENGTH", &length),
     ] {
         append(name.as_bytes(), value.as_bytes())?;
     }

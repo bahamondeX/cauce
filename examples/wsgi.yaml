@@ -1,0 +1,68 @@
+# yaml-language-server: $schema=../schemas/cauce.schema.json
+version: 1
+proxy:
+  name: cauce
+  listen: "127.0.0.1:8080"
+  admin: "127.0.0.1:9090"
+
+  limits:
+    clients: 1024
+    requests: 256
+    connections: 64
+    idle_connections: 32
+    connecting: 8
+    acquire_ms: 250ms
+    connect_ms: 1s
+    headers_ms: 5s
+    stream_idle_ms: 15s
+    request_ms: 2m
+    client_headers_ms: 5s
+    idle_connection_ms: 10s
+    max_connection_age_ms: 1m
+    dns_cache_ms: 5s
+    tcp_keepalive_secs: 30s
+    max_header_bytes: 32KiB
+    max_headers: 64
+    max_body_bytes: 16MiB
+    shutdown_ms: 5s
+
+  logs:
+    enabled: false
+    path: logs/access.jsonl
+    queue: 4096
+    rotate_bytes: 16MiB
+    retained_files: 3
+
+  upstreams:
+    - id: python-uwsgi
+      address: "127.0.0.1:3031"
+      host: python.internal
+      isolation: python-app
+      protocol: uwsgi
+      connections: 16
+      idle_connections: 0
+      failure_backoff_ms: 500ms
+    - id: python-scgi
+      address: unix:/run/python/scgi.sock
+      host: python.internal
+      isolation: scgi-app
+      protocol: scgi
+      connections: 16
+      idle_connections: 0
+      failure_backoff_ms: 500ms
+  routes:
+    - id: python-uwsgi
+      host: "localhost:8080"
+      path_prefix: /uwsgi
+      upstreams: [python-uwsgi]
+      application:
+        script_name: /uwsgi
+        modifier1: 0
+        modifier2: 0
+    - id: python-scgi
+      host: "localhost:8080"
+      path_prefix: /scgi
+      upstreams: [python-scgi]
+      application:
+        script_name: /scgi
+        request_buffer_bytes: 262144

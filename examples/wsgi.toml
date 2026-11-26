@@ -1,0 +1,70 @@
+name = "cauce"
+listen = "127.0.0.1:8080"
+admin = "127.0.0.1:9090"
+
+[limits]
+clients = 1024
+requests = 256
+connections = 64
+idle_connections = 32
+connecting = 8
+acquire_ms = 250
+connect_ms = 1000
+headers_ms = 5000
+stream_idle_ms = 15000
+request_ms = 120000
+client_headers_ms = 5000
+idle_connection_ms = 10000
+max_connection_age_ms = 60000
+dns_cache_ms = 5000
+tcp_keepalive_secs = 30
+max_header_bytes = 32768
+max_headers = 64
+max_body_bytes = 16777216
+shutdown_ms = 5000
+
+[logs]
+enabled = false
+path = "logs/access.jsonl"
+queue = 4096
+rotate_bytes = 16777216
+retained_files = 3
+
+[[upstreams]]
+id = "python-uwsgi"
+address = "127.0.0.1:3031"
+host = "python.internal"
+isolation = "python-app"
+protocol = "uwsgi"
+connections = 16
+idle_connections = 0
+failure_backoff_ms = "500ms"
+
+[[upstreams]]
+id = "python-scgi"
+address = "unix:/run/python/scgi.sock"
+host = "python.internal"
+isolation = "scgi-app"
+protocol = "scgi"
+connections = 16
+idle_connections = 0
+failure_backoff_ms = "500ms"
+
+[[routes]]
+id = "python-uwsgi"
+host = "localhost:8080"
+path_prefix = "/uwsgi"
+upstreams = ["python-uwsgi"]
+[routes.application]
+script_name = "/uwsgi"
+modifier1 = 0
+modifier2 = 0
+
+[[routes]]
+id = "python-scgi"
+host = "localhost:8080"
+path_prefix = "/scgi"
+upstreams = ["python-scgi"]
+[routes.application]
+script_name = "/scgi"
+request_buffer_bytes = 262144

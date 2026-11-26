@@ -391,13 +391,22 @@ pub enum UpstreamProtocol {
     Http1,
     Http2,
     Fastcgi,
+    Uwsgi,
+    Scgi,
 }
 
 impl UpstreamProtocol {
-    pub fn application(self) -> bool {
-        matches!(self, Self::Fastcgi)
+    pub(crate) fn application(self) -> Option<crate::application::config::Protocol> {
+        use crate::application::config::Protocol;
+        match self {
+            Self::Fastcgi => Some(Protocol::Fastcgi),
+            Self::Uwsgi => Some(Protocol::Uwsgi),
+            Self::Scgi => Some(Protocol::Scgi),
+            Self::Http1 | Self::Http2 => None,
+        }
     }
 }
+
 #[derive(Clone, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct UpstreamTls {
@@ -657,7 +666,7 @@ impl Config {
         let mut ids = HashSet::new();
         for u in &self.upstreams {
             ensure!(
-                !u.protocol.application() || (u.health_check.is_none() && u.tls.is_none()),
+                u.protocol.application().is_none() || (u.health_check.is_none() && u.tls.is_none()),
                 "application upstreams require clear TCP or Unix and use passive health"
             );
             ensure!(
@@ -920,20 +929,23 @@ impl Config {
                     "weighted route ticket budget exceeded"
                 );
             }
-            let application = r.upstreams.iter().any(|name| {
+            let application = r.upstreams.iter().find_map(|name| {
                 protocols
                     .get(name.as_str())
-                    .is_some_and(|(protocol, _)| protocol.application())
+                    .and_then(|(protocol, _)| protocol.application())
             });
             ensure!(
-                r.application.is_some() == application,
+                r.application.is_some() == application.is_some(),
                 "application route requires explicit protocol settings"
             );
-            if let Some(settings) = &r.application {
-                settings.validate()?;
-                ensure!(r.content.is_none() && r.upstreams.iter().all(|name| protocols.get(name.as_str())
-                    .is_some_and(|(protocol, idle)| *protocol == UpstreamProtocol::Fastcgi && (settings.keep_connection || *idle == 0))),
-                    "FastCGI routes require matching endpoints and explicit keep_connection for idle sockets");
+            if let (Some(settings), Some(application)) = (&r.application, application) {
+                settings.validate(application)?;
+                ensure!(
+                    r.content.is_none()
+                        && r.upstreams.iter().all(|name| protocols.get(name.as_str()).is_some_and(|(protocol, idle)|
+                            protocol.application() == Some(application) && (settings.keep_connection || *idle == 0))),
+                    "application routes require a common protocol and explicit keepalive for idle sockets"
+                );
             }
             let unique: HashSet<_> = r.upstreams.iter().collect();
             ensure!(

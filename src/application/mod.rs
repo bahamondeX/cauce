@@ -2,7 +2,10 @@
 //! shared pool and yields it only after the protocol's terminal record.
 mod cgi;
 pub(crate) mod config;
+mod envelope;
 mod fastcgi;
+
+use config::Protocol;
 
 use crate::{body::ProxyBody, config::Limits, ClientIo};
 use anyhow::{bail, ensure, Context, Result};
@@ -127,15 +130,36 @@ pub(crate) async fn exchange(
         cgi::params(route, &public, client, secure, authority, length).inspect_err(|_| {
             upload_error.store(6, Ordering::Release);
         })?;
-    let mut begin = [0; 8];
-    begin[1] = 1; // FCGI_RESPONDER
-    begin[2] = u8::from(route.settings.keep_connection);
-    write_record(&mut socket, fastcgi::BEGIN, &begin).await?;
-    write_record(&mut socket, fastcgi::PARAMS, &params).await?;
-    write_record(&mut socket, fastcgi::PARAMS, b"").await?;
+    match route.protocol {
+        Protocol::Fastcgi => {
+            let mut begin = [0; 8];
+            begin[1] = 1; // FCGI_RESPONDER
+            begin[2] = u8::from(route.settings.keep_connection);
+            write_record(&mut socket, fastcgi::BEGIN, &begin).await?;
+            write_record(&mut socket, fastcgi::PARAMS, &params).await?;
+            write_record(&mut socket, fastcgi::PARAMS, b"").await?;
+        }
+        Protocol::Uwsgi => {
+            let prefix = envelope::uwsgi_prefix(
+                params.len(),
+                route.settings.modifier1.unwrap_or(0),
+                route.settings.modifier2.unwrap_or(0),
+            )
+            .expect("application parameter limit");
+            socket.write_all(&prefix).await?;
+            socket.write_all(&params).await?;
+        }
+        Protocol::Scgi => {
+            let prefix = envelope::scgi_prefix(params.len()).expect("application parameter limit");
+            socket.write_all(prefix.as_bytes()).await?;
+            socket.write_all(&params).await?;
+            socket.write_all(b",").await?;
+        }
+    }
     let (read, mut write) = tokio::io::split(socket);
     let mut reader = Reader {
         io: read,
+        protocol: route.protocol,
         pending: Bytes::new(),
         stdout_closed: false,
         stderr_closed: false,
@@ -145,7 +169,7 @@ pub(crate) async fn exchange(
         let mut sent = 0;
         if let Some(data) = buffered {
             for chunk in data.chunks(16 * 1024) {
-                write_record(&mut write, fastcgi::STDIN, chunk).await?;
+                write_upload(&mut write, route.protocol, chunk).await?;
             }
             sent = data.len() as u64;
         } else {
@@ -158,7 +182,7 @@ pub(crate) async fn exchange(
                     ));
                 }
                 for chunk in data.chunks(16 * 1024) {
-                    write_record(&mut write, fastcgi::STDIN, chunk).await?;
+                    write_upload(&mut write, route.protocol, chunk).await?;
                 }
                 sent += data.len() as u64;
             }
@@ -170,7 +194,9 @@ pub(crate) async fn exchange(
                 "application request body is truncated",
             ));
         }
-        write_record(&mut write, fastcgi::STDIN, b"").await?;
+        if route.protocol == Protocol::Fastcgi {
+            write_record(&mut write, fastcgi::STDIN, b"").await?;
+        }
         Ok::<_, anyhow::Error>(())
     };
     let ((), mut response) = tokio::try_join!(writing, reader.head(limits))?;
@@ -278,6 +304,18 @@ async fn next_upload(body: &mut ProxyBody, error: &AtomicU8) -> Result<Option<By
     }
 }
 
+async fn write_upload(
+    io: &mut (impl AsyncWrite + Unpin),
+    protocol: Protocol,
+    data: &[u8],
+) -> io::Result<()> {
+    if protocol == Protocol::Fastcgi {
+        write_record(io, fastcgi::STDIN, data).await
+    } else {
+        io.write_all(data).await
+    }
+}
+
 async fn write_record(io: &mut (impl AsyncWrite + Unpin), kind: u8, data: &[u8]) -> io::Result<()> {
     io.write_all(&fastcgi::header(
         kind,
@@ -289,6 +327,7 @@ async fn write_record(io: &mut (impl AsyncWrite + Unpin), kind: u8, data: &[u8])
 
 struct Reader<T> {
     io: T,
+    protocol: Protocol,
     pending: Bytes,
     stdout_closed: bool,
     stderr_closed: bool,
@@ -299,6 +338,7 @@ impl Reader<tokio::io::ReadHalf<Socket>> {
     fn unsplit(self, write: tokio::io::WriteHalf<Socket>) -> Reader<Socket> {
         Reader {
             io: self.io.unsplit(write),
+            protocol: self.protocol,
             pending: self.pending,
             stdout_closed: self.stdout_closed,
             stderr_closed: self.stderr_closed,
@@ -332,6 +372,10 @@ impl<T: AsyncRead + Unpin> Reader<T> {
     async fn data(&mut self) -> Result<Option<Bytes>> {
         if !self.pending.is_empty() {
             return Ok(Some(std::mem::take(&mut self.pending)));
+        }
+        if self.protocol != Protocol::Fastcgi {
+            let mut buffer = BytesMut::with_capacity(16 * 1024);
+            return Ok((self.io.read_buf(&mut buffer).await? != 0).then(|| buffer.freeze()));
         }
         loop {
             let mut header = [0; 8];

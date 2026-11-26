@@ -697,7 +697,9 @@
               "enum": [
                 "http1",
                 "http2",
-                "fastcgi"
+                "fastcgi",
+                "uwsgi",
+                "scgi"
               ]
             }
           ]
@@ -865,13 +867,14 @@
     "application": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["document_root", "script", "script_name"],
       "properties": {
         "document_root": {"$ref": "#/$defs/localPath"},
         "script": {"type": "string", "minLength": 5, "maxLength": 256},
         "script_name": {"type": "string", "minLength": 1, "maxLength": 256},
         "request_buffer_bytes": {"type": "integer", "minimum": 1, "maximum": 8388608},
-        "keep_connection": {"type": "boolean"}
+        "keep_connection": {"type": "boolean"},
+        "modifier1": {"type": "integer", "minimum": 0, "maximum": 255},
+        "modifier2": {"type": "integer", "minimum": 0, "maximum": 255}
       }
     },
     "route": {
