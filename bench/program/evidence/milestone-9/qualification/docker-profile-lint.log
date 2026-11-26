@@ -1,0 +1,13 @@
+#0 building with "lucid_benz" instance using docker-container driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.92kB 0.0s done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0
+#2 DONE 2.1s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 162B 0.1s done
+#3 DONE 0.2s
+Check complete, no warnings found.

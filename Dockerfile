@@ -2,7 +2,6 @@
 FROM --platform=$BUILDPLATFORM rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0 AS builder
 ARG TARGETARCH
 ARG BUILDARCH
-ARG CAUCE_PROFILE=full
 RUN case "$TARGETARCH" in \
       amd64) cauce_target=x86_64-unknown-linux-gnu ;; \
       arm64) cauce_target=aarch64-unknown-linux-gnu ;; \
@@ -18,6 +17,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY schemas ./schemas
 COPY examples/cauce.toml examples/cauce.yaml ./examples/
+ARG CAUCE_PROFILE=full
 RUN --mount=type=cache,id=cauce-registry,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,id=cauce-target-${TARGETARCH},target=/src/target,sharing=locked \
     case "$TARGETARCH" in \

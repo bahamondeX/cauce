@@ -78,11 +78,16 @@ allocation cost and container size remain unmeasured for this candidate.
 The Linux disk and NGINX fixtures used Full binaries from
 `36b73b1949d5179167624fd5d876f4df36c8e432`, built in the local ARM64
 guest. The proxy is 13,717,976 bytes and the collector is 5,860,480 bytes.
+The corresponding cross-built Linux AMD64 proxy is 15,766,136 bytes
+and the collector is 6,609,520 bytes. The AMD64 fixture verified the ELF
+architecture and hashes, then ran capability discovery and configuration
+validation under emulation.
 The main Darwin socket regression used a debug snapshot from that
 checkpoint. Later disk invalidation, listener retirement and mail DNS
 changes have separate focused evidence. The staging and evidence
 manifests record the source tree, lockfile hash and binary hashes.
 [Linux ARM64 identities](../bench/program/evidence/milestone-9/linux-arm64-release.txt)
+[Linux AMD64 identities and smoke check](../bench/program/evidence/milestone-9/qualification/linux-amd64/)
 [Evidence checksums](../bench/program/evidence/milestone-9/SHA256SUMS).
 
 ## Distribution checks

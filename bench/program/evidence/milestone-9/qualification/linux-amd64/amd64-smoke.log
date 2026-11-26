@@ -1,0 +1,5 @@
+x86_64
+0f55ffc08bcb6ef79ee01a1ea33758a89942e07800d310cfb7a2c6e55681745c  /milestone9/cauce
+99a8002f0357f8035d06122dce3a67c4c74473bf6af9e1373b151f83f68323e5  /milestone9/cauce-collector
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
