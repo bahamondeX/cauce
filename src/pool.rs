@@ -141,6 +141,9 @@ impl Generation {
     pub fn route(&self, host: &str, path: &str) -> Option<&Route> {
         self.routes.find(&self.config.routes, host, path)
     }
+    pub fn named_route(&self, host: &str, name: &str) -> Option<&Route> {
+        self.routes.named(&self.config.routes, host, name)
+    }
     pub fn select(&self, route: &Route) -> Option<Arc<Endpoint>> {
         let start = self.cursor.fetch_add(1, Ordering::Relaxed);
         let mut candidates = (0..route.upstreams.len()).filter_map(|i| {
@@ -1549,6 +1552,7 @@ mod pool_tests {
                 path_match: crate::config::PathMatch::Prefix,
                 path_pattern: None,
                 headers: None,
+                action: None,
                 balance: Balance::RoundRobin,
                 upstreams: vec!["backend".into()],
             }],

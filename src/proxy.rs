@@ -149,7 +149,7 @@ fn invalid_framing(headers: &HeaderMap) -> bool {
                 })
         })
 }
-fn normal_path(path: &str) -> bool {
+pub(crate) fn normal_path(path: &str) -> bool {
     // Routing rejects ambiguous encodings rather than guessing backend normalization.
     if path.contains(['\\', '#']) || path.contains("//") {
         return false;
@@ -434,12 +434,73 @@ pub async fn handle(
             || serde_json::json!({"peer": peer_ip, "client": identity.client, "request_id": id}),
         );
     }
-    let route = match generation.route(&host, req.uri().path()) {
+    let mut route = match generation.route(&host, req.uri().path()) {
         Some(route) => route,
         None => {
             reject!(NOT_FOUND, "route_not_found");
         }
     };
+    if route.action.is_some() {
+        let mut rewritten: Option<hyper::http::uri::PathAndQuery> = None;
+        for hop in 0..=10 {
+            let Some(action) = &route.action else { break };
+            let (path, args) = rewritten.as_ref().map_or_else(
+                || (req.uri().path(), req.uri().query()),
+                |uri| (uri.path(), uri.query()),
+            );
+            match action.apply(path, args) {
+                Err(()) => reject!(BAD_REQUEST, "invalid_rewrite_destination"),
+                Ok(None) => break,
+                Ok(Some(crate::actions::Outcome::Redirect(status, location))) => {
+                    if let Some(mut event) = event {
+                        event.route_id = Some(route.id.clone());
+                        event.status = status.as_u16();
+                        event.outcome = "success";
+                        event.duration_ms = ms(started);
+                        state.logger.emit(event);
+                    }
+                    state
+                        .logger
+                        .metrics
+                        .responses
+                        .fetch_add(1, Ordering::Relaxed);
+                    let mut response = reply(status, "");
+                    response
+                        .headers_mut()
+                        .insert(hyper::header::LOCATION, location);
+                    response
+                        .headers_mut()
+                        .insert(X_REQUEST_ID, HeaderValue::from_str(&id).unwrap());
+                    return Ok(response);
+                }
+                Ok(Some(outcome)) => {
+                    if hop == 10 {
+                        reject!(INTERNAL_SERVER_ERROR, "internal_redirect_limit");
+                    }
+                    let next = match outcome {
+                        crate::actions::Outcome::Rewrite(target) => {
+                            let next = generation.route(&host, target.path());
+                            rewritten = Some(target);
+                            next
+                        }
+                        crate::actions::Outcome::Named(name) => {
+                            generation.named_route(&route.host, name)
+                        }
+                        crate::actions::Outcome::Redirect(..) => unreachable!(),
+                    };
+                    let Some(next) = next else {
+                        reject!(NOT_FOUND, "route_not_found")
+                    };
+                    route = next;
+                }
+            }
+        }
+        if let Some(target) = rewritten {
+            let mut parts = req.uri().clone().into_parts();
+            parts.path_and_query = Some(target);
+            *req.uri_mut() = hyper::Uri::from_parts(parts).expect("validated internal URI");
+        }
+    }
     if let Some(event) = &mut event {
         event.route_id = Some(route.id.clone());
         event.path = (!route.path_prefix.is_empty()).then(|| route.path_prefix.clone());

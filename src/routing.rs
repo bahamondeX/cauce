@@ -9,6 +9,11 @@ const REGEXES_PER_CONFIG: usize = 128;
 
 pub struct Routes {
     single: bool,
+    #[expect(
+        clippy::box_collection,
+        reason = "avoid an inline map without named locations"
+    )]
+    named: Option<Box<HashMap<String, HashMap<String, usize>>>>,
     hosts: HashMap<String, Host>,
     #[expect(
         clippy::box_collection,
@@ -117,11 +122,23 @@ impl Routes {
     pub fn compile(routes: &[Route]) -> Result<Self> {
         let mut hosts = HashMap::<String, Host>::new();
         let mut wildcards = None;
+        let mut named: Option<Box<HashMap<String, HashMap<String, usize>>>> = None;
         let single = matches!(routes, [route]
             if route.path_match == PathMatch::Prefix && !route.host.contains('*'));
         let mut regex_count = 0;
         if !single {
             for (id, route) in routes.iter().enumerate() {
+                if route.path_match == PathMatch::Named {
+                    named
+                        .get_or_insert_with(Box::default)
+                        .entry(route.host.clone())
+                        .or_default()
+                        .insert(
+                            route.path_pattern.clone().expect("validated named route"),
+                            id,
+                        );
+                    continue;
+                }
                 let index = if let Some(pattern) = wildcard(&route.host) {
                     let by_port = wildcards.get_or_insert_with(|| Box::new(HashMap::new()));
                     let group: &mut WildcardHosts =
@@ -179,11 +196,31 @@ impl Routes {
                 }
             }
         }
-        Ok(Self {
+        let compiled = Self {
             single,
+            named,
             hosts,
             wildcards,
-        })
+        };
+        for route in routes {
+            if let Some(name) = route
+                .action
+                .as_deref()
+                .and_then(crate::actions::Action::named)
+            {
+                ensure!(
+                    compiled.named(routes, &route.host, name).is_some(),
+                    "unknown named location on route {}",
+                    route.id
+                );
+            }
+        }
+        Ok(compiled)
+    }
+
+    pub fn named<'a>(&self, routes: &'a [Route], host: &str, name: &str) -> Option<&'a Route> {
+        let index = self.named.as_ref()?.get(host)?.get(name)?;
+        routes.get(*index)
     }
 
     pub fn find<'a>(&self, routes: &'a [Route], host: &str, path: &str) -> Option<&'a Route> {
@@ -298,6 +335,7 @@ mod tests {
             path_match: PathMatch::Prefix,
             path_pattern: None,
             headers: None,
+            action: None,
             balance: Balance::RoundRobin,
             upstreams: vec!["origin".into()],
         }

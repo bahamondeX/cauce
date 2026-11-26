@@ -317,6 +317,8 @@ pub struct Route {
     pub path_match: PathMatch,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub headers: Option<Box<crate::headers::Policy>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) action: Option<Box<crate::actions::Action>>,
     pub balance: Balance,
     pub upstreams: Vec<String>,
 }
@@ -339,6 +341,7 @@ pub enum PathMatch {
     PrefixNoRegex,
     Regex,
     RegexInsensitive,
+    Named,
 }
 
 impl PathMatch {
@@ -356,7 +359,7 @@ pub enum Balance {
     RoundRobin,
     LeastInflight,
 }
-fn identifier(s: &str) -> bool {
+pub(crate) fn identifier(s: &str) -> bool {
     !s.is_empty()
         && s.len() <= 64
         && s.bytes()
@@ -557,6 +560,17 @@ impl Config {
                 );
             }
         }
+        ensure!(
+            self.routes
+                .iter()
+                .filter(|route| route
+                    .action
+                    .as_ref()
+                    .is_some_and(|action| !action.unconditional()))
+                .count()
+                <= 128,
+            "at most 128 action patterns"
+        );
         let mut route_ids = HashSet::new();
         let mut matches = HashSet::new();
         for r in &self.routes {
@@ -576,7 +590,18 @@ impl Config {
                 );
                 let _: hyper::http::uri::Authority = r.host.parse()?;
             }
-            let (path, match_kind) = if r.path_match.is_regex() {
+            let (path, match_kind) = if r.path_match == PathMatch::Named {
+                let name = r
+                    .path_pattern
+                    .as_deref()
+                    .filter(|name| identifier(name))
+                    .context("named route requires a location identifier")?;
+                ensure!(
+                    r.path_prefix.is_empty(),
+                    "named route requires path_pattern only"
+                );
+                (name, PathMatch::Named)
+            } else if r.path_match.is_regex() {
                 ensure!(
                     r.path_prefix.is_empty(),
                     "regex route requires path_pattern only"
@@ -607,7 +632,11 @@ impl Config {
                 "duplicate route match"
             );
             ensure!(
-                !r.upstreams.is_empty() && r.upstreams.iter().all(|id| ids.contains(id)),
+                (!r.upstreams.is_empty()
+                    || r.action
+                        .as_ref()
+                        .is_some_and(|action| action.unconditional()))
+                    && r.upstreams.iter().all(|id| ids.contains(id)),
                 "unknown or empty route upstreams"
             );
             let unique: HashSet<_> = r.upstreams.iter().collect();
