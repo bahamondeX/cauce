@@ -1,0 +1,28 @@
+{
+  "local_archives": [
+    {
+      "path": "work/milestone-3/amd64-results-verified.tar.gz",
+      "sha256": "e03643c91d560aca703582aff1bc8a74feb8970738cebd53cf29ad5fc5627d37",
+      "bytes": 248576224,
+      "reference": "guest"
+    },
+    {
+      "path": "work/milestone-3/amd64-supplement-verified.tar.gz",
+      "sha256": "b8ce76f492dc26764e01ca20f8bca0487a3867564586a0d7847c3da36d0b3f08",
+      "bytes": 39563098,
+      "reference": "guest"
+    },
+    {
+      "path": "work/milestone-3/arm64-final-input.tar.gz",
+      "sha256": "3f7899f0a52e7e1a94a0b68df62fdd8f30bf0ba54c0f8a40750faae422a57ee5",
+      "bytes": 101452404,
+      "reference": "local staged, unused"
+    },
+    {
+      "path": "work/milestone-3/amd64-input.tar.gz",
+      "sha256": "9b7f792a7c4b16f16f47811d1ad7752fe3ef8f466aa9fd176391b39a6724144d",
+      "bytes": 69320009,
+      "reference": "local staged, guest verified individual inputs"
+    }
+  ]
+}

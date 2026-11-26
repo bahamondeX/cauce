@@ -1,0 +1,16 @@
+./campaign-exit-status: OK
+./first-pass/raw offer.jsonl: OK
+./host-after.json: OK
+./host-before.json: OK
+./input-checksums.log: OK
+./pmu.json: OK
+./toolchain.log: OK
+./transport.log: OK
+./campaign-exit-status: OK
+./first-pass/raw offer.jsonl: OK
+./host-after.json: OK
+./host-before.json: OK
+./input-checksums.log: OK
+./pmu.json: OK
+./toolchain.log: OK
+{"staged_checksum_smoke":"passed both campaign exit paths"}

@@ -1,0 +1,77 @@
+{
+  "region": "us-east-1",
+  "account_suffix": "6271",
+  "authorized_usd": 10,
+  "resources": {
+    "arm64_attempts": [
+      {
+        "instance_id": "i-07ac635b5d318b3b1",
+        "launch": "2026-11-26T04:21:50Z",
+        "terminate_requested": "2026-11-26T04:28:25Z",
+        "independently_verified": "2026-11-26T04:31:01Z",
+        "instance_type": "c7g.4xlarge",
+        "os": "Ubuntu 24.04",
+        "instance_state": "terminated",
+        "tagged_volumes": 0,
+        "tagged_interfaces": 0,
+        "tagged_security_groups": 0,
+        "result": "SSH refused"
+      },
+      {
+        "instance_id": "i-0f24838c6f20223dc",
+        "launch": "2026-11-26T04:32:03Z",
+        "terminate_requested": "2026-11-26T04:39:13Z",
+        "independently_verified": "2026-11-26T04:42:50Z",
+        "instance_type": "c7g.4xlarge",
+        "os": "Ubuntu 24.04",
+        "instance_state": "terminated",
+        "tagged_volumes": 0,
+        "tagged_interfaces": 0,
+        "tagged_security_groups": 0,
+        "result": "SSH refused"
+      }
+    ],
+    "amd64": {
+      "instance_type": "c7a.4xlarge",
+      "instance_id": "i-0c096fff684757a2b",
+      "security_group_id": "sg-0b8c7201448187b16",
+      "lab_tag": "cauce-m3-amd64-20261126t044312",
+      "launch": "2026-11-26T04:43:20Z",
+      "expires_at": "2026-11-26T06:43:12Z",
+      "guest_expiry_timer_verified": "2026-11-26T06:31:30Z",
+      "guest_poweroff_accepted": "2026-11-26T06:24:04Z",
+      "ssh_probe_timeout": "2026-11-26T06:24:13Z",
+      "instance_initiated_shutdown": "terminate",
+      "control_plane_cleanup": "pending authenticated verification",
+      "tagged_volume_and_interface_cleanup": "pending authenticated verification",
+      "security_group_cleanup": "pending authenticated deletion",
+      "second_ssh_probe_timeout": "2026-11-26T06:31:05Z"
+    },
+    "iam": {
+      "profile": "cauce-m3-native-20261126-ssm",
+      "role": "cauce-m3-native-20261126-ssm",
+      "managed_policy": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
+      "cleanup": "pending authenticated removal"
+    }
+  },
+  "common_controls": {
+    "root_volume": "40 GiB encrypted gp3 with deletion on termination",
+    "network": "ephemeral IPv4 and SSH restricted to the operator's source /32",
+    "tags": {
+      "Project": "Cauce",
+      "Purpose": "milestone-3-native-performance",
+      "ExpiresAt": "per lab",
+      "CauceLab": "per launch"
+    },
+    "parallel_instances": 1
+  },
+  "model": {
+    "prelaunch_projection_usd": 3.78,
+    "startup_failure_reserve_usd": 0.25,
+    "observed_duration_estimate_usd": 2.14,
+    "deadline_duration_estimate_usd": 2.47,
+    "egress_gb_reserved": 2,
+    "tax_fraction_reserved": 0.25,
+    "actual_invoiced_usd": null
+  }
+}

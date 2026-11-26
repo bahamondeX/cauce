@@ -1,0 +1,14 @@
+proxy,phase,offered_per_s,goodput_per_s,cell_qualified
+Cauce · one worker,confirm-7500,7500,7500.0,True
+Cauce · one worker,ramp-1000,1000,1000.0,True
+Cauce · one worker,ramp-2000,2000,2000.0,True
+Cauce · one worker,ramp-4000,4000,4000.0,True
+Cauce · one worker,ramp-500,500,500.0,True
+Cauce · one worker,ramp-8000,8000,8000.0,False
+Cauce · one worker,refine-6000,6000,6000.0,True
+Cauce · one worker,refine-7000,7000,7000.0,True
+Cauce · one worker,refine-7500,7500,7500.0,True
+NGINX · one worker,confirm-8000,8000,8000.0,True
+NGINX · one worker,ramp-1000,1000,1000.0,True
+NGINX · one worker,ramp-4000,4000,4000.0,True
+NGINX · one worker,ramp-8000,8000,8000.0,True

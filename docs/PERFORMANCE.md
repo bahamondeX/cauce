@@ -1,5 +1,17 @@
 # Performance evidence
 
+## Milestone 3 native AMD64
+
+Seven qualified one-worker HTTP/1.1 cleartext pairs at 1,000 offers/s
+with logs disabled showed 40 µs CPU per success for Cauce `47da8fe`
+and 46 µs for NGINX OSS 1.30.8. Median p99 was 152.90 µs for Cauce
+and 147.03 µs for NGINX. The 60-second confirmations reached 7,500/s
+for Cauce and an 8,000/s lower bound for NGINX. Control failures
+leave the Cauce worker-scaling and competitive saturation gates open.
+The AMD64 campaign retains distinct perf runs and a successful
+two-worker transport replay. ARM64 remains blocked at lab access.
+[Native report, statistics, and raw evidence](PERFORMANCE-NATIVE.md).
+
 ## Route matching, Darwin ARM64
 
 The 0.9.1 request handler scanned every configured route, then cloned the winning route. At the 1,024-route configuration limit, it ran up to 1,024 host comparisons per request and up to 1,024 prefix checks when one authority owned the routes. Pool inspection found one mutex protecting both HTTP/1 and HTTP/2 indexes, including scans during reuse and periodic sweep. Measure contention under multi-worker, multi-endpoint load before changing the pool design.

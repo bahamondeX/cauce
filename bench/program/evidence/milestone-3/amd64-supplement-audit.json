@@ -1,0 +1,71 @@
+{
+  "runs": {
+    "cauce-2w-conservative": {
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 80000
+      }
+    },
+    "cauce-4w-conservative": {
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 80000
+      }
+    },
+    "nginx-1w-conservative": {
+      "confirm-8000": {
+        "offers": 480000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 480000
+      },
+      "control-after": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-4000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "ramp-8000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      }
+    }
+  },
+  "measured_offers": 915000
+}

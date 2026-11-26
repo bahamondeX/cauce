@@ -139,5 +139,28 @@ EC2 offers multiple Nitro form factors and guest PMU capability must be
 observed in the running guest.
 [AWS Nitro instance form factors](https://docs.aws.amazon.com/ec2/latest/instancetypes/ec2-nitro-instances.html).
 
-Provisioning and cleanup permissions have not been exercised against live
-resources. This preflight created no resources and left no lab charges.
+The Milestone 2C preflight created no resources. Milestone 3 used a
+separate two-hour-per-host budget with prebuilt release bundles and
+Amazon Linux 2023 for the working AMD64 host. The recorded AWS session,
+timer and cleanup status belong to that campaign. Use its report for
+measured results and its latest resource state.
+[Milestone 3 native qualification](PERFORMANCE-NATIVE.md)
+[Environment manifests](../bench/program/evidence/milestone-3/native-environments.json).
+
+On a prepared host, extract the matching archive into a new directory.
+The staged runner verifies artifact checksums, probes host and PMU
+capability, and runs the campaign over loopback.
+
+```bash
+cd /var/tmp/cauce-native-stage
+bench/program/native-run-staged.sh /var/tmp/cauce-native-results
+(cd /var/tmp/cauce-native-results && sha256sum -c SHA256SUMS)
+python3 bench/program/audit-native-first-pass.py \
+  /var/tmp/cauce-native-results /var/tmp/cauce-native-audit
+```
+
+Allow separate time for retrieval within the account's shutdown deadline.
+Keep the profiling executable's symbols or a matching debug artifact.
+After retrieval, verify the archive checksum before shutting down and
+independently verify instance, volume, network interface and temporary IAM
+resource cleanup in the authorized account.

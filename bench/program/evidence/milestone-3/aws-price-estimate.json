@@ -1,0 +1,16 @@
+{
+  "catalog_publication": "\"Publication Date\",\"2026-11-24T23:14:17Z\"",
+  "region": "us-east-1",
+  "prices": {
+    "c7g.4xlarge": "0.5800000000",
+    "gp3": "0.0800000000",
+    "c7a.4xlarge": "0.8211200000",
+    "public_ipv4": "0.005",
+    "outbound_base": "0.09"
+  },
+  "hours_per_host": 2.0,
+  "volume_gib": 40,
+  "egress_gb_reserved": 2,
+  "tax_fraction_reserved": 0.25,
+  "projected_total_usd": "3.78"
+}

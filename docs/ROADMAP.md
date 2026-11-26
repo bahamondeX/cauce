@@ -79,7 +79,7 @@ before selecting a new pool, timer design or runtime setting.
 Statuses and evidence live in [the compatibility registry](../compatibility/nginx-oss.yaml) and [program status](../STATUS.md).
 
 
-Milestone 2C is the current gate before functional expansion. The compact
+Milestone 2C was the gate before functional expansion. The compact
 pool remains the default with endpoint sharding available for experiments.
 Native hardware and qualified competitive results remain pending. Resume
 with the ARM64 and AMD64 campaigns, repeat the transport-tail diagnosis,
@@ -87,3 +87,23 @@ and use the native paired pool comparisons to decide whether to automate
 strategy selection.
 [Milestone 2C report](PERFORMANCE-MILESTONE-2C.md)
 [Compatibility backlog ordered by migration impact](NGINX-COMPATIBILITY-BACKLOG.md).
+
+## Milestone 3
+
+The native qualification, functional parity and production readiness
+tracks advance independently. The first functional slice implements
+wildcard virtual hosts and literal exact locations, with NGINX socket
+comparison and YAML reload/rollback validation. The migration preview
+covers the corresponding literal subset and reports confidence. Continue
+from the migration and protocol gaps in the source-derived registry.
+[Functional parity report](FUNCTIONAL-PARITY.md)
+[Native qualification](PERFORMANCE-NATIVE.md).
+
+The AMD64 benchmark establishes one matched HTTP/1.1 comparison and
+several confirmed capacity points. Resume ARM64 after independent
+AWS cleanup verification. Requalify generator and backend headroom
+before multicore scaling, sustain a clean stability run, and compare
+the corrected compact and sharded implementations with seven
+paired repetitions. The production-readiness queue includes richer
+migration diagnostics, supply-chain inventory and protocol-boundary
+validation. [Production status](../STATUS.md).

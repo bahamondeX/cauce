@@ -1,0 +1,290 @@
+{
+  "qualified_pairs": 7,
+  "runs": [
+    {
+      "repeat": 1,
+      "order": [
+        "nginx",
+        "cauce"
+      ],
+      "qualified": true,
+      "metrics": {
+        "nginx": {
+          "cpu_us_per_success": 48.0,
+          "rss_peak_bytes": 6328320,
+          "pss_end_bytes": 6369280,
+          "reused_requests": 6998,
+          "p50_ns": 112939,
+          "p95_ns": 126229,
+          "p99_ns": 147033,
+          "p99.9_ns": 778239
+        },
+        "cauce": {
+          "cpu_us_per_success": 42.0,
+          "rss_peak_bytes": 5955584,
+          "pss_end_bytes": 3979264,
+          "reused_requests": 6997,
+          "p50_ns": 118856,
+          "p95_ns": 136599,
+          "p99_ns": 152703,
+          "p99.9_ns": 1706250
+        }
+      }
+    },
+    {
+      "repeat": 2,
+      "order": [
+        "nginx",
+        "cauce"
+      ],
+      "qualified": true,
+      "metrics": {
+        "nginx": {
+          "cpu_us_per_success": 46.0,
+          "rss_peak_bytes": 6348800,
+          "pss_end_bytes": 6389760,
+          "reused_requests": 6997,
+          "p50_ns": 115552,
+          "p95_ns": 134211,
+          "p99_ns": 149704,
+          "p99.9_ns": 1507215
+        },
+        "cauce": {
+          "cpu_us_per_success": 42.0,
+          "rss_peak_bytes": 6090752,
+          "pss_end_bytes": 4168704,
+          "reused_requests": 6996,
+          "p50_ns": 118155,
+          "p95_ns": 137015,
+          "p99_ns": 153009,
+          "p99.9_ns": 1028335
+        }
+      }
+    },
+    {
+      "repeat": 3,
+      "order": [
+        "nginx",
+        "cauce"
+      ],
+      "qualified": true,
+      "metrics": {
+        "nginx": {
+          "cpu_us_per_success": 46.0,
+          "rss_peak_bytes": 6336512,
+          "pss_end_bytes": 6373376,
+          "reused_requests": 6998,
+          "p50_ns": 115630,
+          "p95_ns": 131720,
+          "p99_ns": 147895,
+          "p99.9_ns": 572394
+        },
+        "cauce": {
+          "cpu_us_per_success": 40.0,
+          "rss_peak_bytes": 6070272,
+          "pss_end_bytes": 4103168,
+          "reused_requests": 6997,
+          "p50_ns": 117477,
+          "p95_ns": 136330,
+          "p99_ns": 147240,
+          "p99.9_ns": 811532
+        }
+      }
+    },
+    {
+      "repeat": 4,
+      "order": [
+        "cauce",
+        "nginx"
+      ],
+      "qualified": true,
+      "metrics": {
+        "cauce": {
+          "cpu_us_per_success": 38.0,
+          "rss_peak_bytes": 5992448,
+          "pss_end_bytes": 4019200,
+          "reused_requests": 6996,
+          "p50_ns": 116171,
+          "p95_ns": 134953,
+          "p99_ns": 152896,
+          "p99.9_ns": 860879
+        },
+        "nginx": {
+          "cpu_us_per_success": 46.0,
+          "rss_peak_bytes": 6283264,
+          "pss_end_bytes": 6316032,
+          "reused_requests": 6997,
+          "p50_ns": 115698,
+          "p95_ns": 131336,
+          "p99_ns": 147375,
+          "p99.9_ns": 562153
+        }
+      }
+    },
+    {
+      "repeat": 5,
+      "order": [
+        "nginx",
+        "cauce"
+      ],
+      "qualified": true,
+      "metrics": {
+        "nginx": {
+          "cpu_us_per_success": 48.0,
+          "rss_peak_bytes": 6328320,
+          "pss_end_bytes": 6365184,
+          "reused_requests": 6998,
+          "p50_ns": 116140,
+          "p95_ns": 131582,
+          "p99_ns": 146544,
+          "p99.9_ns": 1029722
+        },
+        "cauce": {
+          "cpu_us_per_success": 42.0,
+          "rss_peak_bytes": 5935104,
+          "pss_end_bytes": 3989504,
+          "reused_requests": 6996,
+          "p50_ns": 115101,
+          "p95_ns": 133262,
+          "p99_ns": 158365,
+          "p99.9_ns": 1605011
+        }
+      }
+    },
+    {
+      "repeat": 6,
+      "order": [
+        "cauce",
+        "nginx"
+      ],
+      "qualified": true,
+      "metrics": {
+        "cauce": {
+          "cpu_us_per_success": 40.0,
+          "rss_peak_bytes": 6037504,
+          "pss_end_bytes": 4054016,
+          "reused_requests": 6997,
+          "p50_ns": 118367,
+          "p95_ns": 136106,
+          "p99_ns": 157281,
+          "p99.9_ns": 968852
+        },
+        "nginx": {
+          "cpu_us_per_success": 46.0,
+          "rss_peak_bytes": 6328320,
+          "pss_end_bytes": 6361088,
+          "reused_requests": 6998,
+          "p50_ns": 116079,
+          "p95_ns": 134056,
+          "p99_ns": 147021,
+          "p99.9_ns": 1091424
+        }
+      }
+    },
+    {
+      "repeat": 7,
+      "order": [
+        "nginx",
+        "cauce"
+      ],
+      "qualified": true,
+      "metrics": {
+        "nginx": {
+          "cpu_us_per_success": 46.0,
+          "rss_peak_bytes": 6336512,
+          "pss_end_bytes": 6369280,
+          "reused_requests": 6997,
+          "p50_ns": 116027,
+          "p95_ns": 128845,
+          "p99_ns": 146796,
+          "p99.9_ns": 980230
+        },
+        "cauce": {
+          "cpu_us_per_success": 40.0,
+          "rss_peak_bytes": 6012928,
+          "pss_end_bytes": 4073472,
+          "reused_requests": 6996,
+          "p50_ns": 116081,
+          "p95_ns": 134097,
+          "p99_ns": 151822,
+          "p99.9_ns": 785307
+        }
+      }
+    }
+  ],
+  "practical_improvement": 0.05,
+  "metrics": {
+    "cpu_us_per_success": {
+      "cauce_median": 40.0,
+      "nginx_median": 46.0,
+      "median_paired_difference": -6.0,
+      "difference_ci95": [
+        -6.0,
+        -6.0
+      ]
+    },
+    "rss_peak_bytes": {
+      "cauce_median": 6012928,
+      "nginx_median": 6328320,
+      "median_paired_difference": -290816,
+      "difference_ci95": [
+        -372736,
+        -266240
+      ]
+    },
+    "pss_end_bytes": {
+      "cauce_median": 4054016,
+      "nginx_median": 6369280,
+      "median_paired_difference": -2296832,
+      "difference_ci95": [
+        -2375680,
+        -2270208
+      ]
+    },
+    "reused_requests": {
+      "cauce_median": 6996,
+      "nginx_median": 6998,
+      "median_paired_difference": -1,
+      "difference_ci95": [
+        -1,
+        -1
+      ]
+    },
+    "p50_ns": {
+      "cauce_median": 117477,
+      "nginx_median": 115698,
+      "median_paired_difference": 1847,
+      "difference_ci95": [
+        54,
+        2603
+      ]
+    },
+    "p95_ns": {
+      "cauce_median": 136106,
+      "nginx_median": 131582,
+      "median_paired_difference": 3617,
+      "difference_ci95": [
+        2050,
+        5252
+      ]
+    },
+    "p99_ns": {
+      "cauce_median": 152896,
+      "nginx_median": 147033,
+      "median_paired_difference": 5521,
+      "difference_ci95": [
+        3305,
+        10260
+      ]
+    },
+    "p99.9_ns": {
+      "cauce_median": 968852,
+      "nginx_median": 980230,
+      "median_paired_difference": 239138,
+      "difference_ci95": [
+        -194923,
+        575289
+      ]
+    }
+  }
+}

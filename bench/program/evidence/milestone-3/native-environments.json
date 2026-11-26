@@ -1,0 +1,62 @@
+{
+  "region": "us-east-1",
+  "shared_cpu_sets": {
+    "proxy": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "generator": [
+      8,
+      9
+    ],
+    "backend": [
+      10
+    ],
+    "sampler": [
+      11
+    ]
+  },
+  "amd64": {
+    "instance_type": "c7a.4xlarge",
+    "os": "Amazon Linux 2023",
+    "cpu_topology": "16 single-threaded vCPUs",
+    "virt": "EC2 Nitro",
+    "architecture": "x86_64",
+    "kernel": "6.18.62-127.179.amzn2023.x86_64",
+    "proxy_revision": "47da8fe",
+    "node": "24.11.1",
+    "nginx": "1.30.8",
+    "input_sha256": "9b7f792a7c4b16f16f47811d1ad7752fe3ef8f466aa9fd176391b39a6724144d",
+    "host_facts": "amd64-primary-metadata.tar.gz",
+    "outcome": "qualified for recorded workload scopes"
+  },
+  "arm64": {
+    "instance_type": "c7g.4xlarge",
+    "os_attempted": "Ubuntu 24.04",
+    "os_staged": "Amazon Linux 2023",
+    "staged_ami": "ami-04af8b6fff5606f81",
+    "staged_ami_root": "/dev/xvda",
+    "virt": "EC2 Nitro",
+    "architecture": "aarch64",
+    "expected_vcpus": 16,
+    "input_sha256": "3f7899f0a52e7e1a94a0b68df62fdd8f30bf0ba54c0f8a40750faae422a57ee5",
+    "proxy_revisions": [
+      "47da8fe",
+      "ba6f952",
+      "1dfdd3c"
+    ],
+    "node": "24.11.1",
+    "nginx": "1.30.8",
+    "haproxy": "3.4.8",
+    "pingora": "0.9.1",
+    "pmu": null,
+    "outcome": "blocked before workload execution",
+    "runner_revision": "8778679"
+  }
+}

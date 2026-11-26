@@ -1,0 +1,989 @@
+{
+  "runs": {
+    "cauce-1w": {
+      "confirm-7500": {
+        "offers": 450000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 450000
+      },
+      "control-after": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-2000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "control-before-500": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-2000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "ramp-4000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "ramp-500": {
+        "offers": 2500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 2500
+      },
+      "ramp-8000": {
+        "offers": 40000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 40000
+      },
+      "refine-6000": {
+        "offers": 30000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 30000
+      },
+      "refine-7000": {
+        "offers": 35000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 35000
+      },
+      "refine-7500": {
+        "offers": 37500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 37500
+      }
+    },
+    "cauce-2w": {
+      "confirm-15000": {
+        "offers": 900000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 900000
+      },
+      "control-after": {
+        "offers": 160000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-16000": {
+        "offers": 160000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-2000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "control-before-500": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-16000": {
+        "offers": 80000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-2000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "ramp-4000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "ramp-500": {
+        "offers": 2500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 2500
+      },
+      "ramp-8000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "refine-12000": {
+        "offers": 60000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 60000
+      },
+      "refine-14000": {
+        "offers": 70000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 70000
+      },
+      "refine-15000": {
+        "offers": 75000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 75000
+      }
+    },
+    "cauce-4w": {
+      "confirm-16000": {
+        "offers": 960000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 959958
+      },
+      "control-after": {
+        "offers": 160000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-16000": {
+        "offers": 160000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-2000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "control-before-500": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-16000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-2000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "ramp-4000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "ramp-500": {
+        "offers": 2500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 2500
+      },
+      "ramp-8000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      }
+    },
+    "cauce-8w": {
+      "confirm-8000": {
+        "offers": 480000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 480000
+      },
+      "control-after": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-16000": {
+        "offers": 160000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-2000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "control-before-500": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-2000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "ramp-4000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "ramp-500": {
+        "offers": 2500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 2500
+      },
+      "ramp-8000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      }
+    },
+    "cauce-h2-1w": {
+      "confirm-2000": {
+        "offers": 120000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 120000
+      },
+      "control-after": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-2000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 39959
+      },
+      "control-before-500": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-2000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "ramp-500": {
+        "offers": 2500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 2500
+      }
+    },
+    "nginx-1w": {
+      "confirm-16000": {
+        "offers": 960000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 959986
+      },
+      "control-after": {
+        "offers": 160000,
+        "qualified": false,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-1000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before-16000": {
+        "offers": 160000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 160000
+      },
+      "control-before-2000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "control-before-4000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      },
+      "control-before-500": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "control-before-8000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-1000": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      },
+      "ramp-16000": {
+        "offers": 80000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 80000
+      },
+      "ramp-2000": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "ramp-4000": {
+        "offers": 20000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 20000
+      },
+      "ramp-500": {
+        "offers": 2500,
+        "qualified": true,
+        "invalid": [],
+        "successful": 2500
+      },
+      "ramp-8000": {
+        "offers": 40000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 40000
+      }
+    },
+    "pair-1-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-1-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-2-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-2-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-3-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-3-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-4-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-4-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-5-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-5-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-6-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-6-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-7-cauce": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pair-7-nginx": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-compact-1": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-compact-16": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-compact-256": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-compact-4": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-compact-64": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-sharded-1": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-sharded-16": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-sharded-256": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-sharded-4": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    },
+    "pool-sharded-64": {
+      "control-after": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "control-before": {
+        "offers": 10000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 10000
+      },
+      "matched": {
+        "offers": 5000,
+        "qualified": true,
+        "invalid": [],
+        "successful": 5000
+      }
+    }
+  },
+  "measured_offers": 7572500
+}

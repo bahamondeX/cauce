@@ -1,0 +1,4 @@
+run,status,confirmed_goodput_per_s,interpretation,first_failing_rate,control_limited_rate,cpu_us_per_success,p50,p95,p99,p99.9,rss_peak_bytes,pss_end_bytes
+cauce-2w-conservative,REJECTED_PREFLIGHT,,,,8000,,,,,,,
+cauce-4w-conservative,REJECTED_PREFLIGHT,,,,8000,,,,,,,
+nginx-1w-conservative,CONFIRMED,8000.0,confirmed_lower_bound,,,41.208333333333336,93834,101103,110738,263317,6336512,6381568

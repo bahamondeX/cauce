@@ -111,10 +111,38 @@ the Linux ARM64 transport matrix at up to 1,024 logical endpoints. The
 two-worker trace completed 9,200 requests without a transport failure.
 The historic pre-headers incidents and tail breach remain unresolved.
 
-AWS authentication and read-only inventory are complete. Native ARM64 and
-AMD64 capacity, CPU profiling, scaling and the competitive campaign remain
-blocked by host authorization. The project remains in the dataplane
-performance milestone.
+Milestone 2C completed AWS authentication and read-only inventory.
+Native capacity, profiling and comparative work carried into Milestone 3.
 [Milestone 2C report](docs/PERFORMANCE-MILESTONE-2C.md)
 [Native lab](docs/NATIVE-LINUX-BENCHMARKS.md)
 [NGINX compatibility backlog](docs/NGINX-COMPATIBILITY-BACKLOG.md).
+
+## Milestone 3 checkpoint
+
+- **Native performance.** The AMD64 lab independently audited 8,487,500
+  measured offers across the primary and supplemental campaigns. At
+  1,000 offers/s with one worker and logs disabled, `47da8fe` used
+  40 µs CPU per successful HTTP/1.1 request versus 46 µs for NGINX
+  1.30.8 across seven qualified pairs. Cauce's p99 was higher.
+  The 60-second confirmations reached 7,500/s for one-worker Cauce
+  and at least 8,000/s for one-worker NGINX. Generator and direct
+  control limits left Cauce scaling efficiency open.
+  [Native evidence and coverage](docs/PERFORMANCE-NATIVE.md).
+- **Functional parity.** Wildcard virtual hosts and literal exact
+  locations passed 11 shared NGINX real-socket cases. The source
+  registry records the remaining host, path, and normalization
+  differences. [Functional parity](docs/FUNCTIONAL-PARITY.md).
+- **Production readiness.** YAML and TOML accept checked binary byte
+  units. The migration preview handles literal host and route
+  aliases, reports confidence and supplies a validation command.
+  The experimental sharded pool preserves a requester's reusable
+  sockets during global eviction. Compact remains the default.
+  [YAML and migration](docs/CONFIGURATION.md)
+  [Pool decision](docs/adr/0008-endpoint-sharded-pool.md).
+- **Validation and infrastructure.** Rust, real-socket, collector,
+  Linux resilience, HTTP/2 and gRPC, and 100,000 AddressSanitizer
+  fuzz executions passed. Two Graviton startup attempts were
+  terminated and independently verified. AMD64 accepted guest
+  poweroff. AWS reauthentication is required to verify its
+  control-plane cleanup and start the staged ARM64 campaign.
+  [Evidence, cost and cleanup](docs/PERFORMANCE-NATIVE.md#aws-controls).

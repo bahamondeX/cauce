@@ -1,0 +1,5 @@
+workers,run,confirmed_goodput_per_s,interpretation,status,scaling_efficiency
+1,cauce-1w,7500.0,confirmed_bracket,CONFIRMED,1.0
+2,cauce-2w,,,REJECTED_POSTFLIGHT,
+4,cauce-4w,,,CONFIRMATION_FAILED,
+8,cauce-8w,8000.0,confirmed_lower_bound,CONFIRMED,
