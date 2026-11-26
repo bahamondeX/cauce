@@ -197,3 +197,18 @@ subset. Review half-close behavior, UDP reply credit, session limits and
 restart requirements before using the preview. Variable NGINX Stream maps,
 named Stream upstream blocks and generic resolver directives require
 manual migration.
+
+## Bounded migration includes
+
+Run `python3 scripts/nginx-migration-report.py nginx.conf --include-root
+/path/to/nginx-config --preview cauce.yaml --validate-bin /path/to/cauce`.
+The include root is the original configuration prefix. The tool expands
+sorted literal and glob paths, bounds depth and total input, and rejects
+cycles and root escapes. Its report records source, line, context and
+variable names. The preview inherits the supported literal HTTP-level TLS
+and real-IP settings. Other inherited behavior remains explicit review
+work. A runtime validation failure prevents the preview file from being
+published.
+
+Use `cauce check cauce.yaml` for validation and
+`cauce explain cauce.yaml` for the redacted capability and topology summary.

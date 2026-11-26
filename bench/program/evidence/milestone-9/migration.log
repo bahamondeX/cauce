@@ -1,0 +1,16 @@
+test_application_and_mail_recognition_require_manual_mapping (test_nginx_migration.MigrationTests) ... ok
+test_explicit_static_root_alias_and_direct_preview (test_nginx_migration.MigrationTests) ... ok
+test_include_cycle_and_root_escape_are_rejected (test_nginx_migration.MigrationTests) ... ok
+test_include_expansion_provenance_and_validated_preview (test_nginx_migration.MigrationTests) ... ok
+test_literal_locations_and_aliases_have_review_and_validation_metadata (test_nginx_migration.MigrationTests) ... ok
+test_literal_proxy_headers_are_previewed_without_reporting_values (test_nginx_migration.MigrationTests) ... ok
+test_literal_tls_and_mandatory_client_auth_preview (test_nginx_migration.MigrationTests) ... ok
+test_no_regex_prefix_is_preserved (test_nginx_migration.MigrationTests) ... ok
+test_real_ip_and_literal_redirect_preview (test_nginx_migration.MigrationTests) ... ok
+test_stream_preview_validates_literal_listeners_and_requires_proxy_trust (test_nginx_migration.MigrationTests) ... ok
+test_unsupported_host_or_location_refuses_partial_preview (test_nginx_migration.MigrationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 24.699s
+
+OK

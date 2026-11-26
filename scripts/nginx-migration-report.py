@@ -3,16 +3,24 @@
 
 import argparse
 from dataclasses import dataclass, field
+import glob
 import ipaddress
+import itertools
 import json
 import os
 from pathlib import Path
 import re
+import stat
+import subprocess
+import tempfile
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_BYTES = 1_048_576
+MAX_INCLUDE_FILES = 128
+MAX_INCLUDE_DEPTH = 16
+VARIABLE = re.compile(r"(?<!\\)\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*|[0-9]+))")
 TOKEN = re.compile(
     r"""(?P<space>\s+|\#[^\n]*)|(?P<quoted>"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')"""
     r"""|(?P<punct>[{};])|(?P<word>(?:\\.|\$\{[A-Za-z0-9_]+\}|[^\s{};\#'"\\])+)""",
@@ -37,9 +45,10 @@ class Directive:
     line: int
     args: list[str]
     children: list["Directive"] | None = field(default=None)
+    source: str | None = None
 
 
-def parse(text):
+def parse(text, source=None):
     root = []
     blocks = [root]
     args = []
@@ -69,7 +78,7 @@ def parse(text):
         if not args:
             raise ValueError(f"expected a directive at line {token_line}")
         children = [] if value == "{" else None
-        blocks[-1].append(Directive(args[0], start, args[1:], children))
+        blocks[-1].append(Directive(args[0], start, args[1:], children, source))
         if children is not None:
             if len(blocks) >= 64:
                 raise ValueError(f"nesting exceeds limit at line {token_line}")
@@ -78,6 +87,87 @@ def parse(text):
     if args or len(blocks) != 1:
         raise ValueError(f"incomplete directive or block at line {line}")
     return root
+
+
+def expanded_config(path, include_root):
+    root = include_root.resolve(strict=True) if include_root else None
+    if root and not root.is_dir():
+        raise ValueError("include root must be a directory")
+    total_bytes = 0
+    files = []
+    includes = []
+    active = set()
+
+    def read(file):
+        nonlocal total_bytes
+        if file in active:
+            raise ValueError("include cycle")
+        if len(active) >= MAX_INCLUDE_DEPTH or len(files) >= MAX_INCLUDE_FILES:
+            raise ValueError("configuration include depth or file budget exceeded")
+        location = str(file.relative_to(root)) if root and file.is_relative_to(root) else file.name
+        fd = os.open(file, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+        with os.fdopen(fd, "rb") as stream:
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                raise ValueError("configuration input must be a regular file")
+            data = stream.read(MAX_BYTES - total_bytes + 1)
+        total_bytes += len(data)
+        if total_bytes > MAX_BYTES:
+            raise ValueError("configuration exceeds 1 MiB")
+        files.append(location)
+        active.add(file)
+        try:
+            items = parse(data.decode("utf-8"), source=location)
+            return expand(items) if root else items
+        except ValueError as error:
+            raise ValueError(f"{location}: {error}") from None
+        finally:
+            active.remove(file)
+
+    def expand(nodes):
+        result = []
+        for node in nodes:
+            if node.name != "include":
+                if node.children is not None:
+                    node.children = expand(node.children)
+                result.append(node)
+                continue
+            if len(node.args) != 1 or node.children is not None:
+                raise ValueError(f"invalid include at line {node.line}")
+            value = node.args[0]
+            if "$" in value or "\\" in value or "**" in value or any(part == ".." for part in Path(value).parts):
+                raise ValueError(f"unsupported include pattern at line {node.line}")
+            pattern = Path(value)
+            if pattern.is_absolute():
+                if not pattern.is_relative_to(root):
+                    raise ValueError(f"include outside root at line {node.line}")
+            else:
+                pattern = root / pattern
+            matches = list(itertools.islice(glob.iglob(str(pattern)), MAX_INCLUDE_FILES + 1))
+            if not matches and not glob.has_magic(value):
+                raise ValueError(f"include file missing at line {node.line}")
+            if len(matches) + len(files) > MAX_INCLUDE_FILES:
+                raise ValueError("configuration include file budget exceeded")
+            targets = []
+            for entry in sorted(matches):
+                included = Path(entry).resolve(strict=True)
+                if not included.is_relative_to(root):
+                    raise ValueError(f"include outside root at line {node.line}")
+                targets.append(str(included.relative_to(root)))
+                result.extend(read(included))
+            includes.append({"source": node.source, "line": node.line, "files": targets})
+        return result
+
+    items = read(path.resolve(strict=True))
+    return items, files, includes
+
+
+def variable_uses(nodes):
+    for node in nodes:
+        names = sorted({match[1] or match[2] for value in node.args for match in VARIABLE.finditer(value)})
+        if names:
+            yield {"source": node.source, "line": node.line, "variables": names,
+                   "status": "manual_review"}
+        yield from variable_uses(node.children or [])
 
 
 def inventory(matrix):
@@ -114,10 +204,10 @@ def audit(directives, registry, prefix=()):
         ]
         if any(variant["status"] == "partial" for variant in relevant):
             status = "manual_review"
-        row = {"directive": name, "line": node.line, "context": list(prefix),
+        row = {"directive": name, "source": node.source, "line": node.line, "context": list(prefix),
                "status": status, "reference_variants": variants}
         if name == "include":
-            row["notes"] = "Analyze included files individually. The inventory does not expand them."
+            row["notes"] = "Provide --include-root to expand this include."
         yield row
         yield from audit(node.children or [], registry, path)
 
@@ -326,10 +416,13 @@ def http_preview(directives):
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
     if len(http) != 1 or len(events) > 1 or len(http) + len(events) != len(directives):
         raise ValueError("preview supports one HTTP block and an optional empty events block")
-    servers = http[0].children
+    inherited_names = {"set_real_ip_from", "real_ip_header", "real_ip_recursive"} | TLS_PREVIEW_DIRECTIVES
+    inherited = [node for node in http[0].children if node.name in inherited_names]
+    servers = [node for node in http[0].children if node.name not in inherited_names]
     if len(servers) != 1 or servers[0].name != "server" or servers[0].args or servers[0].children is None:
-        raise ValueError("preview supports one HTTP server block")
-    items = servers[0].children
+        raise ValueError("preview supports one HTTP server and literal inherited TLS or real-IP policy")
+    local = {node.name for node in servers[0].children}
+    items = [node for node in inherited if node.name not in local] + servers[0].children
     listener, tls = listen_preview(items)
     hosts = server_names(items)
     locations = [node for node in items if node.name == "location"]
@@ -522,20 +615,24 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
     parser.add_argument("--preview", type=Path, help="Write a new review-only Cauce YAML file for the supported subset")
+    parser.add_argument("--include-root", type=Path, help="Expand local includes rooted at the NGINX configuration prefix")
+    parser.add_argument("--validate-bin", type=Path, help="Validate generated YAML with this Cauce binary before publishing")
     args = parser.parse_args()
-    with args.config.open("rb") as stream:
-        data = stream.read(MAX_BYTES + 1)
     try:
-        if len(data) > MAX_BYTES:
-            raise ValueError("configuration exceeds 1 MiB")
-        directives = parse(data.decode("utf-8"))
-    except (UnicodeError, ValueError) as error:
-        diagnostic = "invalid UTF-8" if isinstance(error, UnicodeError) else str(error)
+        directives, files, includes = expanded_config(args.config, args.include_root)
+    except (OSError, UnicodeError, ValueError) as error:
+        if isinstance(error, UnicodeError):
+            diagnostic = "invalid UTF-8"
+        elif isinstance(error, OSError):
+            diagnostic = "cannot read configuration input"
+        else:
+            diagnostic = str(error)
         print(json.dumps({"status": "invalid", "diagnostic": diagnostic}, indent=2))
         return 2
     matrix = yaml.safe_load((ROOT / "compatibility/nginx-oss.yaml").read_text())
     report = {"nginx_reference": matrix["reference"]["version"],
               "directives": list(audit(directives, inventory(matrix))),
+              "files": files, "includes": includes, "variable_uses": list(variable_uses(directives)),
               "semantic_differences": [
                   "Cauce routes on the raw URI path. NGINX normalizes URIs. Regex and named locations require manual migration.",
                   "The preview matches explicit server names with the listener port or no port. NGINX also has default-server behavior.",
@@ -544,7 +641,8 @@ def main():
                   "Mail preview requires explicit TLS and allowlisted origins. Review auth_http escaping, supported authentication mechanisms and plaintext policy.",
                   "Stream previews use literal origins, TCP half-close, and UDP response credit. Review session limits and restart requirements.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
-                  "Static proxy header policies omit NGINX inheritance and implicit hide rules.",
+                  "Static proxy header policies omit implicit hide rules and accept location-local settings.",
+                  "Preview inheritance covers literal real-IP and TLS policy. Other inherited settings require review.",
                   "Static file previews bind literal directories with symlinks and hidden files denied by default. Index handling stays inside the selected document root.",
                   "Local return redirects use origin-relative Location. Check NGINX absolute_redirect behavior.",
                   "TLS previews use one server certificate and rustls defaults for chain verification and resumption. Review SNI mappings and required client certificates.",
@@ -553,13 +651,28 @@ def main():
     if args.preview:
         try:
             config = preview(directives)
-            fd = os.open(args.preview, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(fd, "w", encoding="utf-8") as output:
+            with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=args.preview.parent,
+                                             prefix=".cauce-preview-", suffix=".yaml") as output:
                 yaml.safe_dump(config, output, sort_keys=False)
+                output.flush()
+                if args.validate_bin:
+                    validation = subprocess.run([str(args.validate_bin.resolve()), "check", output.name],
+                                                capture_output=True, timeout=15, check=False)
+                    if validation.returncode:
+                        raise ValueError("generated configuration was rejected by cauce check")
+                os.link(output.name, args.preview)
             report["preview"] = {"status": "generated_for_review", "confidence": "manual_review",
-                                 "validation": ["cauce", "check", str(args.preview)]}
-        except (ValueError, FileExistsError) as error:
-            reason = "output path already exists" if isinstance(error, FileExistsError) else str(error)
+                                 "validation": ["cauce", "check", str(args.preview)],
+                                 "validated": args.validate_bin is not None}
+        except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+            if isinstance(error, FileExistsError):
+                reason = "output path already exists"
+            elif isinstance(error, OSError):
+                reason = "cannot write preview or run validation"
+            elif isinstance(error, subprocess.TimeoutExpired):
+                reason = "Cauce validation timed out"
+            else:
+                reason = str(error)
             report["preview"] = {"status": "unavailable", "confidence": "unsupported_subset",
                                  "diagnostic": reason}
     print(json.dumps(report, indent=2))

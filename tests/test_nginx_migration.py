@@ -38,6 +38,56 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(validation.returncode, 0, validation.stderr)
             return result.returncode, report, config
 
+    def test_include_expansion_provenance_and_validated_preview(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            include = root / "locations"
+            include.mkdir()
+            source = root / "nginx.conf"
+            destination = root / "cauce.yaml"
+            source.write_text("events {} http { set_real_ip_from 127.0.0.1; "
+                              "server { listen 127.0.0.1:8080; server_name app.test; "
+                              "include locations/*.conf; } }")
+            file = include / "01.conf"
+            file.write_text("location / { proxy_pass http://127.0.0.1:8000; }")
+            args = [sys.executable, str(TOOL), str(source), "--include-root", str(root),
+                    "--preview", str(destination), "--validate-bin", str(ROOT / "target/debug/cauce")]
+            result = subprocess.run(args, capture_output=True, text=True, check=False)
+            report = json.loads(result.stdout)
+            self.assertEqual(result.returncode, 0, report)
+            self.assertTrue(report["preview"]["validated"])
+            self.assertEqual(report["includes"][0]["files"], ["locations/01.conf"])
+            self.assertEqual(next(item for item in report["directives"] if item["directive"] == "proxy_pass")["source"],
+                             "locations/01.conf")
+            self.assertEqual(yaml.safe_load(destination.read_text())["proxy"]["real_ip"]["trusted_proxies"],
+                             ["127.0.0.1/32"])
+            destination.unlink()
+            file.write_text("location / { proxy_pass http://$backend; }")
+            rejected = subprocess.run(args, capture_output=True, text=True, check=False)
+            report = json.loads(rejected.stdout)
+            self.assertEqual(rejected.returncode, 1)
+            self.assertFalse(destination.exists())
+            self.assertEqual(report["variable_uses"][0]["variables"], ["backend"])
+
+    def test_include_cycle_and_root_escape_are_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "allowed"
+            root.mkdir()
+            source = root / "nginx.conf"
+            args = [sys.executable, str(TOOL), str(source), "--include-root", str(root)]
+            source.write_text("include nginx.conf;")
+            cycle = subprocess.run(args, capture_output=True, text=True, check=False)
+            self.assertEqual(cycle.returncode, 2)
+            self.assertIn("include cycle", cycle.stdout)
+            outside = root.parent / "outside.conf"
+            outside.write_text("secret-content")
+            (root / "outside.conf").symlink_to(outside)
+            source.write_text("include outside.conf;")
+            escape = subprocess.run(args, capture_output=True, text=True, check=False)
+            self.assertEqual(escape.returncode, 2)
+            self.assertIn("include outside root", escape.stdout)
+            self.assertNotIn("secret-content", escape.stdout)
+
     def test_application_and_mail_recognition_require_manual_mapping(self):
         for protocol in ("fastcgi", "uwsgi", "scgi"):
             code, report, config = self.run_preview("example.org",
