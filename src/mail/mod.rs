@@ -14,7 +14,7 @@ use std::{
     collections::HashMap,
     net::SocketAddr,
     sync::{
-        atomic::{AtomicU64, Ordering::Relaxed},
+        atomic::{AtomicU64, AtomicUsize, Ordering::Relaxed},
         Arc,
     },
     time::Duration,
@@ -51,7 +51,14 @@ pub(crate) struct Listener {
     config: Settings,
     tls: TlsAcceptor,
     auth: Service,
-    backends: HashMap<SocketAddr, Option<(TlsConnector, ServerName<'static>)>>,
+    backends: HashMap<SocketAddr, Backend>,
+    resolver: Option<Arc<crate::dns::Resolver>>,
+}
+
+struct Backend {
+    tls: Option<(TlsConnector, ServerName<'static>)>,
+    dns_address: Option<String>,
+    dns_cursor: AtomicUsize,
 }
 
 pub(crate) async fn prepare(
@@ -78,7 +85,7 @@ impl Listener {
         let auth = Service::new(
             config.auth_url()?,
             Duration::from_millis(config.auth_timeout_ms),
-            resolver,
+            resolver.clone(),
         )?;
         let mut backends = HashMap::with_capacity(config.backends.len());
         for backend in &config.backends {
@@ -91,13 +98,21 @@ impl Listener {
                     Ok((connector, name))
                 })
                 .transpose()?;
-            backends.insert(backend.address, tls);
+            backends.insert(
+                backend.address,
+                Backend {
+                    tls,
+                    dns_address: backend.dns_address.clone(),
+                    dns_cursor: AtomicUsize::new(0),
+                },
+            );
         }
         Ok(Self {
             config,
             tls,
             auth,
             backends,
+            resolver,
         })
     }
 
@@ -264,13 +279,28 @@ impl Listener {
         else {
             return Ok(None);
         };
-        let tls = self
+        let backend = self
             .backends
             .get(&address)
             .context("mail backend outside allowlist")?;
-        let socket = TcpStream::connect(address).await?;
+        let (destination, token) = if let Some(destination) = &backend.dns_address {
+            let (address, token) = self
+                .resolver
+                .as_ref()
+                .expect("validated mail DNS")
+                .choose(destination, &backend.dns_cursor)
+                .await?;
+            (address, Some(token))
+        } else {
+            (address, None)
+        };
+        let socket = TcpStream::connect(destination).await?;
+        anyhow::ensure!(
+            crate::dns::Address::current(&token),
+            "retired mail DNS address"
+        );
         socket.set_nodelay(true)?;
-        let io: Box<dyn ClientIo> = if let Some((connector, name)) = tls {
+        let io: Box<dyn ClientIo> = if let Some((connector, name)) = &backend.tls {
             Box::new(connector.connect(name.clone(), socket).await?)
         } else {
             Box::new(socket)

@@ -1,0 +1,6 @@
+test_backend_tls_precedes_credential_transmission (__main__.MailTests.test_backend_tls_precedes_credential_transmission) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.783s
+
+OK

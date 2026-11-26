@@ -40,6 +40,8 @@ pub(crate) enum Mechanism {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Backend {
     pub address: SocketAddr,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dns_address: Option<String>,
     pub tls: Option<UpstreamTls>,
 }
 
@@ -109,7 +111,7 @@ impl Settings {
         Ok(url)
     }
 
-    pub(crate) fn validate(&self) -> Result<()> {
+    pub(crate) fn validate(&self, dns_enabled: bool) -> Result<()> {
         self.tls.validate()?;
         self.auth_url()?;
         ensure!(
@@ -144,8 +146,10 @@ impl Settings {
                         && !ip.is_multicast()
                         && (ip.is_loopback() || backend.tls.is_some())
                         && addresses.insert(backend.address)
+                        && backend.dns_address.as_ref().is_none_or(|address|
+                            dns_enabled && backend.tls.is_some() && crate::dns::valid_destination(address))
                 }),
-            "mail backends must be distinct unicast endpoints with TLS outside loopback"
+            "mail backends require distinct allowlist addresses and verified TLS for DNS or non-loopback destinations"
         );
         for backend in &self.backends {
             if let Some(tls) = &backend.tls {

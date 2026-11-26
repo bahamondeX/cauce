@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import poplib
 import signal
+import socket
 import smtplib
 import socketserver
 import ssl
@@ -20,6 +21,8 @@ import unittest
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tests"))
+from dns_upstream import Dns
 sys.path.insert(0, str(ROOT / "tests/stream"))
 from interop import CAUCE, TOKEN, ThreadTcp, eventual, free_port, start_process, start_server, tcp
 
@@ -305,6 +308,10 @@ mail {{
         config = self.configuration("implicit")
         config["proxy"]["mail"][2]["backends"][0]["tls"] = {
             "server_name": "localhost", "ca_file": str(self.cert)}
+        dns = start_server(self.stack, socketserver.UDPServer, Dns)
+        dns.family = socket.AF_INET
+        config["proxy"]["dns"] = {"servers": [f"127.0.0.1:{dns.server_address[1]}"]}
+        config["proxy"]["mail"][2]["backends"][0]["dns_address"] = f"origin.test:{port}"
         # Validate and launch exactly the edited configuration.
         self.start(configuration=config)
         client = poplib.POP3_SSL("127.0.0.1", self.ports["pop3"], context=self.tls, timeout=4)

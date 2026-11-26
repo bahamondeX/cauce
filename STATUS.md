@@ -229,7 +229,8 @@ Native capacity, profiling and comparative work carried into Milestone 3.
 Optional shared recursive DNS now follows address TTLs across HTTP,
 application gateways, active HTTP health checks, Stream and mail auth HTTP.
 Both pool strategies retire removed IPs while existing sessions finish.
-Mail backend selection retains its literal authorization allowlist.
+Mail retains its literal authorization allowlist and can dial a configured
+named backend with verified TLS.
 [DNS reference and evidence](docs/DNS-AND-RESILIENCE.md).
 
 ## Milestone 9 infrastructure candidate

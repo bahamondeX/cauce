@@ -615,7 +615,7 @@ impl Config {
         );
         for listener in &self.mail {
             crate::stream::config::add_address(&mut tcp_addresses, listener.listen)?;
-            listener.validate()?;
+            listener.validate(self.dns.is_some())?;
         }
         if let Some(http3) = &self.http3 {
             http3.validate(self)?;

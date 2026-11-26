@@ -7,9 +7,9 @@ inside the deployment boundary. Literal IP and Unix socket upstreams bypass DNS.
 One process-wide resolver is shared by HTTP and application upstream sockets,
 HTTP active probes, new Stream TCP and UDP sessions, and the HTTPS mail
 authentication service. Configure Stream destinations with `dns_address`.
-Mail backend selection still uses literal Auth-Server and Auth-Port allowlist
-entries. This preserves the authentication service's backend authorization
-boundary. Resolver setting changes require restart.
+Mail authorizes the literal Auth-Server and Auth-Port allowlist entry first.
+An operator-defined `dns_address` can supply the dial destination for that
+entry if verified backend TLS is configured. Resolver setting changes require restart.
 
 Hickory 0.26.4 supplies parallel A and AAAA lookups, CNAME traversal,
 UDP/TCP DNS transport and SOA-based negative caching. Cauce uses the returned

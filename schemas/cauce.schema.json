@@ -1649,6 +1649,7 @@
           "items": {
             "type": "object", "additionalProperties": false, "required": ["address"],
             "properties": {
+              "dns_address": {"$ref": "#/$defs/authority"},
               "address": {"$ref": "#/$defs/authority"},
               "tls": {"$ref": "#/$defs/upstreamTls"}
             }
