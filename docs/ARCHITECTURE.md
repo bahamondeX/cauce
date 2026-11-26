@@ -288,3 +288,20 @@ que conservan frames DATA y trailers. El listener QUIC comparte admisión
 y certificados con HTTP, y sus ventanas, sesiones, tareas y deadlines
 se controlan independientemente. La entrega Alt-Svc se decide al
 establecer una conexión TCP. [ADR 0015](adr/0015-quinn-http3-transport.md).
+
+## Gateways de aplicación y correo
+
+Cada generación compila el protocolo del upstream. Las rutas HTTP envían
+FastCGI, uWSGI o SCGI por un adaptador con framing propio. Estos adaptadores
+reutilizan la selección de endpoints, las cuotas del pool y el filtrado de
+respuestas HTTP. FastCGI retorna un socket exclusivo al pool tras completar
+el cuerpo de entrada y validar `END_REQUEST`. uWSGI y SCGI cierran el
+socket al terminar cada intercambio. Las rutas HTTP/1.1 y HTTP/2 conservan
+sus transportes. [ADR 0016](adr/0016-application-upstream-leases.md).
+
+Los listeners SMTP, IMAP y POP3 compilan sus políticas y certificados
+al iniciar. Cada sesión negocia TLS, consulta un servicio HTTP de
+autenticación y abre una conexión exclusiva autorizada. Tras verificar
+el login del backend, el relay compartido de TCP mantiene los límites
+de deadline y backpressure. El cierre deja drenar sesiones autenticadas
+dentro del plazo global. [ADR 0017](adr/0017-tls-gated-mail-listeners.md).

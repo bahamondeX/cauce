@@ -1,0 +1,11 @@
+test_postgres_redis_and_sshd (__main__.RealServices.test_postgres_redis_and_sshd) ... postgres (PostgreSQL) 14.17 (Homebrew)
+Redis server v=7.4.9 sha=00000000:0 malloc=jemalloc-5.3.0 bits=64 build=5a23d515cf8f8935
+PostgreSQL query returned 42
+Redis RESP PING and binary-safe ECHO
+OpenSSH key exchange returned the configured Ed25519 host key
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 12.858s
+
+OK

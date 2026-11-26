@@ -1,0 +1,264 @@
+Darwin 24.6.0 arm64
+rustc 1.88.0 (6b00bc388 2025-06-23) (Homebrew)
+binary: rustc
+commit-hash: 6b00bc3880198600130e1cf62b8f8a93494488cc
+commit-date: 2025-06-23
+host: aarch64-apple-darwin
+release: 1.88.0
+LLVM version: 20.1.7
+cargo 1.88.0 (Homebrew)
+work/milestone-7/cauce-1ff7f23-darwin 7403648 bytes
+55234e40db2f5781504ae92900877f97ece9f3b6728541ccfd43884910cf1fc4  work/milestone-7/cauce-1ff7f23-darwin
+Segment __PAGEZERO: 4294967296 (zero fill)
+Segment __TEXT: 6914048
+	Section __text: 4880256
+	Section __stubs: 1416
+	Section __stub_helper: 1440
+	Section __const: 1194312
+	Section __gcc_except_tab: 232012
+	Section __cstring: 2858
+	Section __unwind_info: 85088
+	Section __eh_frame: 502544
+	total 6899926
+Segment __DATA_CONST: 245760
+	Section __got: 24
+	Section __const: 234864
+	total 234888
+Segment __DATA: 16384
+	Section __la_symbol_ptr: 944
+	Section __data: 9624
+	Section __thread_vars: 432
+	Section __thread_data: 168
+	Section __thread_bss: 296 (zerofill)
+	Section __bss: 1192 (zerofill)
+	Section __common: 280 (zerofill)
+	total 12936
+Segment __LINKEDIT: 229376
+total 4302372864
+work/milestone-7/cauce-candidate-darwin 9144736 bytes
+6d5b3f86f48f7e040ee0a1545c3e101595f219cf0813ac6b2c4cca7d6ece572e  work/milestone-7/cauce-candidate-darwin
+Segment __PAGEZERO: 4294967296 (zero fill)
+Segment __TEXT: 8552448
+	Section __text: 6216900
+	Section __stubs: 1500
+	Section __stub_helper: 1524
+	Section __const: 1268040
+	Section __gcc_except_tab: 310548
+	Section __cstring: 2908
+	Section __unwind_info: 106800
+	Section __eh_frame: 627044
+	total 8535264
+Segment __DATA_CONST: 311296
+	Section __got: 24
+	Section __const: 304920
+	total 304944
+Segment __DATA: 32768
+	Section __la_symbol_ptr: 1000
+	Section __data: 13344
+	Section __thread_vars: 480
+	Section __thread_data: 168
+	Section __thread_bss: 328 (zerofill)
+	Section __bss: 1192 (zerofill)
+	Section __common: 280 (zerofill)
+	total 16792
+Segment __LINKEDIT: 278528
+total 4304142336
+work/milestone-8/cauce-darwin-arm64 10669376 bytes
+3fd64cae73c6bc2533a6577347d4c60135e5791360548a4cfdb03d69558b487d  work/milestone-8/cauce-darwin-arm64
+Segment __PAGEZERO: 4294967296 (zero fill)
+Segment __TEXT: 9977856
+	Section __text: 7228376
+	Section __stubs: 1512
+	Section __stub_helper: 1536
+	Section __const: 1481032
+	Section __gcc_except_tab: 375316
+	Section __cstring: 2908
+	Section __unwind_info: 126792
+	Section __eh_frame: 739056
+	total 9956528
+Segment __DATA_CONST: 376832
+	Section __got: 24
+	Section __const: 361344
+	total 361368
+Segment __DATA: 32768
+	Section __la_symbol_ptr: 1008
+	Section __data: 14512
+	Section __thread_vars: 600
+	Section __thread_data: 168
+	Section __thread_bss: 368 (zerofill)
+	Section __common: 296 (zerofill)
+	Section __bss: 1192 (zerofill)
+	total 18144
+Segment __LINKEDIT: 311296
+total 4305666048
+base64 v0.22.1
+├── cauce v0.9.1 (<workspace>)
+└── reqwest v0.12.28
+    └── cauce v0.9.1 (<workspace>)
+
+base64 v0.23.1
+└── hyper-util v0.1.21
+    ├── cauce v0.9.1 (<workspace>)
+    ├── hyper-rustls v0.27.10
+    │   └── reqwest v0.12.28 (*)
+    └── reqwest v0.12.28 (*)
+
+getrandom v0.2.17
+└── ring v0.17.14
+    ├── quinn-proto v0.11.19
+    │   └── quinn v0.11.12
+    │       ├── cauce v0.9.1 (<workspace>)
+    │       └── h3-quinn v0.0.10
+    │           └── cauce v0.9.1 (<workspace>)
+    ├── rustls v0.23.46
+    │   ├── cauce v0.9.1 (<workspace>)
+    │   ├── hyper-rustls v0.27.10 (*)
+    │   ├── quinn v0.11.12 (*)
+    │   ├── quinn-proto v0.11.19 (*)
+    │   ├── reqwest v0.12.28 (*)
+    │   └── tokio-rustls v0.26.6
+    │       ├── cauce v0.9.1 (<workspace>)
+    │       ├── hyper-rustls v0.27.10 (*)
+    │       └── reqwest v0.12.28 (*)
+    └── rustls-webpki v0.103.17
+        └── rustls v0.23.46 (*)
+
+getrandom v0.3.4
+└── uuid v1.18.1
+    └── cauce v0.9.1 (<workspace>)
+
+getrandom v0.4.3
+├── rand v0.10.4
+│   └── quinn-proto v0.11.19 (*)
+└── tempfile v3.27.0
+    [dev-dependencies]
+    └── cauce v0.9.1 (<workspace>)
+
+hashbrown v0.15.5
+└── hashlink v0.10.0
+    └── rusqlite v0.37.0
+        └── cauce v0.9.1 (<workspace>)
+
+hashbrown v0.17.1
+└── indexmap v2.14.2
+    ├── h2 v0.4.20
+    │   └── hyper v1.12.0
+    │       ├── cauce v0.9.1 (<workspace>)
+    │       ├── hyper-rustls v0.27.10 (*)
+    │       ├── hyper-util v0.1.21 (*)
+    │       └── reqwest v0.12.28 (*)
+    ├── toml_edit v0.22.27
+    │   └── toml v0.8.23
+    │       └── cauce v0.9.1 (<workspace>)
+    └── yaml_serde v0.10.7
+        └── cauce v0.9.1 (<workspace>)
+
+syn v2.0.119
+└── prost-derive v0.14.6 (proc-macro)
+    └── prost v0.14.6
+        └── cauce v0.9.1 (<workspace>)
+
+syn v3.0.10
+├── displaydoc v0.2.7 (proc-macro)
+│   ├── icu_collections v2.4.0
+│   │   ├── icu_normalizer v2.4.0
+│   │   │   └── idna_adapter v1.2.2
+│   │   │       └── idna v1.1.0
+│   │   │           └── url v2.5.8
+│   │   │               ├── reqwest v0.12.28 (*)
+│   │   │               └── tower-http v0.6.11
+│   │   │                   └── reqwest v0.12.28 (*)
+│   │   └── icu_properties v2.4.0
+│   │       └── idna_adapter v1.2.2 (*)
+│   ├── icu_locale_core v2.4.0
+│   │   ├── icu_properties v2.4.0 (*)
+│   │   └── icu_provider v2.4.0
+│   │       ├── icu_normalizer v2.4.0 (*)
+│   │       └── icu_properties v2.4.0 (*)
+│   ├── icu_properties v2.4.0 (*)
+│   ├── icu_provider v2.4.0 (*)
+│   ├── tinystr v0.8.5
+│   │   └── icu_locale_core v2.4.0 (*)
+│   └── zerotrie v0.2.5
+│       ├── icu_properties v2.4.0 (*)
+│       └── icu_provider v2.4.0 (*)
+├── futures-macro v0.3.34 (proc-macro)
+│   └── futures-util v0.3.34
+│       ├── cauce v0.9.1 (<workspace>)
+│       ├── futures v0.3.34
+│       │   └── h3-quinn v0.0.10 (*)
+│       ├── futures-executor v0.3.34
+│       │   └── futures v0.3.34 (*)
+│       ├── h3 v0.0.8
+│       │   ├── cauce v0.9.1 (<workspace>)
+│       │   └── h3-quinn v0.0.10 (*)
+│       ├── hyper-util v0.1.21 (*)
+│       ├── reqwest v0.12.28 (*)
+│       ├── tower v0.5.3
+│       │   ├── reqwest v0.12.28 (*)
+│       │   └── tower-http v0.6.11 (*)
+│       └── tower-http v0.6.11 (*)
+├── serde_derive v1.0.229 (proc-macro)
+│   └── serde v1.0.229
+│       ├── cauce v0.9.1 (<workspace>)
+│       ├── reqwest v0.12.28 (*)
+│       ├── serde_spanned v0.6.9
+│       │   ├── toml v0.8.23 (*)
+│       │   └── toml_edit v0.22.27 (*)
+│       ├── serde_urlencoded v0.7.1
+│       │   └── reqwest v0.12.28 (*)
+│       ├── toml v0.8.23 (*)
+│       ├── toml_datetime v0.6.11
+│       │   ├── toml v0.8.23 (*)
+│       │   └── toml_edit v0.22.27 (*)
+│       ├── toml_edit v0.22.27 (*)
+│       └── yaml_serde v0.10.7 (*)
+├── synstructure v0.14.0
+│   ├── yoke-derive v0.8.4 (proc-macro)
+│   │   └── yoke v0.8.4
+│   │       ├── icu_collections v2.4.0 (*)
+│   │       ├── icu_provider v2.4.0 (*)
+│   │       ├── zerotrie v0.2.5 (*)
+│   │       └── zerovec v0.11.9
+│   │           ├── icu_collections v2.4.0 (*)
+│   │           ├── icu_locale_core v2.4.0 (*)
+│   │           ├── icu_normalizer v2.4.0 (*)
+│   │           ├── icu_properties v2.4.0 (*)
+│   │           ├── icu_provider v2.4.0 (*)
+│   │           ├── potential_utf v0.1.6
+│   │           │   └── icu_collections v2.4.0 (*)
+│   │           └── tinystr v0.8.5 (*)
+│   └── zerofrom-derive v0.1.8 (proc-macro)
+│       └── zerofrom v0.1.8
+│           ├── icu_collections v2.4.0 (*)
+│           ├── icu_provider v2.4.0 (*)
+│           ├── yoke v0.8.4 (*)
+│           ├── zerotrie v0.2.5 (*)
+│           └── zerovec v0.11.9 (*)
+├── thiserror-impl v2.0.21 (proc-macro)
+│   └── thiserror v2.0.21
+│       ├── quinn v0.11.12 (*)
+│       └── quinn-proto v0.11.19 (*)
+├── tokio-macros v2.7.2 (proc-macro)
+│   └── tokio v1.54.1
+│       ├── async-compression v0.4.54
+│       │   └── cauce v0.9.1 (<workspace>)
+│       ├── cauce v0.9.1 (<workspace>)
+│       ├── h2 v0.4.20 (*)
+│       ├── h3 v0.0.8 (*)
+│       ├── h3-quinn v0.0.10 (*)
+│       ├── hyper v1.12.0 (*)
+│       ├── hyper-rustls v0.27.10 (*)
+│       ├── hyper-util v0.1.21 (*)
+│       ├── quinn v0.11.12 (*)
+│       ├── reqwest v0.12.28 (*)
+│       ├── tokio-rustls v0.26.6 (*)
+│       ├── tokio-util v0.7.20
+│       │   ├── h2 v0.4.20 (*)
+│       │   ├── h3-quinn v0.0.10 (*)
+│       │   └── reqwest v0.12.28 (*)
+│       └── tower v0.5.3 (*)
+├── yoke-derive v0.8.4 (proc-macro) (*)
+├── zerofrom-derive v0.1.8 (proc-macro) (*)
+└── zerovec-derive v0.11.7 (proc-macro)
+    └── zerovec v0.11.9 (*)

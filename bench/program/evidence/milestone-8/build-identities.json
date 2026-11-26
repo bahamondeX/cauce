@@ -1,0 +1,46 @@
+{
+  "runtime": "d2d2dda819100c08269d685cd775df1d59e176d0",
+  "runtime_src_tree": "4eb6049287f184196f9ba9160fa7bf51887b712f",
+  "reference_runtime_trees": {
+    "1ff7f23": "51a161f1cc4fb7790bfe6a8286f3bdd4955eb423",
+    "e612f84": "b236ed4f2881988ee575ce7bf6d46ba69139e578",
+    "22d6ac9": "b236ed4f2881988ee575ce7bf6d46ba69139e578"
+  },
+  "toolchain": [
+    "rustc 1.88.0 (6b00bc388 2025-06-23) (Homebrew)",
+    "binary: rustc",
+    "commit-hash: 6b00bc3880198600130e1cf62b8f8a93494488cc",
+    "commit-date: 2025-06-23",
+    "host: aarch64-apple-darwin",
+    "release: 1.88.0",
+    "LLVM version: 20.1.7"
+  ],
+  "host": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+  "fixtures": {
+    "php-fpm": {
+      "reference": "php@sha256:d39ec536545f1f698dc971cd2a0a77424867a27a992dd43b8e82d5cf112b02cb",
+      "local_image_config": "sha256:472bc446666a25820793b76544890342f399ff69745a93e5551496ec5a150802"
+    },
+    "wsgi": {
+      "reference": "cauce-m8-wsgi",
+      "local_image_config": "sha256:d591b1481dd0bccbf55d0cb2082f6a0397df4ec55c48fc69117f02521df16d58"
+    },
+    "mail": {
+      "reference": "cauce-m8-mail",
+      "local_image_config": "sha256:2555ff189b60c6973e05c730324652cb921e577d99567afd02fc85ddb22ea78a"
+    }
+  },
+  "sha256": {
+    "Cargo.lock": "df13b3b4e4e952dbed2587a68b6cfc146d2cdd1206e4b22f6236bdedd1915db5",
+    "Dockerfile": "e75fecf2f8b463771ed4fe31c056bb252442c84a8c7331dd7e3030f3a3dddfbd",
+    "fuzz/Cargo.lock": "152d325c9366e5c0a6e81a9e22abc9b3386e49def6c252e90c9917381a3f9f73",
+    "work/program/nginx-1.30.8.tar.gz": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+    "work/milestone-7/cauce-1ff7f23-darwin": "55234e40db2f5781504ae92900877f97ece9f3b6728541ccfd43884910cf1fc4",
+    "work/milestone-7/cauce-candidate-darwin": "6d5b3f86f48f7e040ee0a1545c3e101595f219cf0813ac6b2c4cca7d6ece572e",
+    "work/milestone-7/nginx-1.30.8/objs/nginx": "8f9dcbb44b61afb09407575f04e1b344b055ef80bce4fdd6971d80ab8abf35e8",
+    "work/milestone-7/nginx-full/nginx-1.30.8/objs/nginx": "4f1e7975ebdc1eaa3d00fad3b0033185fb12d69b8aca5b0baf41b1bc7d829a20",
+    "work/milestone-8/nginx-mail/nginx-1.30.8/objs/nginx": "820089457eb01eca29650801a6b54f7816a566341482fbebd9377b1830149f96",
+    "work/milestone-8/cauce-darwin-arm64": "3fd64cae73c6bc2533a6577347d4c60135e5791360548a4cfdb03d69558b487d",
+    "work/milestone-6/bench-bin/cauce-load-darwin": "c5644ae7541c61aab995d49026c2f57d62c201d6cdad27644b14f9db180d45d3"
+  }
+}

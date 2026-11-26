@@ -161,3 +161,23 @@ PROXY v2 framing and policies, UDP limits and cancellation. NGINX's
 Stream SSL termination, resolver semantics, dynamic upstream areas,
 and remaining HTTP/3 behavior need separate implementation and
 differential evidence. [Registry](../compatibility/nginx-oss.yaml).
+
+## Milestone 8 application and mail scope
+
+The pinned registry contains 120 OSS modules and 754 directive
+registrations. Of these, 39 modules and 116 registrations have partial
+mappings. The default unsupported status applies to 81 modules and
+638 registrations. The behavioral ledger records 23 verified cases,
+22 partial cases and four unsupported cases. It also inventories 149
+configure option patterns and five official add-on modules with
+70 directive registrations. [Counts](../bench/program/evidence/milestone-8/coverage-counts.json).
+
+The application comparisons cover seven PHP-FPM cases and five each
+for native uWSGI and SCGI. The mail comparison covers SMTP submission
+with Postfix and IMAP and POP3 login with Dovecot. Script expressions
+and inherited gateway configuration require manual migration. Mail
+credential rewriting, challenge mechanisms outside the documented
+password-based subset, and acceptance of unauthenticated SMTP remain
+outside the implemented scope. Shared TTL-aware DNS, advanced resilience,
+background cache revalidation, disk cache, ACME and Stream TLS remain
+open. [Registry](../compatibility/nginx-oss.yaml) [Interoperability](PERFORMANCE-MILESTONE-8.md).

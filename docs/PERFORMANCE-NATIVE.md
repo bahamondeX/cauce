@@ -282,3 +282,18 @@ support, process CPU and memory, syscall and context-switch counts,
 and the link delay and loss configuration. Native workloads require
 separate authorization and verified budget before provisioning.
 [Milestone 7 methods](PERFORMANCE-MILESTONE-7.md).
+
+## Milestone 8 qualification gate
+
+The application workloads extend the existing network runner with native
+FastCGI, uWSGI and SCGI backends. They verify upload digests and response
+bytes and record every scheduled offer. The local matrix validates harness
+operation. It uses a Darwin proxy and Linux fixtures in Colima.
+
+Native ARM64 and AMD64 qualification remains a release gate. Use identical
+checksummed backends in matched Cauce and NGINX 1.30.8 cells, verify origin
+capacity separately, and retain warm-up, failed offers and rejection
+reasons. Compare CPU per success, tails, RSS/PSS/private pages, allocation
+calls and connection reuse. Run the two HTTP references `1ff7f23` and
+`e612f84` with the new protocols disabled before promotion. Any new AWS
+resources require a confirmed budget and authorization. [Milestone 8](PERFORMANCE-MILESTONE-8.md).

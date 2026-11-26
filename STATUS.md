@@ -217,3 +217,9 @@ Native capacity, profiling and comparative work carried into Milestone 3.
   are available locally. The milestone report records regression gates,
   benchmark qualifications and remaining DNS, resilience, cache and ACME
   work. [Milestone report](docs/PERFORMANCE-MILESTONE-7.md).
+
+## Milestone 8 functional checkpoint
+
+- **Application gateways.** FastCGI, native uWSGI and SCGI share the compiled HTTP route and response pipeline. The adapters have independent framing and exclusive socket leases. FastCGI supports bounded sequential reuse. PHP-FPM and both native WSGI wire modes passed matching cases against NGINX 1.30.8. [FastCGI](docs/FASTCGI.md) [uWSGI](docs/UWSGI.md) [SCGI](docs/SCGI.md).
+- **Mail.** Independent SMTP submission, IMAP and POP3 listeners use TLS, authorize through an `auth_http` subset, authenticate to an allowlisted backend and relay with bounded backpressure. Postfix and Dovecot fixtures passed with Cauce and NGINX. Mail topology and certificates require restart. [Mail proxy](docs/MAIL-PROXY.md).
+- **Release qualification.** The checkpoints are `ed8f4b8`, `6b4bb31` and `710188d`. The evidence records test coverage, binary growth, disabled-protocol diagnostics and requirements for native qualification. Cauce 1.0 still requires the independent infrastructure increments and production qualification. [Milestone 8](docs/PERFORMANCE-MILESTONE-8.md) [Roadmap](docs/ROADMAP.md).

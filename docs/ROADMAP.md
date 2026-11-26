@@ -161,3 +161,31 @@ protocol-specific upstream resilience, background stale revalidation,
 disk cache recovery and quotas, and ACME staging and renewal. Native
 Linux benchmarks must establish per-workload capacity, packet cost,
 and disabled-module overhead before promotion.
+
+## Milestone 8 y puertas de Cauce 1.0
+
+El checkpoint funcional incluye FastCGI, uWSGI, SCGI e interceptación de
+autenticación para SMTP, IMAP y POP3 con TLS y backends declarados.
+Las pruebas diferenciales cubren subconjuntos de NGINX 1.30.8.
+[Estado](../STATUS.md#milestone-8-functional-checkpoint)
+[Interoperabilidad y mediciones](PERFORMANCE-MILESTONE-8.md).
+
+Cauce 1.0 requiere los siguientes incrementos independientes.
+
+1. Resolver asíncrono compartido. Respetar TTL y caché negativa, publicar
+   cambios de dirección y retirar conexiones anteriores sin interrumpir
+   sesiones establecidas. Añadir presupuestos de retry y recuperación por
+   protocolo mediante fallos deterministas.
+2. Revalidación HTTP en segundo plano con publicación cercada por
+   generación e invalidación. Implementar almacenamiento en disco con
+   publicación atómica, cuotas y recuperación de caída y ENOSPC.
+3. ACME contra Pebble y staging. Añadir renovación, publicación atómica y
+   un contrato para DNS-01. Stream TLS requiere terminación y verificación
+   upstream independientes de TLS passthrough.
+4. Recarga de sockets Stream y mail con ownership atómico, rollback y
+   drenaje demostrado. La recarga de rutas y certificados web ya
+   conserva las garantías existentes.
+5. Perfiles opcionales de compilación, límites de tamaño y medidas de
+   memoria/allocaciones. La distribución completa sigue siendo el valor
+   predeterminado. La calificación nativa exige artefactos checksummed,
+   controles directos, objetivos de carga y autorización de presupuesto.
