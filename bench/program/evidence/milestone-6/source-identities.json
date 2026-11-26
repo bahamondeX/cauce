@@ -1,0 +1,26 @@
+{
+  "runtime_source": "9dff8b98a546a4615bce122412921735448f26f1",
+  "runtime_platform": "linux/arm64",
+  "runtime_image": "sha256:f9197c9f780238caebfee1e553f9cb254c91939a7708d750eaac573cdf1363f2",
+  "linux_binary_sha256": "1c7fb948839faf09079c2c196cf06c2951f5bbaa2739348a9843e73ef399dd3e",
+  "darwin_binary_sha256": "ab22c5ed8c1fef3c667e08baabae1376c45d3c107925150746cdafdbc8aa9cb9",
+  "source_sha256": {
+    "Cargo.toml": "5b7f042d2cc998d13b7e939ab9a12154c6fd0c44b374f126e90e5b51209365f6",
+    "Cargo.lock": "71fa06f65ab6e773eda781af785b9e3f697526cd8857936a6ce28df2f515f9bd",
+    "Dockerfile": "e75fecf2f8b463771ed4fe31c056bb252442c84a8c7331dd7e3030f3a3dddfbd",
+    "src/actions.rs": "0115a949d3dba5f1a185056cd150528685be03c9681811ac22623804e019db10",
+    "src/static_files.rs": "a718d542cabef472c9fff20cca904de435d6f0301603ae64800ae448ae064d99",
+    "src/cache.rs": "59ad01c873d1b1dbc2336f798e4958867e08262fcce73d3ab2344fcf523d6beb",
+    "src/cache/store.rs": "015c29c2d18cc4b615e7c2847b6ef7f2bee9b622c23d070e3de6e99fb167f613",
+    "src/cache/epoch.rs": "30a5747021a1604763d41b8b0c770148bf0ea16e3c2d7a93e42026c4e50732df",
+    "src/compression.rs": "e3d51d3021296f369dc3571019fff3056ccbd8ea3e73dc0b6f814cc7edd84093",
+    "src/proxy.rs": "f85effb598027e8dfe2af30e2a7edf5af8c29abd4982d5734fa0cf5b79d33927"
+  },
+  "benchmark_runner_source": "b75b9c9ed06119fab8ab5dfc8396066cf47b409e",
+  "reference_version": "1.30.8",
+  "reference_tarball_sha256": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+  "generator_linux_sha256": "6afdfac0e6f7cb033cc8a672a62743b817a2dc9fe2aadb4ee46e5cac8e66b130",
+  "generator_darwin_sha256": "c5644ae7541c61aab995d49026c2f57d62c201d6cdad27644b14f9db180d45d3",
+  "nginx_reference_wrapper_sha256": "5cce7c0b6e6f7ec948e3d5de8a1b123f05f25f6230a0774ead435719dd69e348",
+  "nginx_reference_binary_sha256": "90e76983696dae8879dbb66e72ce5200da1e340bc4de5f432bed2e53e2915c89"
+}

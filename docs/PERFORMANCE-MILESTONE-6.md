@@ -58,3 +58,74 @@ zero estimate does not establish actual spend. The remaining
 authorized budget cannot be reconciled. This checkpoint provisioned
 zero new AWS resources.
 [Lifecycle and billing evidence](../bench/program/evidence/milestone-6/aws-reconciliation.json).
+
+## Runner smoke results
+
+On macOS, the 1 KiB static, range, warmed cache and initially cold
+cache fixtures each completed 60 measured offers. Each cache fixture
+made one origin request over its full run. The generator verified the
+range status and delivered bytes. One separate static request verified
+the 100 MiB streaming path end to end. These are functional runner
+checks at low offered rates.
+[Smoke summary](../bench/program/evidence/milestone-6/runner-smoke-darwin.json)
+[Raw offers](../bench/program/evidence/milestone-6/runner-smoke-darwin.tar.gz).
+
+## Regression results
+
+Formatting, strict Clippy and 65 Rust tests passed. One optional
+microbenchmark was ignored. The original proxy suite passed all 24 cases
+for each pool strategy. The content and cache suites passed on both
+macOS and Linux ARM64. The compressed wire cases include streaming Brotli,
+streaming gzip, precompressed variants and range bypass across those
+tests. The pinned NGINX suite passed 15 shared cases. Seven migration
+tests and eight YAML examples passed, along with runtime YAML and TOML
+checks. The Loom model covered publication against concurrent
+invalidation and generation retirement.
+
+The Linux release also passed HTTP/2 and gRPC lifecycle, absolute headers,
+HTTP/2 stress, resilience, legacy TLS and WebSocket lifecycle and both
+collector suites. Initial runs alongside builds recorded startup and
+shutdown timeouts. The same gates passed with Cauce's two compiler jobs
+paused. The rejected evidence retains the original results.
+[Regression evidence](../bench/program/evidence/milestone-6/regression.tar.gz)
+[Rejected fixture runs](../bench/program/evidence/milestone-6/rejected-fixture-runs.tar.gz)
+[Source identities](../bench/program/evidence/milestone-6/source-identities.json).
+
+The isolated AddressSanitizer campaigns each completed 100,000
+executions, one for the HTTP/2 header observer and one for the content
+policy. The latter invokes the production path decoder, range parser and
+cache selector encoding. Neither produced a crash artifact.
+[Content policy fuzz log](../bench/program/evidence/milestone-6/asan-content-policy.log.gz)
+[Header observer fuzz log](../bench/program/evidence/milestone-6/asan-header-observer.log.gz).
+
+Linux ARM64 runner checks accounted for every measured offer in four
+105-offer static and warm-cache cells against Cauce and NGINX, and
+60 Cauce cleartext HTTP/2 range offers. The sample includes CPU and
+memory snapshots and origin counts. Short run length and Colima
+prevent release-performance attribution. The Varnish fixture was prepared
+and remains unexecuted.
+[Linux smoke summary](../bench/program/evidence/milestone-6/runner-smoke-linux.json)
+[Linux raw offers](../bench/program/evidence/milestone-6/runner-smoke-linux.tar.gz).
+
+## Gateway allocation diagnostic
+
+Four Heaptrack runs exercised cleartext HTTP/1.1 with one proxy worker
+and 100 offers/s. Each accounted for 700 measured and 200 warm-up
+successes. The enabled cell exercised trusted-peer processing, a CIDR
+allowlist, a capture rewrite, a request zone and the TCP peer cap.
+The content handlers and shared cache were absent from those routes.
+The allocations include startup and shutdown.
+
+| Runtime and policies | Allocation calls | Calls per success | Peak heap |
+| --- | ---: | ---: | ---: |
+| Milestone 5, disabled | 24,230 | 26.922 | 406.62K |
+| Milestone 5, enabled | 29,342 | 32.602 | 422.06K |
+| Milestone 6, disabled | 24,452 | 27.169 | 275.17K |
+| Milestone 6, enabled | 27,584 | 30.649 | 485.55K |
+
+The enabled sample had about two fewer allocation calls per success and
+a higher peak heap. The disabled sample had 222 more whole-process calls.
+Each cell has one Colima repetition. These observations do not establish
+a latency, throughput, or disabled-feature allocation effect.
+[Allocation summary](../bench/program/evidence/milestone-6/gateway-overhead.json)
+[Raw profiles and offers](../bench/program/evidence/milestone-6/gateway-overhead-raw.tar.gz).

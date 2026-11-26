@@ -1,0 +1,17 @@
+   Compiling tower-http v0.6.11
+   Compiling reqwest v0.12.28
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce/work/milestone-6/content)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.30s
+     Running unittests src/main.rs (/Users/oscarbahamonde/Desktop/cauce/target/debug/deps/cauce-bb11751b501fb6fa)
+
+running 1 test
+capture_rewrite iterations=100 allocations=500 allocated_bytes=29000
+test admission::tests::capture_rewrite_allocation_sample ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 51 filtered out; finished in 0.00s
+
+     Running unittests src/bin/cauce-collector.rs (/Users/oscarbahamonde/Desktop/cauce/target/debug/deps/cauce_collector-a6b9334813c857a7)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s

@@ -1,0 +1,65 @@
+{
+  "classification": "Colima diagnostic, single Heaptrack cell per configuration",
+  "workers": 1,
+  "rate": 100,
+  "measured_seconds": 7,
+  "warmup_seconds": 2,
+  "cells": {
+    "m5-disabled": {
+      "allocations": 24230,
+      "allocations_per_success_including_warmup": 26.922,
+      "allocated_bytes": 14539869,
+      "peak_heap": "406.62K",
+      "invalid_reasons": [],
+      "binary": {
+        "proxy_sha256": "3329b4cdfd2bbf2c175b746b24fce268890eb114973b470bfc8775602ec2340c",
+        "generator_sha256": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+        "proxy_cpu": 0,
+        "backend_cpu": 1,
+        "client_cpu": 2
+      }
+    },
+    "m5-enabled": {
+      "allocations": 29342,
+      "allocations_per_success_including_warmup": 32.602,
+      "allocated_bytes": 15924486,
+      "peak_heap": "422.06K",
+      "invalid_reasons": [],
+      "binary": {
+        "proxy_sha256": "3329b4cdfd2bbf2c175b746b24fce268890eb114973b470bfc8775602ec2340c",
+        "generator_sha256": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+        "proxy_cpu": 0,
+        "backend_cpu": 1,
+        "client_cpu": 2
+      }
+    },
+    "m6-disabled": {
+      "allocations": 24452,
+      "allocations_per_success_including_warmup": 27.169,
+      "allocated_bytes": 15559691,
+      "peak_heap": "275.17K",
+      "invalid_reasons": [],
+      "binary": {
+        "proxy_sha256": "1c7fb948839faf09079c2c196cf06c2951f5bbaa2739348a9843e73ef399dd3e",
+        "generator_sha256": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+        "proxy_cpu": 0,
+        "backend_cpu": 1,
+        "client_cpu": 2
+      }
+    },
+    "m6-enabled": {
+      "allocations": 27584,
+      "allocations_per_success_including_warmup": 30.649,
+      "allocated_bytes": 15970699,
+      "peak_heap": "485.55K",
+      "invalid_reasons": [],
+      "binary": {
+        "proxy_sha256": "1c7fb948839faf09079c2c196cf06c2951f5bbaa2739348a9843e73ef399dd3e",
+        "generator_sha256": "d776e8d626913bc1923a881b95a525334cf19233c357523276e1361cc4ffe70b",
+        "proxy_cpu": 0,
+        "backend_cpu": 1,
+        "client_cpu": 2
+      }
+    }
+  }
+}

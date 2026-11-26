@@ -1,0 +1,208 @@
+{
+  "classification": "Colima diagnostic; single sampled runs",
+  "cases": {
+    "cache-hot-cauce": {
+      "offered": 105,
+      "successful": 105,
+      "rate": 35,
+      "origin_requests": 1,
+      "invalid_reasons": [],
+      "scheduled_latency_ns": {
+        "p50": 2366176,
+        "p95": 5794637,
+        "p99": 5948297,
+        "p99.9": 13341673
+      },
+      "process_sample": {
+        "before": {
+          "cpu_seconds": 0.0,
+          "summed_rss_kib": 5504,
+          "pss_kib": 4205,
+          "pids": [
+            519651
+          ]
+        },
+        "after": {
+          "cpu_seconds": 0.03,
+          "summed_rss_kib": 5760,
+          "pss_kib": 4481,
+          "pids": [
+            519651
+          ]
+        },
+        "cpu_us_per_success_including_warmup": 214.28571428571428
+      },
+      "proxy_sha256": "1c7fb948839faf09079c2c196cf06c2951f5bbaa2739348a9843e73ef399dd3e",
+      "generator_sha256": "6afdfac0e6f7cb033cc8a672a62743b817a2dc9fe2aadb4ee46e5cac8e66b130",
+      "cpu_affinity": [
+        0,
+        1,
+        2
+      ]
+    },
+    "cache-hot-nginx": {
+      "offered": 105,
+      "successful": 105,
+      "rate": 35,
+      "origin_requests": 1,
+      "invalid_reasons": [],
+      "scheduled_latency_ns": {
+        "p50": 4474592,
+        "p95": 8688559,
+        "p99": 9238197,
+        "p99.9": 10106858
+      },
+      "process_sample": {
+        "before": {
+          "cpu_seconds": 0.01,
+          "summed_rss_kib": 13796,
+          "pss_kib": 6919,
+          "pids": [
+            519690,
+            519692,
+            519693,
+            519694
+          ]
+        },
+        "after": {
+          "cpu_seconds": 0.05,
+          "summed_rss_kib": 13924,
+          "pss_kib": 6955,
+          "pids": [
+            519690,
+            519692,
+            519693,
+            519694
+          ]
+        },
+        "cpu_us_per_success_including_warmup": 285.7142857142857
+      },
+      "proxy_sha256": "5cce7c0b6e6f7ec948e3d5de8a1b123f05f25f6230a0774ead435719dd69e348",
+      "generator_sha256": "6afdfac0e6f7cb033cc8a672a62743b817a2dc9fe2aadb4ee46e5cac8e66b130",
+      "cpu_affinity": [
+        0,
+        1,
+        2
+      ]
+    },
+    "range-http2-cauce": {
+      "offered": 60,
+      "successful": 60,
+      "rate": 20,
+      "origin_requests": null,
+      "invalid_reasons": [],
+      "scheduled_latency_ns": {
+        "p50": 3727411,
+        "p95": 4492281,
+        "p99": 5306644,
+        "p99.9": 5306644
+      },
+      "process_sample": {
+        "before": {
+          "cpu_seconds": 0.01,
+          "summed_rss_kib": 5504,
+          "pss_kib": 4273,
+          "pids": [
+            519728
+          ]
+        },
+        "after": {
+          "cpu_seconds": 0.05,
+          "summed_rss_kib": 6016,
+          "pss_kib": 4696,
+          "pids": [
+            519728
+          ]
+        },
+        "cpu_us_per_success_including_warmup": 500.0
+      },
+      "proxy_sha256": "1c7fb948839faf09079c2c196cf06c2951f5bbaa2739348a9843e73ef399dd3e",
+      "generator_sha256": "6afdfac0e6f7cb033cc8a672a62743b817a2dc9fe2aadb4ee46e5cac8e66b130",
+      "cpu_affinity": [
+        0,
+        1,
+        2
+      ]
+    },
+    "static-cauce": {
+      "offered": 105,
+      "successful": 105,
+      "rate": 35,
+      "origin_requests": null,
+      "invalid_reasons": [],
+      "scheduled_latency_ns": {
+        "p50": 5314260,
+        "p95": 8199500,
+        "p99": 8631870,
+        "p99.9": 9089124
+      },
+      "process_sample": {
+        "before": {
+          "cpu_seconds": 0.01,
+          "summed_rss_kib": 5504,
+          "pss_kib": 4273,
+          "pids": [
+            519600
+          ]
+        },
+        "after": {
+          "cpu_seconds": 0.07,
+          "summed_rss_kib": 5632,
+          "pss_kib": 4392,
+          "pids": [
+            519600
+          ]
+        },
+        "cpu_us_per_success_including_warmup": 428.5714285714286
+      },
+      "proxy_sha256": "1c7fb948839faf09079c2c196cf06c2951f5bbaa2739348a9843e73ef399dd3e",
+      "generator_sha256": "6afdfac0e6f7cb033cc8a672a62743b817a2dc9fe2aadb4ee46e5cac8e66b130",
+      "cpu_affinity": [
+        0,
+        1,
+        2
+      ]
+    },
+    "static-nginx": {
+      "offered": 105,
+      "successful": 105,
+      "rate": 35,
+      "origin_requests": null,
+      "invalid_reasons": [],
+      "scheduled_latency_ns": {
+        "p50": 4791695,
+        "p95": 8021124,
+        "p99": 8331184,
+        "p99.9": 8412075
+      },
+      "process_sample": {
+        "before": {
+          "cpu_seconds": 0.11,
+          "summed_rss_kib": 8572,
+          "pss_kib": 6264,
+          "pids": [
+            519614,
+            519631
+          ]
+        },
+        "after": {
+          "cpu_seconds": 0.15,
+          "summed_rss_kib": 8828,
+          "pss_kib": 6292,
+          "pids": [
+            519614,
+            519631
+          ]
+        },
+        "cpu_us_per_success_including_warmup": 285.71428571428567
+      },
+      "proxy_sha256": "5cce7c0b6e6f7ec948e3d5de8a1b123f05f25f6230a0774ead435719dd69e348",
+      "generator_sha256": "6afdfac0e6f7cb033cc8a672a62743b817a2dc9fe2aadb4ee46e5cac8e66b130",
+      "cpu_affinity": [
+        0,
+        1,
+        2
+      ]
+    }
+  }
+}

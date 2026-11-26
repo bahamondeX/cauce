@@ -139,3 +139,9 @@ verified local behavior includes public-response caching, bounded
 collapse, freshness, revalidation, stale serving and invalidation.
 NGINX disk storage and the Cauce memory policy have distinct resource
 and lifecycle contracts. [Machine-readable coverage](../bench/program/evidence/milestone-6/compatibility.json).
+
+The pinned inventory records 23 partial modules out of 120 and
+71 partial directive registrations out of 754. It has 12 verified
+observable behaviors. The 149 configure option patterns remain
+inventoried separately. The njs and nginx-acme inventories remain
+separate from the core counts.

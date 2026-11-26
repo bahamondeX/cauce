@@ -1,0 +1,48 @@
+{
+  "reference": "1.30.8",
+  "sha256": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+  "modules": {
+    "verified": 0,
+    "implemented": 0,
+    "partial": 23,
+    "unsupported": 97
+  },
+  "directive_registrations": {
+    "verified": 0,
+    "implemented": 0,
+    "partial": 71,
+    "unsupported": 683
+  },
+  "behaviors": {
+    "verified": 12,
+    "implemented": 0,
+    "partial": 14,
+    "unsupported": 12
+  },
+  "configure_patterns": {
+    "inventoried": 149,
+    "individually_mapped": 0
+  },
+  "add_ons": {
+    "njs": {
+      "version": "1.0.2",
+      "modules": 4,
+      "directive_registrations": {
+        "verified": 0,
+        "implemented": 0,
+        "partial": 0,
+        "unsupported": 55
+      }
+    },
+    "nginx-acme": {
+      "version": "0.4.2",
+      "modules": 1,
+      "directive_registrations": {
+        "verified": 0,
+        "implemented": 0,
+        "partial": 0,
+        "unsupported": 15
+      }
+    }
+  }
+}

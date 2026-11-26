@@ -1,0 +1,69 @@
+{
+  "classification": "Darwin functional runner smoke",
+  "cases": {
+    "static": {
+      "offered": 60,
+      "successful": 60,
+      "rate": 20,
+      "origin_requests": null,
+      "proxy_sha256": "ab22c5ed8c1fef3c667e08baabae1376c45d3c107925150746cdafdbc8aa9cb9",
+      "generator_sha256": "99a9880a1de479068b82943f4973ec0ca60f14c66481c98e06310029819e5d3e",
+      "invalid_reasons": [],
+      "response_bytes": 1024,
+      "warmup_offers": 20,
+      "warmup_successes": 20
+    },
+    "cache-hot": {
+      "offered": 60,
+      "successful": 60,
+      "rate": 20,
+      "origin_requests": 1,
+      "proxy_sha256": "ab22c5ed8c1fef3c667e08baabae1376c45d3c107925150746cdafdbc8aa9cb9",
+      "generator_sha256": "99a9880a1de479068b82943f4973ec0ca60f14c66481c98e06310029819e5d3e",
+      "invalid_reasons": [
+        "scheduler p99 exceeds 10 ms"
+      ],
+      "response_bytes": 1024,
+      "warmup_offers": 20,
+      "warmup_successes": 20
+    },
+    "cache-cold": {
+      "offered": 60,
+      "successful": 60,
+      "rate": 20,
+      "origin_requests": 1,
+      "proxy_sha256": "ab22c5ed8c1fef3c667e08baabae1376c45d3c107925150746cdafdbc8aa9cb9",
+      "generator_sha256": "99a9880a1de479068b82943f4973ec0ca60f14c66481c98e06310029819e5d3e",
+      "invalid_reasons": [
+        "scheduler p99 exceeds 10 ms"
+      ],
+      "response_bytes": 1024,
+      "warmup_offers": 0,
+      "warmup_successes": 0
+    },
+    "range": {
+      "offered": 60,
+      "successful": 60,
+      "rate": 20,
+      "origin_requests": null,
+      "proxy_sha256": "ab22c5ed8c1fef3c667e08baabae1376c45d3c107925150746cdafdbc8aa9cb9",
+      "generator_sha256": "c5644ae7541c61aab995d49026c2f57d62c201d6cdad27644b14f9db180d45d3",
+      "invalid_reasons": [],
+      "response_bytes": 1024,
+      "warmup_offers": 20,
+      "warmup_successes": 20
+    },
+    "static-100m": {
+      "offered": 1,
+      "successful": 1,
+      "rate": 1,
+      "origin_requests": null,
+      "proxy_sha256": "ab22c5ed8c1fef3c667e08baabae1376c45d3c107925150746cdafdbc8aa9cb9",
+      "generator_sha256": "c5644ae7541c61aab995d49026c2f57d62c201d6cdad27644b14f9db180d45d3",
+      "invalid_reasons": [],
+      "response_bytes": 104857600,
+      "warmup_offers": 0,
+      "warmup_successes": 0
+    }
+  }
+}
