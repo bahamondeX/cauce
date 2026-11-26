@@ -27,6 +27,11 @@
       "pattern": "^[0-9]+(ms|s|m|h)$",
       "description": "The runtime checks unit conversion and range."
     },
+    "sizeString": {
+      "type": "string",
+      "pattern": "^[0-9]+(B|KiB|MiB|GiB)$",
+      "description": "The runtime checks byte conversion and field limits."
+    },
     "identifier": {
       "anyOf": [
         {
@@ -296,9 +301,19 @@
           ]
         },
         "max_header_bytes": {
-          "type": "integer",
-          "minimum": 8192,
-          "maximum": 1048576
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 8192,
+              "maximum": 1048576
+            },
+            {
+              "$ref": "#/$defs/sizeString"
+            },
+            {
+              "$ref": "#/$defs/environment"
+            }
+          ]
         },
         "max_headers": {
           "type": "integer",
@@ -306,8 +321,18 @@
           "maximum": 1000
         },
         "max_body_bytes": {
-          "type": "integer",
-          "minimum": 1
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "$ref": "#/$defs/sizeString"
+            },
+            {
+              "$ref": "#/$defs/environment"
+            }
+          ]
         }
       }
     },
@@ -342,8 +367,18 @@
           "maximum": 100000
         },
         "rotate_bytes": {
-          "type": "integer",
-          "minimum": 4096
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 4096
+            },
+            {
+              "$ref": "#/$defs/sizeString"
+            },
+            {
+              "$ref": "#/$defs/environment"
+            }
+          ]
         },
         "retained_files": {
           "type": "integer",
@@ -681,19 +716,49 @@
           "maximum": 10000
         },
         "initial_stream_window_bytes": {
-          "type": "integer",
-          "minimum": 16384,
-          "maximum": 16777216
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 16384,
+              "maximum": 16777216
+            },
+            {
+              "$ref": "#/$defs/sizeString"
+            },
+            {
+              "$ref": "#/$defs/environment"
+            }
+          ]
         },
         "initial_connection_window_bytes": {
-          "type": "integer",
-          "minimum": 65535,
-          "maximum": 67108864
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 65535,
+              "maximum": 67108864
+            },
+            {
+              "$ref": "#/$defs/sizeString"
+            },
+            {
+              "$ref": "#/$defs/environment"
+            }
+          ]
         },
         "max_send_buffer_bytes": {
-          "type": "integer",
-          "minimum": 16384,
-          "maximum": 1048576
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 16384,
+              "maximum": 1048576
+            },
+            {
+              "$ref": "#/$defs/sizeString"
+            },
+            {
+              "$ref": "#/$defs/environment"
+            }
+          ]
         },
         "max_pending_accept_reset_streams": {
           "type": "integer",

@@ -21,16 +21,16 @@ proxy:
     max_connection_age_ms: 1m
     dns_cache_ms: 5s
     tcp_keepalive_secs: 30s
-    max_header_bytes: 32768
+    max_header_bytes: 32KiB
     max_headers: 64
-    max_body_bytes: 16777216
+    max_body_bytes: 16MiB
     shutdown_ms: 5s
 
   logs:
     enabled: true
     path: logs/access.jsonl
     queue: 4096
-    rotate_bytes: 16777216
+    rotate_bytes: 16MiB
     retained_files: 3
 
   upstreams:

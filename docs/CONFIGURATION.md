@@ -11,7 +11,14 @@ YAML starts with `version: 1`. Existing proxy fields go below `proxy`. Unknown f
 
 Duration names retain their units for interoperability with TOML. An integer in `headers_ms` means milliseconds, and an integer in `tcp_keepalive_secs` means seconds. The duration fields also accept whole-number values with `ms`, `s`, `m` or `h` suffixes. Conversion must fit the field and satisfy its configured limits. For example, `headers_ms: 5s` and `headers_ms: 5000` are equivalent.
 
-Use an entire YAML scalar such as `"${CAUCE_SERVER_KEY_FILE}"` to load a value from the process environment. Substitution runs on parsed scalar values and never reparses variable contents as YAML. References work with string fields and unit-suffixed durations. An unset or non-Unicode reference rejects the candidate. The aggregate expansion budget is 1 MiB. YAML substitution and validation diagnostics omit resolved values. TLS PEM errors identify the failing operation. Use file paths for TLS private keys. Names and upstream or route IDs are operational labels that can appear in logs.
+Byte fields accept integer bytes or whole-number values with `B`, `KiB`,
+`MiB` or `GiB` in YAML and TOML. The suffixes are binary units. For example,
+`max_header_bytes: 32KiB` is 32,768 bytes. These units apply to header and
+body limits, JSONL rotation size, and HTTP/2 window and send-buffer bytes.
+Configuration preparation checks conversion and applies the field's
+existing limits to the resulting integer.
+
+Use an entire YAML scalar such as `"${CAUCE_SERVER_KEY_FILE}"` to load a value from the process environment. Substitution runs on parsed scalar values and never reparses variable contents as YAML. References work with string fields and unit-suffixed durations and sizes. An unset or non-Unicode reference rejects the candidate. The aggregate expansion budget is 1 MiB. YAML substitution and validation diagnostics omit resolved values. TLS PEM errors identify the failing operation. Use file paths for TLS private keys. Names and upstream or route IDs are operational labels that can appear in logs.
 
 ## Virtual hosts and locations
 

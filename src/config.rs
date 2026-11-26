@@ -31,16 +31,16 @@ struct YamlConfig {
 
 #[derive(Deserialize)]
 #[serde(untagged)]
-enum DurationInput {
+enum QuantityInput {
     Number(u64),
     Unit(String),
 }
 
 fn duration<'de, D: Deserializer<'de>>(input: D, ms_per_unit: u64) -> Result<u64, D::Error> {
     use serde::de::Error;
-    let value = match DurationInput::deserialize(input)? {
-        DurationInput::Number(value) => return Ok(value),
-        DurationInput::Unit(value) => value,
+    let value = match QuantityInput::deserialize(input)? {
+        QuantityInput::Number(value) => return Ok(value),
+        QuantityInput::Unit(value) => value,
     };
     let unit_start = value.bytes().take_while(u8::is_ascii_digit).count();
     let (number, suffix) = value.split_at(unit_start);
@@ -68,6 +68,36 @@ fn milliseconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
 
 fn seconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
     duration(input, 1000)
+}
+
+fn bytes<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
+    use serde::de::Error;
+    let value = match QuantityInput::deserialize(input)? {
+        QuantityInput::Number(value) => return Ok(value),
+        QuantityInput::Unit(value) => value,
+    };
+    let unit_start = value.bytes().take_while(u8::is_ascii_digit).count();
+    let (number, suffix) = value.split_at(unit_start);
+    let factor = match suffix {
+        "B" => 1,
+        "KiB" => 1 << 10,
+        "MiB" => 1 << 20,
+        "GiB" => 1 << 30,
+        _ => return Err(D::Error::custom("size must use B, KiB, MiB or GiB")),
+    };
+    number
+        .parse::<u64>()
+        .ok()
+        .and_then(|n| n.checked_mul(factor))
+        .ok_or_else(|| D::Error::custom("invalid size magnitude"))
+}
+
+fn bytes_usize<'de, D: Deserializer<'de>>(input: D) -> Result<usize, D::Error> {
+    usize::try_from(bytes(input)?).map_err(|_| serde::de::Error::custom("size out of range"))
+}
+
+fn bytes_u32<'de, D: Deserializer<'de>>(input: D) -> Result<u32, D::Error> {
+    u32::try_from(bytes(input)?).map_err(|_| serde::de::Error::custom("size out of range"))
 }
 
 fn expand_env(
@@ -122,7 +152,7 @@ fn deserialize_yaml(data: &str, env: impl Fn(&str) -> Option<String>) -> Result<
     let mut expansion_budget = MAX_CONFIG_BYTES;
     expand_env(&mut doc, &env, &mut expansion_budget)?;
     let config: YamlConfig = yaml_serde::from_value(doc)
-        .map_err(|_| anyhow::anyhow!("invalid YAML configuration field, type or duration"))?;
+        .map_err(|_| anyhow::anyhow!("invalid YAML configuration field, type or quantity"))?;
     ensure!(
         config.version == 1,
         "unsupported YAML configuration version"
@@ -140,8 +170,11 @@ pub struct InboundTls {
 pub struct Http2Config {
     pub enabled: bool,
     pub max_concurrent_streams: u32,
+    #[serde(deserialize_with = "bytes_u32")]
     pub initial_stream_window_bytes: u32,
+    #[serde(deserialize_with = "bytes_u32")]
     pub initial_connection_window_bytes: u32,
+    #[serde(deserialize_with = "bytes_usize")]
     pub max_send_buffer_bytes: usize,
     pub max_pending_accept_reset_streams: usize,
     pub max_local_error_reset_streams: usize,
@@ -190,8 +223,10 @@ pub struct Limits {
     pub dns_cache_ms: u64,
     #[serde(deserialize_with = "seconds")]
     pub tcp_keepalive_secs: u64,
+    #[serde(deserialize_with = "bytes_usize")]
     pub max_header_bytes: usize,
     pub max_headers: usize,
+    #[serde(deserialize_with = "bytes")]
     pub max_body_bytes: u64,
     #[serde(deserialize_with = "milliseconds")]
     pub shutdown_ms: u64,
@@ -211,6 +246,7 @@ pub struct Logs {
     pub enabled: bool,
     pub path: String,
     pub queue: usize,
+    #[serde(deserialize_with = "bytes")]
     pub rotate_bytes: u64,
     pub retained_files: usize,
 }
@@ -580,6 +616,34 @@ mod tests {
                 "{new}"
             );
         }
+    }
+
+    #[test]
+    fn byte_units_compile_to_native_limits_and_reject_overflow() {
+        let original = include_str!("../examples/cauce.yaml");
+        let configure = |size: &str| {
+            let input = original.replace("16MiB", "${CAUCE_BYTES}");
+            deserialize_yaml(&input, |_| Some(size.to_owned()))
+        };
+        let valid = configure("16384KiB").unwrap();
+        assert_eq!(valid.limits.max_body_bytes, 16 * 1024 * 1024);
+        assert_eq!(valid.logs.rotate_bytes, valid.limits.max_body_bytes);
+        valid.validate().unwrap();
+        for bad in ["1.5MiB", "1KB", "1 KiB", "18446744073709551615GiB", "-1B"] {
+            assert!(configure(bad).is_err(), "{bad}");
+        }
+        assert!(configure("0B").unwrap().validate().is_err());
+        let input = format!("{original}\n  http2:\n    initial_stream_window_bytes: 4GiB\n");
+        assert!(deserialize_yaml(&input, |_| None).is_err());
+        let toml = include_str!("../examples/cauce.toml")
+            .replace("max_header_bytes = 32768", "max_header_bytes = \"32KiB\"");
+        assert_eq!(
+            toml::from_str::<Config>(&toml)
+                .unwrap()
+                .limits
+                .max_header_bytes,
+            32768
+        );
     }
 
     #[test]
