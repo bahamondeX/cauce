@@ -1,10 +1,78 @@
 //! Immutable host and path indexes compiled once per validated configuration.
-use crate::config::Route;
+use crate::config::{PathMatch, Route};
 use std::collections::{btree_map::Entry, BTreeMap, HashMap};
 
 pub struct Routes {
     single: bool,
-    hosts: HashMap<String, Node>,
+    hosts: HashMap<String, Host>,
+    #[expect(
+        clippy::box_collection,
+        reason = "keep the optional index one pointer wide"
+    )]
+    wildcards: Option<Box<HashMap<String, WildcardHosts>>>,
+}
+
+#[derive(Default)]
+struct WildcardHosts {
+    suffixes: HashMap<String, Host>,
+    prefixes: HashMap<String, Host>,
+}
+
+#[derive(Default)]
+struct Host {
+    prefixes: Node,
+    #[expect(
+        clippy::box_collection,
+        reason = "avoid an inline map in every prefix-only host"
+    )]
+    exact: Option<Box<HashMap<String, usize>>>,
+}
+
+pub(crate) struct Wildcard<'a> {
+    domain: &'a str,
+    port: &'a str,
+    suffix: bool,
+}
+
+fn authority_parts(authority: &str) -> (&str, &str) {
+    authority
+        .rfind(':')
+        .map_or((authority, ""), |index| authority.split_at(index))
+}
+
+fn dns_name(name: &str) -> bool {
+    name.len() <= 253
+        && name.split('.').all(|label| {
+            !label.is_empty()
+                && label.len() <= 63
+                && !label.starts_with('-')
+                && !label.ends_with('-')
+                && label
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        })
+}
+
+pub(crate) fn wildcard(authority: &str) -> Option<Wildcard<'_>> {
+    let (name, port) = authority_parts(authority);
+    let (domain, suffix) = if let Some(suffix) = name.strip_prefix("*.") {
+        (suffix, true)
+    } else {
+        (name.strip_suffix(".*")?, false)
+    };
+    if !dns_name(domain)
+        || (!port.is_empty()
+            && (port.len() > 6
+                || !port[1..].bytes().all(|b| b.is_ascii_digit())
+                || port[1..].parse::<u16>().ok().filter(|&p| p != 0).is_none()))
+    {
+        return None;
+    }
+    Some(Wildcard {
+        domain,
+        port,
+        suffix,
+    })
 }
 
 #[derive(Default)]
@@ -24,18 +92,39 @@ fn path_boundary(prefix: &[u8], suffix: &[u8]) -> bool {
 
 impl Routes {
     pub fn compile(routes: &[Route]) -> Self {
-        let mut hosts = HashMap::<String, Node>::new();
-        if routes.len() > 1 {
+        let mut hosts = HashMap::<String, Host>::new();
+        let mut wildcards = None;
+        let single = matches!(routes, [route] if !route.host.contains('*'));
+        if !single {
             for (id, route) in routes.iter().enumerate() {
-                hosts
-                    .entry(route.host.clone())
-                    .or_default()
-                    .insert(route.path_prefix.as_bytes(), id);
+                let index = if let Some(pattern) = wildcard(&route.host) {
+                    let by_port = wildcards.get_or_insert_with(|| Box::new(HashMap::new()));
+                    let group: &mut WildcardHosts =
+                        by_port.entry(pattern.port.to_owned()).or_default();
+                    let names = if pattern.suffix {
+                        &mut group.suffixes
+                    } else {
+                        &mut group.prefixes
+                    };
+                    names.entry(pattern.domain.to_owned()).or_default()
+                } else {
+                    hosts.entry(route.host.clone()).or_default()
+                };
+                match route.path_match {
+                    PathMatch::Exact => {
+                        index
+                            .exact
+                            .get_or_insert_with(|| Box::new(HashMap::new()))
+                            .insert(route.path_prefix.clone(), id);
+                    }
+                    PathMatch::Prefix => index.prefixes.insert(route.path_prefix.as_bytes(), id),
+                }
             }
         }
         Self {
-            single: routes.len() == 1,
+            single,
             hosts,
+            wildcards,
         }
     }
 
@@ -44,14 +133,33 @@ impl Routes {
             let route = &routes[0];
             let prefix = route.path_prefix.as_bytes();
             return (route.host == host
-                && path
-                    .as_bytes()
-                    .strip_prefix(prefix)
-                    .is_some_and(|rest| path_boundary(prefix, rest)))
+                && path.as_bytes().strip_prefix(prefix).is_some_and(|rest| {
+                    match route.path_match {
+                        PathMatch::Prefix => path_boundary(prefix, rest),
+                        PathMatch::Exact => rest.is_empty(),
+                    }
+                }))
             .then_some(route);
         }
 
-        let mut node = self.hosts.get(host)?;
+        let host = self.hosts.get(host).or_else(|| {
+            let wildcards = self.wildcards.as_ref()?;
+            let (name, port) = authority_parts(host);
+            let group = wildcards.get(port)?;
+            if !dns_name(name) {
+                return None;
+            }
+            name.match_indices('.')
+                .find_map(|(index, _)| group.suffixes.get(&name[index + 1..]))
+                .or_else(|| {
+                    name.rmatch_indices('.')
+                        .find_map(|(index, _)| group.prefixes.get(&name[..index]))
+                })
+        })?;
+        if let Some(&id) = host.exact.as_ref().and_then(|index| index.get(path)) {
+            return Some(&routes[id]);
+        }
+        let mut node = &host.prefixes;
         let mut remaining = path.as_bytes();
         let mut matched = None;
         while let Some(first) = remaining.first() {
@@ -119,6 +227,7 @@ mod tests {
             id: format!("r{id}"),
             host: host.into(),
             path_prefix: path.into(),
+            path_match: PathMatch::Prefix,
             balance: Balance::RoundRobin,
             upstreams: vec!["origin".into()],
         }
@@ -184,6 +293,96 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn wildcard_hosts_use_nginx_name_precedence_before_path_lookup() {
+        let routes = [
+            route("*.test", "/", 0),
+            route("*.example.test", "/", 1),
+            route("a.deep.*", "/", 2),
+            route("a.*", "/", 3),
+            route("a.example.test", "/exact", 4),
+            route("*.example.test:8080", "/", 5),
+            route("*.example.test", "/api", 6),
+        ];
+        let compiled = Routes::compile(&routes);
+        let resolve = |host, path| compiled.find(&routes, host, path).map(|r| r.id.as_str());
+        assert_eq!(resolve("a.example.test", "/exact"), Some("r4"));
+        assert_eq!(resolve("a.example.test", "/api"), None);
+        assert_eq!(resolve("a.deep.example.test", "/"), Some("r1"));
+        assert_eq!(resolve("a.deep.example.test", "/api/item"), Some("r6"));
+        assert_eq!(resolve("a.deep.example.test", "/apix"), Some("r1"));
+        assert_eq!(resolve("a.deep.invalid", "/"), Some("r2"));
+        assert_eq!(resolve("a.invalid", "/"), Some("r3"));
+        assert_eq!(resolve("example.test", "/"), Some("r0"));
+        assert_eq!(resolve("test", "/"), None);
+        assert_eq!(resolve("a.example.test:8080", "/"), Some("r5"));
+        for host in [
+            "a.example.test:8081",
+            "a.example.test:",
+            ".example.test",
+            "a..example.test",
+        ] {
+            assert_eq!(resolve(host, "/"), None, "{host}");
+        }
+        let single = &routes[1..2];
+        assert!(Routes::compile(single)
+            .find(single, "a.example.test", "/")
+            .is_some());
+        assert!(Routes::compile(single)
+            .find(single, "example.test", "/")
+            .is_none());
+    }
+
+    #[test]
+    fn wildcard_config_accepts_a_complete_edge_label_only() {
+        for valid in [
+            "*.example.org",
+            "mail.*",
+            "*.example.org:443",
+            "a.b.*:65535",
+        ] {
+            assert!(wildcard(valid).is_some(), "{valid}");
+        }
+        for invalid in [
+            "*",
+            "*org",
+            "www.*.org",
+            "*.org.*",
+            "*.Example.org",
+            "*..org",
+            "*.-org",
+            "*.org:",
+            "*.org:0",
+            "*.org:65536",
+            "*.org:+2",
+            "*.org@edge",
+        ] {
+            assert!(wildcard(invalid).is_none(), "{invalid}");
+        }
+    }
+
+    #[test]
+    fn exact_location_precedes_prefix_only_for_the_identical_path() {
+        let mut routes = [
+            route("*.example.test", "/api", 0),
+            route("*.example.test", "/api", 1),
+        ];
+        routes[1].path_match = PathMatch::Exact;
+        let resolve = |routes: &[Route], path| {
+            Routes::compile(routes)
+                .find(routes, "x.example.test", path)
+                .map(|r| r.id.clone())
+        };
+        assert_eq!(resolve(&routes, "/api"), Some("r1".into()));
+        assert_eq!(resolve(&routes, "/api/"), Some("r0".into()));
+        assert_eq!(resolve(&routes, "/api/child"), Some("r0".into()));
+        assert_eq!(resolve(&routes, "/apix"), None);
+        assert_eq!(resolve(&routes[1..], "/api/child"), None);
+        routes[1].host = "x.example.test".into();
+        assert_eq!(resolve(&routes, "/api/child"), None);
+        assert_eq!(resolve(&routes[1..], "/api"), Some("r1".into()));
     }
 
     #[test]

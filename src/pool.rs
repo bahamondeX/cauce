@@ -1531,6 +1531,7 @@ mod pool_tests {
                 id: "route".into(),
                 host: "example.test".into(),
                 path_prefix: "/".into(),
+                path_match: crate::config::PathMatch::Prefix,
                 balance: Balance::RoundRobin,
                 upstreams: vec!["backend".into()],
             }],

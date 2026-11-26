@@ -1,9 +1,9 @@
 {
   "mappings": {
-    "ngx_http_core_module": {"status":"partial","notes":"One data listener, exact lowercased authority and segment-aware prefix routing."},
+    "ngx_http_core_module": {"status":"partial","notes":"One data listener with exact and edge-wildcard host names, literal exact paths and segment-aware prefixes."},
     "ngx_http_core_module.listen": {"status":"partial","notes":"One configured TCP data address. Listener options and per-server sockets are unavailable."},
-    "ngx_http_core_module.server_name": {"status":"partial","notes":"Exact authority only, with port significant."},
-    "ngx_http_core_module.location": {"status":"partial","notes":"Longest segment-aware prefix. Regex, named locations, internal redirects and modifiers are unavailable."},
+    "ngx_http_core_module.server_name": {"status":"partial","notes":"Exact names, complete leading and trailing wildcard labels, longest wildcard precedence and significant port. Default servers, shorthand names and regex are unavailable."},
+    "ngx_http_core_module.location": {"status":"partial","notes":"Literal exact locations take precedence over the longest segment-aware prefix. Regex, named locations, internal redirects and other modifiers are unavailable."},
     "ngx_http_core_module.client_max_body_size": {"status":"partial","notes":"Global byte limit applies to upload and download. Streaming bodies exceeding it can be interrupted after headers."},
     "ngx_http_core_module.client_header_timeout": {"status":"partial","notes":"Global header deadline with separate HTTP/2 framing semantics."},
     "ngx_http_proxy_module": {"status":"partial","notes":"Bounded streaming to configured upstreams only."},
@@ -39,7 +39,7 @@
     {"id":"http-2-header-observer","status":"verified","scope":"Absolute framing deadline for partial headers and continuation; bounded observer under an address-sanitized fuzz campaign","tests":["src/transport.rs","fuzz/fuzz_targets/header_observer.rs"],"evidence":["bench/program/evidence/fuzz-recovered-linux-arm64.log.gz"]},
     {"id":"grpc","status":"partial","scope":"Native gRPC cleartext and TLS, deadlines, trailers and backpressure","tests":["scripts/test-http2-docker.py","bench/increment8/gate_h2.mjs"],"evidence":["bench/program/evidence/candidate-http2-linux-arm64.json","bench/program/evidence/milestone-2/http2-eos-candidate.json"]},
     {"id":"websocket","status":"partial","scope":"HTTP/1.1 upgrade tunnel, bounded idle and lifetime, base RFC6455 framing passthrough","tests":["scripts/test-websocket-edges.py"]},
-    {"id":"routing","status":"partial","scope":"Exact authority and longest segment-aware path prefix","tests":["tests/integration.py"],"evidence":["bench/program/evidence/candidate-integration-darwin-arm64.log"]},
+    {"id":"routing","status":"partial","scope":"Exact and edge-wildcard authorities with exact path and segment-aware prefix routing","tests":["src/routing.rs","tests/integration.py","tests/compare_nginx_routing.py"],"evidence":["bench/program/evidence/milestone-3/routing-nginx.jsonl"]},
     {"id":"tls","status":"partial","scope":"Inbound TLS, verified upstream TLS, no client certificate configuration","tests":["scripts/test-tls-lifecycle.py","scripts/test-tls-docker.py"]},
     {"id":"pooling","status":"partial","scope":"Global and endpoint budgets, HTTP/1 exclusive leases and HTTP/2 multiplexing. The experimental endpoint-sharded pool uses the same numeric endpoint and generation identity. The compact pool remains the default.","tests":["tests/integration.py","tests/resilience/proxy_failures.py","scripts/test-http2-stress-docker.py","src/pool.rs","bench/program/pool-transport.py"],"evidence":["bench/program/evidence/milestone-2c/pool-matrix.json"]},
     {"id":"reload","status":"partial","scope":"SIGHUP route/upstream and certificate reload with rejected candidate preservation","tests":["tests/integration.py","scripts/test-tls-lifecycle.py"],"evidence":["bench/program/evidence/candidate-integration-darwin-arm64.log"]},

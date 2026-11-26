@@ -605,7 +605,20 @@
           "$ref": "#/$defs/identifier"
         },
         "host": {
-          "$ref": "#/$defs/authority"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/environment"
+            },
+            {
+              "type": "string",
+              "pattern": "^[^*A-Z]+$"
+            },
+            {
+              "type": "string",
+              "maxLength": 261,
+              "pattern": "^(\\*\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\\.\\*)(:[0-9]{1,5})?$"
+            }
+          ]
         },
         "path_prefix": {
           "anyOf": [
@@ -617,6 +630,17 @@
               "minLength": 1,
               "maxLength": 256,
               "pattern": "^/[^?#%]*$"
+            }
+          ]
+        },
+        "path_match": {
+          "default": "prefix",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/environment"
+            },
+            {
+              "enum": ["prefix", "exact"]
             }
           ]
         },

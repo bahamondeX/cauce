@@ -13,6 +13,21 @@ Duration names retain their units for interoperability with TOML. An integer in 
 
 Use an entire YAML scalar such as `"${CAUCE_SERVER_KEY_FILE}"` to load a value from the process environment. Substitution runs on parsed scalar values and never reparses variable contents as YAML. References work with string fields and unit-suffixed durations. An unset or non-Unicode reference rejects the candidate. The aggregate expansion budget is 1 MiB. YAML substitution and validation diagnostics omit resolved values. TLS PEM errors identify the failing operation. Use file paths for TLS private keys. Names and upstream or route IDs are operational labels that can appear in logs.
 
+## Virtual hosts and locations
+
+Use a lowercase exact authority, a leading wildcard such as `"*.example.test"`,
+or a trailing wildcard such as `"mail.*"`. A wildcard consumes one or more
+complete DNS labels. Supply the port in the pattern when the client sends it
+in the authority. For example, `"*.example.test:8080"` matches
+`tenant.example.test:8080`. Matching selects the exact authority first, then
+the longest leading wildcard, then the longest trailing wildcard.
+
+Choose `path_match: exact` for a literal path. The match ignores the query.
+Set `path_prefix` to the path in either mode. Exact paths take priority within
+the selected host. The default mode uses the longest segment-bounded prefix.
+A host with no matching path returns 404. Match selection never falls through
+to another virtual host. [Complete YAML example](../examples/wildcard-hosts.yaml).
+
 ## Reload and rollback
 
 Prepare the full candidate in a file next to the active configuration, retaining the same YAML or TOML extension. Run `cauce check` against the candidate, rename it over the active path on the same filesystem, and send the running process SIGHUP. The running process checks the listener, limits, HTTP/2 and logging settings for restart requirements and prepares certificates, trust stores, routes and upstreams before activating a generation. A rejected candidate leaves the current generation active.
@@ -31,6 +46,6 @@ uv run --no-project --with pyyaml python scripts/nginx-migration-report.py nginx
 cargo run --locked -- check candidate.yaml
 ```
 
-The report identifies each directive's line, context, reference registrations, coverage and known semantic differences. The registry includes the pinned NGINX source release, njs HTTP and stream modules, and the nginx-acme module and its issuer-block directives. Analyze included files separately. Directive arguments stay out of the report. The preview accepts a single cleartext HTTP server with an explicit IPv4 listener, an exact DNS server name, and plain prefix locations that proxy to literal IPv4 upstreams. It generates a review-only file with Cauce defaults. Review route matching, host forwarding, buffering, timeouts and capacity before use. Unsupported structures cause the preview command to exit unsuccessfully, and an existing output file is protected.
+The report identifies each directive's line, context, reference registrations, coverage and known semantic differences. The registry includes the pinned NGINX source release, njs HTTP and stream modules, and the nginx-acme module and its issuer-block directives. Analyze included files separately. Directive arguments stay out of the report. The preview accepts a single cleartext HTTP server with an explicit IPv4 listener, explicit DNS names or edge wildcards, and literal exact or plain prefix locations that proxy to literal IPv4 upstreams. It generates a review-only file with Cauce defaults and records its confidence and a validation command. Review route matching, host forwarding, buffering, timeouts and capacity before use. Unsupported structures cause the preview command to exit unsuccessfully, and an existing output file is protected.
 
 Regenerate the source inventory with `python3 scripts/nginx-inventory.py` or verify the generated file with `--check`. Pass `--tarball`, `--njs-tarball` and `--acme-tarball` to use local copies of the checksummed sources. Maintain Cauce feature statuses and test references in [nginx-coverage.json](../compatibility/nginx-coverage.json).

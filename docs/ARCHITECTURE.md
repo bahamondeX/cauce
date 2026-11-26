@@ -16,6 +16,15 @@ Cada socket cliente tiene una tarea, cada conexión upstream un driver; ambos ti
 Los workers Gunicorn/Uvicorn son procesos propios del backend y nunca los inicia el proxy.
 `TOKIO_WORKER_THREADS` controla threads sin fragmentar capacidad upstream.
 
+## Selección de virtual host y ruta
+
+La preparación de una generación arma el índice de autoridades exactas y,
+cuando la configuración los usa, índices separados para comodines DNS y
+rutas literales. La precedencia selecciona el host primero y luego la ruta.
+Las coincidencias exactas preservan el puerto y el índice radix conserva el
+límite de segmento para prefijos. Una generación inválida se rechaza antes
+del intercambio. [ADR 0009](adr/0009-virtual-host-and-location-precedence.md).
+
 ## Pool y transporte
 
 Un pool global en memoria, semáforo global de conexiones y semáforo por endpoint.

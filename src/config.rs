@@ -268,8 +268,23 @@ pub struct Route {
     pub id: String,
     pub host: String,
     pub path_prefix: String,
+    #[serde(default, skip_serializing_if = "PathMatch::is_prefix")]
+    pub path_match: PathMatch,
     pub balance: Balance,
     pub upstreams: Vec<String>,
+}
+#[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Eq, Hash, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum PathMatch {
+    #[default]
+    Prefix,
+    Exact,
+}
+
+impl PathMatch {
+    fn is_prefix(&self) -> bool {
+        *self == Self::Prefix
+    }
 }
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "snake_case")]
@@ -484,13 +499,18 @@ impl Config {
                 identifier(&r.id) && route_ids.insert(&r.id),
                 "invalid/duplicate route id"
             );
-            ensure!(
-                !r.host.is_empty()
-                    && r.host == r.host.to_ascii_lowercase()
-                    && !r.host.contains('*'),
-                "route host must be exact lowercase authority"
-            );
-            let _: hyper::http::uri::Authority = r.host.parse()?;
+            if r.host.contains('*') {
+                ensure!(
+                    crate::routing::wildcard(&r.host).is_some(),
+                    "route host must use a wildcard on one edge of a lowercase DNS name"
+                );
+            } else {
+                ensure!(
+                    !r.host.is_empty() && r.host == r.host.to_ascii_lowercase(),
+                    "route host must be a lowercase authority"
+                );
+                let _: hyper::http::uri::Authority = r.host.parse()?;
+            }
             ensure!(
                 r.path_prefix.starts_with('/')
                     && !r.path_prefix.contains(['?', '#', '%'])
@@ -498,7 +518,7 @@ impl Config {
                 "invalid path prefix"
             );
             ensure!(
-                matches.insert((&r.host, &r.path_prefix)),
+                matches.insert((&r.host, &r.path_prefix, r.path_match)),
                 "duplicate route match"
             );
             ensure!(

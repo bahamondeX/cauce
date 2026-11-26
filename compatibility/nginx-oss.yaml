@@ -316,7 +316,7 @@ modules:
         directives:
           - {"name": "output_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
   ngx_http_core_module:
-    coverage: {"status": "partial", "notes": "One data listener, exact lowercased authority and segment-aware prefix routing."}
+    coverage: {"status": "partial", "notes": "One data listener with exact and edge-wildcard host names, literal exact paths and segment-aware prefixes."}
     definitions:
       - source: src/http/ngx_http_core_module.c
         type: NGX_HTTP_MODULE
@@ -364,7 +364,7 @@ modules:
           - {"name": "lingering_time", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "lingering_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "listen", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "One configured TCP data address. Listener options and per-server sockets are unavailable."}
-          - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Longest segment-aware prefix. Regex, named locations, internal redirects and modifiers are unavailable."}
+          - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Literal exact locations take precedence over the longest segment-aware prefix. Regex, named locations, internal redirects and other modifiers are unavailable."}
           - {"name": "log_not_found", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "log_subrequest", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "max_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -393,7 +393,7 @@ modules:
           - {"name": "sendfile", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_FLAG"]}
           - {"name": "sendfile_max_chunk", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "server", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_CONF_BLOCK", "NGX_CONF_NOARGS"]}
-          - {"name": "server_name", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Exact authority only, with port significant."}
+          - {"name": "server_name", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Exact names, complete leading and trailing wildcard labels, longest wildcard precedence and significant port. Default servers, shorthand names and regex are unavailable."}
           - {"name": "server_name_in_redirect", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "server_names_hash_bucket_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "server_names_hash_max_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_CONF_TAKE1"]}
@@ -1653,7 +1653,7 @@ behaviors:
   - {"id": "http-2-header-observer", "status": "verified", "scope": "Absolute framing deadline for partial headers and continuation; bounded observer under an address-sanitized fuzz campaign", "tests": ["src/transport.rs", "fuzz/fuzz_targets/header_observer.rs"], "evidence": ["bench/program/evidence/fuzz-recovered-linux-arm64.log.gz"]}
   - {"id": "grpc", "status": "partial", "scope": "Native gRPC cleartext and TLS, deadlines, trailers and backpressure", "tests": ["scripts/test-http2-docker.py", "bench/increment8/gate_h2.mjs"], "evidence": ["bench/program/evidence/candidate-http2-linux-arm64.json", "bench/program/evidence/milestone-2/http2-eos-candidate.json"]}
   - {"id": "websocket", "status": "partial", "scope": "HTTP/1.1 upgrade tunnel, bounded idle and lifetime, base RFC6455 framing passthrough", "tests": ["scripts/test-websocket-edges.py"]}
-  - {"id": "routing", "status": "partial", "scope": "Exact authority and longest segment-aware path prefix", "tests": ["tests/integration.py"], "evidence": ["bench/program/evidence/candidate-integration-darwin-arm64.log"]}
+  - {"id": "routing", "status": "partial", "scope": "Exact and edge-wildcard authorities with exact path and segment-aware prefix routing", "tests": ["src/routing.rs", "tests/integration.py", "tests/compare_nginx_routing.py"], "evidence": ["bench/program/evidence/milestone-3/routing-nginx.jsonl"]}
   - {"id": "tls", "status": "partial", "scope": "Inbound TLS, verified upstream TLS, no client certificate configuration", "tests": ["scripts/test-tls-lifecycle.py", "scripts/test-tls-docker.py"]}
   - {"id": "pooling", "status": "partial", "scope": "Global and endpoint budgets, HTTP/1 exclusive leases and HTTP/2 multiplexing. The experimental endpoint-sharded pool uses the same numeric endpoint and generation identity. The compact pool remains the default.", "tests": ["tests/integration.py", "tests/resilience/proxy_failures.py", "scripts/test-http2-stress-docker.py", "src/pool.rs", "bench/program/pool-transport.py"], "evidence": ["bench/program/evidence/milestone-2c/pool-matrix.json"]}
   - {"id": "reload", "status": "partial", "scope": "SIGHUP route/upstream and certificate reload with rejected candidate preservation", "tests": ["tests/integration.py", "scripts/test-tls-lifecycle.py"], "evidence": ["bench/program/evidence/candidate-integration-darwin-arm64.log"]}
