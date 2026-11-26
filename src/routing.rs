@@ -94,7 +94,8 @@ impl Routes {
     pub fn compile(routes: &[Route]) -> Self {
         let mut hosts = HashMap::<String, Host>::new();
         let mut wildcards = None;
-        let single = matches!(routes, [route] if !route.host.contains('*'));
+        let single = matches!(routes, [route]
+            if route.path_match == PathMatch::Prefix && !route.host.contains('*'));
         if !single {
             for (id, route) in routes.iter().enumerate() {
                 let index = if let Some(pattern) = wildcard(&route.host) {
@@ -133,12 +134,10 @@ impl Routes {
             let route = &routes[0];
             let prefix = route.path_prefix.as_bytes();
             return (route.host == host
-                && path.as_bytes().strip_prefix(prefix).is_some_and(|rest| {
-                    match route.path_match {
-                        PathMatch::Prefix => path_boundary(prefix, rest),
-                        PathMatch::Exact => rest.is_empty(),
-                    }
-                }))
+                && path
+                    .as_bytes()
+                    .strip_prefix(prefix)
+                    .is_some_and(|rest| path_boundary(prefix, rest)))
             .then_some(route);
         }
 

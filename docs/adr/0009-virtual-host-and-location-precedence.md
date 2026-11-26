@@ -12,7 +12,7 @@ priority only for their identical path. Preserve the query for forwarding.
 
 The lookup uses borrowed hostname slices and bounded DNS label trials.
 Exact-only configurations allocate no wildcard map. Prefix-only hosts
-allocate no literal-path map. A single exact-authority route still bypasses
+allocate no literal-path map. A single exact-authority prefix route still bypasses
 the compiled maps. Invalid patterns or duplicate path modes reject a reload
 before publication.
 
