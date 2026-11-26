@@ -38,6 +38,47 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(validation.returncode, 0, validation.stderr)
             return result.returncode, report, config
 
+    def test_stream_preview_validates_literal_listeners_and_requires_proxy_trust(self):
+        template = """
+        stream {
+            server {
+                listen 127.0.0.1:15432 proxy_protocol;
+                set_real_ip_from 127.0.0.1/32;
+                proxy_protocol on;
+                proxy_half_close on;
+                proxy_pass unix:/tmp/fixture.sock;
+            }
+            server {
+                listen [::1]:1053 udp;
+                proxy_responses 1;
+                proxy_pass [::1]:5353;
+                proxy_timeout 5s;
+            }
+            server {
+                listen 127.0.0.1:8443;
+                ssl_preread on;
+                proxy_pass 127.0.0.1:9443;
+            }
+        }
+        """
+        with tempfile.TemporaryDirectory() as tmp:
+            source, destination = (Path(tmp) / f for f in ("nginx.conf", "preview.yaml"))
+            args = [sys.executable, str(TOOL), str(source), "--preview", str(destination)]
+            source.write_text(template)
+            result = subprocess.run(args, capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stdout)
+            stream = yaml.safe_load(destination.read_text())["proxy"]["stream"]
+            self.assertEqual(stream["tcp"][0]["options"]["proxy_out"], "v1")
+            self.assertEqual(stream["udp"][0]["options"]["idle_timeout"], "5s")
+            self.assertEqual(stream["tls_passthrough"][0]["routes"], [])
+            if (ROOT / "target/debug/cauce").is_file():
+                subprocess.run([str(ROOT / "target/debug/cauce"), "check", str(destination)],
+                               capture_output=True, check=True)
+            destination.unlink()
+            source.write_text(template.replace("set_real_ip_from 127.0.0.1/32;", ""))
+            self.assertEqual(subprocess.run(args, capture_output=True).returncode, 1)
+            self.assertFalse(destination.exists())
+
     def test_literal_locations_and_aliases_have_review_and_validation_metadata(self):
         code, report, config = self.run_preview("API.example.org *.example.org mail.* API.example.org",
             "location /health { proxy_pass http://127.0.0.1:2010; } "

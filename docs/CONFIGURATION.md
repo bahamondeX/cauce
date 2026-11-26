@@ -174,3 +174,26 @@ do not reuse upstream connections from the previous generation. An invalid
 candidate preserves the previous TLS configuration. Client trust on the
 data listener applies across its SNI names.
 [Mutual TLS YAML](../examples/gateway-mtls.yaml).
+
+## Stream and HTTP/3 listeners
+
+The YAML `proxy.stream` key and the TOML `stream` tables declare
+[TCP](TCP-PROXY.md), [UDP](UDP-PROXY.md) and
+[TLS passthrough](TLS-PASSTHROUGH.md). An installation can omit
+`proxy.listen`, HTTP upstreams and routes when it only serves stream
+traffic. `proxy.listeners` adds separate HTTP and HTTPS TCP sockets.
+`proxy.http3` declares an independent QUIC UDP listener.
+[HTTP/3 examples and lifecycle](HTTP3.md).
+
+Listener addresses, stream configuration, admission budgets and QUIC
+transport parameters require restart. SIGHUP reloads routes, HTTP
+upstreams and certificate material on existing TLS listeners. An invalid
+candidate preserves the active generation. Graceful shutdown drains
+admitted traffic up to the configured shutdown deadline.
+
+The migration preview supports literal TCP or one-response UDP origins,
+trusted TCP PROXY and constant-origin TLS preread, alongside its HTTP
+subset. Review half-close behavior, UDP reply credit, session limits and
+restart requirements before using the preview. Variable NGINX Stream maps,
+named Stream upstream blocks and generic resolver directives require
+manual migration.

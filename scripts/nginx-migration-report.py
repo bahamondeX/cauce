@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit an NGINX config offline and emit a Cauce preview for a small HTTP subset."""
+"""Audit an NGINX config offline and emit a Cauce preview for a bounded HTTP and Stream subset."""
 
 import argparse
 from dataclasses import dataclass, field
@@ -20,7 +20,7 @@ TOKEN = re.compile(
 )
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9-]*\Z")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\Z")
-STRUCTURE = {("http",), ("events",), ("http", "server")}
+STRUCTURE = {("http",), ("events",), ("http", "server"), ("stream",), ("stream", "server")}
 VALUE_BLOCKS = {"charset_map", "geo", "map", "split_clients", "types"}
 HEADER_NAME = re.compile(r"[!#$%&'*+.^_`|~0-9a-z-]{1,64}\Z")
 RESERVED_HEADERS = {
@@ -321,7 +321,7 @@ def listen_preview(items):
     return ipv4_socket(address), tls
 
 
-def preview(directives):
+def http_preview(directives):
     http = [d for d in directives if d.name == "http" and d.children is not None and not d.args]
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
     if len(http) != 1 or len(events) > 1 or len(http) + len(events) != len(directives):
@@ -395,6 +395,125 @@ def preview(directives):
     return config
 
 
+def stream_address(value):
+    if value.startswith("["):
+        match = re.fullmatch(r"\[([0-9a-fA-F:]+)\]:([0-9]{1,5})", value)
+        if match and 1 <= int(match[2]) <= 65535:
+            return f"[{ipaddress.IPv6Address(match[1])}]:{int(match[2])}"
+        raise ValueError("preview requires an explicit IPv6 socket address")
+    return ipv4_socket(value)
+
+
+def stream_preview(block, proxy):
+    if not 1 <= len(block.children) <= 64:
+        raise ValueError("stream preview requires one to 64 server blocks")
+    listeners = {"upstreams": [], "tcp": [], "udp": [], "tls_passthrough": []}
+    for server in block.children:
+        if server.name != "server" or server.args or server.children is None:
+            raise ValueError("stream preview requires literal server blocks")
+        entries = server.children
+        found = [node for node in entries if node.name == "listen"]
+        if len(found) != 1 or not found[0].args or found[0].children is not None:
+            raise ValueError("stream preview requires one literal listen per server")
+        address, *flags = found[0].args
+        allowed_flags = {"udp", "proxy_protocol", "reuseport"}
+        if set(flags) - allowed_flags or len(set(flags)) != len(flags):
+            raise ValueError("unsupported stream listener option")
+        listen = stream_address(address)
+        is_udp = "udp" in flags
+        options = {}
+        if "reuseport" in flags:
+            options["reuse_port"] = True
+        target = one_value(entries, "proxy_pass")
+        if target.startswith("unix:") and not is_udp:
+            socket_path = target.removeprefix("unix:")
+            if not re.fullmatch(r"/[a-zA-Z0-9/._-]{1,102}", socket_path):
+                raise ValueError("stream preview requires an absolute Unix path")
+            endpoint = {"unix": socket_path}
+        else:
+            endpoint = {"address": stream_address(target)}
+        group = f"stream{len(listeners['upstreams']) + 1}"
+        listeners["upstreams"].append({"id": group, "endpoints": [endpoint]})
+        row = {"listen": listen, "upstream": group, "options": options}
+        allowed = {"listen", "proxy_pass", "proxy_timeout"}
+        if any(node.name == "proxy_timeout" for node in entries):
+            options["idle_timeout"] = migration_duration(one_value(entries, "proxy_timeout"))
+        if is_udp:
+            allowed.add("proxy_responses")
+            if "proxy_protocol" in flags or one_value(entries, "proxy_responses") != "1":
+                raise ValueError("UDP preview requires the explicit one-response subset")
+            destination = "udp"
+        else:
+            allowed.update({"proxy_connect_timeout", "proxy_half_close", "proxy_protocol",
+                            "proxy_protocol_timeout", "set_real_ip_from", "ssl_preread", "preread_timeout"})
+            if any(node.name == "proxy_connect_timeout" for node in entries):
+                options["connect_timeout"] = migration_duration(one_value(entries, "proxy_connect_timeout"))
+            if any(node.name == "proxy_half_close" for node in entries):
+                if one_value(entries, "proxy_half_close") != "on":
+                    raise ValueError("TCP preview requires half-close behavior enabled")
+            if any(node.name == "proxy_protocol" for node in entries):
+                if one_value(entries, "proxy_protocol") != "on":
+                    raise ValueError("TCP preview supports explicit outbound PROXY v1")
+                options["proxy_out"] = "v1"
+            trust = [node for node in entries if node.name == "set_real_ip_from"]
+            header_timeout = any(node.name == "proxy_protocol_timeout" for node in entries)
+            if "proxy_protocol" in flags:
+                if not 1 <= len(trust) <= 256 or any(node.children is not None or len(node.args) != 1 for node in trust):
+                    raise ValueError("inbound PROXY preview requires explicit trusted IP networks")
+                try:
+                    networks = list(dict.fromkeys(str(ipaddress.ip_network(node.args[0], strict=False)) for node in trust))
+                except ValueError:
+                    raise ValueError("inbound PROXY preview requires literal IPv4 or IPv6 networks") from None
+                options["proxy_in"] = {"trusted_peers": networks}
+                if header_timeout:
+                    options["proxy_in"]["header_timeout"] = migration_duration(one_value(entries, "proxy_protocol_timeout"))
+            elif trust or header_timeout:
+                raise ValueError("PROXY trust and header timeout require inbound PROXY")
+            preread = any(node.name == "ssl_preread" for node in entries)
+            preread_timeout = any(node.name == "preread_timeout" for node in entries)
+            if preread:
+                if one_value(entries, "ssl_preread") != "on":
+                    raise ValueError("TLS preread preview supports explicit ssl_preread on")
+                row.pop("upstream")
+                row.update(default_upstream=group, routes=[])
+                if preread_timeout:
+                    row["preread_timeout"] = migration_duration(one_value(entries, "preread_timeout"))
+            elif preread_timeout:
+                raise ValueError("preread_timeout requires TLS preread")
+            destination = "tls_passthrough" if preread else "tcp"
+        if any(node.name not in allowed or node.children is not None for node in entries):
+            raise ValueError("stream preview contains an unsupported directive")
+        listeners[destination].append(row)
+    proxy["stream"] = {key: rows for key, rows in listeners.items() if rows}
+
+
+def migration_duration(value):
+    match = re.fullmatch(r"([0-9]{1,8})(ms|s|m|h)?", value)
+    if not match:
+        raise ValueError("stream preview requires a positive duration")
+    amount, unit = int(match[1]), match[2] or "s"
+    if not 1 <= amount * {"ms":1, "s":1000, "m":60_000, "h":3_600_000}[unit] <= 86_400_000:
+        raise ValueError("stream preview duration is out of range")
+    return f"{amount}{unit}"
+
+
+def preview(directives):
+    streams = [node for node in directives if node.name == "stream"]
+    if not streams:
+        return http_preview(directives)
+    if len(streams) != 1 or streams[0].args or streams[0].children is None:
+        raise ValueError("preview requires one Stream block")
+    other = [node for node in directives if node is not streams[0]]
+    if all(node.name == "events" and node.children == [] and not node.args for node in other) and len(other) <= 1:
+        config = yaml.safe_load((ROOT / "examples/cauce.yaml").read_text())
+        for key in ("listen", "upstreams", "routes"):
+            config["proxy"].pop(key)
+    else:
+        config = http_preview(other)
+    stream_preview(streams[0], config["proxy"])
+    return config
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("config", type=Path)
@@ -417,6 +536,7 @@ def main():
                   "Cauce routes on the raw URI path. NGINX normalizes URIs. Regex and named locations require manual migration.",
                   "The preview matches explicit server names with the listener port or no port. NGINX also has default-server behavior.",
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
+                  "Stream previews use literal origins, TCP half-close, and UDP response credit. Review session limits and restart requirements.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Static proxy header policies omit NGINX inheritance and implicit hide rules.",
                   "Static file previews bind literal directories with symlinks and hidden files denied by default. Index handling stays inside the selected document root.",
