@@ -26,4 +26,12 @@ if [[ $status == 0 ]]; then
             >"$results/profile.log" 2>&1 || true
     fi
 fi
+(
+    cd "$results"
+    checksum_tmp=$(mktemp .SHA256SUMS.XXXXXXXX)
+    trap 'rm -f "$checksum_tmp"' EXIT
+    find . -type f ! -path './SHA256SUMS' ! -path "./$checksum_tmp" -print0 |
+        LC_ALL=C sort -z | xargs -0 -r sha256sum >"$checksum_tmp"
+    mv "$checksum_tmp" SHA256SUMS
+)
 exit "$status"
