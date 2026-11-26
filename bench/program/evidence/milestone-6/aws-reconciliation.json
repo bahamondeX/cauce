@@ -1,0 +1,21 @@
+{
+  "account_suffix": "6271",
+  "region": "us-east-1",
+  "identity_api": "STS GetCallerIdentity",
+  "amd64_instance": "i-0c096fff684757a2b",
+  "instance_by_id_reservations_after_cleanup": 0,
+  "campaign_tagged_volumes_after_cleanup": 0,
+  "campaign_tagged_interfaces_after_cleanup": 0,
+  "deleted_security_group": "sg-0b8c7201448187b16",
+  "deleted_role": "cauce-m3-native-20261126-ssm",
+  "deleted_instance_profile": "cauce-m3-native-20261126-ssm",
+  "independent_post_delete_checks": {"security_group": "InvalidGroup.NotFound", "role": "NoSuchEntity", "profile": "NoSuchEntity"},
+  "billing": {
+    "project_tag_active": false,
+    "campaign_tag_active": false,
+    "resource_level_granularity_opted_in": false,
+    "estimated_tag_filtered_usd": 0,
+    "actual_campaign_usd": null
+  },
+  "new_aws_resources": 0
+}
