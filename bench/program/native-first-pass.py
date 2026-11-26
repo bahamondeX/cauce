@@ -65,7 +65,8 @@ def main():
     paths = {name: args.bin / name for name in ("cauce", "nginx")}
     output = args.output
     references = [name for name in ("haproxy", "pingora") if (args.bin / name).is_file()]
-    identities = {name: digest(args.bin / name) for name in [*paths, *references]}
+    revisions = [name for name in ("cauce-published", "cauce-checkpoint") if (args.bin / name).is_file()]
+    identities = {name: digest(args.bin / name) for name in [*paths, *references, *revisions]}
     identities["generator"] = digest(generator)
     pool_binary = "cauce-fixed" if (args.bin / "cauce-fixed").is_file() else "cauce"
     identities["pool_binary"] = digest(args.bin / pool_binary)
@@ -126,8 +127,8 @@ def main():
             if lower_rates:
                 run(f"cauce-{workers}w-conservative", "cauce", workers,
                     rates=lower_rates, stability=90 if workers == 4 else 0)
-    if (args.bin / "cauce-published").is_file():
-        run("published-1w", "cauce-published", rates=(500, 1000, 2000, 4000, 8000))
+    for name in revisions:
+        run(f"{name.removeprefix('cauce-')}-1w", name, rates=(500, 1000, 2000, 4000, 8000))
     for name in references:
         run(f"{name}-1w", name, rates=(500, 1000, 2000, 4000, 8000))
     run("cauce-h2-1w", "cauce", protocol="http2", rates=(500, 1000, 2000, 4000, 8000))

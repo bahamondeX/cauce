@@ -27,8 +27,11 @@ def check_cell(path):
     for field in AUDITED:
         if raw[field] != archived[field]:
             raise ValueError(f"{path} disagrees with raw offers on {field}")
+    if "warmup_outcomes" in archived and raw["warmup_outcomes"] != archived["warmup_outcomes"]:
+        raise ValueError(f"{path} disagrees with raw warm-up outcomes")
     return {"offers": raw["offered"], "qualified": passes(raw, *LIMITS),
-            "invalid": raw["invalid_reasons"], "successful": raw["successful"]}
+            "invalid": raw["invalid_reasons"], "successful": raw["successful"],
+            "outcomes": raw["outcomes"], "warmup_outcomes": raw["warmup_outcomes"]}
 
 
 def parse_campaign(folder, run):

@@ -49,9 +49,25 @@ class CapacityAuditTests(unittest.TestCase):
         self.assertEqual(measurement["invalid_reasons"], ["scheduler p99 exceeds 10 ms"])
         self.assertFalse(passes(measurement, 100_000_000, 100_000_000, 1, 0))
 
+    def test_warmup_queue_rejections_are_counted_separately(self):
+        self.spec["warmup_seconds"] = 1
+        self.summary.update(warmup_offers=2, warmup_successes=1)
+        rejected = dict(self.rows[0], start_ns=None, status=None, bytes=0, outcome="queue_rejection")
+        warm = self.path.with_suffix(".warmup.jsonl")
+        warm.write_text("".join(json.dumps(row) + "\n" for row in (rejected, self.rows[1])))
+        measurement = self.inspect()
+        self.assertEqual(measurement["warmup_outcomes"], {"queue_rejection": 1, "success": 1})
+        self.assertEqual(measurement["outcomes"], {"success": 2})
+        self.assertFalse(passes(measurement, 100, 100, 1, 0))
+        warm.write_text("".join(json.dumps(row) + "\n" for row in
+                                (rejected, dict(self.rows[1], bytes=0))))
+        with self.assertRaisesRegex(ValueError, "warmup.jsonl.*inconsistent success"):
+            self.inspect()
+
 
 class BracketTests(unittest.TestCase):
-    def run_campaign(self, limit=350, control_limit=2_000, confirmation=True, postflight=True):
+    def run_campaign(self, limit=350, control_limit=2_000, confirmation=True, postflight=True,
+                     rejection="service"):
         attempted = []
         report = {}
 
@@ -64,9 +80,13 @@ class BracketTests(unittest.TestCase):
                 passes_at_rate &= confirmation
             if label == "control-after":
                 passes_at_rate &= postflight
+            warmup_successes = int(passes_at_rate or rejection != "warmup")
+            outcome = ("success" if passes_at_rate else
+                       "queue_rejection" if rejection == "queue" else "request_timeout")
             return {
                 "invalid_reasons": [], "scheduled_latency_ns": {"p99": 1, "p99.9": 1},
-                "warmup_offers": 1, "warmup_successes": 1, "rate": spec["rate"],
+                "warmup_offers": 1, "warmup_successes": warmup_successes, "rate": spec["rate"],
+                "outcomes": {outcome: 1},
                 "offered": 1, "successful": int(passes_at_rate),
                 "goodput_per_s": spec["rate"] if passes_at_rate else 0,
             }
@@ -90,6 +110,16 @@ class BracketTests(unittest.TestCase):
         self.assertEqual(report["interpretation"], "confirmed_lower_bound")
         self.assertNotIn(("ramp-500", 500), attempts)
         self.assertEqual(attempts[-1], ("control-after", 500))
+
+    def test_ambiguous_loss_never_qualifies_scaling_boundary(self):
+        for loss, reason in (("warmup", "warmup_loss"), ("queue", "generator_queue_loss")):
+            with self.subTest(loss=loss):
+                status, report, _ = self.run_campaign(rejection=loss)
+                self.assertEqual(status, "CONFIRMED")
+                self.assertEqual(report["interpretation"], "confirmed_lower_bound")
+                self.assertIsNone(report["first_failing_rate"])
+                self.assertEqual(report["unattributed_rate"], 375)
+                self.assertEqual(report["upper_rate_evidence"], reason)
 
     def test_control_and_confirmation_cannot_promote_failed_run(self):
         status, report, _ = self.run_campaign(confirmation=False)

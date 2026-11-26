@@ -32,6 +32,23 @@ def quantile(values, fraction):
     return sorted(values)[math.ceil(fraction * len(values)) - 1] if values else None
 
 
+def validated_offers(path, spec):
+    with path.open() as stream:
+        for n, line in enumerate(stream):
+            row = json.loads(line)
+            scheduled = n * 1_000_000_000 // spec["rate"]
+            arrival, start, end = (row[key] for key in ("arrival_ns", "start_ns", "end_ns"))
+            if (row["n"] != n or row["scheduled_ns"] != scheduled
+                    or not scheduled <= arrival <= end
+                    or (start is not None and not arrival <= start <= end)):
+                raise ValueError(f"{path.name} offer {n} has invalid identity or timestamp ordering")
+            if row["outcome"] == "success" and (
+                start is None or not 200 <= row["status"] < 300 or row["bytes"] != spec["response_bytes"]
+            ):
+                raise ValueError(f"{path.name} offer {n} has an inconsistent success record")
+            yield row
+
+
 def audit(raw, summary, spec):
     expected = spec["rate"] * spec["seconds"]
     if summary["schema"] != LOAD_SCHEMA or summary["offered"] != expected:
@@ -39,40 +56,29 @@ def audit(raw, summary, spec):
     outcomes = {}
     jitter, latency, queue, service = [], [], [], []
     within = 0
-    with raw.open() as offers:
-        for n, line in enumerate(offers):
-            row = json.loads(line)
-            scheduled = n * 1_000_000_000 // spec["rate"]
-            arrival, start, end = (row[key] for key in ("arrival_ns", "start_ns", "end_ns"))
-            if (row["n"] != n or row["scheduled_ns"] != scheduled
-                    or not scheduled <= arrival <= end
-                    or (start is not None and not arrival <= start <= end)):
-                raise ValueError(f"offer {n} has invalid identity or timestamp ordering")
-            jitter.append(arrival - scheduled)
-            outcome = row["outcome"]
-            outcomes[outcome] = outcomes.get(outcome, 0) + 1
-            if start is not None:
-                queue.append(start - arrival)
-            if outcome == "success":
-                if start is None or not 200 <= row["status"] < 300 or row["bytes"] != spec["response_bytes"]:
-                    raise ValueError(f"offer {n} has an inconsistent success record")
-                latency.append(end - scheduled)
-                service.append(end - start)
-                within += end <= spec["seconds"] * 1_000_000_000
+    for row in validated_offers(raw, spec):
+        scheduled, arrival, start, end = (row[key] for key in ("scheduled_ns", "arrival_ns", "start_ns", "end_ns"))
+        jitter.append(arrival - scheduled)
+        outcome = row["outcome"]
+        outcomes[outcome] = outcomes.get(outcome, 0) + 1
+        if start is not None:
+            queue.append(start - arrival)
+        if outcome == "success":
+            latency.append(end - scheduled)
+            service.append(end - start)
+            within += end <= spec["seconds"] * 1_000_000_000
     if expected != len(jitter) or outcomes != summary["outcomes"] or within != summary["offer_window_successes"]:
         raise ValueError("raw offer counts differ from summary")
     if summary["warmup_offers"] != spec["rate"] * spec["warmup_seconds"]:
         raise ValueError("warm-up offer count differs from spec")
+    warmup_outcomes = {}
     if summary["warmup_offers"]:
-        warm_count = warm_success = 0
-        with raw.with_suffix(".warmup.jsonl").open() as warmup:
-            for n, line in enumerate(warmup):
-                row = json.loads(line)
-                if row["n"] != n or row["scheduled_ns"] != n * 1_000_000_000 // spec["rate"]:
-                    raise ValueError("warm-up offer identity differs")
-                warm_count += 1
-                warm_success += row["outcome"] == "success"
-        if (warm_count, warm_success) != (summary["warmup_offers"], summary["warmup_successes"]):
+        for row in validated_offers(raw.with_suffix(".warmup.jsonl"), spec):
+            outcome = row["outcome"]
+            warmup_outcomes[outcome] = warmup_outcomes.get(outcome, 0) + 1
+        if (sum(warmup_outcomes.values()), warmup_outcomes.get("success", 0)) != (
+            summary["warmup_offers"], summary["warmup_successes"]
+        ):
             raise ValueError("warm-up raw counts differ from summary")
     contaminated = []
     if quantile(jitter, .99) > JITTER_P99_NS:
@@ -87,7 +93,7 @@ def audit(raw, summary, spec):
                                  (("p50", .50), ("p95", .95), ("p99", .99), ("p99.9", .999))},
         "queue_p99_ns": quantile(queue, .99), "service_p99_ns": quantile(service, .99),
         "scheduler_p99_ns": quantile(jitter, .99), "warmup_successes": summary["warmup_successes"],
-        "warmup_offers": summary["warmup_offers"],
+        "warmup_offers": summary["warmup_offers"], "warmup_outcomes": warmup_outcomes,
     }
 
 
@@ -208,13 +214,14 @@ def campaign(run, report, target, control, rates, limits, confirm_seconds,
     """Search an audited bracket and verify the candidate on a longer hold."""
     best = None
     upper = None
+    upper_evidence = None
     control_ceiling = None
     contamination = None
     qualified_control = 0
     control_limits = (*limits[:3], 0)
 
     def ramp(rate, label):
-        nonlocal qualified_control, control_ceiling, contamination, best, upper
+        nonlocal qualified_control, control_ceiling, contamination, best, upper, upper_evidence
         if 2 * rate > qualified_control:
             before = run({**control, "rate": 2 * rate}, f"control-before-{rate}")
             if not passes(before, *control_limits):
@@ -229,6 +236,13 @@ def campaign(run, report, target, control, rates, limits, confirm_seconds,
             best = rate
             return True
         upper = rate
+        if result["warmup_successes"] != result["warmup_offers"]:
+            upper_evidence = "warmup_loss"
+        elif any(result.get("outcomes", {}).get(outcome, 0)
+                 for outcome in ("queue_rejection", "queue_timeout")):
+            upper_evidence = "generator_queue_loss"
+        else:
+            upper_evidence = "measured_slo"
         return False
 
     for rate in rates:
@@ -241,7 +255,10 @@ def campaign(run, report, target, control, rates, limits, confirm_seconds,
         rate = (best + upper) // 2
         ramp(rate, f"refine-{rate}")
 
-    report.update(highest_passing_ramp=best, first_failing_rate=upper,
+    tested_boundary = upper if upper_evidence == "measured_slo" else None
+    report.update(highest_passing_ramp=best, first_failing_rate=tested_boundary,
+                  unattributed_rate=upper if tested_boundary is None else None,
+                  upper_rate_evidence=upper_evidence,
                   control_limited_rate=control_ceiling, contaminated_rate=contamination)
     if best is None:
         return ("REJECTED_PREFLIGHT" if control_ceiling else
@@ -264,7 +281,7 @@ def campaign(run, report, target, control, rates, limits, confirm_seconds,
     report["confirmed_goodput_per_s"] = confirm["goodput_per_s"]
     if not stable:
         return "STABILITY_FAILED"
-    report["interpretation"] = ("confirmed_bracket" if upper else "confirmed_lower_bound")
+    report["interpretation"] = ("confirmed_bracket" if tested_boundary else "confirmed_lower_bound")
     return "CONFIRMED"
 
 

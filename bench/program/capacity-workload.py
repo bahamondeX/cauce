@@ -70,6 +70,8 @@ def main():
     parser.add_argument("--strategy", choices=("compact", "sharded"), default="compact")
     parser.add_argument("--endpoints", type=int, choices=range(1, 1025), metavar="1..1024", default=1)
     parser.add_argument("--logs", action="store_true")
+    parser.add_argument("--route-match", choices=("prefix", "regex"), default="prefix",
+                        help="select the equivalent one-route HTTP/1 matching fixture")
     parser.add_argument("--workers", type=int, default=1)
     parser.add_argument("--proxy-cpus", type=int, nargs="+", default=[0])
     parser.add_argument("--backend-cpu", type=int, default=1)
@@ -94,6 +96,9 @@ def main():
         parser.error("reference adapters qualify one-worker cleartext HTTP/1.1 with logs off")
     if args.matched and len(args.rates) != 1:
         parser.error("--matched requires exactly one offered rate")
+    if args.route_match == "regex" and (args.proxy_kind != "cauce" or args.protocol != "http1"
+                                       or args.endpoints != 1):
+        parser.error("the regex fixture requires Cauce HTTP/1 with one endpoint")
 
     cpus = [*args.proxy_cpus, args.backend_cpu, *args.client_cpu]
     if args.sampler_cpu is not None:
@@ -129,6 +134,8 @@ def main():
         readiness = lambda: http(listen, "/ready")
     else:
         source = proxy_config(args, listen, admin, backend_port, root / "access.jsonl", args.logs)
+        if args.route_match == "regex":
+            source = source.replace('path_prefix="/"', 'path_match="regex"\npath_pattern="^/"')
         config.write_text(endpoint_config(source, args.endpoints) if args.endpoints > 1 else source)
         launch = [str(args.proxy), str(config)]
         readiness = lambda: http(admin, "/ready")
@@ -137,7 +144,7 @@ def main():
         "proxy_kind": args.proxy_kind,
         "proxy_cpus": args.proxy_cpus, "backend_cpu": args.backend_cpu, "client_cpu": args.client_cpu,
         "workers": args.workers, "logs": args.logs, "protocol": args.protocol,
-        "strategy": args.strategy, "endpoints": args.endpoints,
+        "strategy": args.strategy, "endpoints": args.endpoints, "route_match": args.route_match,
         "sampler_cpu": args.sampler_cpu, "concurrency": args.concurrency, "queue": args.queue,
     })
     target, control = root / "target.json", root / "control.json"
