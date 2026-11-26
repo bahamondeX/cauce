@@ -11,6 +11,8 @@ description = "An independent bounded HTTP reverse proxy"
 fuzzing = []
 
 [dependencies]
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+httpdate = "1"
 anyhow = "1"
 bytes = "1"
 base64 = "0.22"

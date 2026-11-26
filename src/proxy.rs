@@ -554,6 +554,30 @@ pub async fn handle(
         }
     }
     let slot = crate::admission::RequestSlot::new(global_slot, rule_guard);
+    if let Some(handler) = &route.content {
+        let Ok(mut response) =
+            tokio::time::timeout_at(deadline, handler.response(&req, route)).await
+        else {
+            reject!(GATEWAY_TIMEOUT, "content_deadline");
+        };
+        if let Some(policy) = &route.headers {
+            policy.response.apply(response.headers_mut());
+        }
+        if headers_exceed_limits(response.headers(), limits) {
+            reject!(INTERNAL_SERVER_ERROR, "content_header_limit");
+        }
+        response
+            .headers_mut()
+            .insert(X_REQUEST_ID, HeaderValue::from_str(&id).unwrap());
+        *response.version_mut() = inbound_version;
+        let completion = crate::content::Completion {
+            event,
+            started,
+            slot,
+            logger: state.logger.clone(),
+        };
+        return Ok(completion.wrap(response, limits, deadline));
+    }
     let endpoint = match generation.select(route, client_ip) {
         Some(e) => e,
         None => {

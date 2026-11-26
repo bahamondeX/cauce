@@ -68,7 +68,7 @@ fn duration<'de, D: Deserializer<'de>>(input: D, ms_per_unit: u64) -> Result<u64
     Ok(ms / ms_per_unit)
 }
 
-fn milliseconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
+pub(crate) fn milliseconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
     duration(input, 1)
 }
 
@@ -76,7 +76,7 @@ fn seconds<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
     duration(input, 1000)
 }
 
-fn bytes<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
+pub(crate) fn bytes<'de, D: Deserializer<'de>>(input: D) -> Result<u64, D::Error> {
     use serde::de::Error;
     let value = match QuantityInput::deserialize(input)? {
         QuantityInput::Number(value) => return Ok(value),
@@ -397,7 +397,11 @@ pub struct Route {
     pub(crate) allow_clients: Option<crate::identity::Networks>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rate_zone: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) content: Option<Box<crate::content::Handler>>,
+    #[serde(default)]
     pub balance: Balance,
+    #[serde(default)]
     pub upstreams: Vec<String>,
 }
 
@@ -431,9 +435,10 @@ impl PathMatch {
         matches!(self, Self::Regex | Self::RegexInsensitive)
     }
 }
-#[derive(Clone, Copy, Deserialize, Serialize, PartialEq, Debug)]
+#[derive(Clone, Copy, Default, Deserialize, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "snake_case")]
 pub enum Balance {
+    #[default]
     RoundRobin,
     LeastInflight,
     WeightedRoundRobin,
@@ -566,8 +571,7 @@ impl Config {
         );
         ensure!(!self.logs.path.is_empty(), "missing log path");
         ensure!(
-            !self.upstreams.is_empty()
-                && self.upstreams.len() <= MAX_UPSTREAMS
+            self.upstreams.len() <= MAX_UPSTREAMS
                 && !self.routes.is_empty()
                 && self.routes.len() <= 1024,
             "invalid routing size"
@@ -781,8 +785,16 @@ impl Config {
                 matches.insert((&r.host, path, match_kind)),
                 "duplicate route match"
             );
+            if let Some(handler) = &r.content {
+                handler.validate(r)?;
+                ensure!(
+                    r.upstreams.is_empty(),
+                    "local content cannot have upstreams"
+                );
+            }
             ensure!(
-                (!r.upstreams.is_empty()
+                (r.content.is_some()
+                    || !r.upstreams.is_empty()
                     || r.action
                         .as_ref()
                         .is_some_and(|action| action.unconditional()))

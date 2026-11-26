@@ -1567,6 +1567,7 @@ mod pool_tests {
                 path_pattern: None,
                 headers: None,
                 action: None,
+                content: None,
                 allow_clients: None,
                 rate_zone: None,
                 balance: crate::config::Balance::RoundRobin,
