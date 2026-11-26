@@ -19,7 +19,7 @@
     "properties": [
       {
         "name": "cauce:cargo-lock:sha256",
-        "value": "62c404cb963299564189a9abc4ad2c95c36ddf936a47245dfe26d203346fd46b"
+        "value": "6d35b2121668f7b1287216ed5a45a487a7cc47bd04a053c0fd880b38185c12ae"
       },
       {
         "name": "cauce:scope",
@@ -985,9 +985,9 @@
     {
       "type": "library",
       "name": "foldhash",
-      "version": "0.1.5",
-      "bom-ref": "pkg:cargo/foldhash@0.1.5",
-      "purl": "pkg:cargo/foldhash@0.1.5",
+      "version": "0.2.0",
+      "bom-ref": "pkg:cargo/foldhash@0.2.0",
+      "purl": "pkg:cargo/foldhash@0.2.0",
       "licenses": [
         {
           "expression": "Zlib"
@@ -996,7 +996,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
+          "content": "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
         }
       ]
     },
@@ -1327,24 +1327,6 @@
     {
       "type": "library",
       "name": "hashbrown",
-      "version": "0.15.5",
-      "bom-ref": "pkg:cargo/hashbrown@0.15.5",
-      "purl": "pkg:cargo/hashbrown@0.15.5",
-      "licenses": [
-        {
-          "expression": "MIT OR Apache-2.0"
-        }
-      ],
-      "hashes": [
-        {
-          "alg": "SHA-256",
-          "content": "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "hashbrown",
       "version": "0.17.1",
       "bom-ref": "pkg:cargo/hashbrown@0.17.1",
       "purl": "pkg:cargo/hashbrown@0.17.1",
@@ -1363,9 +1345,9 @@
     {
       "type": "library",
       "name": "hashlink",
-      "version": "0.10.0",
-      "bom-ref": "pkg:cargo/hashlink@0.10.0",
-      "purl": "pkg:cargo/hashlink@0.10.0",
+      "version": "0.12.2",
+      "bom-ref": "pkg:cargo/hashlink@0.12.2",
+      "purl": "pkg:cargo/hashlink@0.12.2",
       "licenses": [
         {
           "expression": "MIT OR Apache-2.0"
@@ -1374,7 +1356,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "7382cf6263419f2d8df38c55d7da83da5c18aef87fc7a7fc1fb1e344edfe14c1"
+          "content": "a596f1b20ed2cc5ecac41a164aaebc7258057060f06c0cf7a2ba3991ee7990fb"
         }
       ]
     },
@@ -1957,9 +1939,9 @@
     {
       "type": "library",
       "name": "libsqlite3-sys",
-      "version": "0.35.0",
-      "bom-ref": "pkg:cargo/libsqlite3-sys@0.35.0",
-      "purl": "pkg:cargo/libsqlite3-sys@0.35.0",
+      "version": "0.39.1",
+      "bom-ref": "pkg:cargo/libsqlite3-sys@0.39.1",
+      "purl": "pkg:cargo/libsqlite3-sys@0.39.1",
       "licenses": [
         {
           "expression": "MIT"
@@ -1968,7 +1950,7 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "133c182a6a2c87864fe97778797e46c7e999672690dc9fa3ee8e241aa4a9c13f"
+          "content": "14a5f01b87b92705d07b433c06f96cbc764637d81a0bffb5734ce17cf0f9a2b3"
         }
       ]
     },
@@ -2838,10 +2820,10 @@
     },
     {
       "type": "library",
-      "name": "rusqlite",
-      "version": "0.37.0",
-      "bom-ref": "pkg:cargo/rusqlite@0.37.0",
-      "purl": "pkg:cargo/rusqlite@0.37.0",
+      "name": "rsqlite-vfs",
+      "version": "0.2.0",
+      "bom-ref": "pkg:cargo/rsqlite-vfs@0.2.0",
+      "purl": "pkg:cargo/rsqlite-vfs@0.2.0",
       "licenses": [
         {
           "expression": "MIT"
@@ -2850,7 +2832,25 @@
       "hashes": [
         {
           "alg": "SHA-256",
-          "content": "165ca6e57b20e1351573e3729b958bc62f0e48025386970b6e4d29e7a7e71f3f"
+          "content": "353b74f9810d5b085b6c42c9d86a5f0fdb795553235cdd48753b32e3809d18a7"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "rusqlite",
+      "version": "0.41.1",
+      "bom-ref": "pkg:cargo/rusqlite@0.41.1",
+      "purl": "pkg:cargo/rusqlite@0.41.1",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "da9bba6f3506135e120a6586df05be18b48d18896600646a4bec8f993d91a594"
         }
       ]
     },
@@ -3463,6 +3463,24 @@
         {
           "alg": "SHA-256",
           "content": "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "sqlite-wasm-rs",
+      "version": "0.6.3",
+      "bom-ref": "pkg:cargo/sqlite-wasm-rs@0.6.3",
+      "purl": "pkg:cargo/sqlite-wasm-rs@0.6.3",
+      "licenses": [
+        {
+          "expression": "MIT"
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "a6cd504cecbfe7eef649988840f9a6cb768d11085efec138f8e99f160632d867"
         }
       ]
     },
@@ -5169,7 +5187,7 @@
         "pkg:cargo/quinn@0.11.12",
         "pkg:cargo/regex@1.13.2",
         "pkg:cargo/reqwest@0.12.28",
-        "pkg:cargo/rusqlite@0.37.0",
+        "pkg:cargo/rusqlite@0.41.1",
         "pkg:cargo/rustls@0.23.46",
         "pkg:cargo/serde@1.0.229",
         "pkg:cargo/serde_json@1.0.154",
@@ -5365,7 +5383,7 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:cargo/foldhash@0.1.5",
+      "ref": "pkg:cargo/foldhash@0.2.0",
       "dependsOn": []
     },
     {
@@ -5522,19 +5540,15 @@
       ]
     },
     {
-      "ref": "pkg:cargo/hashbrown@0.15.5",
+      "ref": "pkg:cargo/hashbrown@0.17.1",
       "dependsOn": [
-        "pkg:cargo/foldhash@0.1.5"
+        "pkg:cargo/foldhash@0.2.0"
       ]
     },
     {
-      "ref": "pkg:cargo/hashbrown@0.17.1",
-      "dependsOn": []
-    },
-    {
-      "ref": "pkg:cargo/hashlink@0.10.0",
+      "ref": "pkg:cargo/hashlink@0.12.2",
       "dependsOn": [
-        "pkg:cargo/hashbrown@0.15.5"
+        "pkg:cargo/hashbrown@0.17.1"
       ]
     },
     {
@@ -5859,7 +5873,7 @@
       "dependsOn": []
     },
     {
-      "ref": "pkg:cargo/libsqlite3-sys@0.35.0",
+      "ref": "pkg:cargo/libsqlite3-sys@0.39.1",
       "dependsOn": [
         "pkg:cargo/cc@1.11.2",
         "pkg:cargo/pkg-config@0.3.34",
@@ -6227,14 +6241,21 @@
       ]
     },
     {
-      "ref": "pkg:cargo/rusqlite@0.37.0",
+      "ref": "pkg:cargo/rsqlite-vfs@0.2.0",
+      "dependsOn": [
+        "pkg:cargo/thiserror@2.0.21"
+      ]
+    },
+    {
+      "ref": "pkg:cargo/rusqlite@0.41.1",
       "dependsOn": [
         "pkg:cargo/bitflags@2.13.2",
         "pkg:cargo/fallible-iterator@0.3.0",
         "pkg:cargo/fallible-streaming-iterator@0.1.9",
-        "pkg:cargo/hashlink@0.10.0",
-        "pkg:cargo/libsqlite3-sys@0.35.0",
-        "pkg:cargo/smallvec@1.16.5"
+        "pkg:cargo/hashlink@0.12.2",
+        "pkg:cargo/libsqlite3-sys@0.39.1",
+        "pkg:cargo/smallvec@1.16.5",
+        "pkg:cargo/sqlite-wasm-rs@0.6.3"
       ]
     },
     {
@@ -6466,6 +6487,13 @@
       "dependsOn": [
         "pkg:cargo/libc@0.2.191",
         "pkg:cargo/windows-sys@0.61.2"
+      ]
+    },
+    {
+      "ref": "pkg:cargo/sqlite-wasm-rs@0.6.3",
+      "dependsOn": [
+        "pkg:cargo/cc@1.11.2",
+        "pkg:cargo/rsqlite-vfs@0.2.0"
       ]
     },
     {

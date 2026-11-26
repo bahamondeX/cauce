@@ -474,7 +474,7 @@
   },
   {
     "name": "foldhash",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "license": "Zlib",
     "notices": [
       "LICENSE"
@@ -659,16 +659,6 @@
   },
   {
     "name": "hashbrown",
-    "version": "0.15.5",
-    "license": "MIT OR Apache-2.0",
-    "notices": [
-      "LICENSE-APACHE",
-      "LICENSE-MIT"
-    ],
-    "source": "https://github.com/rust-lang/hashbrown"
-  },
-  {
-    "name": "hashbrown",
     "version": "0.17.1",
     "license": "MIT OR Apache-2.0",
     "notices": [
@@ -679,13 +669,13 @@
   },
   {
     "name": "hashlink",
-    "version": "0.10.0",
+    "version": "0.12.2",
     "license": "MIT OR Apache-2.0",
     "notices": [
       "LICENSE-APACHE",
       "LICENSE-MIT"
     ],
-    "source": "https://github.com/kyren/hashlink"
+    "source": "https://github.com/djc/hashlink"
   },
   {
     "name": "hickory-net",
@@ -948,7 +938,7 @@
   },
   {
     "name": "libsqlite3-sys",
-    "version": "0.35.0",
+    "version": "0.39.1",
     "license": "MIT",
     "notices": [
       "LICENSE"
@@ -1410,7 +1400,7 @@
   },
   {
     "name": "rusqlite",
-    "version": "0.37.0",
+    "version": "0.41.1",
     "license": "MIT",
     "notices": [
       "LICENSE"

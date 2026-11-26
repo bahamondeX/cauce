@@ -19,7 +19,7 @@ curl -N http://localhost:8080/sse
 docker compose down
 ```
 
-The example binds to loopback and includes sample backends. For native builds use Rust 1.88 or newer:
+The example binds to loopback and includes sample backends. For native builds use Rust 1.89 or newer:
 
 ```sh
 cargo test --locked

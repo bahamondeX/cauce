@@ -8,7 +8,7 @@ native performance gates open.
 
 ## Local or already authorized Linux host
 
-Install Rust 1.88.0 through rustup, Node 24, Python 3.11+, Git, tar, util-linux
+Use Rust 1.89.0 for current runtime builds, Node 24, Python 3.11+, Git, tar, util-linux
 and the perf package matching the running kernel. Keep the OS, Node version
 and compiler identical within each A/B comparison. Check the physical-core
 and SMT map before choosing the CPU indices.
@@ -17,12 +17,14 @@ and SMT map before choosing the CPU indices.
 lscpu -e=CPU,CORE,SOCKET,NODE,ONLINE,MAXMHZ,MINMHZ
 cat /sys/fs/cgroup/cpu.max
 perf list
-rustup toolchain install 1.88.0 --profile minimal
-python3 bench/program/native-linux.py /var/tmp/cauce-arm64-http1 \
+mkdir -p "$PWD/work/native-lab/tmp"
+export RUSTUP_HOME="$PWD/work/native-lab/rustup" CARGO_HOME="$PWD/work/native-lab/cargo" TMPDIR="$PWD/work/native-lab/tmp"
+rustup toolchain install 1.89.0 --profile minimal
+python3 "$PWD/bench/program/native-linux.py" "$PWD/work/native-lab/arm64-http1" \
   --revision HEAD --proxy-cpus 0 1 2 3 4 5 6 7 --generator-cpus 8 9 \
   --backend-cpu 10 --sampler-cpu 11 --workers 1 2 4 8 \
   --confirm-seconds 60 --stability-seconds 180
-(cd /var/tmp/cauce-arm64-http1 && sha256sum -c SHA256SUMS)
+(cd "$PWD/work/native-lab/arm64-http1" && sha256sum -c SHA256SUMS)
 ```
 
 Choose separate physical cores for proxy, generator, backend and sampler.

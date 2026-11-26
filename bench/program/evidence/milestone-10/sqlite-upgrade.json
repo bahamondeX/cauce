@@ -1,0 +1,13 @@
+{
+  "linked_sqlite": "3.54.1",
+  "filesystem_capacity_bytes": 16736256,
+  "events_before": 1,
+  "offset_before": 856,
+  "collector_failure": "Error: unable to open database file\n\nCaused by:\n    Error code 14: unable to open database file",
+  "enospc_confirmed_by_os": true,
+  "durable_state_preserved": true,
+  "events_after_recovery": 65,
+  "offset_after": 55640,
+  "integrity": "ok",
+  "journal_mode": "delete"
+}

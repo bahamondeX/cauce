@@ -375,6 +375,7 @@ def main():
     parser.add_argument("--docker", action="store_true")
     parser.add_argument("--image", default="cauce-collector:test")
     parser.add_argument("--binary", type=Path, default=ROOT / "target/debug/cauce-collector")
+    parser.add_argument("--report", type=Path)
     args = parser.parse_args()
     suite = suite_module.Suite(args)
     try:
@@ -394,7 +395,7 @@ def main():
             result["image_id"] = image_id
         else:
             result["binary_sha256"] = hashlib.sha256(args.binary.read_bytes()).hexdigest()
-        output = ROOT / "docs" / f"collector-storage-{'docker' if args.docker else 'native'}.json"
+        output = args.report or ROOT / "docs" / f"collector-storage-{'docker' if args.docker else 'native'}.json"
         output.write_text(json.dumps(result, indent=2) + "\n")
         print(f"{result['result']}: {len(CASES)} collector storage cases, "
               f"{len(FAILURES)} failures ({architecture})")

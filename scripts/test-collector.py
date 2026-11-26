@@ -455,7 +455,8 @@ print(json.dumps(r,sort_keys=True))
                     fixture='Local proposal-1 only; no Connectivity ingestion', cases=self.cases)
         if self.args.docker:
             result['image_id']=run('docker','image','inspect',self.args.image,'--format','{{.Id}}').stdout.strip()
-        (ROOT/'docs'/f'collector-{"docker" if self.args.docker else "native"}.json').write_text(json.dumps(result,indent=2)+'\n')
+        output = self.args.report or ROOT/'docs'/f'collector-{"docker" if self.args.docker else "native"}.json'
+        output.write_text(json.dumps(result,indent=2)+'\n')
         print(f'PASS: {len(self.cases)} collector cases ({arch})')
 
 
@@ -464,6 +465,7 @@ def main():
     p.add_argument('--docker',action='store_true')
     p.add_argument('--image',default='cauce-collector:test')
     p.add_argument('--binary',type=Path,default=ROOT/'target/debug/cauce-collector')
+    p.add_argument('--report',type=Path)
     args=p.parse_args()
     suite=Suite(args)
     try:

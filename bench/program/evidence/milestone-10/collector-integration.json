@@ -1,0 +1,31 @@
+{
+  "result": "PASS",
+  "mode": "native",
+  "architecture": "arm64",
+  "fixture": "Local proposal-1 only; no Connectivity ingestion",
+  "cases": [
+    "complete-line tail, durable restart checkpoints and non-destructive export",
+    "rename rotation preserves inode checkpoint and discovers new generation",
+    "startup discovers retained rotated files oldest first",
+    "bounded spool pauses input without advancing checkpoint past durable events",
+    "invalid source is rejected without checkpointing or uploading",
+    "oversized source is rejected without checkpointing or uploading",
+    "HTTPS with trusted CA sends proposal batch and validates ACK",
+    "HTTP 401 retains stable batch; retry succeeds; redirects never followed",
+    "HTTP 403 retains stable batch; retry succeeds; redirects never followed",
+    "HTTP 429 retains stable batch; retry succeeds; redirects never followed",
+    "HTTP 500 retains stable batch; retry succeeds; redirects never followed",
+    "HTTP 307 retains stable batch; retry succeeds; redirects never followed",
+    "wrong_id retains durable batch and stable event IDs for retry/dedup",
+    "wrong_count retains durable batch and stable event IDs for retry/dedup",
+    "large_ack retains durable batch and stable event IDs for retry/dedup",
+    "drop_ack retains durable batch and stable event IDs for retry/dedup",
+    "delay_ms retains durable batch and stable event IDs for retry/dedup",
+    "TLS rejects untrusted ca before sending credentials/events",
+    "TLS rejects untrusted hostname before sending credentials/events",
+    "credential file is reread on retry; rotated token accepted",
+    "ACK received but dequeue transaction fails: durable batch is retried intact",
+    "SIGKILL after receiver acceptance: restart resends identical durable batch",
+    "bounded retry backoff, exclusive state ownership, clean SIGTERM"
+  ]
+}

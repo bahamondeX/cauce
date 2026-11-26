@@ -110,7 +110,7 @@ sudo apt-get update
 sudo apt-get install -y ca-certificates curl git build-essential pkg-config python3 util-linux linux-tools-common
 sudo apt-get install -y "linux-tools-$(uname -r)" || true
 curl --proto '=https' --tlsv1.2 -fsSLo rustup.sh https://sh.rustup.rs
-sh rustup.sh -y --profile minimal --default-toolchain 1.88.0
+sh rustup.sh -y --profile minimal --default-toolchain 1.89.0
 export PATH="$HOME/.cargo/bin:$PATH"
 node_version=24.11.1
 node_file="node-v$node_version-linux-$node_arch.tar.xz"

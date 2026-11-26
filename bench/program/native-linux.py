@@ -125,7 +125,7 @@ def main():
     parser.add_argument("--strategy", choices=("compact", "sharded"), default="compact")
     parser.add_argument("--endpoints", type=int, choices=range(1, 1025), metavar="1..1024", default=1)
     parser.add_argument("--revision", action="append", help="committed Cauce revision, repeat to compare")
-    parser.add_argument("--toolchain", default="1.88.0")
+    parser.add_argument("--toolchain", default="1.89.0")
     parser.add_argument("--proxy-cpus", type=int, nargs="+", required=True)
     parser.add_argument("--generator-cpus", type=int, nargs="+", required=True)
     parser.add_argument("--backend-cpu", type=int, required=True)

@@ -5,6 +5,10 @@ use std::{env, path::PathBuf, time::Duration};
 mod collector;
 
 fn main() -> Result<()> {
+    if env::args_os().skip(1).eq(["--sqlite-version"]) {
+        println!("{}", rusqlite::version());
+        return Ok(());
+    }
     // DNS may outlive cancellation in the system resolver. Bound its blocking
     // executor and avoid waiting indefinitely for those threads at shutdown.
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -30,7 +34,7 @@ async fn run() -> Result<()> {
             "--export" => export = Some(args.next().context("--export requires stdout or a path")?),
             "--help" | "-h" => {
                 println!(
-                    "cauce-collector [--config PATH] [--once | --status | --export stdout|PATH]"
+                    "cauce-collector [--config PATH] [--once | --status | --export stdout|PATH]\ncauce-collector --sqlite-version"
                 );
                 return Ok(());
             }

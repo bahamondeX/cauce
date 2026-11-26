@@ -1,5 +1,5 @@
 # Compile on the builder's native CPU; cross-link when target architecture differs.
-FROM --platform=$BUILDPLATFORM rust:1.88-bookworm@sha256:af306cfa71d987911a781c37b59d7d67d934f49684058f96cf72079c3626bfe0 AS builder
+FROM --platform=$BUILDPLATFORM rust:1.89-bookworm@sha256:948f9b08a66e7fe01b03a98ef1c7568292e07ec2e4fe90d88c07bb14563c84ff AS builder
 ARG TARGETARCH
 ARG BUILDARCH
 RUN case "$TARGETARCH" in \
