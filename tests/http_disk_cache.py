@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Disk-tier read, quota, recovery, and invalidation over real HTTP sockets."""
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 import errno
+import http.client
 from pathlib import Path
 import http.server
 import json
@@ -18,6 +21,19 @@ from http_cache import Origin
 from integration import BIN, port
 
 
+LARGE_PAYLOAD = bytes(range(256)) * 16384
+
+
+class DiskOrigin(Origin):
+    def do_GET(self):
+        if self.path.startswith("/disk-large/"):
+            with self.server.lock:
+                self.server.calls[self.path] += 1
+            self.reply(200, LARGE_PAYLOAD, Cache_Control="public, max-age=60")
+            return
+        super().do_GET()
+
+
 class DiskCache(unittest.TestCase):
     def setUp(self):
         temp = tempfile.TemporaryDirectory()
@@ -30,8 +46,9 @@ class DiskCache(unittest.TestCase):
         else:
             self.storage = self.path / "disk"
         self.config = self.path / "cauce.yaml"
-        self.origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Origin)
+        self.origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), DiskOrigin)
         self.origin.calls, self.origin.lock = Counter(), threading.Lock()
+        self.origin.entered, self.origin.release = threading.Event(), threading.Event()
         self.origin.version = 1
         threading.Thread(target=self.origin.serve_forever, daemon=True).start()
         self.addCleanup(self.origin.server_close)
@@ -107,7 +124,53 @@ class DiskCache(unittest.TestCase):
         self.assertEqual(self.get("/default", cache_only=True)[0], 504)
         self.assertEqual(self.objects(), [])
 
-    @unittest.skipUnless(os.environ.get("CAUCE_DISK_CACHE_MOUNT"), "requires a small dedicated tmpfs mount")
+    def test_concurrent_same_key_fills_publish_a_single_complete_disk_object(self):
+        with ThreadPoolExecutor(max_workers=8) as client:
+            requests = [client.submit(self.get, "/race") for _ in range(8)]
+            try:
+                self.assertTrue(self.origin.entered.wait(timeout=2))
+                self.assertEqual(self.objects(), [])
+            finally:
+                self.origin.release.set()
+            for pending in requests:
+                status, _, body = pending.result(timeout=4)
+                self.assertEqual((status, body), (200, b"response 1"))
+        self.await_disk(lambda: len(self.objects()) == 1)
+        self.stop()
+        self.start()
+        self.assertEqual(self.get("/race", cache_only=True)[2], b"response 1")
+        self.assertEqual(self.origin.calls["/race"], 1)
+
+    def test_open_disk_hit_remains_readable_across_quota_eviction(self):
+        self.stop()
+        config = json.loads(self.config.read_text())
+        cache = config["proxy"]["routes"][0]["cache"]
+        cache.update(max_size="8MiB", max_entry_size="4MiB")
+        cache["disk"]["max_size"] = "6MiB"
+        self.config.write_text(json.dumps(config))
+        self.start()
+        first_path = "/disk-large/first"
+        self.assertEqual(self.get(first_path)[2], LARGE_PAYLOAD)
+        self.await_disk(lambda: len(self.objects()) == 1)
+        first_object, = self.objects()
+        self.stop()
+        self.start()
+
+        with closing(http.client.HTTPConnection("127.0.0.1", self.listen, timeout=5)) as client:
+            client.request(
+                "GET", first_path, headers={"Host": "localhost", "Cache-Control": "only-if-cached"}
+            )
+            with client.getresponse() as reader:
+                self.assertEqual(reader.status, 200)
+                prefix = reader.read(1024)
+                self.assertEqual(prefix, LARGE_PAYLOAD[:1024])
+                self.assertEqual(self.get("/disk-large/second")[2], LARGE_PAYLOAD)
+                self.await_disk(lambda: not first_object.exists() and len(self.objects()) == 1)
+                self.assertLessEqual(sum(path.stat().st_size for path in self.objects()), 6 * 1024 * 1024)
+                self.assertEqual(prefix + reader.read(), LARGE_PAYLOAD)
+        self.assertEqual(self.origin.calls[first_path], 1)
+
+    @unittest.skipUnless(os.environ.get("CAUCE_DISK_CACHE_MOUNT"), "requires a dedicated small filesystem")
     def test_enospc_then_recovers(self):
         filler = self.storage / "filler"
         with filler.open("wb", buffering=0) as file:

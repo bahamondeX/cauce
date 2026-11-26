@@ -53,6 +53,10 @@ unmapped registrations.
   POP3 fixture independently held an authenticated session through the
   same address rotation. Fresh connections selected the new address and
   established work finished on the old address.
+- Eight concurrent requests shared one disk fill. A restored 4 MiB
+  response finished after its disk file was evicted. Real ENOSPC on a
+  dedicated HFS+ test image preserved memory-cache reads and allowed disk
+  writes to resume after space returned.
 
 [Pinned differential cases](../bench/program/evidence/milestone-10/differential-final.json)
 [SQLite security evidence](SQLITE-SECURITY.md)

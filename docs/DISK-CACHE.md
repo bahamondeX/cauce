@@ -33,7 +33,10 @@ reconstruction. Disk cache configuration changes require restart.
 The socket tests cover cold and warm disk access, memory eviction, disk
 quota, corruption, mutation invalidation and interrupted-process recovery.
 A 128 KiB Linux ARM64 tmpfs fixture verified actual ENOSPC, memory fallback,
-partial-write cleanup and recovery after disk space returned. Native
-performance and prolonged I/O stability remain release gates.
+partial-write cleanup and recovery after disk space returned. Milestone 10
+repeated that check on a dedicated 16 MiB Darwin HFS+ image. Its socket
+fixtures also checked one disk publication from eight same-key requests
+and complete delivery of a restored 4 MiB body after the disk file was
+evicted. Native performance and prolonged I/O stability remain release gates.
 [Disk cache example](../examples/disk-cache.yaml)
 [Fixture](../tests/http_disk_cache.py).

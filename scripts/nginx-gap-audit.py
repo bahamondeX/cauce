@@ -236,15 +236,23 @@ def configure(option, modules, mappings):
     }
 
 
-def verify_claim(module, mapping):
+def verify_claim(module, directive, mapping):
     proof = mapping.get("verification", {})
-    assert set(proof.get("criteria", ())) == VERIFICATION_CRITERIA, (module, "incomplete equivalence review")
+    target = f"{module}.{directive}" if directive else module
+    assert set(proof.get("criteria", ())) == VERIFICATION_CRITERIA, (target, "incomplete equivalence review")
     path = (ROOT / proof["differential_report"]).resolve()
-    assert ROOT in path.parents, (module, "evidence must be within the repository")
+    assert ROOT in path.parents, (target, "evidence must be within the repository")
     report = json.loads(path.read_text())
-    assert report.get("passed") and any(item["module"] == module and item["cases"]
-                                        for item in report["modules"]), (module, "missing passing differential cases")
-    return {"scope": "equivalence review", "path": str(path.relative_to(ROOT))}
+    sections = [item for item in report.get("modules", []) if item["module"] == module]
+    assert report.get("passed") is True and len(sections) == 1, (target, "missing passing module evidence")
+    section = sections[0]
+    compared = {case["case"] for case in section["cases"]
+                if case.get("passed") is True and "nginx" in case and "cauce" in case}
+    compared.update(case["case"] for case in section["configuration_rejections"]
+                    if case.get("passed") is True and {"nginx", "cauce"} <= case["observations"].keys())
+    cases = proof.get("cases", [])
+    assert cases and set(cases) <= compared, (target, "missing named cases comparing both engines")
+    return {"scope": "equivalence review", "path": str(path.relative_to(ROOT)), "cases": cases}
 
 
 def coverage(module, directive, mapping, reference):
@@ -265,7 +273,7 @@ def coverage(module, directive, mapping, reference):
     if status in {"verified", "implemented"}:
         status = "partial"
     if status == "verified_equivalent":
-        sources.append(verify_claim(module, mapping))
+        sources.append(verify_claim(module, directive, mapping))
     assessment = {"unsupported": "unmapped", "partial": "partially_implemented"}.get(status, status)
     assert assessment in {"unmapped", "mapped_unimplemented", "partially_implemented",
                           "implemented_unverified", "verified_equivalent", "platform_or_build_scope"}

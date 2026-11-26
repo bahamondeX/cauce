@@ -37,8 +37,9 @@ contexts, defaults, inheritance, failures and interaction coverage.
 The machine-readable assessment distinguishes unmapped, mapped but
 unimplemented, partial, implemented but unverified, verified equivalent
 and platform or build scope. An exact classification requires all eight
-review criteria and a passing module differential report within Cauce.
-A module also requires exact classifications for every registration.
+review criteria and named passing cases from a differential report within
+Cauce. Every named case must compare both engines. A module also requires
+exact classifications for every registration.
 
 Migration and JSON Schema fixtures use a repository-local lock. From the
 Cauce root, select an installed Python 3.11–3.14 interpreter explicitly.
