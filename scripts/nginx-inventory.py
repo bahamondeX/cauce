@@ -43,9 +43,9 @@ def checked_archive(data, digest):
     return tarfile.open(fileobj=io.BytesIO(data), mode="r:gz")
 
 
-def read_c_modules(body, source, modules):
-    body = COMMENTS.sub("", body)
-    tables = dict(TABLE.findall(body))
+def read_c_modules(body, source, modules, provenance=None):
+    body = COMMENTS.sub(lambda match: re.sub(r"[^\n]", " ", match[0]), body)
+    tables = {match[1]: match for match in TABLE.finditer(body)}
     used = set()
     for name, fields in MODULE.findall(body):
         # NGX_MODULE_V1, module context, command table, module type.
@@ -55,16 +55,26 @@ def read_c_modules(body, source, modules):
         commands = []
         if table != "NULL":
             used.add(table)
-            content = tables[table]
-            entries = COMMAND.findall(content)
+            table_match = tables[table]
+            content = table_match[2]
+            entries = sorted(COMMAND.finditer(content),
+                             key=lambda item: (item[1], list(dict.fromkeys(FLAGS.findall(item[2])))))
             assert len(entries) == content.count("ngx_string("), (name, table)
-            commands = sorted((directive, list(dict.fromkeys(FLAGS.findall(flags))))
-                              for directive, flags in entries)
+            commands = [(entry[1], list(dict.fromkeys(FLAGS.findall(entry[2])))) for entry in entries]
+            if provenance is not None:
+                for ordinal, entry in enumerate(entries):
+                    offset = table_match.start(2) + entry.start()
+                    setter = re.match(r"\s*(\w+)\s*,", content[entry.end():])
+                    provenance[(source, name, ordinal)] = {
+                        "line": body.count("\n", 0, offset) + 1,
+                        "command_table": table,
+                        "setter": setter[1] if setter else None,
+                    }
         modules.setdefault(name, []).append((source, kind, commands))
     assert used == tables.keys(), (source, tables.keys() - used)
 
 
-def inventory(data):
+def inventory(data, provenance=None):
     modules = {}
     with checked_archive(data, SHA256) as archive:
         options = archive.extractfile(f"nginx-{VERSION}/auto/options").read().decode()
@@ -75,11 +85,11 @@ def inventory(data):
             source = item.name.removeprefix(f"nginx-{VERSION}/")
             if not item.isfile() or not source.startswith("src/") or not source.endswith(".c"):
                 continue
-            read_c_modules(archive.extractfile(item).read().decode("utf-8"), source, modules)
+            read_c_modules(archive.extractfile(item).read().decode("utf-8"), source, modules, provenance)
     return modules, configure_options
 
 
-def add_on_inventory(name, path):
+def add_on_inventory(name, path, provenance=None):
     reference = ADD_ONS[name].copy()
     commit = reference["commit"]
     reference["source"] = f"https://codeload.github.com/nginx/{name}/tar.gz/{commit}"
@@ -90,17 +100,25 @@ def add_on_inventory(name, path):
             for kind in ("http", "stream"):
                 source = f"nginx/ngx_{kind}_js_module.c"
                 body = archive.extractfile(f"{name}-{commit}/{source}").read().decode()
-                read_c_modules(body, source, modules)
+                read_c_modules(body, source, modules, provenance)
         else:
             source = "src/conf.rs"
             body = archive.extractfile(f"{name}-{commit}/{source}").read().decode()
-            tables = ACME_TABLE.findall(body)
+            tables = list(ACME_TABLE.finditer(body))
             assert len(tables) == 2, "Unexpected ACME command tables"
             commands = []
-            for table, count, content in tables:
-                entries = ACME_COMMAND.findall(content)
+            for group in tables:
+                table, count, content = group.groups()
+                entries = list(ACME_COMMAND.finditer(content))
                 assert len(entries) + 1 == int(count), table
-                for directive, flags in entries:
+                for entry in entries:
+                    directive, flags = entry.groups()
+                    if provenance is not None:
+                        provenance[(source, "ngx_http_acme_module", len(commands))] = {
+                            "line": body.count("\n", 0, group.start(3) + entry.start()) + 1,
+                            "command_table": table,
+                            "setter": None,
+                        }
                     item = {"name": directive, "flags": FLAGS.findall(flags)}
                     if table == "NGX_HTTP_ACME_ISSUER_COMMANDS":
                         item["within"] = "acme_issuer"

@@ -50,6 +50,24 @@ FILES = {
     "disk-cache": ("Cauce fixture", "bench/program/evidence/milestone-9/disk-sockets.log"),
 }
 
+REVIEWED = {
+    ("ngx_http_proxy_module", "proxy_set_header"): {
+        "arguments": ["field", "value (literal or variable expression)"],
+        "default": ["Host $proxy_internal_host", "Connection empty", "Content-Length $proxy_internal_body_length",
+                    "Transfer-Encoding $proxy_internal_chunked", "TE empty", "Keep-Alive empty", "Expect empty",
+                    "Upgrade empty"],
+        "inheritance": "Inherit the parent collection only when this context declares no proxy_set_header entries. Implicit proxy headers are added during initialization.",
+        "source_functions": ["ngx_http_proxy_merge_loc_conf", "ngx_http_proxy_init_headers"],
+    },
+    ("ngx_http_proxy_module", "proxy_hide_header"): {
+        "arguments": ["field"],
+        "default": ["Date", "Server", "X-Pad", "X-Accel-Expires", "X-Accel-Redirect", "X-Accel-Limit-Rate",
+                    "X-Accel-Buffering", "X-Accel-Charset"],
+        "inheritance": "An undeclared custom hide list inherits from the parent. The effective hide set also incorporates built-in defaults and proxy_pass_header exceptions.",
+        "source_functions": ["ngx_http_proxy_merge_loc_conf", "ngx_http_upstream_hide_headers_hash"],
+    },
+}
+
 PLATFORMS = {
     "ngx_epoll_module": "Linux epoll",
     "ngx_kqueue_module": "BSD and Darwin kqueue",
@@ -180,7 +198,22 @@ def coverage(module, directive, mapping, reference):
     }
 
 
-def semantic_rows(modules, mappings, reference):
+def accepted_arity(flags):
+    counts = set()
+    for flag in flags:
+        if match := re.fullmatch(r"NGX_CONF_TAKE([1-7]+)", flag):
+            counts.update(int(n) for n in match[1])
+    if "NGX_CONF_NOARGS" in flags:
+        counts.add(0)
+    if "NGX_CONF_FLAG" in flags:
+        counts.add(1)
+    minimum = next((count for symbol, count in (("ANY", 0), ("1MORE", 1), ("2MORE", 2))
+                    if "NGX_CONF_" + symbol in flags), None)
+    return {"accepted_counts": sorted(counts), "variadic_minimum": minimum,
+            "block": "NGX_CONF_BLOCK" in flags}
+
+
+def semantic_rows(modules, mappings, reference, provenance, build_options):
     for module, definitions in sorted(modules.items()):
         yield {
             "kind": "module", "reference": reference, "module": module,
@@ -189,10 +222,20 @@ def semantic_rows(modules, mappings, reference):
         }
         for source, module_type, directives in definitions:
             for order, (directive, flags) in enumerate(directives):
+                known = REVIEWED.get((module, directive), {}) if reference == "oss" else {}
                 yield {
                     "kind": "directive", "reference": reference, "module": module,
                     "directive": directive, "definition_ordinal": order,
                     "source": source, "module_type": module_type,
+                    "task_id": f"{reference}/{source}/{module}/{directive}/{order}",
+                    "registration": provenance[(source, module, order)],
+                    "accepted_arity": accepted_arity(flags),
+                    "arguments": known.get("arguments"),
+                    "reference_default": known.get("default"),
+                    "reference_inheritance": known.get("inheritance"),
+                    "reference_functions": known.get("source_functions", []),
+                    "semantic_audit": "reviewed_subset" if known else "pending",
+                    "build_options": build_options.get(module, []),
                     "context": [flag for flag in flags if flag.endswith("_CONF") or flag == "NGX_DIRECT_CONF"],
                     "parser_flags": flags,
                     **coverage(module, directive, mappings.get(f"{module}.{directive}", {}), reference),
@@ -207,12 +250,19 @@ def main():
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
     data = INVENTORY["read_reference"](args.tarball, INVENTORY["URL"])
-    modules, configure_options = INVENTORY["inventory"](data)
+    provenance = {}
+    modules, configure_options = INVENTORY["inventory"](data, provenance)
     mappings = json.loads((OUTPUT.parent / "nginx-coverage.json").read_text())["mappings"]
-    rows = list(semantic_rows(modules, mappings, "oss"))
-    rows.extend(configure(option, modules, mappings) for option in configure_options)
+    options = [configure(option, modules, mappings) for option in configure_options]
+    build_options = {}
+    for option in options:
+        if option["module"] is not None:
+            build_options.setdefault(option["module"], []).append(option["option"])
+    rows = list(semantic_rows(modules, mappings, "oss", provenance, build_options))
+    rows.extend(options)
     for name, path in (("njs", args.njs_tarball), ("nginx-acme", args.acme_tarball)):
-        addon = INVENTORY["add_on_inventory"](name, path)
+        provenance = {}
+        addon = INVENTORY["add_on_inventory"](name, path, provenance)
         table = {module: [(item["source"], item["type"],
                            [(row["name"], row["flags"]) for row in item["directives"]])
                           for item in row["definitions"]]
@@ -222,7 +272,7 @@ def main():
             for module in table:
                 addon_mappings[module] = {"status": "partial", "notes":
                     "Cauce manages HTTP-01 issuance and renewal with a shared HTTPS/QUIC resolver. The add-on's configuration and challenge variants require separate verification."}
-        rows.extend(semantic_rows(table, addon_mappings, name))
+        rows.extend(semantic_rows(table, addon_mappings, name, provenance, {}))
     counts = Counter((row["reference"], row["kind"]) for row in rows)
     assert counts == {("oss", "module"): 120, ("oss", "directive"): 754, ("oss", "configure"): 149,
                       ("njs", "module"): 4, ("njs", "directive"): 55,
