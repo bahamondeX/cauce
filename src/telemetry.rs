@@ -14,6 +14,9 @@ use std::{
 pub struct Metrics {
     pub requests: AtomicU64,
     pub cache_hits: AtomicU64,
+    pub cache_stale: AtomicU64,
+    pub cache_background_started: AtomicU64,
+    pub cache_background_failed: AtomicU64,
     pub cache_misses: AtomicU64,
     pub cache_bypasses: AtomicU64,
     pub rejected: AtomicU64,
@@ -40,6 +43,9 @@ impl Metrics {
         for (label, value) in [
             ("requests", &self.requests),
             ("cache_hits", &self.cache_hits),
+            ("cache_stale", &self.cache_stale),
+            ("cache_background_started", &self.cache_background_started),
+            ("cache_background_failed", &self.cache_background_failed),
             ("cache_misses", &self.cache_misses),
             ("cache_bypasses", &self.cache_bypasses),
             ("rejected", &self.rejected),

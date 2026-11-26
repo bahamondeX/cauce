@@ -73,11 +73,21 @@ class Origin(http.server.BaseHTTPRequestHandler):
         if path == "/replace" and self.headers.get("If-None-Match") == '"current"':
             self.reply(304, Cache_Control=rules, ETag='"current"')
             return
-        if path in ("/replace", "/stale", "/swr"):
+        if path in ("/replace", "/stale", "/swr", "/background", "/background-304"):
             rules = "public, max-age=1, stale-if-error=10, stale-while-revalidate=10"
             if path == "/stale" and count > 1:
                 self.reply(503, b"origin unavailable")
                 return
+            if path in ("/background", "/background-304") and count == 2:
+                self.server.entered.set()
+                self.server.release.wait(timeout=3)
+                if path == "/background-304":
+                    if self.headers.get("If-None-Match") != '"current"':
+                        self.reply(412)
+                    else:
+                        self.reply(304, Cache_Control="public, max-age=60", ETag='"current"', X_Fresh="yes")
+                    return
+                body = b"background result"
             if path == "/swr" and count == 2:
                 self.server.entered.set()
                 self.server.release.wait(timeout=3)
@@ -210,6 +220,88 @@ class CacheTests(unittest.TestCase):
         self.get("/bad-304")
         self.assertEqual(self.get("/bad-304", {"Cache-Control":"no-cache"})[0], 502)
         self.assertEqual(self.get("/bad-304", {"Cache-Control":"only-if-cached"})[0], 504)
+
+    def background(self, deadline="2s"):
+        self.data["routes"][0]["cache"]["background_revalidate_ms"] = deadline
+        self.write()
+        self.proxy.send_signal(signal.SIGHUP)
+        wait(self.log, '"reloaded"', self.proxy)
+
+    def test_background_single_flight_and_304_metadata(self):
+        self.background()
+        self.assertEqual(self.get("/background-304")[2], b"response 1")
+        time.sleep(1.12)
+        with ThreadPoolExecutor(max_workers=8) as workers:
+            leader = workers.submit(self.get, "/background-304")
+            try:
+                self.assertTrue(self.origin.entered.wait(2))
+                self.assertEqual(leader.result(timeout=0.6)[2], b"response 1")
+                responses = list(workers.map(lambda _: self.get("/background-304"), range(12)))
+                self.assertEqual({row[2] for row in responses}, {b"response 1"})
+                self.assertTrue(all("ttl=0" in row[1]["cache-status"] for row in responses))
+                self.assertEqual(self.origin.calls["/background-304"], 2)
+            finally:
+                self.origin.release.set()
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            refreshed = self.get("/background-304")
+            if refreshed[1].get("x-fresh") == "yes":
+                break
+            time.sleep(0.02)
+        self.assertEqual(refreshed[1].get("x-fresh"), "yes")
+        self.assertEqual(refreshed[2], b"response 1")
+        self.assertEqual(self.origin.calls["/background-304"], 2)
+
+    def test_background_publication_is_fenced_by_write(self):
+        self.background()
+        self.get("/background")
+        time.sleep(1.12)
+        self.assertEqual(self.get("/background")[2], b"response 1")
+        self.assertTrue(self.origin.entered.wait(2))
+        self.assertEqual(self.get("/background", method="POST")[0], 204)
+        self.origin.release.set()
+        # A forced read either waits for the prior flight or misses immediately.
+        self.assertEqual(self.get("/background", {"Cache-Control":"only-if-cached"})[0], 504)
+        self.assertEqual(self.get("/background", {"Cache-Control":"no-cache"})[2], b"response 2")
+        self.assertEqual(self.get("/background")[2], b"response 2")
+
+    def test_reload_retires_a_background_flight(self):
+        self.background()
+        self.get("/background")
+        time.sleep(1.12)
+        self.assertEqual(self.get("/background")[2], b"response 1")
+        self.assertTrue(self.origin.entered.wait(2))
+        self.proxy.send_signal(signal.SIGHUP)
+        deadline = time.monotonic() + 5
+        while self.log.read_text().count('"reloaded"') < 2:
+            self.assertLess(time.monotonic(), deadline, self.log.read_text())
+            time.sleep(0.02)
+        self.assertEqual(self.get("/background", {"Cache-Control":"only-if-cached"})[0], 504)
+        self.assertEqual(self.get("/background", method="POST")[0], 204)
+        self.assertEqual(self.get("/background")[2], b"response 2")
+        self.origin.release.set()
+        self.assertEqual(self.get("/background")[2], b"response 2")
+
+    def test_background_deadline_retains_stale_until_refresh_can_recover(self):
+        self.background("100ms")
+        self.get("/background")
+        time.sleep(1.12)
+        self.assertEqual(self.get("/background")[2], b"response 1")
+        self.assertTrue(self.origin.entered.wait(2))
+        time.sleep(0.15)
+        self.origin.release.set()
+        self.assertIn("ttl=0", self.get("/background")[1]["cache-status"])
+        self.assertEqual(self.origin.calls["/background"], 2)
+        time.sleep(0.50)
+        self.assertEqual(self.get("/background")[2], b"response 1")
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            fresh = self.get("/background")
+            if "ttl=0" not in fresh[1]["cache-status"]:
+                break
+            time.sleep(0.02)
+        self.assertNotIn("ttl=0", fresh[1]["cache-status"])
+        self.assertEqual(self.origin.calls["/background"], 3)
 
     def test_overflow_truncation_and_eviction(self):
         for _ in range(2):

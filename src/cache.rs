@@ -18,7 +18,7 @@ use hyper::{
 use serde::{Deserialize, Serialize};
 use std::{
     pin::Pin,
-    sync::Arc,
+    sync::{Arc, Mutex},
     task::{Context, Poll},
     time::{Duration, Instant, SystemTime},
 };
@@ -43,12 +43,24 @@ pub(crate) struct Spec {
     stale_if_error: u64,
     #[serde(deserialize_with = "milliseconds")]
     stale_while_revalidate: u64,
+    #[serde(
+        default,
+        deserialize_with = "optional_milliseconds",
+        skip_serializing_if = "Option::is_none"
+    )]
+    background_revalidate_ms: Option<u64>,
     coalesce: bool,
     invalidate_on_write: bool,
     vary: Vec<String>,
     bypass_header: Option<String>,
     statuses: Vec<u16>,
 }
+fn optional_milliseconds<'de, D: serde::Deserializer<'de>>(
+    input: D,
+) -> Result<Option<u64>, D::Error> {
+    crate::config::milliseconds(input).map(Some)
+}
+
 impl Default for Spec {
     fn default() -> Self {
         Self {
@@ -60,6 +72,7 @@ impl Default for Spec {
             ttl: 60_000,
             stale_if_error: 0,
             stale_while_revalidate: 0,
+            background_revalidate_ms: None,
             coalesce: true,
             invalidate_on_write: true,
             vary: vec!["accept-encoding".into()],
@@ -82,6 +95,9 @@ impl Spec {
                 && self.ttl <= 7 * 86_400_000
                 && self.stale_if_error <= 86_400_000
                 && self.stale_while_revalidate <= 86_400_000
+                && self
+                    .background_revalidate_ms
+                    .is_none_or(|ms| (10..=60_000).contains(&ms))
                 && (1..=7).contains(&self.statuses.len())
                 && self
                     .statuses
@@ -235,14 +251,24 @@ impl Cache {
                     {
                         return Read::Hit;
                     }
-                    if filling
-                        && !force
+                    if !force
                         && !conditional
                         && controls.min_fresh.is_none()
                         && controls.max_age.is_none()
                         && entry.within_stale(now, entry.meta.swr)
                     {
-                        return Read::Hit;
+                        if let Some(delay) = self.spec.background_revalidate_ms {
+                            if could_fill && !filling {
+                                let mut next = entry.background_after.lock().unwrap();
+                                if next.is_none_or(|deadline| deadline <= now) {
+                                    *next = Some(now + Duration::from_millis(delay.max(500)));
+                                    return Read::Background;
+                                }
+                            }
+                            return Read::Hit;
+                        } else if filling {
+                            return Read::Hit;
+                        }
                     }
                 }
                 if could_fill {
@@ -273,6 +299,17 @@ impl Cache {
                         }
                     }
                     return Probe::Hit(response);
+                }
+                Selection::Background(entry, ticket) => {
+                    let response = entry.response(false, now, "Cauce; hit; ttl=0");
+                    let revalidation = Box::new(Fill {
+                        cache: self.clone(),
+                        ticket,
+                        stale: Some(entry),
+                        started: now,
+                        can_serve_stale: false,
+                    });
+                    return Probe::Background(response, revalidation);
                 }
                 Selection::Fill(ticket, stale) => {
                     return Probe::Fill(Box::new(Fill {
@@ -473,6 +510,7 @@ struct Meta {
     sie: Duration,
 }
 struct Entry {
+    background_after: Mutex<Option<Instant>>,
     meta: Meta,
     body: Bytes,
     capacity: usize,
@@ -611,6 +649,7 @@ fn date(headers: &HeaderMap, field: HeaderName) -> Option<SystemTime> {
 }
 
 pub(crate) enum Probe {
+    Background(Response<ProxyBody>, Box<Fill>),
     Hit(Response<ProxyBody>),
     Fill(Box<Fill>),
     Bypass,
@@ -625,6 +664,19 @@ pub(crate) struct Fill {
     can_serve_stale: bool,
 }
 impl Fill {
+    pub(crate) fn background_deadline(&self) -> Duration {
+        Duration::from_millis(
+            self.cache
+                .spec
+                .background_revalidate_ms
+                .expect("background mode"),
+        )
+    }
+
+    pub(crate) fn retirement(&self) -> tokio::sync::watch::Receiver<bool> {
+        self.ticket.retirement()
+    }
+
     pub fn conditional(&self, headers: &mut HeaderMap) -> bool {
         let Some(entry) = &self.stale else {
             return false;
@@ -680,13 +732,15 @@ impl Fill {
         let mut merged = previous.clone();
         merged.remove(AGE);
         merged.remove(DATE);
-        for name in [DATE, AGE, CACHE_CONTROL, EXPIRES, LAST_MODIFIED, ETAG, VARY] {
-            let values = headers.get_all(&name);
-            if values.iter().next().is_some() {
-                merged.remove(&name);
-                for value in values {
-                    merged.append(&name, value.clone());
-                }
+        for name in headers.keys() {
+            // The stored body is unchanged. Retain its framing, including
+            // its known length, regardless of 304 framing.
+            if *name == CONTENT_LENGTH {
+                continue;
+            }
+            merged.remove(name);
+            for value in headers.get_all(name) {
+                merged.append(name, value.clone());
             }
         }
         let Some(meta) = self.cache.metadata(old.meta.status, &merged, self.started) else {
@@ -694,6 +748,7 @@ impl Fill {
             return None;
         };
         let entry = Arc::new(Entry {
+            background_after: Mutex::new(None),
             meta,
             body: old.body.clone(),
             capacity: old.capacity,
@@ -750,17 +805,43 @@ pub(crate) struct Capture {
     expected: Option<u64>,
 }
 impl Capture {
-    fn publish(self) {
+    fn publish(self) -> bool {
         if self
             .expected
             .is_none_or(|length| length == self.bytes.len() as u64)
         {
-            self.ticket.publish(Arc::new(Entry {
+            return self.ticket.publish(Arc::new(Entry {
+                background_after: Mutex::new(None),
                 meta: self.meta,
                 capacity: self.bytes.capacity(),
                 body: Bytes::from(self.bytes),
             }));
         }
+        false
+    }
+
+    fn observe(&mut self, frame: &Frame<Bytes>) -> bool {
+        let Some(bytes) = frame
+            .data_ref()
+            .filter(|bytes| bytes.len() <= self.limit - self.bytes.len())
+        else {
+            return false;
+        };
+        self.bytes.reserve_exact(bytes.len());
+        self.bytes.extend_from_slice(bytes);
+        true
+    }
+
+    pub(crate) async fn collect<B>(mut self, mut body: B) -> bool
+    where
+        B: Body<Data = Bytes> + Unpin,
+    {
+        while let Some(frame) = body.frame().await {
+            if !frame.is_ok_and(|frame| self.observe(&frame)) {
+                return false;
+            }
+        }
+        self.publish()
     }
     pub fn wrap(self, body: ProxyBody) -> ProxyBody {
         CaptureBody {
@@ -791,17 +872,8 @@ impl Body for CaptureBody {
         if let Some(capture) = &mut self.capture {
             match &frame {
                 Poll::Ready(Some(Ok(ready))) => {
-                    if let Some(bytes) = ready
-                        .data_ref()
-                        .filter(|bytes| bytes.len() <= capture.limit - capture.bytes.len())
-                    {
-                        // Exact reservation prevents capacity growth above the
-                        // per-fill byte budget when the last frame is large.
-                        capture.bytes.reserve_exact(bytes.len());
-                        capture.bytes.extend_from_slice(bytes);
-                    } else {
-                        // Trailer responses and oversized responses remain
-                        // forward-only. Waiters can start another fill.
+                    if !capture.observe(ready) {
+                        // Trailer and oversized responses remain forward-only.
                         self.capture.take();
                     }
                 }

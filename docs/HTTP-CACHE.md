@@ -49,3 +49,26 @@ combination, authenticated caching, general cache extensions, disk
 storage, cluster invalidation and background revalidation remain
 outside the profile. NGINX's proxy_cache and Varnish have different
 storage and eviction semantics. [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html).
+
+## Background stale-while-revalidate
+
+A cache route can set `background_revalidate_ms` to an independent deadline
+from 10 ms through 60 seconds. An eligible stale GET returns immediately
+and can start a conditional refresh. HEAD and only-if-cached requests can
+use the stale representation during the permitted window. The origin
+cache directives and configured stale window still govern eligibility.
+Forced or conditional clients follow foreground cache semantics.
+
+The cache coalesces background and foreground fills per key. The
+process admits at most 32 background jobs, and each route also applies
+its configured fill limit. A key waits at least 500 ms between refresh
+attempts. Jobs share existing upstream TLS, admission, selection and byte
+limits. Refreshing a 304 updates stored metadata while retaining the
+original body and length. A successful write or retired generation fences
+publication. A reload cancels waiting and in-progress refreshes.
+
+Prometheus exposes counters for stale responses, started background jobs
+and failed, timed-out or retired jobs. Use the existing origin and proxy
+telemetry to diagnose repeated refresh failures.
+
+[Socket regression suite](../tests/http_cache.py).

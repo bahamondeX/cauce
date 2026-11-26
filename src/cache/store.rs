@@ -12,6 +12,7 @@ pub(super) struct Store {
     entries: usize,
     fills: usize,
     waiters: usize,
+    retired: watch::Sender<bool>,
 }
 #[derive(Default)]
 struct Inner {
@@ -23,6 +24,7 @@ struct Inner {
 }
 pub(super) enum Selection {
     Hit(Arc<Entry>),
+    Background(Arc<Entry>, Ticket),
     Fill(Ticket, Option<Arc<Entry>>),
     Wait(watch::Receiver<()>),
     Unavailable,
@@ -35,6 +37,7 @@ impl Store {
             entries,
             fills,
             waiters,
+            retired: watch::channel(false).0,
         })
     }
     pub fn select(
@@ -48,11 +51,15 @@ impl Store {
         }
         let entry = state.entries.get(key).map(|(entry, _)| entry);
         let flight = state.flights.get(key);
-        match decide(entry.map(AsRef::as_ref), flight.is_some()) {
+        let background = match decide(entry.map(AsRef::as_ref), flight.is_some()) {
             Read::Hit => return Selection::Hit(entry.expect("existing entry").clone()),
             Read::Bypass => return Selection::Unavailable,
-            Read::Fill => {}
-        }
+            Read::Background if flight.is_some() || state.flights.len() >= self.fills => {
+                return Selection::Hit(entry.expect("existing entry").clone());
+            }
+            Read::Background => true,
+            Read::Fill => false,
+        };
         if let Some(flight) = flight {
             if flight.receiver_count() < self.waiters {
                 return Selection::Wait(flight.subscribe());
@@ -70,7 +77,11 @@ impl Store {
             key: key.clone(),
             epoch: state.epoch.ticket(),
         };
-        Selection::Fill(ticket, stale)
+        if background {
+            Selection::Background(stale.expect("stale entry"), ticket)
+        } else {
+            Selection::Fill(ticket, stale)
+        }
     }
     pub fn drain(&self) {
         let retired = {
@@ -85,10 +96,14 @@ impl Store {
                 },
             )
         };
+        self.retired.send_replace(true);
         drop(retired);
     }
     pub fn invalidate(&self, family: &Family) {
-        let mut state = self.inner.lock().unwrap();
+        Self::invalidate_family(&mut self.inner.lock().unwrap(), family);
+    }
+
+    fn invalidate_family(state: &mut Inner, family: &Family) {
         state.epoch.invalidate();
         let mut removed = 0;
         state.entries.retain(|key, (_, weight)| {
@@ -104,6 +119,7 @@ impl Store {
 }
 pub(super) enum Read {
     Hit,
+    Background,
     Bypass,
     Fill,
 }
@@ -142,7 +158,14 @@ impl Ticket {
         state.epoch.current(self.epoch)
     }
     pub fn invalidate(&self) {
-        self.store.invalidate(&self.key.family);
+        let mut state = self.store.inner.lock().unwrap();
+        if state.epoch.current(self.epoch) {
+            Store::invalidate_family(&mut state, &self.key.family);
+        }
+    }
+
+    pub fn retirement(&self) -> watch::Receiver<bool> {
+        self.store.retired.subscribe()
     }
 }
 impl Drop for Ticket {

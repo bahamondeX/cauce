@@ -147,6 +147,7 @@ async fn run() -> Result<()> {
             resolver.clone(),
         )),
         pool,
+        revalidators: Arc::new(Semaphore::new(32)),
         logger,
         requests: Arc::new(Semaphore::new(config.limits.requests)),
         clients: Arc::new(Semaphore::new(config.limits.clients)),
@@ -239,12 +240,12 @@ async fn run() -> Result<()> {
                 match prepared {
                     Some(Ok(Ok(Prepared { generation: next, legacy_tls, explicit_tls, quic }))) => {
                         let version = next.version;
-                        let old = {
+                        {
                             let mut current = state.generation.write().unwrap();
                             current.draining.store(true, Ordering::Release);
-                            std::mem::replace(&mut *current, next)
-                        };
-                        for cache in old.caches.values() { cache.drain(); }
+                            for cache in current.caches.values() { cache.drain(); }
+                            *current = next;
+                        }
                         if let Some(health) = health.take() {
                             health.abort();
                         }
@@ -314,6 +315,13 @@ async fn run() -> Result<()> {
     stream.shutdown().await;
     tasks.abort_all();
     while tasks.join_next().await.is_some() {}
+    {
+        let generation = state.generation.read().unwrap();
+        generation.draining.store(true, Ordering::Release);
+        for cache in generation.caches.values() {
+            cache.drain();
+        }
+    }
     state.pool.sweep(u64::MAX);
     drop(web);
     drop(state);

@@ -1,8 +1,8 @@
 use crate::{
     body::{self, Completion, ProxyBody},
-    config::{Limits, UpstreamProtocol},
+    config::{Limits, Route, UpstreamProtocol},
     diagnostics,
-    pool::{ms, Generation, Pool},
+    pool::{ms, Endpoint, Generation, Pool},
     telemetry::{self, Attempt, Event, Logger},
 };
 use hyper::{
@@ -30,6 +30,7 @@ pub struct State {
     pub(crate) peers: Option<Arc<crate::admission::PeerGate>>,
     pub generation: RwLock<Arc<Generation>>,
     pub pool: Arc<Pool>,
+    pub(crate) revalidators: Arc<Semaphore>,
     pub logger: Logger,
     pub requests: Arc<Semaphore>,
     pub clients: Arc<Semaphore>,
@@ -241,6 +242,212 @@ impl OriginBody {
             Self::Http(body) => body.is_end_stream(),
             Self::Application(body) => body.is_end_stream(),
         }
+    }
+}
+
+struct OriginHeaders {
+    forward_chain: HeaderValue,
+    secure: bool,
+    trace: Option<HeaderValue>,
+    request_id: HeaderValue,
+}
+
+impl OriginHeaders {
+    fn apply<B>(self, request: &mut Request<B>, endpoint: &Endpoint) {
+        let path = request
+            .uri()
+            .path_and_query()
+            .map_or("/", |path| path.as_str());
+        let upstream_h2 = endpoint.config.protocol == UpstreamProtocol::Http2;
+        let uri = if upstream_h2 {
+            format!(
+                "{}://{}{}",
+                if endpoint.config.tls.is_some() {
+                    "https"
+                } else {
+                    "http"
+                },
+                endpoint.config.host,
+                path
+            )
+        } else {
+            path.to_owned()
+        };
+        *request.uri_mut() = uri.parse().expect("validated authority and request path");
+        *request.version_mut() = if upstream_h2 {
+            hyper::Version::HTTP_2
+        } else {
+            hyper::Version::HTTP_11
+        };
+        let headers = request.headers_mut();
+        strip_hop(headers);
+        let forwarded: Vec<_> = headers
+            .keys()
+            .filter(|key| key.as_str() == "forwarded" || key.as_str().starts_with("x-forwarded-"))
+            .cloned()
+            .collect();
+        for key in forwarded {
+            headers.remove(key);
+        }
+        headers.remove("traceparent");
+        headers.remove("tracestate");
+        if let Some(trace) = self.trace {
+            headers.insert("traceparent", trace);
+        }
+        headers.insert(HOST, endpoint.host.clone());
+        headers.remove("x-real-ip");
+        headers.insert(X_FORWARDED_FOR, self.forward_chain);
+        headers.insert(
+            X_FORWARDED_PROTO,
+            HeaderValue::from_static(if self.secure { "https" } else { "http" }),
+        );
+        headers.insert(X_REQUEST_ID, self.request_id);
+    }
+}
+
+struct Revalidation {
+    request: Request<ProxyBody>,
+    origin_headers: OriginHeaders,
+    client: IpAddr,
+    route_id: String,
+    fill: Box<crate::cache::Fill>,
+}
+
+impl Revalidation {
+    fn start(self, state: Arc<State>, generation: Arc<Generation>) {
+        let Ok(permit) = state.revalidators.clone().try_acquire_owned() else {
+            return;
+        };
+        let mut retirement = self.fill.retirement();
+        if *retirement.borrow_and_update() || !state.ready.load(Ordering::Acquire) {
+            return;
+        }
+        let deadline = tokio::time::Instant::now() + self.fill.background_deadline();
+        state
+            .logger
+            .metrics
+            .cache_background_started
+            .fetch_add(1, Ordering::Relaxed);
+        tokio::spawn(async move {
+            let _permit = permit;
+            let success = tokio::select! {
+                biased;
+                _ = retirement.changed() => false,
+                result = tokio::time::timeout_at(deadline, self.run(&state.pool, &generation, deadline)) =>
+                    result.is_ok_and(|result| result.unwrap_or(false)),
+            };
+            if !success {
+                state
+                    .logger
+                    .metrics
+                    .cache_background_failed
+                    .fetch_add(1, Ordering::Relaxed);
+            }
+        });
+    }
+
+    async fn run(
+        self,
+        pool: &Arc<Pool>,
+        generation: &Arc<Generation>,
+        deadline: tokio::time::Instant,
+    ) -> anyhow::Result<bool> {
+        let Self {
+            mut request,
+            origin_headers,
+            client,
+            route_id,
+            fill,
+        } = self;
+        let route: &Route = generation
+            .config
+            .routes
+            .iter()
+            .find(|route| route.id == route_id)
+            .expect("same request generation");
+        let Some(endpoint) = generation.select(route, client) else {
+            return Ok(false);
+        };
+        let mut authority = request
+            .uri()
+            .authority()
+            .cloned()
+            .or_else(|| request.headers().get(HOST)?.to_str().ok()?.parse().ok());
+        let limits = &generation.config.limits;
+        let secure = origin_headers.secure;
+        origin_headers.apply(&mut request, &endpoint);
+        let conditional = fill.conditional(request.headers_mut());
+        if let Some(policy) = &route.headers {
+            policy.request.apply(request.headers_mut());
+        }
+        if headers_exceed_limits(request.headers(), limits) {
+            return Ok(false);
+        }
+        let (mut lease, _) = pool
+            .acquire(generation.clone(), endpoint.clone(), false)
+            .await?;
+        lease.arm_deadline(deadline);
+        let header_deadline =
+            deadline.min(tokio::time::Instant::now() + Duration::from_millis(limits.headers_ms));
+        let response = tokio::time::timeout_at(header_deadline, async {
+            if route.application.is_some() {
+                let authority = authority.take().expect("validated request authority");
+                let upload_error = AtomicU8::new(0);
+                let context = crate::application::Contextual {
+                    route: &generation.applications[&route.id],
+                    authority: &authority,
+                    client,
+                    secure,
+                    length: Some(0),
+                    buffers: generation
+                        .application_buffers
+                        .as_ref()
+                        .expect("application buffer budget"),
+                    limits,
+                    upload_error: &upload_error,
+                };
+                lease
+                    .application_request(request, context)
+                    .await
+                    .map(|response| response.map(OriginBody::Application))
+            } else {
+                lease
+                    .send_request(request, None)
+                    .await
+                    .map(|response| response.map(OriginBody::Http))
+                    .map_err(anyhow::Error::from)
+            }
+        })
+        .await??;
+        if invalid_framing(response.headers()) || headers_exceed_limits(response.headers(), limits)
+        {
+            lease.health_result(false);
+            return Ok(false);
+        }
+        let (mut parts, body) = response.into_parts();
+        strip_hop(&mut parts.headers);
+        let outlier = endpoint.config.resilience.as_ref().is_some_and(|settings| {
+            settings.eject_on_gateway_status && matches!(parts.status.as_u16(), 502..=504)
+        });
+        lease.health_result(!outlier);
+        if parts.status.is_server_error() {
+            return Ok(false);
+        }
+        if conditional && parts.status == StatusCode::NOT_MODIFIED {
+            lease.complete(body.is_end_stream());
+            return Ok(fill.refreshed(&parts.headers).is_some());
+        }
+
+        // Use the same storage policy and completeness checks as foreground fills.
+        if let Some(capture) = fill.capture(parts.status, &parts.headers, false) {
+            let published = match body {
+                OriginBody::Http(body) => capture.collect(body).await,
+                OriginBody::Application(body) => capture.collect(body).await,
+            };
+            lease.complete(published);
+            return Ok(published);
+        }
+        Ok(false)
     }
 }
 
@@ -671,6 +878,56 @@ where
                     .metrics
                     .cache_hits
                     .fetch_add(1, Ordering::Relaxed);
+                if response
+                    .headers()
+                    .get("cache-status")
+                    .is_some_and(|value| value == "Cauce; hit; ttl=0")
+                {
+                    state
+                        .logger
+                        .metrics
+                        .cache_stale
+                        .fetch_add(1, Ordering::Relaxed);
+                }
+                send_cached!(response);
+            }
+            Probe::Background(response, fill) => {
+                state
+                    .logger
+                    .metrics
+                    .cache_hits
+                    .fetch_add(1, Ordering::Relaxed);
+                state
+                    .logger
+                    .metrics
+                    .cache_stale
+                    .fetch_add(1, Ordering::Relaxed);
+                if !grpc {
+                    let mut request = Request::new(body::full(""));
+                    *request.method_mut() = hyper::Method::GET;
+                    *request.uri_mut() = req.uri().clone();
+                    *request.headers_mut() = req.headers().clone();
+                    if is_h3 && route.application.is_none() {
+                        request.headers_mut().remove(CONTENT_LENGTH);
+                    }
+                    Revalidation {
+                        request,
+                        origin_headers: OriginHeaders {
+                            forward_chain: identity
+                                .as_ref()
+                                .and_then(|value| value.forwarded.clone())
+                                .unwrap_or_else(|| peer.clone()),
+                            secure,
+                            trace: trace.clone(),
+                            request_id: HeaderValue::from_str(&uuid::Uuid::new_v4().to_string())
+                                .unwrap(),
+                        },
+                        client: client_ip,
+                        route_id: route.id.clone(),
+                        fill,
+                    }
+                    .start(state.clone(), generation.clone());
+                }
                 send_cached!(response);
             }
             Probe::Fill(ticket) => {
@@ -704,6 +961,11 @@ where
                         .logger
                         .metrics
                         .cache_hits
+                        .fetch_add(1, Ordering::Relaxed);
+                    state
+                        .logger
+                        .metrics
+                        .cache_stale
                         .fetch_add(1, Ordering::Relaxed);
                     send_cached!(response);
                 }
@@ -891,32 +1153,14 @@ where
             attempt
         }));
     }
-    let path = req
-        .uri()
-        .path_and_query()
-        .map(|p| p.as_str())
-        .unwrap_or("/");
-    let uri = if upstream_h2 {
-        format!(
-            "{}://{}{}",
-            if endpoint.config.tls.is_some() {
-                "https"
-            } else {
-                "http"
-            },
-            endpoint.config.host,
-            path
-        )
-    } else {
-        path.to_owned()
-    };
-    *req.uri_mut() = uri.parse().expect("validated authority and request path");
-    *req.version_mut() = if upstream_h2 {
-        hyper::Version::HTTP_2
-    } else {
-        hyper::Version::HTTP_11
-    };
-    strip_hop(req.headers_mut());
+    let request_id_header = HeaderValue::from_str(&id).unwrap();
+    OriginHeaders {
+        forward_chain: identity.and_then(|value| value.forwarded).unwrap_or(peer),
+        secure,
+        trace,
+        request_id: request_id_header.clone(),
+    }
+    .apply(&mut req, &endpoint);
     if is_h3 && application.is_none() {
         // The receive adapter verifies the declared length at end of stream.
         // Keep HTTP/1.1 uploads chunked so Hyper cannot stop before that check.
@@ -931,34 +1175,6 @@ where
         req.headers_mut().remove("sec-websocket-extensions");
         req.headers_mut().remove(CONTENT_LENGTH);
     }
-    // Convert trusted input to a canonical chain after stripping forwarding fields.
-    let forwarded: Vec<_> = req
-        .headers()
-        .keys()
-        .filter(|k| k.as_str() == "forwarded" || k.as_str().starts_with("x-forwarded-"))
-        .cloned()
-        .collect();
-    for k in forwarded {
-        req.headers_mut().remove(k);
-    }
-    req.headers_mut().remove("traceparent");
-    req.headers_mut().remove("tracestate");
-    if let Some(t) = trace {
-        req.headers_mut().insert("traceparent", t);
-    }
-    req.headers_mut().insert(HOST, endpoint.host.clone());
-    req.headers_mut().remove("x-real-ip");
-    req.headers_mut().insert(
-        X_FORWARDED_FOR,
-        identity.and_then(|value| value.forwarded).unwrap_or(peer),
-    );
-    req.headers_mut().insert(
-        X_FORWARDED_PROTO,
-        HeaderValue::from_static(if secure { "https" } else { "http" }),
-    );
-    let request_id_header = HeaderValue::from_str(&id).unwrap();
-    req.headers_mut()
-        .insert(X_REQUEST_ID, request_id_header.clone());
     if grpc {
         let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
         if remaining.is_zero() {
