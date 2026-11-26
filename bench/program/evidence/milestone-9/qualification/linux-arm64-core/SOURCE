@@ -1,0 +1,5 @@
+source_commit=cbb1a79843dc618a5101a5b57acb870b8f6688dd
+source_tree=af98e0c90db7a637c62c1f295da5bb61fa1aaf5f
+cargo_lock_sha256=62c404cb963299564189a9abc4ad2c95c36ddf936a47245dfe26d203346fd46b
+profile=core
+platform=linux/arm64

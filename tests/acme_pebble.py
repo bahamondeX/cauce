@@ -97,6 +97,7 @@ class Pebble(unittest.TestCase):
             runtime.update(admin=f"127.0.0.1:{admin}", upstreams=[], routes=[
                 {"id":"site", "host":HOST, "path_prefix":"/", "content":{"type":"direct", "body":"ok", "status":200}},
                 {"id":"extra", "host":"extra.cauce.test", "path_prefix":"/", "content":{"type":"direct", "body":"ok", "status":200}},
+                {"id":"overlap", "host":"overlap.cauce.test", "path_prefix":"/", "content":{"type":"direct", "body":"ok", "status":200}},
             ])
             tls = {"cert_file": "bootstrap.pem", "key_file": "bootstrap-key.pem"}
             runtime["listeners"] = [{"listen": f"127.0.0.1:{clear}"}, {"listen": f"127.0.0.1:{secure}", "tls": tls}]
@@ -104,7 +105,8 @@ class Pebble(unittest.TestCase):
             state = directory / "acme"
             runtime["acme"] = {
                 "directory": f"https://localhost:{ca_port}/dir", "directory_ca_file": str(directory / "fixture-ca.pem"),
-                "state_dir": str(state), "accept_terms": True, "certificates": [[HOST, "extra.cauce.test"]],
+                "state_dir": str(state), "accept_terms": True,
+                "certificates": [[HOST, "extra.cauce.test"], [HOST, "overlap.cauce.test"]],
                 "renew_before_seconds": 5, "check_interval_seconds": 1,
             }
             cauce_config = directory / "cauce.yaml"
@@ -126,9 +128,9 @@ class Pebble(unittest.TestCase):
                     raw = close.enter_context(socket.create_connection(("127.0.0.1", secure), timeout=2))
                     connection = tls_client.wrap_socket(raw, server_hostname=name)
                     return connection
-            def ready():
+            def ready(name=HOST):
                 try:
-                    return dial()
+                    return dial(name)
                 except (ssl.SSLError, OSError):
                     return None
 
@@ -141,10 +143,18 @@ class Pebble(unittest.TestCase):
             with dial("extra.cauce.test") as second_name:
                 self.assertEqual(initial, second_name.getpeercert(binary_form=True))
                 self.assertEqual(tls_get(second_name, "extra.cauce.test"), (200, b"ok"))
+            with poll(lambda: ready("overlap.cauce.test")) as overlap:
+                self.assertNotEqual(initial, overlap.getpeercert(binary_form=True))
+                self.assertEqual(tls_get(overlap, "overlap.cauce.test"), (200, b"ok"))
+                self.assertIn(("DNS", HOST), overlap.getpeercert()["subjectAltName"])
+            with dial() as preferred:
+                self.assertEqual(initial, preferred.getpeercert(binary_form=True))
             account = state / "account.json"
             certificate = state / "certificate-0.json"
+            overlapping_certificate = state / "certificate-1.json"
             account_contents = account.read_bytes()
-            self.assertEqual([path.stat().st_mode & 0o777 for path in [state, account, certificate]], [0o700, 0o600, 0o600])
+            self.assertEqual([path.stat().st_mode & 0o777 for path in [state, account, certificate, overlapping_certificate]],
+                             [0o700, 0o600, 0o600, 0o600])
 
             def rotated():
                 with ready() or contextlib.nullcontext() as connection:
@@ -154,7 +164,7 @@ class Pebble(unittest.TestCase):
                             return der
             rotated_der = poll(rotated, timeout=25)
             self.assertEqual(tls_get(old), (200, b"ok"))
-            self.assertGreaterEqual(cauce_log.read_text().count("acme_certificate_published"), 2)
+            self.assertGreaterEqual(cauce_log.read_text().count("acme_certificate_published"), 3)
             if os.environ.get("CAUCE_TEST_ACME_QUIC"):
                 asyncio.run(verify_quic(quic, directory / "root.pem"))
             stop(proxy)

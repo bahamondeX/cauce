@@ -9,7 +9,7 @@ DNS rotation fixture and HTTP regression suite.
 | Shared DNS | Loopback IPv4 and IPv6, CNAME, TTL rotation, NXDOMAIN, SERVFAIL, cancellation and concurrent refresh. Real HTTP/1 pooled requests and established TCP sessions exercised both pool strategies. |
 | Resilience | Circuit state tests and real sockets for half-open admission, bounded pre-send failover and non-idempotent handling. |
 | Cache | 11 shared memory-cache socket cases, Loom publication fencing, and three disk-tier cases covering reads after memory eviction, corruption, quotas, mutation invalidation and recovery. |
-| TLS | NGINX OSS 1.30.8 Stream differential for named/default certificates and bidirectional verification. Pebble v2.9.0 verified HTTP-01 issuance, renewal with an open HTTPS connection, trusted QUIC handshake and secure persisted restart. |
+| TLS | NGINX OSS 1.30.8 Stream differential for named/default certificates and bidirectional verification. Pebble v2.9.0 verified HTTP-01 issuance, overlapping certificate precedence, renewal with an open HTTPS connection, trusted QUIC handshake and secure persisted restart. |
 | Migration | 11 tests. Include root bounds, provenance, inherited literal policy, variable analysis and validation before candidate publication. |
 | Supply chain | CycloneDX, dependency notices and two RustSec snapshots. The final snapshot flags bundled SQLite and no warnings. |
 
@@ -82,12 +82,18 @@ The corresponding cross-built Linux AMD64 proxy is 15,766,136 bytes
 and the collector is 6,609,520 bytes. The AMD64 fixture verified the ELF
 architecture and hashes, then ran capability discovery and configuration
 validation under emulation.
+The separate Linux ARM64 Core build from `cbb1a79` is 10,109,656 bytes.
+It passed capability discovery and an explicit configuration rejection
+for the disk-cache example. The source boundary differs from the Linux
+Full snapshot. The matched Darwin comparison below measures build size
+with source held fixed.
 The main Darwin socket regression used a debug snapshot from that
 checkpoint. Later disk invalidation, listener retirement and mail DNS
 changes have separate focused evidence. The staging and evidence
 manifests record the source tree, lockfile hash and binary hashes.
 [Linux ARM64 identities](../bench/program/evidence/milestone-9/linux-arm64-release.txt)
 [Linux AMD64 identities and smoke check](../bench/program/evidence/milestone-9/qualification/linux-amd64/)
+[Linux ARM64 Core identities and smoke check](../bench/program/evidence/milestone-9/qualification/linux-arm64-core/)
 [Evidence checksums](../bench/program/evidence/milestone-9/SHA256SUMS).
 
 ## Distribution checks
