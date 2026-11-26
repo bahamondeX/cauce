@@ -181,3 +181,15 @@ password-based subset, and acceptance of unauthenticated SMTP remain
 outside the implemented scope. Shared TTL-aware DNS, advanced resilience,
 background cache revalidation, disk cache, ACME and Stream TLS remain
 open. [Registry](../compatibility/nginx-oss.yaml) [Interoperability](PERFORMANCE-MILESTONE-8.md).
+
+## Milestone 9 infrastructure slices
+
+Stream TLS shared cases cover default and named certificates, downstream
+mTLS, verified upstream TLS and backend hostname rejection against NGINX
+OSS 1.30.8. DNS rotation, upstream circuits, detached cache refresh,
+disk storage and local ACME have independent Cauce fixtures. These
+capabilities also have configuration and lifecycle differences that
+remain in the source-derived backlog.
+
+[Gap analysis](CAUCE-1.0-GAP-ANALYSIS.md)
+[Milestone 9 evidence](PERFORMANCE-MILESTONE-9.md).

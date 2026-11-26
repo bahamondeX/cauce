@@ -386,8 +386,8 @@ modules:
           - {"name": "recursive_error_pages", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "request_pool_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "reset_timedout_connection", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "resolver", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "resolver_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "resolver", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Optional shared Hickory recursive resolver with TTL, negative cache and address retirements. Configuration is process-wide."}
+          - {"name": "resolver_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Shared configurable query deadline including refresh and concurrency admission."}
           - {"name": "root", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Route-local absolute document root with descriptor confinement and conservative symlink handling."}
           - {"name": "satisfy", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "send_lowat", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
@@ -716,7 +716,7 @@ modules:
           - {"name": "proxy_buffers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"]}
           - {"name": "proxy_busy_buffers_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Bounded shared memory cache for explicitly public origin representations."}
-          - {"name": "proxy_cache_background_update", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_cache_background_update", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Immediate eligible stale responses and bounded background per-key revalidation with generation fences."}
           - {"name": "proxy_cache_bypass", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Explicit bypass header and conservative request privacy policy."}
           - {"name": "proxy_cache_convert_head", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_cache_key", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Fixed scheme, authority, effective URI and configured representation selectors."}
@@ -726,7 +726,7 @@ modules:
           - {"name": "proxy_cache_max_range_offset", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_cache_methods", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
           - {"name": "proxy_cache_min_uses", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_cache_path", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_CONF_2MORE"]}
+          - {"name": "proxy_cache_path", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_CONF_2MORE"], "status": "partial", "notes": "Bounded disk tier, quota and filesystem directory configuration. Crash restart is cold, and shared zones, cache manager and NGINX layout differ."}
           - {"name": "proxy_cache_revalidate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Conditional cache revalidation with restricted 304 metadata."}
           - {"name": "proxy_cache_use_stale", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Configured stale-on-error and stale followers while a leader revalidates."}
           - {"name": "proxy_cache_valid", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Configurable cacheable status codes and a route freshness cap."}
@@ -745,7 +745,7 @@ modules:
           - {"name": "proxy_limit_rate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_max_temp_file_size", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_method", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_next_upstream", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
+          - {"name": "proxy_next_upstream", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "One budgeted alternate connection acquisition on eligible empty safe requests before transmission. Broader retry triggers differ."}
           - {"name": "proxy_next_upstream_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_next_upstream_tries", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_no_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_1MORE"]}
@@ -1359,8 +1359,8 @@ modules:
           - {"name": "preread_buffer_size", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Bounded rustls ClientHello parser and retained wire prefix."}
           - {"name": "preread_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Absolute TLS preread deadline under the session deadline."}
           - {"name": "proxy_protocol_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Absolute header deadline on explicitly trusted stream TCP listeners."}
-          - {"name": "resolver", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "resolver_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "resolver", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Named Stream TCP/UDP endpoints use the shared TTL-aware resolver. NGINX variable destinations remain open."}
+          - {"name": "resolver_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Process-wide DNS timeout and per-Stream session or connect deadline."}
           - {"name": "server", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_CONF_BLOCK", "NGX_CONF_NOARGS"]}
           - {"name": "server_name", "flags": ["NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
           - {"name": "server_names_hash_bucket_size", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_CONF_TAKE1"]}
@@ -1439,20 +1439,20 @@ modules:
           - {"name": "proxy_requests", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_responses", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_socket_keepalive", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Configurable TCP keepalive time for TCP endpoints."}
-          - {"name": "proxy_ssl", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_ssl_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_ssl", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Verified optional Stream TLS on a TCP upstream group."}
+          - {"name": "proxy_ssl_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Optional explicit client certificate sent to the upstream."}
           - {"name": "proxy_ssl_certificate_cache", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE123"]}
-          - {"name": "proxy_ssl_certificate_key", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_ssl_certificate_key", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Optional explicit private key for upstream authentication."}
           - {"name": "proxy_ssl_ciphers", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_conf_command", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE2"]}
           - {"name": "proxy_ssl_crl", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_ssl_name", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "proxy_ssl_name", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Explicit backend TLS identity retained through DNS rotation."}
           - {"name": "proxy_ssl_password_file", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_ssl_protocols", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "proxy_ssl_server_name", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_ssl_server_name", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Rustls uses the configured DNS identity as SNI."}
           - {"name": "proxy_ssl_session_reuse", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "proxy_ssl_trusted_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_ssl_verify", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
+          - {"name": "proxy_ssl_trusted_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Explicit PEM trust roots on the upstream group."}
+          - {"name": "proxy_ssl_verify", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Verification is mandatory on encrypted upstreams."}
           - {"name": "proxy_ssl_verify_depth", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_timeout", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "TCP forwarding progress and UDP session inactivity, plus absolute lifetime."}
           - {"name": "proxy_upload_rate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -1483,17 +1483,18 @@ modules:
         directives:
           - {"name": "split_clients", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE2"]}
   ngx_stream_ssl_module:
+    coverage: {"status": "partial", "notes": "Downstream Stream TLS termination with SNI, explicit mTLS, TLS 1.2 and 1.3 and resumption controls. Broad directive parity remains open."}
     definitions:
       - source: src/stream/ngx_stream_ssl_module.c
         type: NGX_STREAM_MODULE
         directives:
           - {"name": "ssl_alpn", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_1MORE"]}
-          - {"name": "ssl_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "ssl_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Bootstrap PEM certificate and exact-name SNI map."}
           - {"name": "ssl_certificate_cache", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE123"]}
           - {"name": "ssl_certificate_compression", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "ssl_certificate_key", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "ssl_certificate_key", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Explicit PEM key for the default and each SNI certificate."}
           - {"name": "ssl_ciphers", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "ssl_client_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "ssl_client_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Listener-wide explicit PEM trust bundle for required downstream client certificates."}
           - {"name": "ssl_conf_command", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE2"]}
           - {"name": "ssl_crl", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_dhparam", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -1516,7 +1517,7 @@ modules:
           - {"name": "ssl_stapling_responder", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ssl_stapling_verify", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_FLAG"]}
           - {"name": "ssl_trusted_certificate", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "ssl_verify_client", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "ssl_verify_client", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "Required client authentication with an explicit trust file, or disabled authentication. Optional modes remain open."}
           - {"name": "ssl_verify_depth", "flags": ["NGX_STREAM_MAIN_CONF", "NGX_STREAM_SRV_CONF", "NGX_CONF_TAKE1"]}
   ngx_stream_ssl_preread_module:
     coverage: {"status": "partial", "notes": "Routes by visible SNI and advertised ALPN without TLS termination."}
@@ -1711,9 +1712,9 @@ behaviors:
   - {"id": "http-3", "status": "partial", "scope": "Downstream HTTP/3 and shared HTTP policies with aioquic and an NGINX wired comparison. Upstream HTTP/3 and WebTransport remain open.", "tests": ["tests/http3/interop.py"], "evidence": ["bench/program/evidence/milestone-7/http3-darwin.log"]}
   - {"id": "quic", "status": "partial", "scope": "Downstream QUIC with Retry, limits, TLS 1.3 and migration.", "tests": ["tests/http3/interop.py"], "evidence": ["bench/program/evidence/milestone-7/http3-darwin.log"]}
   - {"id": "mtls", "status": "partial", "scope": "Listener-wide downstream client authentication and upstream client certificates; optional authentication and per-SNI trust policies differ", "tests": ["tests/tls_gateway.py"]}
-  - {"id": "acme", "status": "unsupported"}
+  - {"id": "acme", "status": "partial", "scope": "HTTP-01 with local Pebble, certificate persistence and renewal on shared HTTPS and QUIC. DNS-01 and the NGINX add-on syntax remain open.", "tests": ["tests/acme_pebble.py"]}
   - {"id": "static-files", "status": "verified", "scope": "Shared root, alias, index, literal try_files, GET, HEAD, conditional metadata and single, suffix, multipart and date If-Range responses. Filesystem policy and weak ETag representation differ.", "tests": ["tests/compare_nginx_content.py", "tests/content_handlers.py"], "evidence": ["bench/program/evidence/milestone-6/nginx-content.jsonl"]}
-  - {"id": "http-cache", "status": "partial", "scope": "Conservative bounded shared memory cache, conditional revalidation, stale windows and single-flight. Disk storage and complete NGINX proxy_cache semantics unavailable.", "tests": ["tests/http_cache.py"]}
+  - {"id": "http-cache", "status": "partial", "scope": "Conservative bounded shared memory cache, conditional revalidation, stale windows and single-flight. Optional local disk tier and detached stale revalidation. Complete NGINX proxy_cache semantics remain open.", "tests": ["tests/http_cache.py"]}
   - {"id": "tcp-proxy", "status": "partial", "scope": "IPv4/IPv6 TCP and Unix upstreams with half-close and bounds; exact NGINX option parity remains open.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
   - {"id": "udp-proxy", "status": "partial", "scope": "Bounded UDP sessions and response credit. Exact NGINX session semantics differ.", "tests": ["tests/stream/interop.py"], "evidence": ["bench/program/evidence/milestone-7/layer4-darwin.log"]}
   - {"id": "fastcgi", "status": "partial", "scope": "Bounded FastCGI responder, streaming and sequential reuse. Seven shared PHP-FPM HTTP cases matched NGINX.", "tests": ["tests/application/test_application.py"], "evidence": ["bench/program/evidence/milestone-8/fastcgi-darwin.log"]}
