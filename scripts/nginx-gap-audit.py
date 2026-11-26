@@ -37,6 +37,8 @@ EVIDENCE = {
     "stream-backend-tls": ("ngx_stream_proxy_module", "proxy_ssl proxy_ssl_name proxy_ssl_server_name proxy_ssl_verify proxy_ssl_trusted_certificate proxy_ssl_certificate proxy_ssl_certificate_key"),
     "cache": ("ngx_http_proxy_module", "proxy_cache proxy_cache_background_update proxy_cache_revalidate"),
     "disk-cache": ("ngx_http_proxy_module", "proxy_cache_path"),
+    "nested-locations": ("ngx_http_core_module", "location"),
+    "header-inheritance": ("ngx_http_headers_filter_module", "add_header add_header_inherit"),
 }
 FILES = {
     "routing": ("shared cases", "bench/program/evidence/milestone-4/nginx-differential.jsonl"),
@@ -48,9 +50,28 @@ FILES = {
     "stream-backend-tls": ("shared cases", "bench/program/evidence/milestone-9/stream-tls-sockets.log"),
     "cache": ("Cauce fixture", "bench/program/evidence/milestone-9/swr-sockets.log"),
     "disk-cache": ("Cauce fixture", "bench/program/evidence/milestone-9/disk-sockets.log"),
+    "nested-locations": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
+    "header-inheritance": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
 }
 
 REVIEWED = {
+    ("ngx_http_core_module", "location"): {
+        "arguments": ["optional =, ^~, ~ or ~* modifier", "URI prefix, regex or named location"],
+        "default": "The server's root location configuration is used when no location matches.",
+        "inheritance": "Location matching selects a scope. Individual modules merge configuration through their own callbacks.",
+        "source_functions": ["ngx_http_core_location", "ngx_http_core_find_location"],
+    },
+    ("ngx_http_headers_filter_module", "add_header"): {
+        "arguments": ["field", "value (literal or expression)", "optional always"],
+        "default": "No additional field.",
+        "inheritance": "Inherit the parent collection without local entries when add_header_inherit is on. The merge and off modes change this behavior.",
+        "source_functions": ["ngx_http_headers_filter", "ngx_http_headers_merge_conf"],
+    },
+    ("ngx_http_headers_filter_module", "add_header_inherit"): {
+        "arguments": ["on, off or merge"], "default": "on",
+        "inheritance": "An unset mode inherits the nearest parent mode.",
+        "source_functions": ["ngx_http_headers_merge_conf"],
+    },
     ("ngx_http_proxy_module", "proxy_set_header"): {
         "arguments": ["field", "value (literal or variable expression)"],
         "default": ["Host $proxy_internal_host", "Connection empty", "Content-Length $proxy_internal_body_length",

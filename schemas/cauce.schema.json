@@ -940,6 +940,10 @@
         "id": {
           "$ref": "#/$defs/identifier"
         },
+        "parent": {
+          "$ref": "#/$defs/identifier",
+          "description": "Optional enclosing location route ID on the same authority"
+        },
         "host": {
           "anyOf": [
             {

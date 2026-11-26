@@ -1837,6 +1837,7 @@ mod pool_tests {
             routes: vec![Route {
                 id: "route".into(),
                 host: "example.test".into(),
+                parent: None,
                 path_prefix: "/".into(),
                 path_match: crate::config::PathMatch::Prefix,
                 path_pattern: None,

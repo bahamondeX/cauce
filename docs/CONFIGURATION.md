@@ -126,11 +126,32 @@ the existing version-1 YAML model. The same fields are available in TOML.
 
 The NGINX migration preview also translates server-local
 `set_real_ip_from`, `real_ip_header` and `real_ip_recursive`
-with literal IPv4 or IPv6 addresses. It translates flat, static
+with literal IPv4 or IPv6 addresses. It translates literal locations and static
 origin-relative `return` redirects alongside proxied locations.
 Complex rewrites, inherited policies and NGINX-specific balancing
 and admission tables require review.
 [Policy ordering](adr/0011-compiled-gateway-policies.md).
+
+## Nested locations
+
+Set a route's `parent` to the ID of an enclosing route on the same configured
+authority. The gateway compiles separate sibling indexes. Exact locations are
+terminal, the longest inclusive location opens its nested scope, and regexes
+are checked in declaration order within their scope. `prefix_no_regex`
+suppresses regexes at its own level. An ancestor regex can still win when
+an inner scope only matched a prefix. Literal children must be contained by
+their parent. A regex parent accepts regex children. Exact and named
+locations cannot contain children. The maximum nesting is 16 parent edges.
+
+An unset child `headers`, `allow_clients`, or `rate_zone` inherits the closest
+ancestor value at configuration load. A configured value replaces that policy.
+Each child declares its own handler or upstreams. The gateway keeps raw URI
+matching and the existing regex dialect and resource limits.
+
+The migration preview translates nested literal locations that declare
+their handlers explicitly. It emits a parent ID per authority and resolves
+ordinary proxy request and response header inheritance independently.
+The report includes a minimum build distribution and preserves manual review.
 
 ## Active upstream health
 

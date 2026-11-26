@@ -411,7 +411,7 @@ def listen_preview(items):
     return ipv4_socket(address), tls
 
 
-def http_preview(directives):
+def http_preview(directives, route_mappings):
     http = [d for d in directives if d.name == "http" and d.children is not None and not d.args]
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
     if len(http) != 1 or len(events) > 1 or len(http) + len(events) != len(directives):
@@ -428,7 +428,7 @@ def http_preview(directives):
     locations = [node for node in items if node.name == "location"]
     allowed = {"listen", "server_name", "location", "set_real_ip_from", "real_ip_header", "real_ip_recursive"} | TLS_PREVIEW_DIRECTIVES
     if not locations or any(item.name not in allowed for item in items):
-        raise ValueError("preview supports listen, server_name, flat locations and literal real-IP or TLS policy")
+        raise ValueError("preview supports listen, server_name, literal locations and real-IP or TLS policy")
     config = yaml.safe_load((ROOT / "examples/cauce.yaml").read_text())
     proxy = config["proxy"]
     if listener == proxy["admin"]:
@@ -440,7 +440,9 @@ def http_preview(directives):
         proxy["real_ip"] = identity
     endpoints = {}
     paths = set()
-    for location in locations:
+    def translate(location, parents, parent_path, depth, inherited_headers):
+        if depth > 16:
+            raise ValueError("preview exceeds the Cauce location nesting limit")
         mode = None
         if len(location.args) == 1:
             mode = "literal_prefix"
@@ -448,21 +450,26 @@ def http_preview(directives):
             mode = {"=": "exact", "^~": "prefix_no_regex"}.get(location.args[0])
         if (mode is None or location.children is None
                 or not re.fullmatch(r"/[A-Za-z0-9_~./-]{0,255}", location.args[-1])):
-            raise ValueError("preview requires a flat literal location")
+            raise ValueError(f"preview requires a literal location at line {location.line}")
         path = location.args[-1]
-        key = (path, mode == "exact")
-        if key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
+        key = (tuple(parents.values()), path, mode == "exact")
+        if (key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/"))
+                or (parent_path is not None and not path.startswith(parent_path))):
             raise ValueError("preview requires unique and unambiguous paths")
         paths.add(key)
-        content = direct_preview(location.children) or static_preview(location.children, mode, path)
-        action = None if content else redirect_preview(location.children)
+        children = [node for node in location.children if node.name == "location"]
+        if children and mode == "exact":
+            raise ValueError("exact locations cannot contain nested locations")
+        directives = [node for node in location.children if node.name != "location"]
+        content = direct_preview(directives) or static_preview(directives, mode, path)
+        action = None if content else redirect_preview(directives)
         policy = None
         upstreams = []
         if action is None and content is None:
-            if any(node.name in {"fastcgi_pass", "uwsgi_pass", "scgi_pass"} for node in location.children):
+            if any(node.name in {"fastcgi_pass", "uwsgi_pass", "scgi_pass"} for node in directives):
                 raise ValueError("application gateway preview requires manual endpoint and parameter mapping")
-            target = one_value(location.children, "proxy_pass")
-            policy = header_preview(location.children)
+            target = one_value(directives, "proxy_pass")
+            policy = header_preview(directives)
             if not target.startswith("http://"):
                 raise ValueError("preview requires clear HTTP IPv4 upstreams")
             address = ipv4_socket(target.removeprefix("http://"))
@@ -474,19 +481,31 @@ def http_preview(directives):
                          connections=32, idle_connections=16, failure_backoff_ms="500ms")
                 )
             upstreams = [endpoints[address]]
+        effective_headers = {**inherited_headers, **(policy or {})}
+        current = {}
         for host in hosts:
             for authority in (host, f"{host}:{listener.rsplit(':', 1)[1]}"):
                 if len(proxy["routes"]) == 1024:
                     raise ValueError("preview exceeds Cauce route capacity")
                 row = dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
                            path_match=mode, balance="round_robin", upstreams=upstreams)
+                if authority in parents:
+                    row["parent"] = parents[authority]
                 if content:
                     row["content"] = content
                 if action:
                     row["action"] = action
-                if policy:
-                    row["headers"] = policy
+                if effective_headers:
+                    row["headers"] = effective_headers if upstreams else {}
                 proxy["routes"].append(row)
+                current[authority] = row["id"]
+        route_mappings.append({"source": location.source, "line": location.line,
+                               "target_routes": list(current.values())})
+        for child in children:
+            translate(child, current, path, depth + 1, effective_headers)
+
+    for location in locations:
+        translate(location, {}, None, 0, {})
     return config
 
 
@@ -592,12 +611,12 @@ def migration_duration(value):
     return f"{amount}{unit}"
 
 
-def preview(directives):
+def preview(directives, route_mappings):
     if any(node.name == "mail" for node in directives):
         raise ValueError("mail preview requires a manually verified authentication service and backend allowlist")
     streams = [node for node in directives if node.name == "stream"]
     if not streams:
-        return http_preview(directives)
+        return http_preview(directives, route_mappings)
     if len(streams) != 1 or streams[0].args or streams[0].children is None:
         raise ValueError("preview requires one Stream block")
     other = [node for node in directives if node is not streams[0]]
@@ -606,7 +625,7 @@ def preview(directives):
         for key in ("listen", "upstreams", "routes"):
             config["proxy"].pop(key)
     else:
-        config = http_preview(other)
+        config = http_preview(other, route_mappings)
     stream_preview(streams[0], config["proxy"])
     return config
 
@@ -642,7 +661,7 @@ def main():
                   "Stream previews use literal origins, TCP half-close, and UDP response credit. Review session limits and restart requirements.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Static proxy header policies omit implicit hide rules and accept location-local settings.",
-                  "Preview inheritance covers literal real-IP and TLS policy. Other inherited settings require review.",
+                  "Preview inheritance covers literal real-IP and TLS policy and ordinary proxy header rules across literal children. Other inherited settings require review.",
                   "Static file previews bind literal directories with symlinks and hidden files denied by default. Index handling stays inside the selected document root.",
                   "Local return redirects use origin-relative Location. Check NGINX absolute_redirect behavior.",
                   "TLS previews use one server certificate and rustls defaults for chain verification and resumption. Review SNI mappings and required client certificates.",
@@ -650,7 +669,8 @@ def main():
               ]}
     if args.preview:
         try:
-            config = preview(directives)
+            route_mappings = []
+            config = preview(directives, route_mappings)
             with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", dir=args.preview.parent,
                                              prefix=".cauce-preview-", suffix=".yaml") as output:
                 yaml.safe_dump(config, output, sort_keys=False)
@@ -661,7 +681,13 @@ def main():
                     if validation.returncode:
                         raise ValueError("generated configuration was rejected by cauce check")
                 os.link(output.name, args.preview)
+            proxy = config["proxy"]
+            web = any(route.get("content", {}).get("type") == "static" for route in proxy.get("routes", []))
+            stream = "stream" in proxy
+            profile = "full" if web and stream else "network" if stream else "web" if web else "core"
             report["preview"] = {"status": "generated_for_review", "confidence": "manual_review",
+                                 "minimum_distribution_profile": profile,
+                                 "route_mappings": route_mappings,
                                  "validation": ["cauce", "check", str(args.preview)],
                                  "validated": args.validate_bin is not None}
         except (OSError, ValueError, subprocess.TimeoutExpired) as error:

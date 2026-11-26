@@ -38,7 +38,99 @@ def proxy(config, reference_port, resources):
          "headers": ["x-hidden", "x-repeated", "content-length"]},
         {"name": "filter-upstream-error-and-retain-multiplicity", "target": "/missing", "status": 404,
          "expected_body": "fixture", "headers": ["x-hidden", "x-repeated", "content-length"]},
+    ], []
+
+
+def nested(config, reference_port, _resources):
+    config["routes"] = []
+
+    def route(id_, selector, literal, body, parent=None, scope=None):
+        row = {"id": id_, "host": "compat.test", "path_match": selector,
+               "content": {"type": "direct", "status": 200, "body": body}}
+        row["path_pattern" if selector.startswith("regex") else "path_prefix"] = literal
+        if parent:
+            row["parent"] = parent
+        if scope:
+            row["headers"] = {"response": {"set": {"X-Scope": scope}}}
+        config["routes"].append(row)
+
+    route("root", "literal_prefix", "/", "root")
+    route("nested-exact", "exact", "/nest/exact.outer", "nested-exact", "outer")
+    route("outer", "literal_prefix", "/nest", "outer", scope="inherited")
+    route("deep", "literal_prefix", "/nest/deep", "deep", "outer", "overridden")
+    route("deep-exact", "exact", "/nest/deep/fixed", "deep-exact", "deep")
+    route("quiet", "prefix_no_regex", "/nest/quiet", "quiet", "outer")
+    route("local-regex", "regex", "[.]near$", "local-regex", "outer")
+    route("regex-parent", "regex", "/reg/", "regex-parent")
+    route("regex-child", "regex", "^/reg/exact$", "regex-child", "regex-parent")
+    route("top-regex", "regex", "[.](near|outer)$", "top-regex")
+    route("protected", "prefix_no_regex", "/shield", "protected")
+    route("protected-child", "literal_prefix", "/shield/child", "protected-child", "protected")
+
+    reference = f"""server {{ listen 127.0.0.1:{reference_port}; server_name compat.test;
+      location / {{ return 200 root; }}
+      location /nest {{
+        add_header X-Scope inherited;
+        location = /nest/exact.outer {{ return 200 nested-exact; }}
+        location /nest/deep {{
+          add_header X-Scope overridden;
+          location = /nest/deep/fixed {{ return 200 deep-exact; }}
+          return 200 deep;
+        }}
+        location ^~ /nest/quiet {{ return 200 quiet; }}
+        location ~ [.]near$ {{ return 200 local-regex; }}
+        return 200 outer;
+      }}
+      location ~ /reg/ {{
+        location ~ ^/reg/exact$ {{ return 200 regex-child; }}
+        return 200 regex-parent;
+      }}
+      location ~ [.](near|outer)$ {{ return 200 top-regex; }}
+      location ^~ /shield {{
+        location /shield/child {{ return 200 protected-child; }}
+        return 200 protected;
+      }}
+    }}"""
+    checks = [
+        ("prefix-default", "/nest", "outer", "inherited"),
+        ("literal-prefix-without-segment-boundary", "/nested", "outer", "inherited"),
+        ("longest-child-and-header-override", "/nest/deep/relative", "deep", "overridden"),
+        ("grandchild-inherits-nearest-override", "/nest/deep/fixed", "deep-exact", "overridden"),
+        ("nested-exact-beats-server-regex", "/nest/exact.outer?fixture=1", "nested-exact", "inherited"),
+        ("nested-regex-beats-server-regex", "/nest/file.near", "local-regex", "inherited"),
+        ("nested-no-regex-suppresses-same-depth-regex", "/nest/quiet/file.near", "top-regex", None),
+        ("server-regex-can-override-nested-prefix", "/nest/deep/file.outer", "top-regex", None),
+        ("server-no-regex-protects-included-child", "/shield/child/file.outer", "protected-child", None),
+        ("nested-location-below-regex", "/reg/exact", "regex-child", None),
+        ("regex-parent-fallback", "/reg/fallback", "regex-parent", None),
+        ("nested-regex-out-of-scope", "/other/file.near", "top-regex", None),
+        ("unrelated-fallback", "/other", "root", None),
     ]
+    accepted = [
+        {"name": label, "target": path, "status": 200, "expected_body": body,
+         "headers": ["x-scope"], "expected_headers": {"x-scope": [scope] if scope else []}}
+        for label, path, body, scope in checks
+    ]
+    parent = config["routes"][2]
+    exact = config["routes"][1]
+    rejected = [
+        {"name": "outside-enclosing-path", "routes": [parent, {**exact, "path_prefix": "/outside"}],
+         "reference": f"server {{ listen 127.0.0.1:{reference_port}; location /nest {{ location = /outside {{ return 200 bad; }} }} }}",
+         "error": {"cauce": "outside its parent", "nginx": "is outside location"}},
+        {"name": "exact-parent-forbidden", "routes": [{**parent, "path_match": "exact"}, exact],
+         "reference": f"server {{ listen 127.0.0.1:{reference_port}; location = /nest {{ location /nest/child {{ return 200 bad; }} }} }}",
+         "error": {"cauce": "invalid parent location", "nginx": "cannot be inside the exact location"}},
+        {"name": "cross-authority-parent", "routes": [parent, {**exact, "host": "other.test"}],
+         "error": {"cauce": "invalid parent location or host"}},
+        {"name": "literal-location-below-regex-is-rejected-by-cauce",
+         "routes": [config["routes"][7], {**exact, "parent": "regex-parent", "path_prefix": "/reg/exact"}],
+         "error": {"cauce": "literal location below a regex parent is unsupported"}},
+        {"name": "cycle-in-location-graph",
+         "routes": [{**parent, "parent": "nested-exact"},
+                    {**exact, "path_prefix": "/nest", "path_match": "literal_prefix"}],
+         "error": {"cauce": "cyclic or excessively nested location"}},
+    ]
+    return reference, accepted, rejected
 
 
-MODULES = {"ngx_http_proxy_module": proxy}
+MODULES = {"ngx_http_core_module": nested, "ngx_http_proxy_module": proxy}

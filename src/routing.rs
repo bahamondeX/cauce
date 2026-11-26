@@ -6,6 +6,7 @@ use std::collections::{btree_map::Entry, BTreeMap, HashMap};
 
 const REGEXES_PER_HOST: usize = 16;
 const REGEXES_PER_CONFIG: usize = 128;
+const LOCATION_DEPTH: usize = 16;
 
 pub struct Routes {
     single: bool,
@@ -15,6 +16,11 @@ pub struct Routes {
     )]
     named: Option<Box<HashMap<String, HashMap<String, usize>>>>,
     hosts: HashMap<String, Host>,
+    #[expect(
+        clippy::box_collection,
+        reason = "one pointer when nested routing is unused"
+    )]
+    nested: Option<Box<HashMap<usize, Host>>>,
     #[expect(
         clippy::box_collection,
         reason = "keep the optional index one pointer wide"
@@ -123,8 +129,17 @@ impl Routes {
         let mut hosts = HashMap::<String, Host>::new();
         let mut wildcards = None;
         let mut named: Option<Box<HashMap<String, HashMap<String, usize>>>> = None;
+        let parents = routes
+            .iter()
+            .any(|route| route.parent.is_some())
+            .then(|| location_parents(routes))
+            .transpose()?;
         let single = matches!(routes, [route]
-            if route.path_match == PathMatch::Prefix && !route.host.contains('*'));
+            if parents.is_none() && route.path_match == PathMatch::Prefix && !route.host.contains('*'));
+        let mut nested = parents
+            .as_ref()
+            .map(|_| Box::<HashMap<usize, Host>>::default());
+        let mut regex_by_host = HashMap::new();
         let mut regex_count = 0;
         if !single {
             for (id, route) in routes.iter().enumerate() {
@@ -139,7 +154,13 @@ impl Routes {
                         );
                     continue;
                 }
-                let index = if let Some(pattern) = wildcard(&route.host) {
+                let index = if let Some(parent) = parents.as_ref().and_then(|parents| parents[id]) {
+                    nested
+                        .as_mut()
+                        .expect("validated parent index")
+                        .entry(parent)
+                        .or_default()
+                } else if let Some(pattern) = wildcard(&route.host) {
                     let by_port = wildcards.get_or_insert_with(|| Box::new(HashMap::new()));
                     let group: &mut WildcardHosts =
                         by_port.entry(pattern.port.to_owned()).or_default();
@@ -161,8 +182,9 @@ impl Routes {
                     }
                     PathMatch::Regex | PathMatch::RegexInsensitive => {
                         let regexes = index.regexes.get_or_insert_with(Box::default);
+                        let host_count = regex_by_host.entry(route.host.as_str()).or_insert(0);
                         ensure!(
-                            regexes.len() < REGEXES_PER_HOST && regex_count < REGEXES_PER_CONFIG,
+                            *host_count < REGEXES_PER_HOST && regex_count < REGEXES_PER_CONFIG,
                             "regex route limit is {REGEXES_PER_HOST} per authority and {REGEXES_PER_CONFIG} per configuration"
                         );
                         let pattern = route
@@ -180,6 +202,7 @@ impl Routes {
                                 anyhow::anyhow!("invalid or oversized regex on route {}", route.id)
                             })?;
                         regexes.push((regex, id));
+                        *host_count += 1;
                         regex_count += 1;
                     }
                     mode => {
@@ -201,6 +224,7 @@ impl Routes {
             named,
             hosts,
             wildcards,
+            nested,
         };
         for route in routes {
             if let Some(name) = route
@@ -249,11 +273,127 @@ impl Routes {
                         .find_map(|(index, _)| group.prefixes.get(&name[..index]))
                 })
         })?;
-        if let Some(&id) = host.exact.as_ref().and_then(|index| index.get(path)) {
-            return Some(&routes[id]);
+        host.lookup(path, self.nested.as_deref())
+            .id()
+            .map(|id| &routes[id])
+    }
+}
+
+pub(crate) fn location_parents(routes: &[Route]) -> Result<Vec<Option<usize>>> {
+    let ids: HashMap<_, _> = routes
+        .iter()
+        .enumerate()
+        .map(|(i, route)| (route.id.as_str(), i))
+        .collect();
+    let parents = routes
+        .iter()
+        .map(|route| {
+            route
+                .parent
+                .as_deref()
+                .map(|id| {
+                    let Some(&pos) = ids.get(id) else {
+                        anyhow::bail!("unknown parent location on route {}", route.id);
+                    };
+                    let parent = &routes[pos];
+                    ensure!(
+                        parent.host == route.host
+                            && route.path_match != PathMatch::Named
+                            && !matches!(parent.path_match, PathMatch::Named | PathMatch::Exact),
+                        "invalid parent location or host on route {}",
+                        route.id
+                    );
+                    if !route.path_prefix.is_empty() {
+                        ensure!(
+                            parent.path_pattern.is_none(),
+                            "literal location below a regex parent is unsupported on route {}",
+                            route.id
+                        );
+                        let prefix = parent.path_prefix.as_bytes();
+                        ensure!(
+                            route
+                                .path_prefix
+                                .as_bytes()
+                                .strip_prefix(prefix)
+                                .is_some_and(|suffix| parent.path_match != PathMatch::Prefix
+                                    || path_boundary(prefix, suffix)),
+                            "location is outside its parent on route {}",
+                            route.id
+                        );
+                    }
+                    Ok(pos)
+                })
+                .transpose()
+        })
+        .collect::<Result<Vec<_>>>()?;
+    for (start, route) in routes.iter().enumerate() {
+        let mut ancestor = parents[start];
+        let mut depth = 0;
+        while let Some(id) = ancestor {
+            ensure!(
+                id != start && depth < LOCATION_DEPTH,
+                "cyclic or excessively nested location on route {}",
+                route.id
+            );
+            depth += 1;
+            ancestor = parents[id];
         }
-        let mut node = &host.prefixes;
-        let mut remaining = path.as_bytes();
+    }
+    Ok(parents)
+}
+
+#[derive(Clone, Copy)]
+enum LocationMatch {
+    None,
+    Prefix(usize),
+    Final(usize),
+}
+
+impl LocationMatch {
+    fn id(self) -> Option<usize> {
+        match self {
+            Self::None => None,
+            Self::Prefix(id) | Self::Final(id) => Some(id),
+        }
+    }
+}
+
+impl Host {
+    fn lookup(&self, path: &str, nested: Option<&HashMap<usize, Self>>) -> LocationMatch {
+        if let Some(&id) = self.exact.as_ref().and_then(|index| index.get(path)) {
+            return LocationMatch::Final(id);
+        }
+        let matched = self.longest_prefix(path.as_bytes());
+        let mut fallback = LocationMatch::None;
+        if let Some(prefix) = matched {
+            fallback = LocationMatch::Prefix(prefix.id);
+            if let Some(children) = nested.and_then(|levels| levels.get(&prefix.id)) {
+                match children.lookup(path, nested) {
+                    LocationMatch::None => (),
+                    result @ LocationMatch::Prefix(_) => fallback = result,
+                    result @ LocationMatch::Final(_) => return result,
+                }
+            }
+        }
+        if !matched.is_some_and(|prefix| prefix.mode == PrefixMode::SkipRegex) {
+            if let Some((_, id)) = self.regexes.as_deref().and_then(|regexes| {
+                regexes
+                    .iter()
+                    .find(|(regex, _)| regex.is_match(path.as_bytes()))
+            }) {
+                let selected = nested
+                    .and_then(|levels| levels.get(id))
+                    .and_then(|children| children.lookup(path, nested).id())
+                    .unwrap_or(*id);
+                return LocationMatch::Final(selected);
+            }
+        }
+        fallback
+    }
+
+    fn longest_prefix(&self, path: &[u8]) -> Option<Prefix> {
+        let mut node = &self.prefixes;
+        let mut remaining = path;
         let mut matched = None;
         while let Some(first) = remaining.first() {
             let Some(edge) = node.children.get(first) else {
@@ -270,17 +410,7 @@ impl Routes {
             }
             remaining = suffix;
         }
-        if let Some(regexes) = &host.regexes {
-            if !matched.is_some_and(|prefix| prefix.mode == PrefixMode::SkipRegex) {
-                if let Some((_, id)) = regexes
-                    .iter()
-                    .find(|(regex, _)| regex.is_match(path.as_bytes()))
-                {
-                    return Some(&routes[*id]);
-                }
-            }
-        }
-        matched.map(|prefix| &routes[prefix.id])
+        matched
     }
 }
 
@@ -331,6 +461,7 @@ mod tests {
         Route {
             id: format!("r{id}"),
             host: host.into(),
+            parent: None,
             path_prefix: path.into(),
             path_match: PathMatch::Prefix,
             path_pattern: None,

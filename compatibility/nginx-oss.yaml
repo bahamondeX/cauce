@@ -366,7 +366,7 @@ modules:
           - {"name": "lingering_time", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "lingering_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "listen", "flags": ["NGX_HTTP_SRV_CONF", "NGX_CONF_1MORE"], "status": "partial", "notes": "Legacy or explicit cleartext/TLS TCP listeners with an independent QUIC UDP listener. Most NGINX socket options and per-server scoping differ."}
-          - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Verified flat exact, plain prefix, ^~, ~ and ~* precedence for the shared raw-path subset. Existing segment-aware matching remains the default. Named locations and bounded internal redirects use the same authority declaration. Nested and PCRE-only rules and URI normalization differ."}
+          - {"name": "location", "flags": ["NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_BLOCK", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Verified flat and nested precedence for the shared raw-path subset, including regex scope and ^~ behavior. Existing segment-aware matching remains the default. Literal children below regex locations are rejected. PCRE-only patterns, URI normalization and automatic trailing-slash redirects remain differences."}
           - {"name": "log_not_found", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "log_subrequest", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "max_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_TAKE1"]}
@@ -583,8 +583,8 @@ modules:
       - source: src/http/modules/ngx_http_headers_filter_module.c
         type: NGX_HTTP_MODULE
         directives:
-          - {"name": "add_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE23"]}
-          - {"name": "add_header_inherit", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
+          - {"name": "add_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE23"], "status": "partial", "notes": "Shared literal response fields on successful nested routes. Cauce uses replacements instead of appending repeated field values. Values with variables and NGINX status gating remain differences."}
+          - {"name": "add_header_inherit", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "The implicit inherit-unless-overridden subset is verified for ordinary headers in nested locations. The NGINX merge mode and conditional contexts remain gaps."}
           - {"name": "add_trailer", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE23"]}
           - {"name": "add_trailer_inherit", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "expires", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_HTTP_LIF_CONF", "NGX_CONF_TAKE12"], "status": "partial", "notes": "Static route expires_seconds generates a relative expiry. NGINX modifications and status rules differ."}
@@ -760,7 +760,7 @@ modules:
           - {"name": "proxy_send_lowat", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_send_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "proxy_set_body", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
-          - {"name": "proxy_set_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"], "status": "partial", "notes": "Static route-local replacements and removals after hop filtering. Dynamic values, inherited rules and proxy-owned protocol edits are unavailable."}
+          - {"name": "proxy_set_header", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE2"], "status": "partial", "notes": "Static replacements and removals after hop filtering. An unset nested policy inherits and the literal migration preview resolves request and response policies independently. Dynamic values and proxy-owned protocol edits remain outside the shared subset."}
           - {"name": "proxy_socket_keepalive", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"]}
           - {"name": "proxy_ssl_certificate", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"], "status": "partial", "notes": "One explicit client certificate chain per TLS-enabled upstream."}
           - {"name": "proxy_ssl_certificate_cache", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE123"]}

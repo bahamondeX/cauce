@@ -432,6 +432,8 @@ pub struct UpstreamTls {
 pub struct Route {
     pub id: String,
     pub host: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<Box<str>>,
     #[serde(
         default,
         deserialize_with = "nonempty_path_prefix",
@@ -534,17 +536,53 @@ impl Config {
             .is_some_and(|ext| ext == "yaml" || ext == "yml");
         tokio::task::spawn_blocking(move || {
             let text = std::str::from_utf8(&data)?;
-            let config: Self = if yaml {
+            let mut config: Self = if yaml {
                 deserialize_yaml(text, |name| std::env::var(name).ok())?
             } else {
                 toml::from_str(text)?
             };
+            config.inherit_location_policies()?;
             config.validate()?;
             let routes = crate::routing::Routes::compile(&config.routes)?;
             Ok((config, routes))
         })
         .await?
     }
+
+    fn inherit_location_policies(&mut self) -> Result<()> {
+        if !self.routes.iter().any(|route| route.parent.is_some()) {
+            return Ok(());
+        }
+        ensure!(self.routes.len() <= 1024, "too many routes");
+        let parents = crate::routing::location_parents(&self.routes)?;
+        for (index, ancestor) in parents.iter().copied().enumerate() {
+            let mut ancestor = ancestor;
+            let mut headers = None;
+            let mut clients = None;
+            let mut rate_zone = None;
+            while let Some(parent) = ancestor {
+                let route = &self.routes[parent];
+                headers = headers.or(route.headers.as_ref());
+                clients = clients.or(route.allow_clients.as_ref());
+                rate_zone = rate_zone.or(route.rate_zone.as_ref());
+                ancestor = parents[parent];
+            }
+            let (headers, clients, rate_zone) =
+                (headers.cloned(), clients.cloned(), rate_zone.cloned());
+            let route = &mut self.routes[index];
+            if route.headers.is_none() {
+                route.headers = headers;
+            }
+            if route.allow_clients.is_none() {
+                route.allow_clients = clients;
+            }
+            if route.rate_zone.is_none() {
+                route.rate_zone = rate_zone;
+            }
+        }
+        Ok(())
+    }
+
     pub fn validate(&self) -> Result<()> {
         crate::capabilities::validate(self)?;
         ensure!(identifier(&self.name), "invalid product name");
@@ -929,7 +967,7 @@ impl Config {
                 (r.path_prefix.as_str(), unique_kind)
             };
             ensure!(
-                matches.insert((&r.host, path, match_kind)),
+                matches.insert((&r.host, r.parent.as_deref(), path, match_kind)),
                 "duplicate route match"
             );
             if let Some(spec) = &r.cache {
@@ -1058,6 +1096,33 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_nested_leaf_inherits_nearest_access_and_rate_policy() {
+        let mut config: Config = toml::from_str(include_str!("../examples/cauce.toml")).unwrap();
+        let template = config.routes[0].clone();
+        let mut parent = template.clone();
+        parent.id = "parent".into();
+        parent.path_prefix = "/".into();
+        parent.allow_clients = Some(vec!["192.0.2.0/24".into()].try_into().unwrap());
+        parent.rate_zone = Some("shared-rate".into());
+        let mut middle = template.clone();
+        middle.id = "middle".into();
+        middle.path_prefix = "/api".into();
+        middle.parent = Some("parent".into());
+        middle.allow_clients = Some(vec!["192.0.2.0/25".into()].try_into().unwrap());
+        let mut leaf = template;
+        leaf.path_prefix = "/api/get".into();
+        leaf.parent = Some("middle".into());
+        config.routes = vec![leaf, parent, middle];
+        config.inherit_location_policies().unwrap();
+        let leaf = &config.routes[0];
+        let allow = leaf.allow_clients.as_ref().unwrap();
+        assert!(allow.contains("192.0.2.1".parse().unwrap()));
+        assert!(!allow.contains("192.0.2.129".parse().unwrap()));
+        assert!(!allow.contains("127.0.0.1".parse().unwrap()));
+        assert_eq!(leaf.rate_zone.as_deref(), Some("shared-rate"));
+    }
 
     #[test]
     fn yaml_and_toml_compile_to_the_same_configuration() {

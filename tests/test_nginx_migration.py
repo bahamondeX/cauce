@@ -173,6 +173,38 @@ class MigrationTests(unittest.TestCase):
         self.assertTrue(all(route["path_match"] == "prefix_no_regex"
                             for route in config["proxy"]["routes"]))
 
+    def test_literal_nested_routes_preserve_authorities_and_header_inheritance(self):
+        code, report, config = self.run_preview("example.org", """
+            location /api {
+                proxy_pass http://127.0.0.1:2010;
+                proxy_set_header X-Tenant parent;
+                location = /api/lookup {
+                    proxy_pass http://127.0.0.1:2011;
+                    proxy_hide_header X-Private;
+                }
+            }
+        """)
+        self.assertEqual(code, 0)
+        routes = config["proxy"]["routes"]
+        self.assertEqual(len(routes), 4)
+        self.assertEqual(report["preview"]["minimum_distribution_profile"], "core")
+        self.assertEqual({key for row in report["preview"]["route_mappings"] for key in row["target_routes"]},
+                         {route["id"] for route in routes})
+        parents = {route["id"]: route["host"] for route in routes if "parent" not in route}
+        for child in [route for route in routes if "parent" in route]:
+            self.assertEqual(child["host"], parents[child["parent"]])
+            self.assertEqual(child["headers"], {"request": {"set": {"x-tenant": "parent"}},
+                                                "response": {"remove": ["x-private"]}})
+        for invalid in ("= /api", "/elsewhere"):
+            code, _, config = self.run_preview("example.org", f"""
+                location {invalid} {{
+                    proxy_pass http://127.0.0.1:2010;
+                    location /api/lookup {{ proxy_pass http://127.0.0.1:2011; }}
+                }}
+            """)
+            self.assertEqual(code, 1)
+            self.assertIsNone(config)
+
     def test_literal_proxy_headers_are_previewed_without_reporting_values(self):
         code, report, config = self.run_preview("example.org",
             'location / { proxy_pass http://127.0.0.1:2010; '

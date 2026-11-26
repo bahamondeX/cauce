@@ -143,18 +143,36 @@ def run_module(module, nginx, cauce, folder):
     config.update(listen=f"127.0.0.1:{cauce_port}", admin=f"127.0.0.1:{admin}", upstreams=[], routes=[])
     config["logs"]["enabled"] = False
     with ExitStack() as resources:
-        reference, cases = fixtures.MODULES[module](config, nginx_port, resources)
+        reference, cases, rejected = fixtures.MODULES[module](config, nginx_port, resources)
         folders = {key: folder / key for key in ("nginx", "cauce")}
         for runtime in folders.values():
             runtime.mkdir(parents=True)
+        (folders["nginx"] / "logs").mkdir()
         nginx_config = folders["nginx"] / "nginx.conf"
-        nginx_config.write_text("master_process off;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\n"
-                                "events { worker_connections 64; }\nhttp { access_log off;\n"
-                                "client_body_temp_path client_body; proxy_temp_path proxy;\n"
-                                "fastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\n"
-                                + reference + "\n}\n")
+        nginx_prologue = ("master_process off;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\n"
+                          "events { worker_connections 64; }\nhttp { access_log off;\n"
+                          "client_body_temp_path client_body; proxy_temp_path proxy;\n"
+                          "fastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\n")
+        nginx_config.write_text(nginx_prologue + reference + "\n}\n")
         cauce_config = folders["cauce"] / "cauce.yaml"
         cauce_config.write_text(json.dumps({"version": 1, "proxy": config}, indent=2) + "\n")
+        rejection_results = []
+        for case in rejected:
+            invalid_cauce = folders["cauce"] / "invalid.yaml"
+            invalid_cauce.write_text(json.dumps({"version": 1, "proxy": {**config, "routes": case["routes"]}}))
+            commands = {"cauce": [cauce, "check", invalid_cauce]}
+            if "reference" in case:
+                invalid_nginx = folders["nginx"] / "invalid.conf"
+                invalid_nginx.write_text(nginx_prologue + case["reference"] + "\n}\n")
+                commands["nginx"] = [nginx, "-t", "-p", str(folders["nginx"]) + "/", "-c", "invalid.conf"]
+            outputs = {}
+            for key, command in commands.items():
+                probe = subprocess.run(command, cwd=folders[key], capture_output=True, text=True, timeout=5)
+                outputs[key] = {"exit_status": probe.returncode,
+                                "expected_diagnostic": case["error"][key] in probe.stderr}
+            rejection_results.append({"case": case["name"], "observations": outputs,
+                                      "passed": all(item["exit_status"] != 0 and item["expected_diagnostic"]
+                                                    for item in outputs.values())})
         with ExitStack() as children:
             runs = {
                 "nginx": children.enter_context(launch(nginx, ["-p", str(folders["nginx"]) + "/",
@@ -169,13 +187,16 @@ def run_module(module, nginx, cauce, folder):
                 expected_body = case.get("expected_body")
                 expected_match = left["status"] == case["status"] and (
                     expected_body is None or left.get("body_base64") == base64.b64encode(expected_body.encode()).decode())
+                expected_match = expected_match and all(left["headers"].get(name) == values
+                    for name, values in case.get("expected_headers", {}).items())
                 results.append({"case": case["name"], "target": case["target"],
                                 "passed": left == right and expected_match,
                                 "nginx": left, "cauce": right,
                                 "uncompared_headers": sorted(set(ignored_left + ignored_right)),
                                 "compared_body": case.get("compare_body", True)})
             after = {key: resource_sample(value[0]) for key, value in runs.items()}
-        return {"module": module, "cases": results, "resources_before": before, "resources_after": after,
+        return {"module": module, "cases": results, "configuration_rejections": rejection_results,
+                "resources_before": before, "resources_after": after,
                 "lifecycle": {key: value[1] for key, value in runs.items()}}
 
 
@@ -189,7 +210,7 @@ def test(args):
     with tempfile.TemporaryDirectory(prefix="nginx-differential-", dir=args.work) as tmp:
         modules = [run_module(module, nginx, cauce, Path(tmp) / module)
                    for module in args.module or sorted(fixtures.MODULES)]
-    passed = all(all(case["passed"] for case in module["cases"])
+    passed = all(all(case["passed"] for case in module["cases"] + module["configuration_rejections"])
                  and all(side["started"] and side["exit_status"] == 0 and not side["forced_kill"]
                          for side in module["lifecycle"].values()) for module in modules)
     return {"passed": passed, "nginx_version": build.strip(), "nginx_sha256": digest(nginx),
