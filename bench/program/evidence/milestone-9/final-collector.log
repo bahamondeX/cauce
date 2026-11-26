@@ -1,0 +1,24 @@
+PASS: complete-line tail, durable restart checkpoints and non-destructive export
+PASS: rename rotation preserves inode checkpoint and discovers new generation
+PASS: startup discovers retained rotated files oldest first
+PASS: bounded spool pauses input without advancing checkpoint past durable events
+PASS: invalid source is rejected without checkpointing or uploading
+PASS: oversized source is rejected without checkpointing or uploading
+PASS: HTTPS with trusted CA sends proposal batch and validates ACK
+PASS: HTTP 401 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 403 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 429 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 500 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 307 retains stable batch; retry succeeds; redirects never followed
+PASS: wrong_id retains durable batch and stable event IDs for retry/dedup
+PASS: wrong_count retains durable batch and stable event IDs for retry/dedup
+PASS: large_ack retains durable batch and stable event IDs for retry/dedup
+PASS: drop_ack retains durable batch and stable event IDs for retry/dedup
+PASS: delay_ms retains durable batch and stable event IDs for retry/dedup
+PASS: TLS rejects untrusted ca before sending credentials/events
+PASS: TLS rejects untrusted hostname before sending credentials/events
+PASS: credential file is reread on retry; rotated token accepted
+PASS: ACK received but dequeue transaction fails: durable batch is retried intact
+PASS: SIGKILL after receiver acceptance: restart resends identical durable batch
+PASS: bounded retry backoff, exclusive state ownership, clean SIGTERM
+PASS: 23 collector cases (arm64)

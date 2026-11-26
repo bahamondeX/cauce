@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOL = ROOT / "scripts/nginx-migration-report.py"
+BINARY = Path(os.environ.get("CAUCE_TEST_BINARY", ROOT / "target/debug/cauce")).resolve()
 
 
 class MigrationTests(unittest.TestCase):
@@ -32,8 +34,8 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
             if (config and not config["proxy"].get("tls")
                     and not any(route.get("content",{}).get("type")=="static" for route in config["proxy"]["routes"])
-                    and (ROOT / "target/debug/cauce").is_file()):
-                validation = subprocess.run([str(ROOT / "target/debug/cauce"), "check", str(destination)],
+                    and BINARY.is_file()):
+                validation = subprocess.run([str(BINARY), "check", str(destination)],
                                             capture_output=True, check=False)
                 self.assertEqual(validation.returncode, 0, validation.stderr)
             return result.returncode, report, config
@@ -51,7 +53,7 @@ class MigrationTests(unittest.TestCase):
             file = include / "01.conf"
             file.write_text("location / { proxy_pass http://127.0.0.1:8000; }")
             args = [sys.executable, str(TOOL), str(source), "--include-root", str(root),
-                    "--preview", str(destination), "--validate-bin", str(ROOT / "target/debug/cauce")]
+                    "--preview", str(destination), "--validate-bin", str(BINARY)]
             result = subprocess.run(args, capture_output=True, text=True, check=False)
             report = json.loads(result.stdout)
             self.assertEqual(result.returncode, 0, report)
@@ -143,8 +145,8 @@ class MigrationTests(unittest.TestCase):
             self.assertEqual(stream["tcp"][0]["options"]["proxy_out"], "v1")
             self.assertEqual(stream["udp"][0]["options"]["idle_timeout"], "5s")
             self.assertEqual(stream["tls_passthrough"][0]["routes"], [])
-            if (ROOT / "target/debug/cauce").is_file():
-                subprocess.run([str(ROOT / "target/debug/cauce"), "check", str(destination)],
+            if BINARY.is_file():
+                subprocess.run([str(BINARY), "check", str(destination)],
                                capture_output=True, check=True)
             destination.unlink()
             source.write_text(template.replace("set_real_ip_from 127.0.0.1/32;", ""))
@@ -250,3 +252,34 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertEqual(report["preview"]["confidence"], "unsupported_subset")
                 self.assertIsNone(config)
+
+    def test_deployment_fixtures_validate_or_report_blocking_directives(self):
+        fixtures = ROOT / "tests/fixtures/nginx-migration"
+        cases = {
+            "api-gateway": (), "static-site": (), "stream-gateway": (),
+            "php-fpm": ("fastcgi_param", "fastcgi_pass"),
+            "python-application": ("uwsgi_pass", "scgi_pass"),
+            "cache-proxy": ("proxy_cache_path", "proxy_cache_background_update"),
+            "mail-proxy": ("auth_http", "starttls"),
+        }
+        for name, blocking in cases.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp).resolve()
+                source = root / (name + ".conf")
+                destination = root / "preview.yaml"
+                source.write_text((fixtures / source.name).read_text().replace("/srv/www/cauce-fixture", str(root)))
+                result = subprocess.run([sys.executable, str(TOOL), str(source), "--include-root", str(root),
+                                         "--preview", str(destination), "--validate-bin", str(BINARY)],
+                                        capture_output=True, check=False, text=True)
+                report = json.loads(result.stdout)
+                if blocking:
+                    self.assertEqual(result.returncode, 1, report)
+                    self.assertFalse(destination.exists())
+                    for directive in blocking:
+                        self.assertTrue(any(row["directive"] == directive and row["source"] == source.name
+                                            and row["line"] > 0 and row["status"] != "structure"
+                                            for row in report["directives"]), (directive, report))
+                else:
+                    self.assertEqual(result.returncode, 0, report)
+                    self.assertTrue(report["preview"]["validated"])
+                    self.assertTrue(destination.is_file())

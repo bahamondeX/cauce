@@ -1,0 +1,14 @@
+{"host": "tenant.example.test", "path": "/", "status": 200, "marker": "suffix"}
+{"host": "A.B.EXAMPLE.TEST", "path": "/", "status": 200, "marker": "suffix"}
+{"host": "tenant.example.test", "path": "/health?probe=1", "status": 200, "marker": "health"}
+{"host": "tenant.example.test", "path": "/health/child", "status": 200, "marker": "suffix"}
+{"host": "mail.example.test", "path": "/", "status": 200, "marker": "suffix"}
+{"host": "mail.internal.invalid", "path": "/", "status": 200, "marker": "long-prefix"}
+{"host": "mail.invalid", "path": "/", "status": 200, "marker": "prefix"}
+{"host": "api.example.test", "path": "/only", "status": 200, "marker": "exact-host"}
+{"host": "api.example.test", "path": "/", "status": 404, "marker": null}
+{"host": "example.test", "path": "/", "status": 200, "marker": "fallback-wildcard"}
+{"host": "unmatched.invalid", "path": "/", "status": 404, "marker": null}
+{"host": "locations.example.test", "path": "/imgix", "status": 200, "marker": "literal"}
+{"host": "locations.example.test", "path": "/img/icon.png?x=1", "status": 200, "marker": "exact"}
+{"host": "locations.example.test", "path": "/img/one.png", "status": 200, "marker": "first-regex"}

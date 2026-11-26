@@ -1,0 +1,11 @@
+39065bb084771bb1c31046e0fd0c3c200a9e8b45
+7248c9954aff6b0a845e4870da9c42a1912e292a7ac45c7f12db72b1c5336e18  work/increment9/pebble/pebble
+c9f6c91a44dbad9d71742329e9df061279f9c4be
+62c404cb963299564189a9abc4ad2c95c36ddf936a47245dfe26d203346fd46b  Cargo.lock
+ec9dc2c27947cf569ccef07747cd946444dcb02ebd975aee7620c4d0105a6d5b  work/increment9/regression/cauce
+289fda1bf5fd49e6d6ed6561468fb83c5d317a229c1e595f4b25c0dc44972434  work/increment9/arm64-extract/bin/cauce
+nginx version: nginx/1.30.8
+built by clang 17.0.0 (clang-1700.0.13.5)
+built with OpenSSL 3.6.4 25 Aug 2026
+TLS SNI support enabled
+configure arguments: --with-stream --with-stream_realip_module --with-stream_ssl_module --with-stream_ssl_preread_module --with-http_ssl_module --with-http_v3_module --with-http_gzip_static_module --with-cc-opt='-I/opt/homebrew/opt/openssl@3/include -I/opt/homebrew/opt/pcre2/include' --with-ld-opt='-L/opt/homebrew/opt/openssl@3/lib -L/opt/homebrew/opt/pcre2/lib'

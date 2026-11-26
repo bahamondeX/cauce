@@ -1,0 +1,39 @@
+test_background_deadline_retains_stale_until_refresh_can_recover (__main__.CacheTests.test_background_deadline_retains_stale_until_refresh_can_recover) ... ----------------------------------------
+Exception occurred during processing of request from ('127.0.0.1', 64236)
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 502, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/server.py", line 468, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/socket.py", line 729, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+----------------------------------------
+ok
+test_background_publication_is_fenced_by_write (__main__.CacheTests.test_background_publication_is_fenced_by_write) ... ok
+test_background_single_flight_and_304_metadata (__main__.CacheTests.test_background_single_flight_and_304_metadata) ... ok
+test_byte_quota_evicts_below_entry_count_limit (__main__.CacheTests.test_byte_quota_evicts_below_entry_count_limit) ... ok
+test_cancelled_leader_releases_fill_ownership (__main__.CacheTests.test_cancelled_leader_releases_fill_ownership) ... ok
+test_coalesced_fill_and_distinct_request_identity (__main__.CacheTests.test_coalesced_fill_and_distinct_request_identity) ... ok
+test_invalidation_prevents_stale_inflight_publication (__main__.CacheTests.test_invalidation_prevents_stale_inflight_publication) ... ok
+test_isolation_and_conservative_shared_policy (__main__.CacheTests.test_isolation_and_conservative_shared_policy) ... ok
+test_overflow_truncation_and_eviction (__main__.CacheTests.test_overflow_truncation_and_eviction) ... ok
+test_reload_retires_a_background_flight (__main__.CacheTests.test_reload_retires_a_background_flight) ... ok
+test_revalidation_and_stale_policies (__main__.CacheTests.test_revalidation_and_stale_policies) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 12.412s
+
+OK

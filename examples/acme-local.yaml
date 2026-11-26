@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../schemas/cauce.schema.json
+version: 1
+proxy:
+  name: cauce-example
+  admin: "127.0.0.1:9090"
+
+  limits:
+    clients: 1024
+    requests: 256
+    connections: 64
+    idle_connections: 32
+    connecting: 8
+    acquire_ms: 250ms
+    connect_ms: 1s
+    headers_ms: 5s
+    stream_idle_ms: 15s
+    request_ms: 2m
+    client_headers_ms: 5s
+    idle_connection_ms: 10s
+    max_connection_age_ms: 1m
+    dns_cache_ms: 5s
+    tcp_keepalive_secs: 30s
+    max_header_bytes: 32KiB
+    max_headers: 64
+    max_body_bytes: 16MiB
+    shutdown_ms: 5s
+
+  logs:
+    enabled: false
+    path: logs/access.jsonl
+    queue: 4096
+    rotate_bytes: 16MiB
+    retained_files: 3
+
+  listeners:
+    - listen: "127.0.0.1:5002"
+    - listen: "127.0.0.1:8443"
+      tls:
+        cert_file: "${CAUCE_CERTIFICATE}"
+        key_file: "${CAUCE_PRIVATE_KEY}"
+  acme:
+    directory: "https://localhost:14000/dir"
+    directory_ca_file: "${CAUCE_PEBBLE_CA}"
+    state_dir: "/var/lib/cauce/acme"
+    accept_terms: true
+    certificates:
+      - [app.cauce.test, extra.cauce.test]
+  routes:
+    - id: ready
+      host: app.cauce.test
+      path_prefix: /
+      content: {type: direct, status: 200, body: ready}

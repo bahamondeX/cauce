@@ -1,0 +1,9 @@
+{"event":"started","data":"127.0.0.1:50460","admin":"127.0.0.1:50462"}
+Traceback (most recent call last):
+  File "/Users/oscarbahamonde/Desktop/cauce/tests/compare_nginx_routing.py", line 229, in <module>
+    main()
+    ~~~~^^
+  File "/Users/oscarbahamonde/Desktop/cauce/tests/compare_nginx_routing.py", line 216, in main
+    assert actual == reference == wanted, (host, path, actual, reference)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('locations.example.test', '/img/one.PNG', (200, 'caseless-regex'), (200, 'first-regex'))

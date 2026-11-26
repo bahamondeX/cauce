@@ -23,9 +23,12 @@ events report the group index and actual expiration.
 
 The Pebble v2.9.0 fixture uses real HTTP-01 and a local DNS server. It
 issues a two-name certificate, rotates it while an HTTPS connection stays
-open, verifies the active certificate on QUIC, and checks restart recovery.
+open, verifies the active certificate on QUIC and checks restart recovery.
+The fixture also confirms that HTTPS serves the current certificate after
+a failed renewal.
 DNS-01 provider integration and public-CA interoperability remain open.
 
+[Local example](../examples/acme-local.yaml)
 [Configuration fixture](../tests/acme_pebble.py)
 [instant-acme](https://docs.rs/instant-acme/0.8.5/instant_acme/)
 [Pebble](https://github.com/letsencrypt/pebble/tree/v2.9.0).

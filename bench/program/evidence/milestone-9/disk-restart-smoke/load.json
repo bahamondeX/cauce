@@ -1,0 +1,13 @@
+{
+  "url": "http://localhost:50653/file.txt",
+  "host": "localhost:50653",
+  "protocol": "http1",
+  "rate": 15,
+  "seconds": 2,
+  "warmup_seconds": 0,
+  "concurrency": 2,
+  "queue": 8,
+  "request_bytes": 0,
+  "response_bytes": 1024,
+  "response_byte": 120
+}

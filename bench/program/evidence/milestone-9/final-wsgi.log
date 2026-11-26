@@ -1,0 +1,11 @@
+test_native_scgi_wire (__main__.GatewayTests.test_native_scgi_wire) ... ok
+test_native_uwsgi_wire (__main__.GatewayTests.test_native_uwsgi_wire) ... ok
+test_scgi_reference (__main__.GatewayTests.test_scgi_reference) ... scgi cases 5, NGINX differential True
+ok
+test_uwsgi_reference (__main__.GatewayTests.test_uwsgi_reference) ... uwsgi cases 5, NGINX differential True
+ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 21.338s
+
+OK

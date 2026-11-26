@@ -25,6 +25,8 @@ def multipart(headers, payload):
 def compare(cauce, nginx):
     with tempfile.TemporaryDirectory() as temporary:
         directory = Path(temporary).resolve()
+        # A root NGINX master runs workers under its compiled-in service user.
+        directory.chmod(0o755)
         root = directory / "web"
         root.mkdir()
         (root / "item.txt").write_bytes(b"0123456789")
@@ -93,6 +95,7 @@ def compare(cauce, nginx):
                         raise AssertionError(nginx_stderr.read_text())
                     time.sleep(0.025)
             initial = [request(port, "/item.txt") for port in (cp, np)]
+            assert all(status == 200 for status, _, _ in initial), (initial, nginx_stderr.read_text())
             last_modified = initial[0][1]["last-modified"]
             assert last_modified == initial[1][1]["last-modified"], initial
             cases = [

@@ -21,5 +21,10 @@ compression dependencies are Cargo-gated. Shared configuration types,
 security checks and code used by multiple profiles remain in common
 source. The collector continues to build as a separate executable.
 
+`scripts/stage-native-release.sh OUTPUT REF` builds Full and Core for
+Linux ARM64 and AMD64. Pass `full arm64` after the revision to stage only
+that pair. Each pair has its own source identity and `SHA256SUMS` after
+the build and ELF architecture checks succeed.
+
 [Profile smoke checks](../scripts/check-build-profiles.sh)
 [Checksummed Linux staging](../scripts/stage-native-release.sh).

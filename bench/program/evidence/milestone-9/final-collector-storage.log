@@ -1,0 +1,14 @@
+PASS: state database rejects a changed source path without consuming it
+PASS: state path symlink to access log is rejected before opening SQLite
+PASS: same-inode atomic rename race does not crash the tailer
+PASS: disk-full fixture reached the configured SQLite page ceiling
+PASS: SQLite FULL rolls back spool and source checkpoint together
+PASS: copytruncate fixture preserves inode and is at least the prior byte offset
+PASS: copytruncate with same-size replacement is detected before loss
+PASS: first batch is durable before quota test
+PASS: full spool pauses source at its prior durable checkpoint
+PASS: evicted generation with observed but unspooled bytes fails closed after debounce
+PASS: corrupt state fails closed and is left intact
+PASS: read-only checkpoint storage fails without accepting new input
+PASS: state database rejects endpoint changes before sending a request
+PASS: 13 collector storage cases, 0 failures (arm64)

@@ -1,0 +1,14 @@
+PASS: state database rejects a changed source path without consuming it
+PASS: state path symlink to access log is rejected before opening SQLite
+FAIL: same-inode atomic rename race does not crash the tailer {"returncode": 1, "stderr_start": "Error: cannot canonicalize path /Users/oscarbahamonde/Desktop/cauce/work/collector-tests-y2rc5d3y/rotation-race/access.jsonl\n\nCaused by:\n    No such file or directory (os error 2)\n\nStack backtrace:\n   0: std::backtrace::Backtrace::create\n   1: <E as anyhow::context::ext::StdError>::ext_context\n             at /Users/oscarbahamonde/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/backtrace.rs:10:14\n   2: anyhow::context::<impl anyhow::Context<T,E> for core::result::Result<T,E>>::with_context\n             at /Users/oscarbahamonde/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/context.rs:65:31\n   3: cauce_collector::collector::canonical_target\n             at ./src/bin/../collector.rs:979:16\n   4: cauce_collector::collector::State::open\n             at ./src/bin/../collector.rs:263:27\n   5: cauce_collector::run::{{closure}}\n             at ./src/bin/cauce-collector.rs:45:21\n   6: tokio::runtime::scheduler::current_thread::CoreGuard::block_on", "stderr_end": "tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/std/src/sys/backtrace.rs:152:18\n  28: std::rt::lang_start::{{closure}}\n             at /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/std/src/rt.rs:199:18\n  29: std::rt::lang_start_internal\n  30: std::rt::lang_start\n             at /private/tmp/rust-20250628-8015-2pvnvd/rustc-1.88.0-src/library/std/src/rt.rs:198:5\n  31: _main\n"}
+PASS: disk-full fixture reached the configured SQLite page ceiling
+PASS: SQLite FULL rolls back spool and source checkpoint together
+PASS: copytruncate fixture preserves inode and is at least the prior byte offset
+PASS: copytruncate with same-size replacement is detected before loss
+PASS: first batch is durable before quota test
+PASS: full spool pauses source at its prior durable checkpoint
+PASS: evicted generation with observed but unspooled bytes fails closed after debounce
+PASS: corrupt state fails closed and is left intact
+PASS: read-only checkpoint storage fails without accepting new input
+PASS: state database rejects endpoint changes before sending a request
+FAIL: 12 collector storage cases, 1 failures (arm64)

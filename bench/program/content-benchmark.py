@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import ssl
 import subprocess
 import threading
 import tomllib
@@ -51,6 +52,8 @@ def prepare_cauce(args, root, document, proxy_port, admin, upstream_port):
         config["upstreams"] = [endpoint]
         route.update(upstreams=[endpoint["id"]], cache={"max_size":"32MiB", "max_entry_size":"4MiB",
                      "max_fills": 4, "ttl":"1h", "max_waiters":256, "vary":[]})
+        if args.cache_backend == "disk":
+            route["cache"]["disk"] = {"directory":str(root / "disk-cache"), "max_size":"64MiB"}
     else:
         config["upstreams"] = []
         route["content"] = {"type":"static", "root":str(document), "max_open": min(256, max(32, args.concurrency))}
@@ -146,6 +149,26 @@ def snapshot(parent):
     }
 
 
+def prime_disk(args, command, root, env, ready, proxy_port):
+    with process(command, root / "prime.log", env, group=True) as prime:
+        until(prime, ready, 5)
+        if args.ca:
+            trust = ssl.create_default_context(cafile=args.ca)
+            connection = http.client.HTTPSConnection("localhost", proxy_port, timeout=3, context=trust)
+        else:
+            connection = http.client.HTTPConnection("localhost", proxy_port, timeout=3)
+        try:
+            connection.request("GET", "/file.txt", headers={"Host": f"localhost:{proxy_port}"})
+            response = connection.getresponse()
+            if response.status != 200 or response.read() != b"x" * args.size:
+                raise RuntimeError("disk cache priming response mismatch")
+        finally:
+            connection.close()
+        until(prime, lambda: any((root / "disk-cache").glob("*.cauce-object")), 5)
+    if not (root / "disk-cache" / "clean").is_file():
+        raise RuntimeError("disk cache fixture did not shut down cleanly")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kind", choices=["static", "range", "cache-hot", "cache-cold"])
@@ -153,6 +176,8 @@ def main():
     parser.add_argument("proxy", type=Path)
     parser.add_argument("generator", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--cache-backend", choices=["memory", "disk"], default="memory")
+    parser.add_argument("--disk-restart", action="store_true", help="Prime disk, restart, then measure a cold memory tier")
     parser.add_argument("--size", type=int, default=1024)
     parser.add_argument("--rate", type=int, default=100)
     parser.add_argument("--seconds", type=int, default=10)
@@ -167,6 +192,10 @@ def main():
     args = parser.parse_args()
 
     cached = args.kind.startswith("cache")
+    if args.cache_backend == "disk" and (not cached or args.implementation != "cauce"):
+        parser.error("the disk tier option requires a Cauce cache workload")
+    if args.disk_restart and (args.cache_backend != "disk" or args.kind != "cache-hot"):
+        parser.error("disk restart requires a Cauce cache-hot disk workload")
     if args.implementation == "varnish" and (not cached or args.cert or args.protocol != "http1"):
         parser.error("the Varnish reference covers cleartext HTTP/1.1 cache fixtures")
     if not 1 <= args.size <= (4 if cached else 100) * 1024 * 1024:
@@ -209,13 +238,15 @@ def main():
         command = prepare(args, root, document, proxy_port, admin, backend.server_port if backend else None)
         if args.cpus:
             command = ["taskset","-c",str(args.cpus[0]),*command]
-        proxy = stack.enter_context(process(command, root / "proxy.log", env, group=True))
         def ready():
             import socket
             with socket.create_connection(("127.0.0.1", proxy_port), timeout=.25):
                 return True
+        if args.disk_restart:
+            prime_disk(args, command, root, env, ready, proxy_port)
+        proxy = stack.enter_context(process(command, root / "proxy.log", env, group=True))
         until(proxy, ready, 5)
-        if args.kind == "cache-cold":
+        if args.kind == "cache-cold" or args.disk_restart:
             args.warmup = 0
         spec = {"url":f"{'https' if args.cert else 'http'}://localhost:{proxy_port}/file.txt",
                 "host":f"localhost:{proxy_port}","protocol":args.protocol, "rate":args.rate,
@@ -245,6 +276,8 @@ def main():
             report["process_sample"] = {"before":before, "after":after,
                 "cpu_us_per_success_including_warmup": (cpu * 1e6 / samples if samples else None)}
         report.update(implementation=args.implementation, kind=args.kind,
+                      cache_backend=args.cache_backend if args.implementation == "cauce" and cached else None,
+                      disk_restart=args.disk_restart,
                       proxy_sha256=digest(args.proxy), generator_sha256=digest(args.generator),
                       origin_requests=backend.requests if backend else None, cpu_affinity=args.cpus,
                       host=dict(platform.uname()._asdict()),

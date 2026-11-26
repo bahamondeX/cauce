@@ -163,6 +163,20 @@ for _ in range(180):
             suite_module.run("docker", "exec", suite.sink_name, "python", "-c", code,
                              suite.path(source), suite.path(rotated))
         else:
+            # The test exercises rotation while the tailer owns its state,
+            # after startup has finished canonicalizing the configured path.
+            import fcntl
+            deadline = time.monotonic() + 6
+            with (d / "state.lock").open("rb") as ownership:
+                while True:
+                    try:
+                        fcntl.flock(ownership, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError:
+                        break
+                    fcntl.flock(ownership, fcntl.LOCK_UN)
+                    if worker.poll() is not None or time.monotonic() >= deadline:
+                        raise AssertionError("collector did not acquire state ownership")
+                    time.sleep(0.01)
             for _ in range(180):
                 if source.exists():
                     try:

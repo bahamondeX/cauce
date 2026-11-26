@@ -158,10 +158,16 @@ class Pebble(unittest.TestCase):
             if os.environ.get("CAUCE_TEST_ACME_QUIC"):
                 asyncio.run(verify_quic(quic, directory / "root.pem"))
             stop(proxy)
-            _, _ = start()
+            _, restored_log = start()
             with dial() as restored:
                 self.assertEqual(restored.getpeercert(binary_form=True), rotated_der)
             self.assertEqual(account.read_bytes(), account_contents)
+
+            stop(process)
+            poll(lambda: "acme_renewal_failed" in restored_log.read_text(), timeout=23)
+            with dial() as available:
+                self.assertEqual(available.getpeercert(binary_form=True), rotated_der)
+                self.assertEqual(tls_get(available), (200, b"ok"))
 
 
 async def verify_quic(port, ca):

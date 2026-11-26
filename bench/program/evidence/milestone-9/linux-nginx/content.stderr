@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/suite/tests/compare_nginx_content.py", line 141, in <module>
+    compare(arguments.cauce.resolve(), arguments.nginx.resolve())
+  File "/suite/tests/compare_nginx_content.py", line 97, in compare
+    assert last_modified == initial[1][1]["last-modified"], initial
+                            ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'last-modified'

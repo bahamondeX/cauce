@@ -67,16 +67,16 @@ HEAD/204 y cuerpos vacíos completan explícitamente sin quedar esperando un fra
 Límites activos+idle globales y por endpoint; idle global/endpoint adicionales. Caducidad
 idle y edad total se verifican al adquirir y mediante sweep cada 250 ms. La edad máxima
 retira transportes al liberarlos, no corta streams activos. La retirada de destinos por
-fallo es pasiva, con backoff fijo configurable (sin retries), no un health check activo.
-El gate limita tormentas; jitter exponencial de reconexión e histéresis quedan pendientes.
+fallo puede usar backoff fijo o circuitos por endpoint con jitter y recuperación
+half-open. Las sondas HTTP, HTTP/2 y gRPC se aplican en forma independiente.
+Los reintentos optativos para solicitudes vacías se limitan al establecimiento
+de un nuevo transporte antes de enviar la solicitud.
 
-DNS usa `tokio::net::lookup_host` (resolver del SO) y un TTL de caché **administrativo**
-configurable, no el TTL autoritativo del DNS. Hasta 64 respuestas; rotación de una dirección
-por conexión; no Happy Eyeballs ni fallback entre todas las direcciones en el mismo intento.
-La respuesta DNS renovada afecta nuevas conexiones. Las antiguas expiran por edad/idle;
-no se detecta inmediatamente una retirada DNS ni se drena al cambiar solo una respuesta.
-La recarga sí drena toda la generación. Implementar resolver con TTL autoritativo y drenaje
-por cambio de conjunto de IP en fase 2.
+Sin `proxy.dns`, los upstreams HTTP usan el resolver del SO y una caché con
+TTL administrativo. Con `proxy.dns`, Hickory resuelve los registros A, AAAA y
+CNAME, comparte las consultas concurrentes y retira las conexiones idle que
+pierden su dirección. La configuración TLS conserva su identidad original.
+[Configuración de DNS y resiliencia](DNS-AND-RESILIENCE.md).
 
 ## Backpressure, tiempos y límites
 

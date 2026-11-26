@@ -1,0 +1,8 @@
+test_stream_tls (__main__.StreamTls.test_stream_tls) ... configuration valid
+NGINX 1.30.8 and Cauce matched SNI, mTLS, and upstream hostname verification
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.385s
+
+OK

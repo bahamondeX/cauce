@@ -56,7 +56,9 @@ class TlsGatewayTests(unittest.TestCase):
             directory = Path(tmp)
             for ca in ("trusted", "other"):
                 openssl(directory, "req", "-x509", "-newkey", "rsa:2048", "-nodes",
-                        "-days", "2", "-subj", f"/CN={ca}", "-keyout", f"{ca}-key.pem",
+                        "-days", "2", "-subj", f"/CN={ca}", "-addext", "basicConstraints=critical,CA:TRUE",
+                        "-addext", "keyUsage=critical,keyCertSign,cRLSign", "-addext", "subjectKeyIdentifier=hash",
+                        "-keyout", f"{ca}-key.pem",
                         "-out", f"{ca}.pem")
             issue(directory, 1, "default", "trusted", "serverAuth", "localhost")
             issue(directory, 2, "alternate", "trusted", "serverAuth", "api.test")

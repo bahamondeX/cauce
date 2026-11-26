@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../schemas/cauce.schema.json
+version: 1
+proxy:
+  name: cauce-example
+  admin: "127.0.0.1:9090"
+
+  limits:
+    clients: 1024
+    requests: 256
+    connections: 64
+    idle_connections: 32
+    connecting: 8
+    acquire_ms: 250ms
+    connect_ms: 1s
+    headers_ms: 5s
+    stream_idle_ms: 15s
+    request_ms: 2m
+    client_headers_ms: 5s
+    idle_connection_ms: 10s
+    max_connection_age_ms: 1m
+    dns_cache_ms: 5s
+    tcp_keepalive_secs: 30s
+    max_header_bytes: 32KiB
+    max_headers: 64
+    max_body_bytes: 16MiB
+    shutdown_ms: 5s
+
+  logs:
+    enabled: false
+    path: logs/access.jsonl
+    queue: 4096
+    rotate_bytes: 16MiB
+    retained_files: 3
+
+  listen: "127.0.0.1:8080"
+  upstreams:
+    - id: public-origin
+      address: "127.0.0.1:8000"
+      host: "localhost:8000"
+      isolation: public-content
+      connections: 32
+      idle_connections: 16
+      failure_backoff_ms: 400ms
+  routes:
+    - id: public
+      host: localhost
+      path_prefix: /
+      upstreams: [public-origin]
+      cache:
+        max_size: 16MiB
+        max_entry_size: 256KiB
+        max_fills: 4
+        background_revalidate_ms: 2s
+        stale_while_revalidate: 10s
+        disk:
+          directory: "/var/lib/cauce/cache-public"
+          max_size: 128MiB

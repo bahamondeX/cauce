@@ -71,5 +71,6 @@ certificates, downstream certificate requirements, upstream mTLS and
 upstream hostname rejection. A separate Cauce fixture covers an idle
 TLS handshake deadline.
 
+[Stream TLS example](../examples/stream-tls.yaml)
 [Stream TLS fixture](../tests/stream_tls.py)
 [Listener lifecycle](LISTENER-LIFECYCLE.md).

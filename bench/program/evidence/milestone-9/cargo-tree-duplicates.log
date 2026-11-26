@@ -1,0 +1,245 @@
+base64 v0.22.1
+├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+├── instant-acme v0.8.5
+│   └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+└── reqwest v0.12.28
+    └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+
+base64 v0.23.1
+├── hyper-util v0.1.21
+│   ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│   ├── hyper-rustls v0.27.10
+│   │   ├── instant-acme v0.8.5 (*)
+│   │   └── reqwest v0.12.28 (*)
+│   ├── instant-acme v0.8.5 (*)
+│   └── reqwest v0.12.28 (*)
+└── pem v4.0.0
+    └── rcgen v0.14.10
+        └── instant-acme v0.8.5 (*)
+
+either v1.19.0
+└── prefix-trie v0.10.2
+    └── hickory-proto v0.26.4
+        ├── hickory-net v0.26.4
+        │   └── hickory-resolver v0.26.4
+        │       └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+        └── hickory-resolver v0.26.4 (*)
+
+either v1.19.0
+└── itertools v0.15.0
+    └── prost-derive v0.14.6 (proc-macro)
+        └── prost v0.14.6
+            └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+
+getrandom v0.2.17
+└── ring v0.17.14
+    ├── instant-acme v0.8.5 (*)
+    ├── quinn-proto v0.11.19
+    │   └── quinn v0.11.12
+    │       ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    │       └── h3-quinn v0.0.10
+    │           └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    ├── rcgen v0.14.10 (*)
+    ├── rustls v0.23.46
+    │   ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    │   ├── hyper-rustls v0.27.10 (*)
+    │   ├── instant-acme v0.8.5 (*)
+    │   ├── quinn v0.11.12 (*)
+    │   ├── quinn-proto v0.11.19 (*)
+    │   ├── reqwest v0.12.28 (*)
+    │   ├── rustls-platform-verifier v0.7.1
+    │   │   └── hyper-rustls v0.27.10 (*)
+    │   └── tokio-rustls v0.26.6
+    │       ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    │       ├── hyper-rustls v0.27.10 (*)
+    │       └── reqwest v0.12.28 (*)
+    └── rustls-webpki v0.103.17
+        └── rustls v0.23.46 (*)
+
+getrandom v0.3.4
+└── uuid v1.18.1
+    ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    └── moka v0.12.16
+        └── hickory-resolver v0.26.4 (*)
+
+getrandom v0.4.3
+├── rand v0.10.4
+│   ├── hickory-net v0.26.4 (*)
+│   ├── hickory-proto v0.26.4 (*)
+│   ├── hickory-resolver v0.26.4 (*)
+│   └── quinn-proto v0.11.19 (*)
+└── tempfile v3.27.0
+    [dev-dependencies]
+    └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+
+hashbrown v0.15.5
+└── hashlink v0.10.0
+    └── rusqlite v0.37.0
+        └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+
+hashbrown v0.17.1
+└── indexmap v2.14.2
+    ├── h2 v0.4.20
+    │   └── hyper v1.12.0
+    │       ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    │       ├── hyper-rustls v0.27.10 (*)
+    │       ├── hyper-util v0.1.21 (*)
+    │       ├── instant-acme v0.8.5 (*)
+    │       └── reqwest v0.12.28 (*)
+    ├── toml_edit v0.22.27
+    │   └── toml v0.8.23
+    │       └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    └── yaml_serde v0.10.7
+        └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+
+syn v2.0.119
+├── asn1-rs-derive v0.6.0 (proc-macro)
+│   └── asn1-rs v0.7.2
+│       ├── der-parser v10.0.0
+│       │   └── x509-parser v0.18.1
+│       │       └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       ├── oid-registry v0.8.1
+│       │   └── x509-parser v0.18.1 (*)
+│       └── x509-parser v0.18.1 (*)
+├── asn1-rs-impl v0.2.0 (proc-macro)
+│   └── asn1-rs v0.7.2 (*)
+├── prost-derive v0.14.6 (proc-macro) (*)
+└── synstructure v0.13.2
+    └── asn1-rs-derive v0.6.0 (proc-macro) (*)
+
+syn v3.0.10
+├── async-trait v0.1.92 (proc-macro)
+│   ├── hickory-net v0.26.4 (*)
+│   └── instant-acme v0.8.5 (*)
+├── displaydoc v0.2.7 (proc-macro)
+│   ├── asn1-rs v0.7.2 (*)
+│   ├── der-parser v10.0.0 (*)
+│   ├── icu_collections v2.4.0
+│   │   ├── icu_normalizer v2.4.0
+│   │   │   └── idna_adapter v1.2.2
+│   │   │       └── idna v1.1.0
+│   │   │           ├── hickory-net v0.26.4 (*)
+│   │   │           ├── hickory-proto v0.26.4 (*)
+│   │   │           └── url v2.5.9
+│   │   │               ├── hickory-net v0.26.4 (*)
+│   │   │               ├── hickory-proto v0.26.4 (*)
+│   │   │               ├── reqwest v0.12.28 (*)
+│   │   │               └── tower-http v0.6.11
+│   │   │                   └── reqwest v0.12.28 (*)
+│   │   └── icu_properties v2.4.0
+│   │       └── idna_adapter v1.2.2 (*)
+│   ├── icu_locale_core v2.4.0
+│   │   ├── icu_properties v2.4.0 (*)
+│   │   └── icu_provider v2.4.0
+│   │       ├── icu_normalizer v2.4.0 (*)
+│   │       └── icu_properties v2.4.0 (*)
+│   ├── icu_properties v2.4.0 (*)
+│   ├── icu_provider v2.4.0 (*)
+│   ├── tinystr v0.8.5
+│   │   └── icu_locale_core v2.4.0 (*)
+│   └── zerotrie v0.2.5
+│       ├── icu_properties v2.4.0 (*)
+│       └── icu_provider v2.4.0 (*)
+├── futures-macro v0.3.34 (proc-macro)
+│   └── futures-util v0.3.34
+│       ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       ├── futures v0.3.34
+│       │   └── h3-quinn v0.0.10 (*)
+│       ├── futures-executor v0.3.34
+│       │   └── futures v0.3.34 (*)
+│       ├── h3 v0.0.8
+│       │   ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       │   └── h3-quinn v0.0.10 (*)
+│       ├── hickory-net v0.26.4 (*)
+│       ├── hickory-resolver v0.26.4 (*)
+│       ├── hyper-util v0.1.21 (*)
+│       ├── reqwest v0.12.28 (*)
+│       ├── tower v0.5.3
+│       │   ├── reqwest v0.12.28 (*)
+│       │   └── tower-http v0.6.11 (*)
+│       └── tower-http v0.6.11 (*)
+├── serde_derive v1.0.229 (proc-macro)
+│   └── serde v1.0.229
+│       ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       ├── instant-acme v0.8.5 (*)
+│       ├── ipnet v2.12.2
+│       │   ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       │   ├── hickory-net v0.26.4 (*)
+│       │   ├── hickory-proto v0.26.4 (*)
+│       │   ├── hickory-resolver v0.26.4 (*)
+│       │   ├── hyper-util v0.1.21 (*)
+│       │   └── prefix-trie v0.10.2 (*)
+│       ├── reqwest v0.12.28 (*)
+│       ├── serde_spanned v0.6.9
+│       │   ├── toml v0.8.23 (*)
+│       │   └── toml_edit v0.22.27 (*)
+│       ├── serde_urlencoded v0.7.1
+│       │   └── reqwest v0.12.28 (*)
+│       ├── toml v0.8.23 (*)
+│       ├── toml_datetime v0.6.11
+│       │   ├── toml v0.8.23 (*)
+│       │   └── toml_edit v0.22.27 (*)
+│       ├── toml_edit v0.22.27 (*)
+│       └── yaml_serde v0.10.7 (*)
+├── synstructure v0.14.0
+│   ├── yoke-derive v0.8.4 (proc-macro)
+│   │   └── yoke v0.8.4
+│   │       ├── icu_collections v2.4.0 (*)
+│   │       ├── icu_provider v2.4.0 (*)
+│   │       ├── zerotrie v0.2.5 (*)
+│   │       └── zerovec v0.11.9
+│   │           ├── icu_collections v2.4.0 (*)
+│   │           ├── icu_locale_core v2.4.0 (*)
+│   │           ├── icu_normalizer v2.4.0 (*)
+│   │           ├── icu_properties v2.4.0 (*)
+│   │           ├── icu_provider v2.4.0 (*)
+│   │           ├── potential_utf v0.1.6
+│   │           │   └── icu_collections v2.4.0 (*)
+│   │           └── tinystr v0.8.5 (*)
+│   └── zerofrom-derive v0.1.8 (proc-macro)
+│       └── zerofrom v0.1.8
+│           ├── icu_collections v2.4.0 (*)
+│           ├── icu_provider v2.4.0 (*)
+│           ├── yoke v0.8.4 (*)
+│           ├── zerotrie v0.2.5 (*)
+│           └── zerovec v0.11.9 (*)
+├── thiserror-impl v2.0.21 (proc-macro)
+│   └── thiserror v2.0.21
+│       ├── asn1-rs v0.7.2 (*)
+│       ├── hickory-net v0.26.4 (*)
+│       ├── hickory-proto v0.26.4 (*)
+│       ├── hickory-resolver v0.26.4 (*)
+│       ├── instant-acme v0.8.5 (*)
+│       ├── quinn v0.11.12 (*)
+│       ├── quinn-proto v0.11.19 (*)
+│       └── x509-parser v0.18.1 (*)
+├── tokio-macros v2.7.2 (proc-macro)
+│   └── tokio v1.54.1
+│       ├── async-compression v0.4.54
+│       │   └── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       ├── cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+│       ├── h2 v0.4.20 (*)
+│       ├── h3 v0.0.8 (*)
+│       ├── h3-quinn v0.0.10 (*)
+│       ├── hickory-net v0.26.4 (*)
+│       ├── hickory-resolver v0.26.4 (*)
+│       ├── hyper v1.12.0 (*)
+│       ├── hyper-rustls v0.27.10 (*)
+│       ├── hyper-util v0.1.21 (*)
+│       ├── instant-acme v0.8.5 (*)
+│       ├── quinn v0.11.12 (*)
+│       ├── reqwest v0.12.28 (*)
+│       ├── tokio-rustls v0.26.6 (*)
+│       ├── tokio-util v0.7.20
+│       │   ├── h2 v0.4.20 (*)
+│       │   ├── h3-quinn v0.0.10 (*)
+│       │   └── reqwest v0.12.28 (*)
+│       └── tower v0.5.3 (*)
+├── yoke-derive v0.8.4 (proc-macro) (*)
+├── zerofrom-derive v0.1.8 (proc-macro) (*)
+└── zerovec-derive v0.11.7 (proc-macro)
+    └── zerovec v0.11.9 (*)
+
+synstructure v0.13.2 (*)
+
+synstructure v0.14.0 (*)

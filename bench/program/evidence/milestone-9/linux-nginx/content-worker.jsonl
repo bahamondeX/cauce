@@ -1,0 +1,15 @@
+{"case": "get", "status": 200, "shared_headers": ["content-type", "content-length", "last-modified"]}
+{"case": "head", "status": 200, "shared_headers": ["content-type", "content-length"]}
+{"case": "index", "status": 200, "shared_headers": ["content-type", "content-length"]}
+{"case": "alias", "status": 200, "shared_headers": ["content-length"]}
+{"case": "static-try-found", "status": 200, "shared_headers": ["content-type"]}
+{"case": "static-try-missing", "status": 404, "shared_headers": []}
+{"case": "direct", "status": 200, "shared_headers": ["content-type"]}
+{"case": "not-modified-etag", "status": 304, "shared_headers": []}
+{"case": "not-modified-time", "status": 304, "shared_headers": []}
+{"case": "single-range", "status": 206, "shared_headers": ["content-range", "content-length"]}
+{"case": "suffix-range", "status": 206, "shared_headers": ["content-range"]}
+{"case": "unsatisfiable-range", "status": 416, "shared_headers": ["content-range"]}
+{"case": "multipart-range", "status": 206, "shared_headers": []}
+{"case": "if-range-date", "status": 206, "shared_headers": ["content-range"]}
+{"case": "gzip", "status": 200, "shared_headers": ["content-encoding", "content-type"], "coded_bytes": {"cauce": 222, "nginx": 360}}

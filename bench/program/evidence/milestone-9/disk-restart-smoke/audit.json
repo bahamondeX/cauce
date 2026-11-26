@@ -1,0 +1,40 @@
+{
+  "invalid_reasons": [],
+  "outcomes": {
+    "success": 30
+  },
+  "offered": 30,
+  "rate": 15,
+  "successful": 30,
+  "offer_window_successes": 30,
+  "goodput_per_s": 15.0,
+  "scheduled_latency_ns": {
+    "p50": 4648416,
+    "p95": 9247208,
+    "p99": 27736416,
+    "p99.9": 27736416
+  },
+  "queue_p99_ns": 7081000,
+  "service_p99_ns": 16911500,
+  "scheduler_p99_ns": 5488333,
+  "warmup_successes": 0,
+  "warmup_offers": 0,
+  "warmup_outcomes": {},
+  "implementation": "cauce",
+  "kind": "cache-hot",
+  "cache_backend": "disk",
+  "disk_restart": true,
+  "proxy_sha256": "ec9dc2c27947cf569ccef07747cd946444dcb02ebd975aee7620c4d0105a6d5b",
+  "generator_sha256": "99a9880a1de479068b82943f4973ec0ca60f14c66481c98e06310029819e5d3e",
+  "origin_requests": 1,
+  "cpu_affinity": null,
+  "host": {
+    "system": "Darwin",
+    "node": "estuvepaciente.local",
+    "release": "24.6.0",
+    "version": "Darwin Kernel Version 24.6.0: Sun Aug 23 20:37:27 PDT 2026; root:xnu-11417.140.69.712.69~1/RELEASE_ARM64_T8112",
+    "machine": "arm64",
+    "processor": "arm"
+  },
+  "classification": "diagnostic until independently qualified"
+}

@@ -1,0 +1,10 @@
+source_commit=36b73b1949d5179167624fd5d876f4df36c8e432
+source_tree=6211439b020840f58202b0f8ec5fa8980554cbd8
+cargo_lock_sha256=62c404cb963299564189a9abc4ad2c95c36ddf936a47245dfe26d203346fd46b
+profile=full
+platform=linux/arm64
+81b7846092cdbd4ff6c9fd3480f3a5d6efb118dd12fdf7fa39502a3eae8b1ca3  SOURCE
+289fda1bf5fd49e6d6ed6561468fb83c5d317a229c1e595f4b25c0dc44972434  cauce
+8381546fd09b0ae52fc5320599e3676e7190c305e9d84878506ed0be73594bb5  cauce-collector
+work/increment9/linux-staged-check/full/linux_arm64/cauce 13717976 bytes
+work/increment9/linux-staged-check/full/linux_arm64/cauce-collector 5860480 bytes

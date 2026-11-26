@@ -32,5 +32,8 @@ reconstruction. Disk cache configuration changes require restart.
 
 The socket tests cover cold and warm disk access, memory eviction, disk
 quota, corruption, mutation invalidation and interrupted-process recovery.
-Filesystem ENOSPC and production performance remain qualification gates.
+A 128 KiB Linux ARM64 tmpfs fixture verified actual ENOSPC, memory fallback,
+partial-write cleanup and recovery after disk space returned. Native
+performance and prolonged I/O stability remain release gates.
+[Disk cache example](../examples/disk-cache.yaml)
 [Fixture](../tests/http_disk_cache.py).

@@ -1,0 +1,8 @@
+test_issue_renew_preserve_session_and_restore_private_state (__main__.Pebble.test_issue_renew_preserve_session_and_restore_private_state) ... configuration valid
+QUIC handshake used the active ACME certificate and trusted the Pebble CA
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 18.417s
+
+OK

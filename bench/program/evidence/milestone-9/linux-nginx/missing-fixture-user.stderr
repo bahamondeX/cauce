@@ -1,0 +1,10 @@
+{"event":"started","data":"127.0.0.1:53935","admin":"127.0.0.1:35175"}
+2026/11/26 21:29:19 [emerg] 12#12: getpwnam("nginx") failed
+Traceback (most recent call last):
+  File "/suite/tests/compare_nginx_routing.py", line 229, in <module>
+    main()
+  File "/suite/tests/compare_nginx_routing.py", line 211, in main
+    verify(nginx, partial(request, nginx_port, "tenant.example.test", "/"))
+  File "/suite/tests/compare_nginx_routing.py", line 186, in verify
+    raise RuntimeError(f"fixture exited {child.returncode}")
+RuntimeError: fixture exited 1

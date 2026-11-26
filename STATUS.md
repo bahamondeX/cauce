@@ -251,3 +251,10 @@ named backend with verified TLS.
   publication. Established TCP and authenticated mail sessions drain,
   and retired UDP listeners preserve prior peers under their deadlines.
   [Lifecycle policy](docs/LISTENER-LIFECYCLE.md).
+
+The Linux ARM64 fixture passed 20 routing cases, 11 gateway cases per
+pool layout and 15 content cases against pinned NGINX OSS 1.30.8. The
+source audit records 134 of 754 directive registrations as partial and
+620 as unmapped. Current native throughput and multicore qualification,
+retained-socket TLS reload and the bundled SQLite advisory remain release
+gates. [Qualification evidence](docs/PERFORMANCE-MILESTONE-9.md).
