@@ -1,4 +1,5 @@
 mod actions;
+mod admission;
 mod balance;
 mod body;
 mod config;
@@ -85,6 +86,14 @@ async fn run() -> Result<()> {
     );
     let clients = Arc::new(Semaphore::new(config.limits.clients));
     let state = Arc::new(State {
+        rate_zones: config
+            .rate_zones
+            .iter()
+            .map(|(id, spec)| (id.clone(), Arc::new(admission::Zone::new(spec.clone()))))
+            .collect(),
+        peers: config
+            .max_connections_per_peer
+            .map(|cap| Arc::new(admission::PeerGate::new(cap))),
         generation: RwLock::new(Generation::with_strategy(
             (*config).clone(),
             routes,
@@ -169,12 +178,20 @@ async fn run() -> Result<()> {
                     drop(socket);
                     continue;
                 }};
+                let peer_slot = if let Some(gate) = &state.peers {
+                    let Some(slot) = gate.enter(peer.ip()) else {
+                        state.logger.metrics.rejected.fetch_add(1, Ordering::Relaxed);
+                        continue;
+                    };
+                    Some(slot)
+                } else { None };
                 socket.set_nodelay(true)?;
                 let state = state.clone(); let mut shutdown = shutdown_rx.clone(); let l = config.limits.clone();
                 let h2 = config.http2.clone();
                 let acceptor = server_tls.clone();
                 let mut lifecycle = diagnostics::Task::new("downstream", downstream);
                 tasks.spawn(async move {
+                    let _peer_slot = peer_slot;
                     let _slot = slot;
                     let secure = acceptor.is_some();
                     let mut negotiated_h2 = false;

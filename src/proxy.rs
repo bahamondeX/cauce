@@ -14,6 +14,7 @@ use hyper::{
 };
 use std::{
     borrow::Cow,
+    collections::HashMap,
     convert::Infallible,
     net::IpAddr,
     sync::{
@@ -25,6 +26,8 @@ use std::{
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 pub struct State {
+    pub(crate) rate_zones: HashMap<String, Arc<crate::admission::Zone>>,
+    pub(crate) peers: Option<Arc<crate::admission::PeerGate>>,
     pub generation: RwLock<Arc<Generation>>,
     pub pool: Arc<Pool>,
     pub logger: Logger,
@@ -317,8 +320,8 @@ pub async fn handle(
     if !state.ready.load(Ordering::Acquire) {
         reject!(SERVICE_UNAVAILABLE, "draining");
     }
-    let slot = match state.requests.clone().try_acquire_owned() {
-        Ok(p) => Arc::new(p),
+    let global_slot = match state.requests.clone().try_acquire_owned() {
+        Ok(permit) => permit,
         Err(_) => {
             reject!(SERVICE_UNAVAILABLE, "request_capacity");
         }
@@ -519,6 +522,38 @@ pub async fn handle(
         .as_ref()
         .map_or(peer_ip, |value| value.client)
         .to_canonical();
+    if route
+        .allow_clients
+        .as_ref()
+        .is_some_and(|networks| !networks.contains(client_ip))
+    {
+        reject!(FORBIDDEN, "client_not_allowed");
+    }
+    let mut rule_guard = None;
+    if let Some(zone) = route.rate_zone.as_ref().map(|name| &state.rate_zones[name]) {
+        let result = zone.admit(client_ip, &route.id);
+        let Some(rule) = result.filter(|rule| {
+            rule.delay.is_zero() || tokio::time::Instant::now() + rule.delay < deadline
+        }) else {
+            let (status, custom) = zone.rejection();
+            let mut response = record_error(&state, event, started, status, "route_admission");
+            if let Some(body) = custom {
+                *response.body_mut() = body::full(body);
+            }
+            return Ok(response);
+        };
+        rule_guard = rule.guard;
+        if !rule.delay.is_zero() {
+            tokio::time::sleep(rule.delay).await;
+            if tokio::time::Instant::now() >= deadline {
+                if grpc {
+                    return Ok(record_grpc_deadline(&state, event, started));
+                }
+                reject!(GATEWAY_TIMEOUT, "request_deadline");
+            }
+        }
+    }
+    let slot = crate::admission::RequestSlot::new(global_slot, rule_guard);
     let endpoint = match generation.select(route, client_ip) {
         Some(e) => e,
         None => {

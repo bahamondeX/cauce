@@ -47,6 +47,7 @@ fn editable_name(value: &str) -> Result<HeaderName, &'static str> {
             | "proxy-authenticate"
             | "proxy-authorization"
             | "forwarded"
+            | "x-real-ip"
             | "x-request-id"
             | "traceparent"
             | "tracestate"

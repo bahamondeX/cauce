@@ -1543,6 +1543,8 @@ mod pool_tests {
             tls: None,
             http2: Http2Config::default(),
             real_ip: None,
+            rate_zones: Default::default(),
+            max_connections_per_peer: None,
             upstreams: vec![Upstream {
                 health_check: None,
                 id: "backend".into(),
@@ -1565,6 +1567,8 @@ mod pool_tests {
                 path_pattern: None,
                 headers: None,
                 action: None,
+                allow_clients: None,
+                rate_zone: None,
                 balance: crate::config::Balance::RoundRobin,
                 upstreams: vec!["backend".into()],
             }],

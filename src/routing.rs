@@ -336,6 +336,8 @@ mod tests {
             path_pattern: None,
             headers: None,
             action: None,
+            allow_clients: None,
+            rate_zone: None,
             balance: Balance::RoundRobin,
             upstreams: vec!["origin".into()],
         }

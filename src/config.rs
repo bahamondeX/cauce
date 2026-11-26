@@ -21,6 +21,10 @@ pub struct Config {
     pub http2: Http2Config,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) real_ip: Option<Box<crate::identity::Policy>>,
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub(crate) rate_zones: std::collections::BTreeMap<String, crate::admission::Spec>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_connections_per_peer: Option<usize>,
     pub upstreams: Vec<Upstream>,
     pub routes: Vec<Route>,
 }
@@ -325,6 +329,10 @@ pub struct Route {
     pub headers: Option<Box<crate::headers::Policy>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) action: Option<Box<crate::actions::Action>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) allow_clients: Option<crate::identity::Networks>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rate_zone: Option<String>,
     pub balance: Balance,
     pub upstreams: Vec<String>,
 }
@@ -593,9 +601,34 @@ impl Config {
             .map(|upstream| (upstream.id.as_str(), usize::from(upstream.weight)))
             .collect();
         let mut ticket_budget = 0;
+        ensure!(
+            self.rate_zones.len() <= 32
+                && self
+                    .rate_zones
+                    .iter()
+                    .all(|(id, zone)| identifier(id) && zone.valid())
+                && self
+                    .rate_zones
+                    .values()
+                    .map(|zone| zone.max_keys)
+                    .sum::<usize>()
+                    <= 262144,
+            "invalid rate zone or total key budget"
+        );
+        ensure!(
+            self.max_connections_per_peer
+                .is_none_or(|cap| (1..=l.clients).contains(&cap)),
+            "invalid per-peer connection cap"
+        );
         let mut route_ids = HashSet::new();
         let mut matches = HashSet::new();
         for r in &self.routes {
+            ensure!(
+                r.rate_zone
+                    .as_ref()
+                    .is_none_or(|name| self.rate_zones.contains_key(name)),
+                "unknown rate zone"
+            );
             ensure!(
                 identifier(&r.id) && route_ids.insert(&r.id),
                 "invalid/duplicate route id"
@@ -684,9 +717,11 @@ impl Config {
             || self.limits != next.limits
             || self.http2 != next.http2
             || self.logs != next.logs
+            || self.rate_zones != next.rate_zones
+            || self.max_connections_per_peer != next.max_connections_per_peer
             || self.name != next.name
         {
-            bail!("reload supports routes/upstreams only; listener/limits/log/name changes require restart");
+            bail!("reload supports routes/upstreams only; listener/limits/log/name and admission zone changes require restart");
         }
         Ok(())
     }

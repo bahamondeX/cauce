@@ -18,10 +18,7 @@ use std::{
     task::{Context, Poll},
     time::{Duration, Instant},
 };
-use tokio::{
-    sync::OwnedSemaphorePermit,
-    time::{sleep_until, Instant as TokioInstant, Sleep},
-};
+use tokio::time::{sleep_until, Instant as TokioInstant, Sleep};
 
 pub type BoxError = Box<dyn Error + Send + Sync>;
 pub type ProxyBody = http_body_util::combinators::UnsyncBoxBody<Bytes, BoxError>;
@@ -36,7 +33,7 @@ pub struct Completion {
     pub headers_at: Instant,
     pub logger: Logger,
     pub lease: Lease,
-    pub _request_slot: Arc<OwnedSemaphorePermit>,
+    pub _request_slot: crate::admission::RequestSlot,
     pub uploaded: Arc<AtomicBool>,
     pub request_bytes: Arc<AtomicU64>,
     pub exchange: Option<diagnostics::Exchange>,
@@ -53,7 +50,7 @@ struct GuardBody {
     upload_error: Option<Arc<AtomicU8>>,
     completion: Option<Completion>,
     upload_guard: Option<UploadGuard>,
-    upload_request_slot: Option<Arc<OwnedSemaphorePermit>>,
+    upload_request_slot: Option<crate::admission::RequestSlot>,
     max_headers: usize,
     max_header_bytes: usize,
     grpc: bool,
@@ -236,7 +233,7 @@ pub struct UploadState {
     pub done: Arc<AtomicBool>,
     pub error: Arc<AtomicU8>,
     pub upload_guard: Option<UploadGuard>,
-    pub request_slot: Arc<OwnedSemaphorePermit>,
+    pub request_slot: crate::admission::RequestSlot,
     pub exchange: Option<diagnostics::Exchange>,
 }
 pub fn upload(
