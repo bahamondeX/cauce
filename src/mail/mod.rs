@@ -111,7 +111,7 @@ impl Listener {
     pub(crate) async fn serve(
         self,
         listener: TcpListener,
-        mut shutdown: watch::Receiver<bool>,
+        mut shutdown: watch::Receiver<crate::listeners::Command>,
         counters: Arc<Counters>,
     ) -> Result<()> {
         let this = Arc::new(self);
@@ -147,7 +147,7 @@ impl Listener {
         &self,
         client: TcpStream,
         peer: SocketAddr,
-        mut shutdown: watch::Receiver<bool>,
+        mut shutdown: watch::Receiver<crate::listeners::Command>,
         active: Active,
     ) {
         let start = Instant::now();

@@ -245,3 +245,8 @@ Mail backend selection retains its literal authorization allowlist.
 - Six Cargo profiles and a redacted CLI summary support distribution
   tests. The source-derived backlog tracks OSS and add-ons separately.
   [Profiles](docs/BUILD-PROFILES.md) [1.0 gaps](docs/CAUCE-1.0-GAP-ANALYSIS.md).
+
+- Stream and mail socket additions and removals prepare bindings before
+  publication. Established TCP and authenticated mail sessions drain,
+  and retired UDP listeners preserve prior peers under their deadlines.
+  [Lifecycle policy](docs/LISTENER-LIFECYCLE.md).

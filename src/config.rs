@@ -1049,10 +1049,8 @@ impl Config {
             || self.rate_zones != next.rate_zones
             || self.max_connections_per_peer != next.max_connections_per_peer
             || self.name != next.name
-            || self.stream != next.stream
-            || self.mail != next.mail
         {
-            bail!("reload supports routes/upstreams only; listener, stream, mail, DNS, ACME, limits, log, name and admission zone changes require restart");
+            bail!("reload supports routes/upstreams only; HTTP listener topology, DNS, ACME, limits, log, name and admission zone changes require restart");
         }
         Ok(())
     }

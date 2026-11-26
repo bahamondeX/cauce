@@ -22,7 +22,7 @@ pub(super) async fn serve(
     socket: Arc<UdpSocket>,
     group: Arc<Group>,
     options: UdpOptions,
-    mut shutdown: watch::Receiver<bool>,
+    mut shutdown: watch::Receiver<crate::listeners::Command>,
     counters: Arc<Counters>,
 ) -> Result<()> {
     let mut buffer = vec![0; options.max_datagram_bytes + 1];
@@ -30,10 +30,19 @@ pub(super) async fn serve(
     let options = Arc::new(options);
     let mut sessions = HashMap::<SocketAddr, mpsc::Sender<Bytes>>::new();
     let mut tasks = JoinSet::new();
+    let mut draining = false;
     loop {
+        if draining && sessions.is_empty() {
+            break;
+        }
         tokio::select! {
             biased;
-            _ = shutdown.changed() => break,
+            changed = shutdown.changed() => {
+                if changed.is_err() || *shutdown.borrow_and_update() == crate::listeners::Command::Shutdown {
+                    break;
+                }
+                draining = true;
+            },
             ended = tasks.join_next(), if !tasks.is_empty() => {
                 sessions.remove(&ended.expect("active UDP session")?);
             }
@@ -59,7 +68,7 @@ pub(super) async fn serve(
                     }
                     continue;
                 }
-                let admitted = (sessions.len() < options.max_sessions)
+                let admitted = (!draining && sessions.len() < options.max_sessions)
                     .then(|| peers.enter(client.ip()))
                     .flatten()
                     .and_then(|peer| group.select(client.ip()).map(|member| (peer, member)));

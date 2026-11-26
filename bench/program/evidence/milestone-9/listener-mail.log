@@ -1,0 +1,7 @@
+test_auth_http_rejection_failure_allowlist_redaction_and_reload (__main__.MailTests.test_auth_http_rejection_failure_allowlist_redaction_and_reload) ... ok
+test_reload_adds_and_removes_listeners_with_authenticated_pop3 (__main__.MailTests.test_reload_adds_and_removes_listeners_with_authenticated_pop3) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.663s
+
+OK

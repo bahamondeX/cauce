@@ -20,7 +20,6 @@ use std::{
 };
 use tokio::{
     net::{TcpListener, UdpSocket},
-    sync::watch,
     task::JoinSet,
     time::Instant,
 };
@@ -315,37 +314,34 @@ impl Listeners {
         Ok(listeners)
     }
 
-    pub(crate) fn metrics(&self) -> crate::telemetry::Metrics {
-        crate::telemetry::Metrics {
-            tcp: (!self.tcp.is_empty()).then(Arc::default),
-            udp: (!self.udp.is_empty()).then(Arc::default),
-            ..Default::default()
-        }
-    }
-
     pub(crate) fn start(
         self,
-        shutdown: &watch::Receiver<bool>,
+        supervisor: &mut crate::listeners::Supervisor,
+        tasks: &mut JoinSet<Result<()>>,
         metrics: &crate::telemetry::Metrics,
-    ) -> JoinSet<Result<()>> {
-        let mut tasks = JoinSet::new();
+    ) {
         for (socket, listener) in self.tcp {
-            tasks.spawn(listener.serve(
-                socket,
-                shutdown.clone(),
-                metrics.tcp.as_ref().unwrap().clone(),
-            ));
+            let key = crate::listeners::Key::Tcp(socket.local_addr().expect("bound Stream TCP"));
+            supervisor.start(key, tasks, |stop| {
+                listener.serve(
+                    socket,
+                    stop,
+                    metrics.tcp.as_ref().expect("Stream TCP counters").clone(),
+                )
+            });
         }
         for (socket, group, options) in self.udp {
-            tasks.spawn(udp::serve(
-                socket,
-                group,
-                options,
-                shutdown.clone(),
-                metrics.udp.as_ref().unwrap().clone(),
-            ));
+            let key = crate::listeners::Key::Udp(socket.local_addr().expect("bound Stream UDP"));
+            supervisor.start(key, tasks, |stop| {
+                udp::serve(
+                    socket,
+                    group,
+                    options,
+                    stop,
+                    metrics.udp.as_ref().expect("Stream UDP counters").clone(),
+                )
+            });
         }
-        tasks
     }
 }
 

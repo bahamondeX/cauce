@@ -331,6 +331,46 @@ mail {{
         self.assertIn(b"SYS/TEMP", result.exception.args[0])
         self.assertEqual(len(origin.commands), 3)
 
+    def test_reload_adds_and_removes_listeners_with_authenticated_pop3(self):
+        class Origin(socketserver.StreamRequestHandler):
+            def handle(self):
+                self.wfile.write(b"+OK greeting\r\n")
+                for expected in (b"USER", b"PASS", b"STAT", b"QUIT"):
+                    command = self.rfile.readline(2048)
+                    if not command.startswith(expected):
+                        return
+                    self.wfile.write(b"+OK 0 0\r\n")
+
+        origin = start_server(self.stack, ThreadTcp, Origin)
+        self.auth.ports["pop3"] = origin.server_address[1]
+        config = self.configuration("implicit")
+        original = config["proxy"]["mail"]
+        added_port = free_port()
+        extra = dict(original[0], listen=f"127.0.0.1:{added_port}")
+        proc = self.start(configuration=config)
+        client = poplib.POP3_SSL("127.0.0.1", self.ports["pop3"], context=self.tls, timeout=4)
+        self.stack.callback(client.close)
+        client.user(USER)
+        client.pass_(PASSWORD)
+
+        config["proxy"]["mail"] = [item for item in original if item["protocol"] != "pop3"] + [extra]
+        replacement = self.config.with_suffix(".tmp")
+        replacement.write_text(json.dumps(config))
+        replacement.replace(self.config)
+        proc.send_signal(signal.SIGHUP)
+        eventual(lambda: '"config_version":2' in self.log.read_text())
+        with self.smtp(added_port, True) as added:
+            self.assertEqual(added.ehlo()[0], 250)
+        def retired():
+            try:
+                with tcp(self.ports["pop3"]):
+                    return False
+            except ConnectionError:
+                return True
+        eventual(retired)
+        self.assertEqual(client.stat(), (0, 0))
+        self.assertTrue(client.quit().startswith(b"+OK"))
+
     def test_sigterm_drains_authenticated_sessions(self):
         class Origin(socketserver.StreamRequestHandler):
             def handle(self):

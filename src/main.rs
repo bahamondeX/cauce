@@ -18,6 +18,7 @@ mod health;
 mod http3;
 mod http_tcp;
 mod identity;
+mod listeners;
 mod mail;
 mod pool;
 mod proxy;
@@ -138,7 +139,7 @@ async fn run() -> Result<()> {
     let admin_listener = TcpListener::bind(config.admin)
         .await
         .context("admin listener")?;
-    let stream = if cfg!(feature = "stream") {
+    let stream_bindings = if cfg!(feature = "stream") {
         config
             .stream
             .as_ref()
@@ -159,12 +160,12 @@ async fn run() -> Result<()> {
         .map(|quic| http3::bind(config.http3.as_deref().unwrap(), quic))
         .transpose()?;
     let alt_svc = config.http3.as_ref().and_then(|spec| spec.alt_svc());
-    let mut metrics = stream
-        .as_ref()
-        .map_or_else(Metrics::default, stream::Listeners::metrics);
-    let mail_counters = (!mail.is_empty()).then(|| Arc::new(mail::Counters::default()));
-    metrics.mail = mail_counters.clone();
-    let metrics = Arc::new(metrics);
+    let metrics = Arc::new(Metrics {
+        tcp: cfg!(feature = "stream").then(Arc::default),
+        udp: cfg!(feature = "stream").then(Arc::default),
+        mail: cfg!(feature = "mail").then(Arc::default),
+        ..Metrics::default()
+    });
     let (logger, log_thread) = Logger::start(config.logs.clone(), metrics.clone());
     let pool = Pool::with_strategy(
         config.limits.clone(),
@@ -214,14 +215,15 @@ async fn run() -> Result<()> {
     let maintenance = (listener.is_some() || config.http3.is_some() || !extra_listeners.is_empty())
         .then(|| tokio::spawn(maintain_pool(state.pool.clone(), generation_rx)));
     let mut tasks = JoinSet::new();
-    let mut stream = stream
-        .map(|stream| stream.start(&shutdown_rx, &state.logger.metrics))
-        .unwrap_or_default();
-    if let Some(counters) = mail_counters {
-        for (runtime, listener) in mail {
-            stream.spawn(runtime.serve(listener, shutdown_rx.clone(), counters.clone()));
-        }
-    }
+    let mut listener_supervisor = listeners::Supervisor::default();
+    let mut stream = JoinSet::new();
+    listeners::start(
+        stream_bindings,
+        mail,
+        &mut listener_supervisor,
+        &mut stream,
+        &state.logger.metrics,
+    );
     let web = http_tcp::Runtime {
         config: config.clone(),
         state: state.clone(),
@@ -272,22 +274,29 @@ async fn run() -> Result<()> {
         tokio::select! {
             _ = term.recv() => break,
             _ = interrupt.recv() => break,
-            ended = stream.join_next(), if !stream.is_empty() => {
-                stream_failure = match ended {
-                    Some(Ok(Err(error))) => Err(error.context("stream listener failed")),
-                    Some(Err(error)) => Err(error.into()),
-                    _ => Err(anyhow::anyhow!("stream listener ended before shutdown")),
+            ended = stream.join_next_with_id(), if !stream.is_empty() => {
+                let retired = match &ended {
+                    Some(Ok((id, _))) => listener_supervisor.drained(*id),
+                    Some(Err(error)) => listener_supervisor.drained(error.id()),
+                    None => false,
                 };
-                break;
+                if !retired {
+                    stream_failure = match ended {
+                        Some(Ok((_, Err(error)))) => Err(error.context("listener failed")),
+                        Some(Err(error)) => Err(error.into()),
+                        _ => Err(anyhow::anyhow!("listener ended before shutdown")),
+                    };
+                    break;
+                }
             },
             _ = tasks.join_next(), if !tasks.is_empty() => {},
             _ = hup.recv(), if reload.is_empty() => {
-                let version = state.generation.read().unwrap().version + 1;
-                reload.spawn(prepare_reload(path.clone(), config.clone(), version, strategy, resolver.clone(), managed.clone()));
+                let baseline = state.generation.read().unwrap().clone();
+                reload.spawn(prepare_reload(path.clone(), baseline, strategy, resolver.clone(), managed.clone(), listener_supervisor.draining_keys()));
             },
             prepared = reload.join_next(), if !reload.is_empty() => {
                 match prepared {
-                    Some(Ok(Ok(Prepared { generation: next, legacy_tls, explicit_tls, #[cfg(feature = "quic")] quic }))) => {
+                    Some(Ok(Ok(Prepared { generation: next, legacy_tls, explicit_tls, network, #[cfg(feature = "quic")] quic }))) => {
                         let version = next.version;
                         {
                             let mut current = state.generation.write().unwrap();
@@ -307,6 +316,7 @@ async fn run() -> Result<()> {
                         if let (Some(endpoint), Some(quic)) = (&endpoint, quic) {
                             endpoint.set_server_config(Some(quic));
                         }
+                        network.publish(&mut listener_supervisor, &mut stream, &state.logger.metrics);
                         generation_tx.send_replace(version);
                         eprintln!("{{\"event\":\"reloaded\",\"config_version\":{version}}}");
                     },
@@ -353,6 +363,7 @@ async fn run() -> Result<()> {
         health.abort();
         let _ = health.await;
     }
+    listener_supervisor.shutdown();
     let _ = shutdown_tx.send(true);
     state.tunnels.close();
     let deadline = tokio::time::Instant::now() + Duration::from_millis(config.limits.shutdown_ms);
@@ -418,6 +429,7 @@ struct Prepared {
     generation: Arc<Generation>,
     legacy_tls: Option<tokio_rustls::TlsAcceptor>,
     explicit_tls: Vec<Option<tokio_rustls::TlsAcceptor>>,
+    network: listeners::Prepared,
     #[cfg(feature = "quic")]
     quic: Option<quinn::ServerConfig>,
 }
@@ -448,14 +460,18 @@ async fn prepare_explicit_listeners(
 
 async fn prepare_reload(
     path: PathBuf,
-    baseline: Arc<Config>,
-    version: u64,
+    baseline: Arc<Generation>,
     strategy: PoolStrategy,
     resolver: Option<Arc<dns::Resolver>>,
     managed: tls::ManagedCertificates,
+    draining: Vec<listeners::Key>,
 ) -> Result<Prepared> {
     let (candidate, routes) = Config::load(&path).await?;
-    baseline.reload_compatible(&candidate)?;
+    baseline.config.reload_compatible(&candidate)?;
+    let version = baseline.version + 1;
+    let network =
+        listeners::Prepared::reload(&baseline.config, &candidate, &draining, resolver.clone())
+            .await?;
     let clients = prepare_tls_clients(&candidate).await?;
     let legacy_tls = prepare_server_tls(
         candidate.tls.clone(),
@@ -474,6 +490,7 @@ async fn prepare_reload(
         generation,
         legacy_tls,
         explicit_tls,
+        network,
         #[cfg(feature = "quic")]
         quic,
     })

@@ -195,8 +195,8 @@ Cauce 1.0 requiere los siguientes incrementos independientes.
 Shared DNS and address retirement, HTTP and application resilience,
 background revalidation, a disk cache tier, local ACME, Stream TLS,
 bounded include migration and optional distribution profiles have
-implementation and test coverage in this tree. Atomic Stream/mail
-reconfiguration, broader NGINX semantics, programmable extensions,
+implementation and test coverage in this tree. Retained Stream/mail
+listener policy changes, broader NGINX semantics, programmable extensions,
 and native release qualification remain open.
 
 [Open gates](CAUCE-1.0-GAP-ANALYSIS.md)

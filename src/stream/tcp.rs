@@ -89,7 +89,7 @@ impl Listener {
     pub(super) async fn serve(
         self,
         socket: TcpListener,
-        mut shutdown: watch::Receiver<bool>,
+        mut shutdown: watch::Receiver<crate::listeners::Command>,
         counters: Arc<Counters>,
     ) -> Result<()> {
         let listener = Arc::new(self);
