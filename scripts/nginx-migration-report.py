@@ -20,7 +20,7 @@ TOKEN = re.compile(
 )
 IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z_0-9-]*\Z")
 DNS_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\Z")
-STRUCTURE = {("http",), ("events",), ("http", "server"), ("stream",), ("stream", "server")}
+STRUCTURE = {("http",), ("events",), ("http", "server"), ("stream",), ("stream", "server"), ("mail",), ("mail", "server")}
 VALUE_BLOCKS = {"charset_map", "geo", "map", "split_clients", "types"}
 HEADER_NAME = re.compile(r"[!#$%&'*+.^_`|~0-9a-z-]{1,64}\Z")
 RESERVED_HEADERS = {
@@ -366,6 +366,8 @@ def http_preview(directives):
         policy = None
         upstreams = []
         if action is None and content is None:
+            if any(node.name in {"fastcgi_pass", "uwsgi_pass", "scgi_pass"} for node in location.children):
+                raise ValueError("application gateway preview requires manual endpoint and parameter mapping")
             target = one_value(location.children, "proxy_pass")
             policy = header_preview(location.children)
             if not target.startswith("http://"):
@@ -498,6 +500,8 @@ def migration_duration(value):
 
 
 def preview(directives):
+    if any(node.name == "mail" for node in directives):
+        raise ValueError("mail preview requires a manually verified authentication service and backend allowlist")
     streams = [node for node in directives if node.name == "stream"]
     if not streams:
         return http_preview(directives)
@@ -536,6 +540,8 @@ def main():
                   "Cauce routes on the raw URI path. NGINX normalizes URIs. Regex and named locations require manual migration.",
                   "The preview matches explicit server names with the listener port or no port. NGINX also has default-server behavior.",
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
+                  "Application gateways use bounded fixed CGI mapping. Verify script paths, modifiers, request lengths and protocol-specific pooling manually.",
+                  "Mail preview requires explicit TLS and allowlisted origins. Review auth_http escaping, supported authentication mechanisms and plaintext policy.",
                   "Stream previews use literal origins, TCP half-close, and UDP response credit. Review session limits and restart requirements.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Static proxy header policies omit NGINX inheritance and implicit hide rules.",

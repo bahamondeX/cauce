@@ -1,0 +1,6 @@
+test_sigterm_drains_authenticated_sessions (__main__.MailTests.test_sigterm_drains_authenticated_sessions) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.438s
+
+OK

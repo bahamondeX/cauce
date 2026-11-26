@@ -103,7 +103,8 @@ def process_stats(pid):
             for name in ("status", "smaps_rollup")
             for line in (proc / name).read_text().splitlines()
             for key, _, value in [line.partition(":")]
-            if key in {"VmRSS", "Pss", "voluntary_ctxt_switches", "nonvoluntary_ctxt_switches"}
+            if key in {"VmRSS", "Pss", "Private_Clean", "Private_Dirty",
+                       "voluntary_ctxt_switches", "nonvoluntary_ctxt_switches"}
         }
         return {"cpu_seconds": (int(fields[11]) + int(fields[12])) / os.sysconf("SC_CLK_TCK"),
                 "rss_kib": counters.pop("VmRSS"), **counters}

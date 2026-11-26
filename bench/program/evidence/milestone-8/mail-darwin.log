@@ -9,6 +9,6 @@ ok
 test_tls_gate_relay_denial_and_fragmented_transition (__main__.MailTests.test_tls_gate_relay_denial_and_fragmented_transition) ... ok
 
 ----------------------------------------------------------------------
-Ran 6 tests in 8.118s
+Ran 6 tests in 44.019s
 
 OK

@@ -108,9 +108,9 @@ subjectKeyIdentifier=hash
         ]
         return {"version": 1, "proxy": config}
 
-    def start(self, mode="starttls", configuration=None, **options):
-        self.config = self.tmp / "cauce.yaml"
-        self.log = self.tmp / "cauce.log"
+    def start(self, mode="starttls", configuration=None, config_file="cauce", **options):
+        self.config = self.tmp / f"{config_file}.yaml"
+        self.log = self.tmp / f"{config_file}.log"
         self.config.write_text(json.dumps(configuration or self.configuration(mode, **options)))
         proc = start_process(self.stack, [CAUCE, str(self.config)], self.log,
                              env={**os.environ, "CAUCE_ADMIN_TOKEN": TOKEN})
@@ -131,7 +131,7 @@ subjectKeyIdentifier=hash
                 with tcp(port) as stream:
                     return bool(stream.recv(256))
             try:
-                eventual(ready)
+                eventual(ready, seconds=20)
             except AssertionError:
                 self.fail(subprocess.check_output(["docker", "logs", container], stderr=subprocess.STDOUT, text=True))
         versions = subprocess.check_output(["docker", "exec", container, "sh", "-c",
@@ -314,6 +314,55 @@ mail {{
         self.assertEqual(client.stat(), (0, 0))
         self.assertEqual(len(origin.commands), 3)
 
+        bad_config = self.configuration("implicit")
+        bad_config["proxy"]["admin"] = f"127.0.0.1:{free_port()}"
+        bad_listeners = self.ports.copy()
+        for settings in bad_config["proxy"]["mail"]:
+            bad_listeners[settings["protocol"]] = free_port()
+            settings["listen"] = f"127.0.0.1:{bad_listeners[settings['protocol']]}"
+        bad_config["proxy"]["mail"][2]["backends"][0]["tls"] = {
+            "server_name": "unexpected.test", "ca_file": str(self.cert)}
+        self.start(configuration=bad_config, config_file="bad-backend-name")
+        client = poplib.POP3_SSL("127.0.0.1", bad_listeners["pop3"], context=self.tls, timeout=4)
+        self.stack.callback(client.close)
+        client.user(USER)
+        with self.assertRaises(poplib.error_proto) as result:
+            client.pass_(PASSWORD)
+        self.assertIn(b"SYS/TEMP", result.exception.args[0])
+        self.assertEqual(len(origin.commands), 3)
+
+    def test_sigterm_drains_authenticated_sessions(self):
+        class Origin(socketserver.StreamRequestHandler):
+            def handle(self):
+                self.wfile.write(b"+OK greeting\r\n")
+                for expected in (b"USER", b"PASS", b"STAT", b"QUIT"):
+                    command = self.rfile.readline(2048)
+                    if not command.startswith(expected):
+                        return
+                    self.wfile.write(b"+OK 0 0\r\n")
+
+        origin = start_server(self.stack, ThreadTcp, Origin)
+        self.auth.ports["pop3"] = origin.server_address[1]
+        proc = self.start()
+        client = poplib.POP3("127.0.0.1", self.ports["pop3"], timeout=4)
+        self.stack.callback(client.close)
+        client.stls(self.tls)
+        client.user(USER)
+        client.pass_(PASSWORD)
+        proc.send_signal(signal.SIGTERM)
+
+        def listener_closed():
+            try:
+                with tcp(self.ports["pop3"]):
+                    return False
+            except (ConnectionRefusedError, ConnectionResetError):
+                return True
+
+        eventual(listener_closed)
+        self.assertEqual(client.stat(), (0, 0))
+        self.assertTrue(client.quit().startswith(b"+OK"))
+        self.assertEqual(proc.wait(5), 0)
+
     @unittest.skipUnless(os.environ.get("CAUCE_MAIL_FIXTURE"), "build tests/mail/Dockerfile and set CAUCE_MAIL_FIXTURE=1")
     def test_postfix_dovecot_and_optional_nginx(self):
         self.origin()
@@ -329,6 +378,20 @@ mail {{
         self.origin()
         self.start("implicit")
         self.exercise(self.ports, implicit=True)
+        with self.smtp(self.ports["smtp"], True) as client:
+            client.ehlo()
+            client.user, client.password = USER, PASSWORD
+            self.assertEqual(client.auth("LOGIN", client.auth_login)[0], 235)
+        client = imaplib.IMAP4_SSL("127.0.0.1", self.ports["imap"], ssl_context=self.tls, timeout=4)
+        with client:
+            self.assertEqual(client.authenticate("PLAIN", lambda _: f"\0{USER}\0{PASSWORD}".encode())[0], "OK")
+        with self.smtp(self.ports["smtp"], True) as client:
+            client.ehlo()
+            self.auth.mode = "approve"
+            client.user, client.password = USER, "wrong-by-design"
+            with self.assertRaises(smtplib.SMTPAuthenticationError) as result:
+                client.auth("PLAIN", client.auth_plain)
+            self.assertEqual(result.exception.smtp_code, 454)
 
 
 if __name__ == "__main__":

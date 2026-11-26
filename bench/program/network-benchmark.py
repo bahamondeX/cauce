@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Account for fixed-rate TCP, UDP and HTTP/3 workloads on prequalified hosts."""
+"""Account for fixed-rate network and application workloads on prequalified hosts."""
 import argparse
 import asyncio
 from contextlib import AsyncExitStack, ExitStack
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -14,9 +15,10 @@ from time import monotonic_ns
 import tomllib
 
 from capacity import digest, write_json
-from telemetry import process, process_stats, until
+from telemetry import metrics, process, process_stats, until
 
 ROOT = Path(__file__).resolve().parents[2]
+APPLICATION = {"fastcgi", "uwsgi", "scgi"}
 
 
 def allocate(kind):
@@ -52,6 +54,21 @@ def prepare(args, include_proxy, listen, origin, admin):
                 "id": "payload", "host": "localhost", "path_prefix": "/",
                 "content": {"type": "static", "root": str(root / "document")},
             }]
+        elif protocol in APPLICATION:
+            base["name"] = "bench_cauce"
+            base["listen"] = address
+            base["limits"].update(requests=args.inflight, connections=args.inflight,
+                                  idle_connections=min(16, args.inflight), connecting=min(16, args.inflight))
+            app = {}
+            reuse = min(16, args.inflight) if protocol == "fastcgi" and args.fastcgi_keepalive else 0
+            if protocol == "fastcgi":
+                app = {"document_root": "/fixture", "script": "main.php",
+                       "script_name": "/main.php", "keep_connection": bool(reuse)}
+            base["upstreams"] = [{"id": "app", "address": backend, "host": "fixture.test",
+                                  "isolation": "bench", "protocol": protocol, "connections": args.inflight,
+                                  "idle_connections": reuse, "failure_backoff_ms": "100ms"}]
+            base["routes"] = [{"id": "app", "host": "fixture.test", "path_prefix": "/",
+                               "upstreams": ["app"], "application": app}]
         else:
             options = {"idle_timeout": "1s" if protocol == "udp" else "10s"}
             if protocol == "udp":
@@ -83,6 +100,44 @@ def prepare(args, include_proxy, listen, origin, admin):
         ssl_certificate {json.dumps(str(args.cert))};
         ssl_certificate_key {json.dumps(str(args.key))};
         root {json.dumps(str(root / "document"))};
+    }}
+}}"""
+        elif protocol in APPLICATION:
+            params = {
+                "REQUEST_METHOD": "$request_method", "QUERY_STRING": "$query_string",
+                "CONTENT_TYPE": "$content_type", "PATH_INFO": "$uri", "SCRIPT_NAME": "/main.php",
+                "SERVER_NAME": "$server_name", "SERVER_PORT": "$server_port",
+                "SERVER_PROTOCOL": "$server_protocol",
+            }
+            if protocol == "fastcgi":
+                params.update(SCRIPT_FILENAME="/fixture/main.php", DOCUMENT_ROOT="/fixture", REDIRECT_STATUS="200")
+            if protocol == "scgi":
+                params["SCGI"] = "1"
+            else:
+                params["CONTENT_LENGTH"] = "$content_length"
+            fields = "\n".join(f"{protocol}_param {key} {value};" for key, value in params.items())
+            reduction = ""
+            keep = ""
+            if protocol == "fastcgi" and args.fastcgi_keepalive:
+                reduction = f"keepalive {min(16, args.inflight)}; keepalive_timeout 10s; keepalive_time 1m;"
+                keep = "fastcgi_keep_conn on;"
+            block = f"""http {{
+    client_body_temp_path client_body;
+    fastcgi_temp_path fastcgi_body;
+    uwsgi_temp_path uwsgi_body;
+    scgi_temp_path scgi_body;
+    access_log off;
+    client_max_body_size 16m;
+    upstream app {{ server {backend} max_conns={args.inflight}; {reduction} }}
+    server {{ listen {address}; server_name fixture.test;
+        location / {{
+            {protocol}_pass app;
+            {protocol}_next_upstream off;
+            {protocol}_request_buffering off;
+            {protocol}_buffering off;
+            {keep}
+            {fields}
+        }}
     }}
 }}"""
         else:
@@ -171,14 +226,51 @@ def udp_socket(port):
     return sock
 
 
-async def sample(args, target, pid):
+async def application_offer(port, args, upload, upload_hash):
+    start = monotonic_ns()
+    reader, writer = await asyncio.open_connection("127.0.0.1", port)
+    connected = monotonic_ns() - start
+    try:
+        query = f"mode=benchmark&size={args.size}&hold={args.hold_ms}"
+        method = "POST" if upload else "GET"
+        writer.write(f"{method} /?{query} HTTP/1.1\r\nHost: fixture.test\r\n"
+                     f"Connection: close\r\nContent-Length: {len(upload)}\r\n"
+                     "Content-Type: application/octet-stream\r\n\r\n".encode())
+        for position in range(0, len(upload), 64 * 1024):
+            writer.write(upload[position:position + 64 * 1024])
+            await writer.drain()
+        await writer.drain()
+        head = await reader.readuntil(b"\r\n\r\n")
+        status, *fields = head[:-4].split(b"\r\n")
+        headers = dict((key.lower(), value.strip()) for key, value in (field.split(b":", 1) for field in fields))
+        if (status.split(b" ", 2)[1:2] != [b"200"] or headers.get(b"x-request-sha256") != upload_hash
+                or headers.get(b"content-length") != str(args.size).encode()):
+            raise ValueError("application response status, length or upload hash mismatch")
+        remaining = args.size
+        while remaining:
+            data = await reader.read(min(64 * 1024, remaining))
+            if not data or data.count(b"x") != len(data):
+                raise ValueError("application response content mismatch")
+            remaining -= len(data)
+            if args.slow_read_ms:
+                await asyncio.sleep(args.slow_read_ms / 1000)
+        if await reader.read(1):
+            raise ValueError("application response exceeded declared length")
+        return connected
+    finally:
+        writer.close()
+
+
+async def sample(args, target, pid, admin, token):
     output = args.output
     raw = output / "offers.jsonl"
     active = set()
     peak_active = 0
     handshakes = []
     measurements = []
-    payload = b"x" * args.size
+    payload = b"x" * args.size if args.protocol not in APPLICATION else b""
+    upload = b"a" * args.request_size
+    upload_hash = hashlib.sha256(upload).hexdigest().encode()
     async with AsyncExitStack() as stack:
         quic_clients = []
         pool = None
@@ -221,6 +313,8 @@ async def sample(args, target, pid):
                         row["connect_ns"] = await tcp_offer(target, payload, args)
                     elif args.protocol == "udp":
                         await udp_offer(target, sequence.to_bytes(8, "big") + payload[8:], pool)
+                    elif args.protocol in APPLICATION:
+                        row["connect_ns"] = await application_offer(target, args, upload, upload_hash)
                     else:
                         quic = quic_clients[sequence % len(quic_clients)]
                         stream = quic.request("/payload", authority=b"localhost")
@@ -234,7 +328,7 @@ async def sample(args, target, pid):
                             raise ValueError("HTTP/3 response mismatch")
             except TimeoutError:
                 row["status"] = "timeout"
-            except (OSError, ValueError, ExceptionGroup) as error:
+            except (OSError, EOFError, ValueError, asyncio.LimitOverrunError, ExceptionGroup) as error:
                 row["status"] = type(error).__name__
             row["ended_ns"] = monotonic_ns()
             emit(row)
@@ -262,6 +356,7 @@ async def sample(args, target, pid):
 
         await phase(args.warmup, 0, True)
         before = snapshot(pid)
+        before_metrics = metrics(admin, token) if token else {}
         sampling = asyncio.create_task(process_samples())
         try:
             await phase(args.seconds, args.warmup * args.rate, False)
@@ -269,9 +364,14 @@ async def sample(args, target, pid):
             sampling.cancel()
             await asyncio.gather(sampling, return_exceptions=True)
         after = snapshot(pid)
+        after_metrics = metrics(admin, token) if token else {}
     write_json(output / "process.json", dict(before=before, after=after, samples=measurements,
                                              handshake_ns=handshakes, peak_inflight=peak_active))
-    write_json(output / "summary.json", audit(args, raw, before, after))
+    summary = audit(args, raw, before, after)
+    for key in ("upstream_connections_created_total", "upstream_reused_total"):
+        if key in before_metrics and key in after_metrics:
+            summary[key] = after_metrics[key] - before_metrics[key]
+    write_json(output / "summary.json", summary)
 
 
 def snapshot(pid):
@@ -289,7 +389,9 @@ def audit(args, raw, before, after):
     accounted = sorted(row["seq"] for row in rows) == list(range(warm + expect))
     accounted &= sorted(row["seq"] for row in measured) == list(range(warm, warm + expect))
     successes = [row for row in measured if row["status"] == "ok"]
-    combined = (2 if args.protocol != "http3" else 1) * args.size * len(successes)
+    bytes_per_success = (args.size + args.request_size if args.protocol in APPLICATION
+                         else (2 if args.protocol != "http3" else 1) * args.size)
+    combined = bytes_per_success * len(successes)
     status = {value: sum(1 for row in measured if row["status"] == value)
               for value in sorted({row["status"] for row in measured})}
 
@@ -315,10 +417,14 @@ def audit(args, raw, before, after):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("protocol", choices=["tcp", "udp", "http3"])
+    parser.add_argument("protocol", choices=["tcp", "udp", "http3", *sorted(APPLICATION)])
     parser.add_argument("engine", choices=["direct", "cauce", "nginx", "haproxy"])
     parser.add_argument("output", type=Path)
     parser.add_argument("--proxy", type=Path)
+    parser.add_argument("--origin-port", type=int)
+    parser.add_argument("--origin-identity", help="Pin the staged backend build/image and fixture hashes")
+    parser.add_argument("--request-size", type=int, default=0)
+    parser.add_argument("--fastcgi-keepalive", action="store_true")
     parser.add_argument("--size", type=int, default=1024)
     parser.add_argument("--rate", type=int, default=100)
     parser.add_argument("--seconds", type=int, default=10)
@@ -347,7 +453,16 @@ def main():
         parser.error("Invalid workload bounds")
     if args.protocol == "udp" and not 8 <= args.size <= 8192:
         parser.error("UDP size must be 8–8192 bytes in the matched fixtures")
-    if args.size * args.inflight > 512 * 1024 * 1024 or (args.seconds + args.warmup) * args.rate > 2_000_000:
+    if args.protocol in APPLICATION:
+        if (not proxy or args.origin_port not in range(1, 65536) or not args.origin_identity
+                or not 0 <= args.request_size <= 16 * 1024 * 1024 or args.size > 16 * 1024 * 1024
+                or args.hold_ms > 1000):
+            parser.error("Application workloads require a prestarted loopback backend, identity and valid bounds")
+    elif args.origin_port or args.origin_identity or args.request_size:
+        parser.error("Application origin and upload settings require an application protocol")
+    if args.fastcgi_keepalive and args.protocol != "fastcgi":
+        parser.error("Upstream keepalive applies to FastCGI")
+    if (args.size + args.request_size) * args.inflight > 512 * 1024 * 1024 or (args.seconds + args.warmup) * args.rate > 2_000_000:
         parser.error("Generator in-flight payload or raw offer budget exceeded")
     if args.cpus and (platform.system() != "Linux" or len(set(args.cpus)) != 3):
         parser.error("CPU isolation requires three distinct Linux logical CPUs")
@@ -360,8 +475,8 @@ def main():
         document = args.output / "document"
         document.mkdir()
         (document / "payload").write_bytes(b"x" * args.size)
-    kind = socket.SOCK_STREAM if args.protocol == "tcp" else socket.SOCK_DGRAM
-    origin, listen, admin = allocate(kind), allocate(kind), allocate(socket.SOCK_STREAM)
+    kind = socket.SOCK_STREAM if args.protocol == "tcp" or args.protocol in APPLICATION else socket.SOCK_DGRAM
+    origin, listen, admin = args.origin_port or allocate(kind), allocate(kind), allocate(socket.SOCK_STREAM)
     while (proxy and listen == origin) or admin in {listen, origin}:
         listen, admin = allocate(kind), allocate(socket.SOCK_STREAM)
     proxy_cpu, generator_cpu, origin_cpu = args.cpus or (None, None, None)
@@ -382,15 +497,16 @@ def main():
         "python": sys.version, "cpu_affinity": args.cpus,
     })
     with ExitStack() as stack:
-        if args.protocol != "http3":
+        if args.protocol != "http3" and args.protocol not in APPLICATION:
             origin_log = args.output / "origin.log"
             backend = stack.enter_context(process(affinity(origin_cpu) + [sys.executable,
                 str(Path(__file__).with_name("network-origin.py")), args.protocol, str(origin)], origin_log))
             until(backend, lambda: "ready" in origin_log.read_text(), 5)
+        token = "benchmark-local-metrics-token-at-least-32" if args.engine == "cauce" and args.protocol in APPLICATION else None
         if proxy:
             log = args.output / "proxy.log"
             gateway = stack.enter_context(process(affinity(proxy_cpu) + cmd, log,
-                env={**os.environ, "TOKIO_WORKER_THREADS": "1"}))
+                env={**os.environ, "TOKIO_WORKER_THREADS": "1", **({"CAUCE_ADMIN_TOKEN": token} if token else {})}))
             until(gateway, lambda: gateway.poll() is None and (
                 "started" in log.read_text() if args.engine == "cauce" else True), 5)
             # UDP and QUIC do not provide a TCP readiness probe. The measured
@@ -398,7 +514,7 @@ def main():
         else:
             gateway = backend
         (args.output / "sampled-pid.txt").write_text(f"{gateway.pid}\n")
-        asyncio.run(sample(args, listen if proxy else origin, gateway.pid))
+        asyncio.run(sample(args, listen if proxy else origin, gateway.pid, admin, token))
     print((args.output / "summary.json").read_text().strip())
 
 

@@ -1,0 +1,24 @@
+{
+  "modules": {
+    "unsupported": 81,
+    "partial": 39
+  },
+  "directive_registrations": {
+    "unsupported": 638,
+    "partial": 116
+  },
+  "behavior_cases": {
+    "verified": 23,
+    "partial": 22,
+    "unsupported": 4
+  },
+  "configure_option_patterns": {
+    "inventoried": 149
+  },
+  "addon_modules": {
+    "inventoried": 5
+  },
+  "addon_directive_registrations": {
+    "inventoried": 70
+  }
+}

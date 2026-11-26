@@ -1,0 +1,9 @@
+examples/fastcgi.yaml schema valid
+examples/fastcgi.yaml configuration valid
+examples/fastcgi.toml configuration valid
+examples/wsgi.yaml schema valid
+examples/wsgi.yaml configuration valid
+examples/wsgi.toml configuration valid
+examples/mail.yaml schema valid
+examples/mail.yaml configuration valid
+examples/mail.toml configuration valid

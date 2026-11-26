@@ -3,6 +3,24 @@ declare(strict_types=1);
 
 $mode = $_GET['mode'] ?? 'request';
 header('Content-Type: application/json');
+if ($mode === 'benchmark') {
+    $size = min(16777216, max(1, (int) ($_GET['size'] ?? 1)));
+    $hold = min(1000, max(0, (int) ($_GET['hold'] ?? 0)));
+    $input = fopen('php://input', 'rb');
+    $digest = hash_init('sha256');
+    hash_update_stream($digest, $input);
+    fclose($input);
+    header('Content-Type: application/octet-stream');
+    header('Content-Length: ' . $size);
+    header('X-Request-SHA256: ' . hash_final($digest));
+    if ($hold) {
+        usleep($hold * 1000);
+    }
+    for ($offset = 0; $offset < $size; $offset += 65536) {
+        echo str_repeat('x', min(65536, $size - $offset));
+    }
+    exit;
+}
 if ($mode === 'redirect') {
     header('Location: /next', true, 307);
     exit;

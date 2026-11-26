@@ -9,6 +9,6 @@ test_unix_reuse_environment_and_request_header_injection (__main__.FastCGITests.
 test_unknown_length_fails_before_app_connect (__main__.FastCGITests.test_unknown_length_fails_before_app_connect) ... ok
 
 ----------------------------------------------------------------------
-Ran 7 tests in 1.699s
+Ran 7 tests in 17.700s
 
 OK

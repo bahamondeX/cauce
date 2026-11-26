@@ -138,6 +138,23 @@ http {{
                 return True
         eventual(attempt)
 
+    @staticmethod
+    def backend_ready(protocol, port):
+        fields = [(b"CONTENT_LENGTH", b"0"), (b"REQUEST_METHOD", b"GET"),
+                  (b"SERVER_PROTOCOL", b"HTTP/1.1"), (b"SERVER_NAME", b"fixture.test"),
+                  (b"SERVER_PORT", b"80"), (b"PATH_INFO", b"/ready")]
+        if protocol == "scgi":
+            fields.insert(1, (b"SCGI", b"1"))
+            data = b"".join(key + b"\0" + val + b"\0" for key, val in fields)
+            packet = str(len(data)).encode() + b":" + data + b","
+        else:
+            data = b"".join(len(field).to_bytes(2, "little") + field for pair in fields for field in pair)
+            packet = b"\0" + len(data).to_bytes(2, "little") + b"\0" + data
+        with tcp(port) as stream:
+            stream.sendall(packet)
+            with stream.makefile("rb") as response:
+                return b"201 Created" in response.readline(2048)
+
     def real(self, protocol, args):
         backend = free_port()
         container = subprocess.check_output([
@@ -145,7 +162,10 @@ http {{
             "cauce-m8-wsgi", *args
         ], text=True).strip()
         self.stack.callback(subprocess.run, ["docker", "stop", "-t", "1", container], stdout=subprocess.DEVNULL)
-        self.ready(backend)
+        try:
+            eventual(lambda: self.backend_ready(protocol, backend), seconds=10)
+        except AssertionError:
+            self.fail(subprocess.check_output(["docker", "logs", container], stderr=subprocess.STDOUT, text=True))
         port = self.serve(protocol, f"127.0.0.1:{backend}")
         ports = [port] + ([self.reference(protocol, backend)] if NGINX else [])
         payload = (b"\xabchunk\0" * 102400) + b"end"
@@ -155,8 +175,8 @@ http {{
             ("/?slow", "GET", None, 200),
         ]:
             results = [call(target, uri, method, body) for target in ports]
-            for code, _, entity in results:
-                self.assertEqual(code, expected, (uri, entity))
+            for index, (code, _, entity) in enumerate(results):
+                self.assertEqual(code, expected, (("Cauce", "NGINX")[index], uri, entity))
             if len(results) == 2:
                 self.assertEqual(results[0][2], results[1][2], uri)
             if body:

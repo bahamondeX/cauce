@@ -38,6 +38,28 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(validation.returncode, 0, validation.stderr)
             return result.returncode, report, config
 
+    def test_application_and_mail_recognition_require_manual_mapping(self):
+        for protocol in ("fastcgi", "uwsgi", "scgi"):
+            code, report, config = self.run_preview("example.org",
+                f"location / {{ {protocol}_pass 127.0.0.1:2000; }}")
+            self.assertEqual(code, 1)
+            self.assertIsNone(config)
+            item = next(row for row in report["directives"] if row["directive"] == f"{protocol}_pass")
+            self.assertEqual(item["status"], "manual_review")
+        with tempfile.TemporaryDirectory() as tmp:
+            source, destination = (Path(tmp) / f for f in ("nginx.conf", "preview.yaml"))
+            source.write_text("mail { auth_http http://127.0.0.1:8081/secret; "
+                              "server { protocol smtp; starttls only; listen 127.0.0.1:1587; } }")
+            result = subprocess.run([sys.executable, str(TOOL), str(source), "--preview",
+                                     str(destination)], capture_output=True, check=False, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertFalse(destination.exists())
+            self.assertNotIn("/secret", result.stdout)
+            report = json.loads(result.stdout)
+            items = {row["directive"]: row["status"] for row in report["directives"]}
+            self.assertEqual(items["mail"], "structure")
+            self.assertEqual(items["auth_http"], "manual_review")
+
     def test_stream_preview_validates_literal_listeners_and_requires_proxy_trust(self):
         template = """
         stream {
