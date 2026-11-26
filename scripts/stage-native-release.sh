@@ -2,11 +2,18 @@
 # Build checksummed Linux artifacts from a committed Git tree.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+root=$(pwd -P)
+[[ "$root" == "$(git rev-parse --show-toplevel)" ]]
 if [[ $# -lt 1 || $# -gt 4 ]]; then
     echo "usage: $0 OUTPUT [REF [full|core|all [arm64|amd64|all]]]" >&2
     exit 2
 fi
-release_dir=$(mkdir -p "$1" && cd "$1" && pwd -P)
+release_dir=$(python3 -I -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve())' "$1")
+if [[ "$release_dir" != "$root/"* ]]; then
+    echo "release output must be inside the Cauce repository" >&2
+    exit 2
+fi
+mkdir -p "$release_dir" "$root/work"
 ref="${2:-HEAD}"
 case "${3:-all}" in
     full|core) profiles=("$3") ;;
@@ -20,11 +27,12 @@ case "${4:-all}" in
 esac
 commit=$(git rev-parse "$ref^{commit}")
 tree=$(git rev-parse "$commit^{tree}")
-snapshot=$(mktemp -d "${TMPDIR:-/tmp}/cauce-release.XXXXXXXX")
+snapshot=$(mktemp -d "$root/work/cauce-release.XXXXXXXX")
 trap 'rm -rf "$snapshot"' EXIT
 git archive "$commit" | tar -x -C "$snapshot"
 if ! docker info >/dev/null 2>&1; then
-    colima start
+    echo "an existing Docker engine is required" >&2
+    exit 1
 fi
 lock_sha=$(shasum -a 256 "$snapshot/Cargo.lock" | awk '{print $1}')
 for profile in "${profiles[@]}"; do

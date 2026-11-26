@@ -1,0 +1,8 @@
+# Cauce repository policy
+
+- Verify the physical working directory (`pwd -P`) and repository root (`git rev-parse --show-toplevel`) before builds, dependency installation, or environment management. Execute from the repository root or an explicitly selected subproject inside it.
+- Keep modifications, temporary directories, dependency caches, lockfiles, test fixtures and build artifacts inside this repository. Use an ignored directory under `work/` for external builds, fixture state and caches. Set `TMPDIR` explicitly for tools that create temporary files.
+- Use an explicit Cauce project or script path for Python and uv. Create Python environments inside Cauce and invoke their interpreter by absolute path. For uv projects, pass `--project` and set `UV_PROJECT_ENVIRONMENT` to a Cauce-local path. For an isolated invocation without a project, pass `--no-project` and use a Cauce-local cache and environment.
+- Scope Cargo, Rustup and other tool caches inside Cauce or use already installed tools and read-only caches. Never install or upgrade global packages, edit shell configuration, or modify any home project, lockfile or virtual environment.
+- Preserve user changes. Check disks read-only and obtain authorization before deleting user files. Backup and snapshot investigations must be read-only. Save any recovered candidate into a new repository-local file and verify its provenance before reporting recovery.
+- Keep compatibility claims tied to the pinned NGINX source and observable evidence. Record partial coverage and differences explicitly. Preserve existing security, protocol and resource limits. AWS provisioning requires explicit authorization.
