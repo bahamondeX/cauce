@@ -21,6 +21,12 @@ setters, defaults and inheritance require semantic review. The report
 leaves unreviewed fields pending and keeps build flags outside runtime
 equivalence counts. [Compatibility tooling](COMPATIBILITY-TOOLING.md).
 
+The nginx-acme 0.4.2 source review covers all 15 registrations. Ten have
+partial Cauce behavior and five have mapped gaps. The entries preserve
+issuer-block contexts and keep the Cauce-only Pebble evidence separate
+from add-on differential evidence. njs retains four modules and 55
+unmapped registrations.
+
 ## Verified slices
 
 - The pinned NGINX loopback run passed 23 request cases and seven

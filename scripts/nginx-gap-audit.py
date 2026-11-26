@@ -96,6 +96,37 @@ REVIEWED = {
     },
 }
 
+ACME_REVIEW = {
+    "acme_issuer": ("issuer name and block", "None", "partial", "One global proxy.acme issuer. The add-on can name multiple issuers."),
+    "acme_shared_zone": ("zone=name:size", "ngx_acme_shared, 256 KiB", "mapped_unimplemented",
+                         "Cauce uses bounded in-process state. No named shared memory zone or byte-size equivalent is exposed."),
+    "acme_certificate": ("issuer, optional identifiers and key algorithm/size", "None", "partial",
+                         "Explicit SAN groups in proxy.acme.certificates. Issuer selection, implicit server_name identifiers and key policy differ."),
+    "uri": ("ACME directory URL", "Required", "partial", "proxy.acme.directory requires HTTPS and excludes user credentials."),
+    "account_key": ("algorithm and size or key file", "No directive default", "partial",
+                    "Cauce generates and persists the account key. Import and algorithm choices remain unsupported."),
+    "challenge": ("http-01, tls-alpn-01 or their aliases", "http-01", "partial",
+                  "Cauce HTTP-01 uses a cleartext listener. No TLS-ALPN-01 selection is exposed."),
+    "common_name_in_csr": ("on or off", "off", "mapped_unimplemented",
+                           "No setting controls adding the first identifier as the CSR common name."),
+    "contact": ("contact URL", "No contact", "partial",
+                "proxy.acme.contact accepts a single explicit mailto URL."),
+    "external_account_key": ("key identifier and file or inline key", "None", "mapped_unimplemented",
+                             "There is no external account binding configuration."),
+    "preferred_chain": ("issuer common name", "Server-selected chain", "mapped_unimplemented",
+                        "No alternate chain selection policy is exposed."),
+    "profile": ("profile name and optional require", "Server default", "mapped_unimplemented",
+                "No profile negotiation or require flag is exposed."),
+    "ssl_trusted_certificate": ("PEM bundle path", "System roots", "partial",
+                                "proxy.acme.directory_ca_file supplies a separate trust bundle for the directory client."),
+    "ssl_verify": ("on or off", "on", "partial",
+                   "Cauce verifies the directory TLS peer. Disabling verification has no mapping."),
+    "state_path": ("directory or off", "acme_<issuer>", "partial",
+                   "proxy.acme.state_dir requires an explicit private absolute directory. Memory-only issuer state remains unsupported."),
+    "accept_terms_of_service": ("no arguments", "Terms unaccepted", "partial",
+                                "proxy.acme.accept_terms must be true before account registration."),
+}
+
 PLATFORMS = {
     "ngx_epoll_module": "Linux epoll",
     "ngx_kqueue_module": "BSD and Darwin kqueue",
@@ -218,15 +249,17 @@ def verify_claim(module, mapping):
 
 def coverage(module, directive, mapping, reference):
     notes = mapping.get("notes")
+    status = mapping.get("status", "unmapped")
     migrations = ("bounded preview" if reference == "oss" and directive in TRANSLATIONS.get(module, ())
-                  else "manual" if notes else "unsupported")
+                  else "manual" if notes and status != "mapped_unimplemented" else "unsupported")
     sources = [
         {"scope": FILES[key][0], "path": FILES[key][1]}
         for key, (name, directives) in EVIDENCE.items()
         if module == name and (directive is None or directive in directives.split())
         and (ROOT / FILES[key][1]).is_file()
     ]
-    status = mapping.get("status", "unmapped")
+    if reference == "nginx-acme" and directive in {"acme_issuer", "acme_certificate", "uri", "challenge", "state_path"}:
+        sources.append({"scope": "Cauce HTTP-01 fixture", "path": "bench/program/evidence/milestone-9/qualification/acme-overlap-exact.log"})
     # Existing inventory uses "verified" for subsets. Never elevate the whole
     # registration on that basis.
     if status in {"verified", "implemented"}:
@@ -274,12 +307,21 @@ def semantic_rows(modules, mappings, reference, provenance, build_options):
         for source, module_type, directives in definitions:
             for order, (directive, flags) in enumerate(directives):
                 known = REVIEWED.get((module, directive), {}) if reference == "oss" else {}
+                registration = provenance[(source, module, order)]
+                contexts = [flag for flag in flags if flag.endswith("_CONF") or flag == "NGX_DIRECT_CONF"]
+                if reference == "nginx-acme":
+                    arguments, default, _, _ = ACME_REVIEW[directive]
+                    known = {"arguments": [arguments], "default": default,
+                             "inheritance": "Explicit issuer block settings and server certificate bindings.",
+                             "source_functions": [registration["setter"]]}
+                    if registration["within"]:
+                        contexts.append(registration["within"])
                 yield {
                     "kind": "directive", "reference": reference, "module": module,
                     "directive": directive, "definition_ordinal": order,
                     "source": source, "module_type": module_type,
                     "task_id": f"{reference}/{source}/{module}/{directive}/{order}",
-                    "registration": provenance[(source, module, order)],
+                    "registration": registration,
                     "accepted_arity": accepted_arity(flags),
                     "arguments": known.get("arguments"),
                     "reference_default": known.get("default"),
@@ -287,7 +329,7 @@ def semantic_rows(modules, mappings, reference, provenance, build_options):
                     "reference_functions": known.get("source_functions", []),
                     "semantic_audit": "reviewed_subset" if known else "pending",
                     "build_options": build_options.get(module, []),
-                    "context": [flag for flag in flags if flag.endswith("_CONF") or flag == "NGX_DIRECT_CONF"],
+                    "context": contexts,
                     "parser_flags": flags,
                     **coverage(module, directive, mappings.get(f"{module}.{directive}", {}), reference),
                 }
@@ -323,6 +365,8 @@ def main():
             for module in table:
                 addon_mappings[module] = {"status": "partial", "notes":
                     "Cauce manages HTTP-01 issuance and renewal with a shared HTTPS/QUIC resolver. The add-on's configuration and challenge variants require separate verification."}
+                addon_mappings.update({f"{module}.{directive}": {"status": status, "notes": notes}
+                                       for directive, (_, _, status, notes) in ACME_REVIEW.items()})
         rows.extend(semantic_rows(table, addon_mappings, name, provenance, {}))
     counts = Counter((row["reference"], row["kind"]) for row in rows)
     assert counts == {("oss", "module"): 120, ("oss", "directive"): 754, ("oss", "configure"): 149,

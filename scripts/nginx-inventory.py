@@ -114,10 +114,12 @@ def add_on_inventory(name, path, provenance=None):
                 for entry in entries:
                     directive, flags = entry.groups()
                     if provenance is not None:
+                        setter = re.match(r"\s*set:\s*Some\(([\w:]+)\)", content[entry.end():])
                         provenance[(source, "ngx_http_acme_module", len(commands))] = {
                             "line": body.count("\n", 0, group.start(3) + entry.start()) + 1,
                             "command_table": table,
-                            "setter": None,
+                            "setter": setter[1] if setter else None,
+                            "within": "acme_issuer" if table == "NGX_HTTP_ACME_ISSUER_COMMANDS" else None,
                         }
                     item = {"name": directive, "flags": FLAGS.findall(flags)}
                     if table == "NGX_HTTP_ACME_ISSUER_COMMANDS":

@@ -1,8 +1,14 @@
 {
   "assessments": [
     {
-      "assessment": "unmapped",
-      "count": 15,
+      "assessment": "mapped_unimplemented",
+      "count": 5,
+      "kind": "directive",
+      "reference": "nginx-acme"
+    },
+    {
+      "assessment": "partially_implemented",
+      "count": 10,
       "kind": "directive",
       "reference": "nginx-acme"
     },
@@ -63,10 +69,16 @@
   ],
   "counts": [
     {
-      "count": 15,
+      "count": 5,
       "kind": "directive",
       "reference": "nginx-acme",
-      "status": "unmapped"
+      "status": "mapped_unimplemented"
+    },
+    {
+      "count": 10,
+      "kind": "directive",
+      "reference": "nginx-acme",
+      "status": "partial"
     },
     {
       "count": 1,
@@ -129,6 +141,6 @@
     "ngx_http_proxy_module"
   ],
   "reference_version": "1.30.8",
-  "registry_sha256": "918571800689c09c1bd2bcaef1750866ff75fe9f1fcc56ab75fb556c7fd26b82",
+  "registry_sha256": "76b7ffd1b17a4a211d8eb349dfb7dab157361784171036bbe044103cc1be7633",
   "verified_equivalent": 0
 }

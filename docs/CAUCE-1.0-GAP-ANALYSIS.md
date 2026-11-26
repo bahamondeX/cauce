@@ -15,7 +15,7 @@ until their full supported semantics have evidence.
 | njs modules | 4 | 0 | 4 | 0 |
 | njs directives | 55 | 0 | 55 | 0 |
 | nginx-acme modules | 1 | 1 partial | 0 | 0 |
-| nginx-acme directives | 15 | 0 | 15 | 0 |
+| nginx-acme directives | 15 | 10 partial, 5 mapped but unimplemented | 0 | 0 |
 
 Unmapped entries have no established mapping in the current audit.
 They remain implementation or semantic review work. Configure options
