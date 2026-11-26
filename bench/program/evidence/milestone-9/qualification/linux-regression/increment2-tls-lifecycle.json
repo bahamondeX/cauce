@@ -1,0 +1,51 @@
+{
+  "image": "cauce:milestone9-lab",
+  "cases": [
+    {
+      "case": "inbound TLSv1.2 with ALPN http/1.1",
+      "passed": true
+    },
+    {
+      "case": "inbound TLSv1.3 with ALPN http/1.1",
+      "passed": true
+    },
+    {
+      "case": "unsupported h2-only ALPN rejected",
+      "passed": true
+    },
+    {
+      "case": "stalled incoming TLS handshake times out",
+      "passed": true
+    },
+    {
+      "case": "invalid inbound certificate rejects reload and preserves working TLS",
+      "passed": true
+    },
+    {
+      "case": "valid certificate rotation takes effect on new connections",
+      "passed": true
+    },
+    {
+      "case": "invalid upstream CA file rejects entire reload",
+      "passed": true
+    },
+    {
+      "case": "changing trust drains old HTTPS pool; untrusted backend gives 502",
+      "passed": true
+    },
+    {
+      "case": "restored upstream trust establishes a working new generation",
+      "passed": true
+    },
+    {
+      "case": "expired upstream certificate rejected with 502",
+      "passed": true
+    },
+    {
+      "case": "stalled upstream TLS handshake returns 504 within TLS deadline",
+      "passed": true,
+      "elapsed_ms": 390.73
+    }
+  ],
+  "passed": 11
+}

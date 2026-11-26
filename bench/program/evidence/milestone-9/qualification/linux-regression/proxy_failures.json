@@ -1,0 +1,384 @@
+{
+  "case": "proxy_failures_reload",
+  "image": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+  "node_image": "node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944",
+  "evidence": {
+    "source_sha256": {
+      "proxy_failures.py": "20f9edba6d2e359839dc2003c2550a77446e6abd225ad35eb5e301f855f3db38",
+      "proxy_backend.mjs": "2693f2e0ab93335b6919809403199cf69100dcc0aed46e2954ac931f127abee6"
+    },
+    "network": "cauce-i9-proxy-4fe98deb",
+    "container_ids": {
+      "proxy": "3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112",
+      "healthy": "bffab9fcf6e94da946ae7add642d699f015cb3a356271506ce12b1b4a605a7c4",
+      "broken": "2411d1833da1b979a3e0522ad220799dc22b7bbee690fbd48a7fc06d3d6e7732"
+    },
+    "access_log": {
+      "records": 365,
+      "held_generation_event": {
+        "schema_version": "1.1",
+        "event_id": "47bf8d8a-309d-483a-aea4-0c3cec1f32ba",
+        "timestamp": "2026-11-26T21:49:41.067684582Z",
+        "instance_id": "77fb9240-f398-4ca4-9f28-dc84d94ef065",
+        "config_version": 2,
+        "request_id": "0aaa7467-333f-4b14-84d3-5d3d833b180d",
+        "traceparent": null,
+        "route_id": "main",
+        "upstream_id": "healthy",
+        "method": "GET",
+        "path": "/",
+        "protocol": "HTTP/1.1",
+        "status": 200,
+        "duration_ms": 6938.663598,
+        "transfer_ms": 0.0036669999999999997,
+        "request_bytes": 0,
+        "response_bytes": 51,
+        "outcome": "complete",
+        "error_direction": null,
+        "error_category": null,
+        "error_phase": null,
+        "reason": null,
+        "backpressure_observations": null,
+        "attempts": [
+          {
+            "number": 1,
+            "outcome": "complete",
+            "connection_id": "c6",
+            "reused": false,
+            "pool_wait_ms": 0.20663199999999998,
+            "connect_gate_ms": 0.019,
+            "dns_ms": 6.810211,
+            "tcp_ms": 1.0008700000000001,
+            "tls_ms": null,
+            "headers_ms": 6929.23604
+          }
+        ]
+      },
+      "new_generation_sample": {
+        "schema_version": "1.1",
+        "event_id": "742a80e0-35d6-4b00-bdac-e08be17abf46",
+        "timestamp": "2026-11-26T21:49:52.2758311Z",
+        "instance_id": "77fb9240-f398-4ca4-9f28-dc84d94ef065",
+        "config_version": 3,
+        "request_id": "ff1cd3ec-48d5-4e77-a1c4-d1cb2a0184f4",
+        "traceparent": null,
+        "route_id": "main",
+        "upstream_id": "healthy",
+        "method": "GET",
+        "path": "/",
+        "protocol": "HTTP/1.1",
+        "status": 200,
+        "duration_ms": 1.5856,
+        "transfer_ms": 0.011876,
+        "request_bytes": 0,
+        "response_bytes": 43,
+        "outcome": "complete",
+        "error_direction": null,
+        "error_category": null,
+        "error_phase": null,
+        "reason": null,
+        "backpressure_observations": null,
+        "attempts": [
+          {
+            "number": 1,
+            "outcome": "complete",
+            "connection_id": "c8",
+            "reused": true,
+            "pool_wait_ms": 0.0050420000000000005,
+            "connect_gate_ms": null,
+            "dns_ms": null,
+            "tcp_ms": null,
+            "tls_ms": null,
+            "headers_ms": 1.230004
+          }
+        ]
+      },
+      "raw_file": "proxy_failures-access.jsonl"
+    },
+    "proxy_logs": "{\"event\":\"started\",\"data\":\"0.0.0.0:8080\",\"admin\":\"127.0.0.1:9090\"}\n{\"event\":\"reloaded\",\"config_version\":2}\n{\"event\":\"reloaded\",\"config_version\":3}\n{\"event\":\"reload_rejected\",\"reason\":\"invalid_or_restart_required\"}\n"
+  },
+  "limits": {
+    "proxy_memory": "256m",
+    "proxy_cpus": 0.75,
+    "proxy_pids": 64,
+    "backend_memory": "128m",
+    "max_duration_seconds": 120,
+    "proxy_effective": {
+      "Memory": 268435456,
+      "NanoCpus": 750000000,
+      "PidsLimit": 64,
+      "Ulimits": [
+        {
+          "Name": "nofile",
+          "Hard": 1024,
+          "Soft": 1024
+        }
+      ]
+    }
+  },
+  "images": {
+    "runtime_tag": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+    "runtime_id_os_arch": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257|linux|arm64",
+    "node_pinned_ref": "node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944",
+    "node_id_os_arch": "sha256:c7a06707ef82a79b71aa545cf7d27362e066af1dd9b903e113b056f532f1f83e|linux|arm64"
+  },
+  "checks": {
+    "backend_failure_failover": {
+      "passed": true,
+      "responses": 8,
+      "raw_responses": [
+        {
+          "status": 502,
+          "body": "upstream_connect_error",
+          "backend": null
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        },
+        {
+          "status": 200,
+          "body": "{\"backend\":\"healthy\",\"path\":\"/\",\"method\":\"GET\"}",
+          "backend": "healthy"
+        }
+      ],
+      "backend": "healthy"
+    },
+    "post_midbody_failure_bounded_no_retry": {
+      "passed": true,
+      "result": {
+        "status": 200,
+        "body": "BODY_ERROR:TypeError: terminated",
+        "backend": "broken"
+      },
+      "backend_counter": {
+        "label": "broken",
+        "total": 2,
+        "active": 0,
+        "peak": 1,
+        "paths": {
+          "/post/drop": 1,
+          "/stats": 1
+        }
+      },
+      "attempts_observed": 1
+    },
+    "resources_recovered": {
+      "passed": true,
+      "gauges": {
+        "requests_total": 10,
+        "cache_hits_total": 0,
+        "cache_stale_total": 0,
+        "cache_background_started_total": 0,
+        "cache_background_failed_total": 0,
+        "cache_misses_total": 0,
+        "cache_bypasses_total": 0,
+        "rejected_total": 1,
+        "upstream_connections_created_total": 3,
+        "upstream_reused_total": 6,
+        "upstream_failures_total": 1,
+        "cancellations_total": 0,
+        "log_dropped_total": 0,
+        "log_io_errors_total": 0,
+        "pool_wait_microseconds_total": 1704,
+        "responses_total": 8,
+        "response_bytes_total": 383,
+        "body_errors_total": 1,
+        "http2_header_timeouts_total": 0,
+        "upstream_streams_active": 0,
+        "http2_tasks_active": 0,
+        "upstream_connections_in_use": 0,
+        "upstream_connections_idle": 0,
+        "request_slots_available": 32,
+        "config_version": 1,
+        "clients_active": 0,
+        "requests_active": 0
+      },
+      "before": {
+        "fds": 13,
+        "rss_kib": 8704,
+        "threads": 5
+      },
+      "after": {
+        "fds": 12,
+        "rss_kib": 8832,
+        "threads": 5
+      }
+    },
+    "backend_recovered_after_backoff": {
+      "passed": true,
+      "failure_backoff_ms": 5000,
+      "probe": {
+        "restored": true,
+        "n": 1,
+        "seen": {
+          "broken": 1
+        }
+      }
+    },
+    "reload_while_http1_load": {
+      "passed": true,
+      "generation_a_version": 2,
+      "version": 3,
+      "inflight_generation_backend": "healthy",
+      "new_generation_backend": "new",
+      "requests": {
+        "n": 351,
+        "bad": 0,
+        "started": 1795729783786,
+        "finished": 1795729792297,
+        "by": {
+          "healthy": 4,
+          "new": 347
+        },
+        "first": {
+          "healthy": 1795729783904,
+          "new": 1795729784082
+        },
+        "last": {
+          "healthy": 1795729784041,
+          "new": 1795729792278
+        }
+      },
+      "gauges": {
+        "requests_total": 365,
+        "cache_hits_total": 0,
+        "cache_stale_total": 0,
+        "cache_background_started_total": 0,
+        "cache_background_failed_total": 0,
+        "cache_misses_total": 0,
+        "cache_bypasses_total": 0,
+        "rejected_total": 1,
+        "upstream_connections_created_total": 7,
+        "upstream_reused_total": 357,
+        "upstream_failures_total": 1,
+        "cancellations_total": 0,
+        "log_dropped_total": 0,
+        "log_io_errors_total": 0,
+        "pool_wait_microseconds_total": 3728,
+        "responses_total": 363,
+        "response_bytes_total": 15675,
+        "body_errors_total": 1,
+        "http2_header_timeouts_total": 0,
+        "upstream_streams_active": 0,
+        "http2_tasks_active": 0,
+        "upstream_connections_in_use": 0,
+        "upstream_connections_idle": 0,
+        "request_slots_available": 32,
+        "config_version": 3,
+        "clients_active": 0,
+        "requests_active": 0
+      },
+      "fds_before": 13,
+      "fds_after": 12,
+      "invalid_reload_kept_version": 3,
+      "held_was_active_before_hup": true
+    },
+    "http2_new_generation": {
+      "passed": true,
+      "response": {
+        "body": "{\"backend\":\"new\",\"path\":\"/\",\"method\":\"GET\"}"
+      }
+    }
+  },
+  "status": "passed",
+  "result": "PASS",
+  "duration_seconds": 38.145,
+  "commands": [
+    "docker image inspect --format {{.Id}}|{{.Os}}|{{.Architecture}} sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+    "docker image inspect --format {{.Id}}|{{.Os}}|{{.Architecture}} node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944",
+    "docker network create --internal cauce-i9-proxy-4fe98deb",
+    "docker run -d --name i9-healthy-4fe98deb --network cauce-i9-proxy-4fe98deb --network-alias i9-healthy-4fe98deb --label cauce.increment9.proxy=true --memory=128m --cpus=.35 --pids-limit=32 --log-opt max-size=1m --log-opt max-file=2 -e LABEL=healthy -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/proxy_backend.mjs:/proxy_backend.mjs:ro -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/.proxy-run-43fsm255:/control:ro node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node /proxy_backend.mjs",
+    "docker run -d --name i9-broken-4fe98deb --network cauce-i9-proxy-4fe98deb --network-alias i9-broken-4fe98deb --label cauce.increment9.proxy=true --memory=128m --cpus=.35 --pids-limit=32 --log-opt max-size=1m --log-opt max-file=2 -e LABEL=broken -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/proxy_backend.mjs:/proxy_backend.mjs:ro -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/.proxy-run-43fsm255:/control:ro node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node /proxy_backend.mjs",
+    "docker run -d --name i9-proxy-4fe98deb --network cauce-i9-proxy-4fe98deb --network-alias proxy --label cauce.increment9.proxy=true --memory=256m --cpus=.75 --pids-limit=64 --ulimit nofile=1024:1024 --log-opt max-size=1m --log-opt max-file=2 -e CAUCE_ADMIN_TOKEN=increment9-proxy-test-token-0123456789abcdef -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/.proxy-run-43fsm255:/config:ro sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257 /config/cauce.toml",
+    "docker inspect --format {{json .HostConfig}} 3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112",
+    "docker run -d --name i9-probe-b94abb5842 --network cauce-i9-proxy-4fe98deb --memory=192m --cpus=.5 --pids-limit=48 --label cauce.increment9.proxy=true --log-opt max-size=1m --log-opt max-file=2 node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node -e setInterval(() => {}, 60000)",
+    "docker exec i9-probe-b94abb5842 node -e (async () => {\n        const results = [];\n        for (let i = 0; i < 1; i++) {\n            try {\n                const response = await fetch('http://proxy:8080' + \"/\", {\n                    method: \"GET\",\n                    body: undefined,\n                    signal: AbortSignal.timeout(16000)\n                });\n                let payload;\n                try { payload = await response.text(); }\n                catch (error) { payload = 'BODY_ERROR:' + error; }\n                results.push({status: response.status, body: payload, backend: response.headers.get('x-backend')});\n            } catch (error) { results.push({error: String(error)}); }\n        }\n        console.log(JSON.stringify(results));\n    })()",
+    "docker run -d --name i9-probe-6d257e1180 --network none --memory=192m --cpus=.5 --pids-limit=48 --label cauce.increment9.proxy=true --log-opt max-size=1m --log-opt max-file=2 --pid container:3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112 --user 10001:10001 node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node -e setInterval(() => {}, 60000)",
+    "docker exec i9-probe-6d257e1180 node -e const fs=require('fs');const s=fs.readFileSync('/proc/1/status','utf8');const n=k=>{const l=s.split('\\n').find(x=>x.startsWith(k+':'));return l?parseInt(l.split(/\\s+/)[1],10):null};console.log(JSON.stringify({fds:fs.readdirSync('/proc/1/fd').length,rss_kib:n('VmRSS'),threads:n('Threads')}))",
+    "docker exec i9-probe-b94abb5842 node -e (async () => {\n        const results = [];\n        for (let i = 0; i < 1; i++) {\n            try {\n                const response = await fetch('http://proxy:8080' + \"/post/drop\", {\n                    method: \"POST\",\n                    body: \"one-shot-side-effect-payload\",\n                    signal: AbortSignal.timeout(16000)\n                });\n                let payload;\n                try { payload = await response.text(); }\n                catch (error) { payload = 'BODY_ERROR:' + error; }\n                results.push({status: response.status, body: payload, backend: response.headers.get('x-backend')});\n            } catch (error) { results.push({error: String(error)}); }\n        }\n        console.log(JSON.stringify(results));\n    })()",
+    "docker exec i9-probe-b94abb5842 node -e fetch('http://i9-broken-4fe98deb:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))",
+    "docker kill --signal KILL 2411d1833da1b979a3e0522ad220799dc22b7bbee690fbd48a7fc06d3d6e7732",
+    "docker exec i9-probe-b94abb5842 node -e (async () => {\n        const results = [];\n        for (let i = 0; i < 8; i++) {\n            try {\n                const response = await fetch('http://proxy:8080' + \"/\", {\n                    method: \"GET\",\n                    body: undefined,\n                    signal: AbortSignal.timeout(16000)\n                });\n                let payload;\n                try { payload = await response.text(); }\n                catch (error) { payload = 'BODY_ERROR:' + error; }\n                results.push({status: response.status, body: payload, backend: response.headers.get('x-backend')});\n            } catch (error) { results.push({error: String(error)}); }\n        }\n        console.log(JSON.stringify(results));\n    })()",
+    "docker run -d --name i9-probe-731bce0627 --network container:3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112 --memory=192m --cpus=.5 --pids-limit=48 --label cauce.increment9.proxy=true --log-opt max-size=1m --log-opt max-file=2 node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node -e setInterval(() => {}, 60000)",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-6d257e1180 node -e const fs=require('fs');const s=fs.readFileSync('/proc/1/status','utf8');const n=k=>{const l=s.split('\\n').find(x=>x.startsWith(k+':'));return l?parseInt(l.split(/\\s+/)[1],10):null};console.log(JSON.stringify({fds:fs.readdirSync('/proc/1/fd').length,rss_kib:n('VmRSS'),threads:n('Threads')}))",
+    "docker start 2411d1833da1b979a3e0522ad220799dc22b7bbee690fbd48a7fc06d3d6e7732",
+    "docker exec i9-probe-b94abb5842 node -e fetch('http://i9-broken-4fe98deb:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))",
+    "docker exec i9-probe-b94abb5842 node -e fetch('http://i9-broken-4fe98deb:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))",
+    "docker exec i9-probe-b94abb5842 node -e const http=require('http');let n=0,seen={};const end=Date.now()+9000;function go(){const r=http.get('http://proxy:8080/',x=>{x.resume();x.on('end',()=>{n++;const b=x.headers['x-backend']||String(x.statusCode);seen[b]=(seen[b]||0)+1;if(b==='broken'){console.log(JSON.stringify({restored:true,n,seen}));return}if(Date.now()>end){console.log(JSON.stringify({restored:false,n,seen}));return}setTimeout(go,50)})});r.on('error',()=>{n++;if(Date.now()>end){console.log(JSON.stringify({restored:false,n,seen}));return}setTimeout(go,50)})}go()",
+    "docker kill --signal HUP 3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker run -d --name i9-new-4fe98deb --network cauce-i9-proxy-4fe98deb --network-alias i9-new-4fe98deb --label cauce.increment9.proxy=true --memory=128m --cpus=.35 --pids-limit=32 --log-opt max-size=1m --log-opt max-file=2 -e LABEL=new -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/proxy_backend.mjs:/proxy_backend.mjs:ro -v /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/tests/resilience/.proxy-run-43fsm255:/control:ro node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node /proxy_backend.mjs",
+    "docker exec i9-probe-b94abb5842 node -e fetch('http://i9-new-4fe98deb:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))",
+    "docker exec i9-probe-b94abb5842 node -e fetch('http://i9-new-4fe98deb:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))",
+    "docker exec i9-probe-b94abb5842 node -e (async () => {\n        const results = [];\n        for (let i = 0; i < 1; i++) {\n            try {\n                const response = await fetch('http://proxy:8080' + \"/slow\", {\n                    method: \"GET\",\n                    body: undefined,\n                    signal: AbortSignal.timeout(16000)\n                });\n                let payload;\n                try { payload = await response.text(); }\n                catch (error) { payload = 'BODY_ERROR:' + error; }\n                results.push({status: response.status, body: payload, backend: response.headers.get('x-backend')});\n            } catch (error) { results.push({error: String(error)}); }\n        }\n        console.log(JSON.stringify(results));\n    })()",
+    "docker exec i9-probe-b94abb5842 node -e fetch('http://i9-healthy-4fe98deb:8000/stats').then(r=>r.json()).then(x=>console.log(JSON.stringify(x)))",
+    "docker run -d --name i9-load-4fe98deb --network cauce-i9-proxy-4fe98deb --label cauce.increment9.proxy=true --memory=96m --cpus=.25 --pids-limit=24 node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944 node -e const http=require('http');let n=0,bad=0,by={},first={},last={};const started=Date.now(),stop=started+8500;function go(){if(Date.now()>stop){console.log(JSON.stringify({n,bad,started,finished:Date.now(),by,first,last}));return}const r=http.get('http://proxy:8080/',x=>{const b=x.headers['x-backend']||String(x.statusCode),now=Date.now();x.resume();x.on('end',()=>{n++;if(n===1)console.log('LOAD_STARTED');by[b]=(by[b]||0)+1;first[b]??=now;last[b]=now;if(x.statusCode!==200)bad++;setTimeout(go,15)})});r.on('error',()=>{bad++;setTimeout(go,25)})}go()",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker kill --signal HUP 3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-b94abb5842 node -e (async () => {\n        const results = [];\n        for (let i = 0; i < 1; i++) {\n            try {\n                const response = await fetch('http://proxy:8080' + \"/\", {\n                    method: \"GET\",\n                    body: undefined,\n                    signal: AbortSignal.timeout(16000)\n                });\n                let payload;\n                try { payload = await response.text(); }\n                catch (error) { payload = 'BODY_ERROR:' + error; }\n                results.push({status: response.status, body: payload, backend: response.headers.get('x-backend')});\n            } catch (error) { results.push({error: String(error)}); }\n        }\n        console.log(JSON.stringify(results));\n    })()",
+    "docker kill --signal HUP 3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-b94abb5842 node -e (async () => {\n        const results = [];\n        for (let i = 0; i < 1; i++) {\n            try {\n                const response = await fetch('http://proxy:8080' + \"/\", {\n                    method: \"GET\",\n                    body: undefined,\n                    signal: AbortSignal.timeout(16000)\n                });\n                let payload;\n                try { payload = await response.text(); }\n                catch (error) { payload = 'BODY_ERROR:' + error; }\n                results.push({status: response.status, body: payload, backend: response.headers.get('x-backend')});\n            } catch (error) { results.push({error: String(error)}); }\n        }\n        console.log(JSON.stringify(results));\n    })()",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker logs b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker stop -t 1 b8498f47859e4bbf5addbd0f5206891a5932d0b3c9ca8d4c57d26d58544531a5",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-731bce0627 node -e fetch('http://127.0.0.1:9090/metrics',{headers:{authorization:'Bearer increment9-proxy-test-token-0123456789abcdef'}}).then(r=>r.text()).then(console.log)",
+    "docker exec i9-probe-6d257e1180 node -e const fs=require('fs');const s=fs.readFileSync('/proc/1/status','utf8');const n=k=>{const l=s.split('\\n').find(x=>x.startsWith(k+':'));return l?parseInt(l.split(/\\s+/)[1],10):null};console.log(JSON.stringify({fds:fs.readdirSync('/proc/1/fd').length,rss_kib:n('VmRSS'),threads:n('Threads')}))",
+    "docker cp 3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112:/tmp/cauce-access.jsonl /Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/resilience/proxy_failures-access.jsonl",
+    "docker exec i9-probe-b94abb5842 node -e const h=require('http2'),c=h.connect('http://proxy:8080'),r=c.request({':path':'/'});let b='';r.on('data',x=>b+=x);r.on('end',()=>{console.log(JSON.stringify({body:b}));c.close()});r.end()",
+    "docker logs 3addced7432aa3d787aaf5cdab234230ee9158df48f231fce803f2a7c4297112"
+  ]
+}

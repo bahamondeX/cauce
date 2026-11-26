@@ -307,5 +307,12 @@ The original 13% AMD64 CPU result applies to its specific historical
 HTTP/1.1 comparison. Native ARM64, current AMD64 and multicore capacity
 remain release gates. This checkpoint uses local infrastructure.
 
+The ARM64 Full build staged from `36b73b1` has ELF and checksum
+verification and was exercised in the Linux guest. The current
+four-pair release matrix and its runtime verification remain open.
+Existing HTTP, gRPC and network runners cover the shared protocol
+workloads, and the content runner now has a disk-restart mode. Use the
+exact artifact and scenario identities in the workload reports.
+
 [Staging script](../scripts/stage-native-release.sh)
 [Milestone 9 report](PERFORMANCE-MILESTONE-9.md).

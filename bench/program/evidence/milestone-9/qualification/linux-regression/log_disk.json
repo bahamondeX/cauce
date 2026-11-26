@@ -1,0 +1,333 @@
+{
+  "result": "PASS",
+  "started_utc": "2026-11-26T21:49:58.621725+00:00",
+  "run_id": "i9-log-f3f09c7c52",
+  "cases": [
+    {
+      "name": "enospc",
+      "result": "PASS",
+      "injection": {
+        "errno": "ENOSPC",
+        "fill_exit": 1,
+        "stderr": "dd: error writing '/var/log/cauce/filler': No space left on device\n64+0 records in\n63+0 records out\n4190208 bytes (4.2 MB, 4.0 MiB) copied, 0.00383756 s, 1.1 GB/s\n",
+        "available_blocks_and_block_bytes": "0 4096"
+      },
+      "before": {
+        "metrics": {
+          "cauce_requests_total": 0.0,
+          "cauce_cache_hits_total": 0.0,
+          "cauce_cache_stale_total": 0.0,
+          "cauce_cache_background_started_total": 0.0,
+          "cauce_cache_background_failed_total": 0.0,
+          "cauce_cache_misses_total": 0.0,
+          "cauce_cache_bypasses_total": 0.0,
+          "cauce_rejected_total": 0.0,
+          "cauce_upstream_connections_created_total": 0.0,
+          "cauce_upstream_reused_total": 0.0,
+          "cauce_upstream_failures_total": 0.0,
+          "cauce_cancellations_total": 0.0,
+          "cauce_log_dropped_total": 0.0,
+          "cauce_log_io_errors_total": 0.0,
+          "cauce_pool_wait_microseconds_total": 0.0,
+          "cauce_responses_total": 0.0,
+          "cauce_response_bytes_total": 0.0,
+          "cauce_body_errors_total": 0.0,
+          "cauce_http2_header_timeouts_total": 0.0,
+          "cauce_upstream_streams_active": 0.0,
+          "cauce_http2_tasks_active": 0.0,
+          "cauce_upstream_connections_in_use": 0.0,
+          "cauce_upstream_connections_idle": 0.0,
+          "cauce_request_slots_available": 32.0,
+          "cauce_config_version": 1.0,
+          "cauce_clients_active": 0.0,
+          "cauce_requests_active": 0.0
+        },
+        "process": {
+          "VmRSS": 7296,
+          "Threads": 4
+        },
+        "file_descriptors": 12
+      },
+      "during": {
+        "metrics": {
+          "cauce_requests_total": 258.0,
+          "cauce_cache_hits_total": 0.0,
+          "cauce_cache_stale_total": 0.0,
+          "cauce_cache_background_started_total": 0.0,
+          "cauce_cache_background_failed_total": 0.0,
+          "cauce_cache_misses_total": 0.0,
+          "cauce_cache_bypasses_total": 0.0,
+          "cauce_rejected_total": 0.0,
+          "cauce_upstream_connections_created_total": 9.0,
+          "cauce_upstream_reused_total": 249.0,
+          "cauce_upstream_failures_total": 0.0,
+          "cauce_cancellations_total": 0.0,
+          "cauce_log_dropped_total": 0.0,
+          "cauce_log_io_errors_total": 208.0,
+          "cauce_pool_wait_microseconds_total": 467.0,
+          "cauce_responses_total": 258.0,
+          "cauce_response_bytes_total": 3612.0,
+          "cauce_body_errors_total": 0.0,
+          "cauce_http2_header_timeouts_total": 0.0,
+          "cauce_upstream_streams_active": 0.0,
+          "cauce_http2_tasks_active": 0.0,
+          "cauce_upstream_connections_in_use": 0.0,
+          "cauce_upstream_connections_idle": 0.0,
+          "cauce_request_slots_available": 32.0,
+          "cauce_config_version": 1.0,
+          "cauce_clients_active": 0.0,
+          "cauce_requests_active": 0.0
+        },
+        "process": {
+          "VmRSS": 9344,
+          "Threads": 4
+        },
+        "file_descriptors": 11
+      },
+      "after": {
+        "metrics": {
+          "cauce_requests_total": 260.0,
+          "cauce_cache_hits_total": 0.0,
+          "cauce_cache_stale_total": 0.0,
+          "cauce_cache_background_started_total": 0.0,
+          "cauce_cache_background_failed_total": 0.0,
+          "cauce_cache_misses_total": 0.0,
+          "cauce_cache_bypasses_total": 0.0,
+          "cauce_rejected_total": 0.0,
+          "cauce_upstream_connections_created_total": 10.0,
+          "cauce_upstream_reused_total": 250.0,
+          "cauce_upstream_failures_total": 0.0,
+          "cauce_cancellations_total": 0.0,
+          "cauce_log_dropped_total": 0.0,
+          "cauce_log_io_errors_total": 208.0,
+          "cauce_pool_wait_microseconds_total": 495.0,
+          "cauce_responses_total": 260.0,
+          "cauce_response_bytes_total": 3640.0,
+          "cauce_body_errors_total": 0.0,
+          "cauce_http2_header_timeouts_total": 0.0,
+          "cauce_upstream_streams_active": 0.0,
+          "cauce_http2_tasks_active": 0.0,
+          "cauce_upstream_connections_in_use": 0.0,
+          "cauce_upstream_connections_idle": 0.0,
+          "cauce_request_slots_available": 32.0,
+          "cauce_config_version": 1.0,
+          "cauce_clients_active": 0.0,
+          "cauce_requests_active": 0.0
+        },
+        "process": {
+          "VmRSS": 9344,
+          "Threads": 4
+        },
+        "file_descriptors": 12
+      },
+      "requests_during_failure": 256,
+      "recovery_requests": [
+        {
+          "request_id": "3f04313a-2365-48cb-913e-cfbc793ead94",
+          "status": 200,
+          "elapsed_ms": 18.007947997830343
+        },
+        {
+          "request_id": "a2dfbb7a-9396-4092-bd9a-1d5450314f1b",
+          "status": 200,
+          "elapsed_ms": 0.6656900004600175
+        }
+      ],
+      "recovery_events_present": true,
+      "valid_jsonl_events_retained": 7,
+      "log_files": [
+        "/var/log/cauce/access.jsonl.1",
+        "/var/log/cauce/access.jsonl"
+      ],
+      "max_request_ms": 45.36378099874128,
+      "limits": {
+        "Memory": 268435456,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Tmpfs": {
+          "/var/log/cauce": "rw,size=4m,uid=10001,gid=10001,mode=0770"
+        },
+        "ReadonlyRootfs": true
+      },
+      "restart_count": 0,
+      "oom_killed": false,
+      "raw_requests": "log_disk-enospc-requests.jsonl",
+      "config_sha256": "f456086e5043719b0db6268204fa89a1a0f8a76c3bc111ae3a7b8d5d974b5569"
+    },
+    {
+      "name": "rotation",
+      "result": "PASS",
+      "injection": {
+        "rotation_destination": "directory prevents rename over retained file"
+      },
+      "before": {
+        "metrics": {
+          "cauce_requests_total": 0.0,
+          "cauce_cache_hits_total": 0.0,
+          "cauce_cache_stale_total": 0.0,
+          "cauce_cache_background_started_total": 0.0,
+          "cauce_cache_background_failed_total": 0.0,
+          "cauce_cache_misses_total": 0.0,
+          "cauce_cache_bypasses_total": 0.0,
+          "cauce_rejected_total": 0.0,
+          "cauce_upstream_connections_created_total": 0.0,
+          "cauce_upstream_reused_total": 0.0,
+          "cauce_upstream_failures_total": 0.0,
+          "cauce_cancellations_total": 0.0,
+          "cauce_log_dropped_total": 0.0,
+          "cauce_log_io_errors_total": 0.0,
+          "cauce_pool_wait_microseconds_total": 0.0,
+          "cauce_responses_total": 0.0,
+          "cauce_response_bytes_total": 0.0,
+          "cauce_body_errors_total": 0.0,
+          "cauce_http2_header_timeouts_total": 0.0,
+          "cauce_upstream_streams_active": 0.0,
+          "cauce_http2_tasks_active": 0.0,
+          "cauce_upstream_connections_in_use": 0.0,
+          "cauce_upstream_connections_idle": 0.0,
+          "cauce_request_slots_available": 32.0,
+          "cauce_config_version": 1.0,
+          "cauce_clients_active": 0.0,
+          "cauce_requests_active": 0.0
+        },
+        "process": {
+          "VmRSS": 7040,
+          "Threads": 4
+        },
+        "file_descriptors": 12
+      },
+      "during": {
+        "metrics": {
+          "cauce_requests_total": 258.0,
+          "cauce_cache_hits_total": 0.0,
+          "cauce_cache_stale_total": 0.0,
+          "cauce_cache_background_started_total": 0.0,
+          "cauce_cache_background_failed_total": 0.0,
+          "cauce_cache_misses_total": 0.0,
+          "cauce_cache_bypasses_total": 0.0,
+          "cauce_rejected_total": 0.0,
+          "cauce_upstream_connections_created_total": 9.0,
+          "cauce_upstream_reused_total": 249.0,
+          "cauce_upstream_failures_total": 0.0,
+          "cauce_cancellations_total": 0.0,
+          "cauce_log_dropped_total": 253.0,
+          "cauce_log_io_errors_total": 253.0,
+          "cauce_pool_wait_microseconds_total": 124.0,
+          "cauce_responses_total": 258.0,
+          "cauce_response_bytes_total": 3612.0,
+          "cauce_body_errors_total": 0.0,
+          "cauce_http2_header_timeouts_total": 0.0,
+          "cauce_upstream_streams_active": 0.0,
+          "cauce_http2_tasks_active": 0.0,
+          "cauce_upstream_connections_in_use": 0.0,
+          "cauce_upstream_connections_idle": 0.0,
+          "cauce_request_slots_available": 32.0,
+          "cauce_config_version": 1.0,
+          "cauce_clients_active": 0.0,
+          "cauce_requests_active": 0.0
+        },
+        "process": {
+          "VmRSS": 9216,
+          "Threads": 4
+        },
+        "file_descriptors": 11
+      },
+      "after": {
+        "metrics": {
+          "cauce_requests_total": 260.0,
+          "cauce_cache_hits_total": 0.0,
+          "cauce_cache_stale_total": 0.0,
+          "cauce_cache_background_started_total": 0.0,
+          "cauce_cache_background_failed_total": 0.0,
+          "cauce_cache_misses_total": 0.0,
+          "cauce_cache_bypasses_total": 0.0,
+          "cauce_rejected_total": 0.0,
+          "cauce_upstream_connections_created_total": 10.0,
+          "cauce_upstream_reused_total": 250.0,
+          "cauce_upstream_failures_total": 0.0,
+          "cauce_cancellations_total": 0.0,
+          "cauce_log_dropped_total": 253.0,
+          "cauce_log_io_errors_total": 253.0,
+          "cauce_pool_wait_microseconds_total": 142.0,
+          "cauce_responses_total": 260.0,
+          "cauce_response_bytes_total": 3640.0,
+          "cauce_body_errors_total": 0.0,
+          "cauce_http2_header_timeouts_total": 0.0,
+          "cauce_upstream_streams_active": 0.0,
+          "cauce_http2_tasks_active": 0.0,
+          "cauce_upstream_connections_in_use": 0.0,
+          "cauce_upstream_connections_idle": 0.0,
+          "cauce_request_slots_available": 32.0,
+          "cauce_config_version": 1.0,
+          "cauce_clients_active": 0.0,
+          "cauce_requests_active": 0.0
+        },
+        "process": {
+          "VmRSS": 9216,
+          "Threads": 4
+        },
+        "file_descriptors": 12
+      },
+      "requests_during_failure": 256,
+      "recovery_requests": [
+        {
+          "request_id": "13336dec-2234-4025-ac07-10f078cd53e8",
+          "status": 200,
+          "elapsed_ms": 19.219571000576252
+        },
+        {
+          "request_id": "945da478-6fef-4a30-ad66-bed93611c67e",
+          "status": 200,
+          "elapsed_ms": 0.7284849998541176
+        }
+      ],
+      "recovery_events_present": true,
+      "valid_jsonl_events_retained": 7,
+      "log_files": [
+        "/var/log/cauce/access.jsonl.1",
+        "/var/log/cauce/access.jsonl"
+      ],
+      "max_request_ms": 39.07875000004424,
+      "limits": {
+        "Memory": 268435456,
+        "NanoCpus": 1000000000,
+        "PidsLimit": 128,
+        "Tmpfs": {
+          "/var/log/cauce": "rw,size=4m,uid=10001,gid=10001,mode=0770"
+        },
+        "ReadonlyRootfs": true
+      },
+      "restart_count": 0,
+      "oom_killed": false,
+      "raw_requests": "log_disk-rotation-requests.jsonl",
+      "config_sha256": "64f720ad09bc209b6b8758da87f3084a7f32d55ee2bb64be3ca2331753720213"
+    }
+  ],
+  "images": {
+    "cauce": {
+      "reference": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+      "id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+      "architecture": "arm64"
+    },
+    "node": {
+      "reference": "node:22.14.0-alpine3.21@sha256:9bef0ef1e268f60627da9ba7d7605e8831d5b56ad07487d24d1aa386336d1944",
+      "id": "sha256:c7a06707ef82a79b71aa545cf7d27362e066af1dd9b903e113b056f532f1f83e",
+      "architecture": "arm64"
+    },
+    "python": {
+      "reference": "python:3.13.2-slim-bookworm@sha256:6b3223eb4d93718828223966ad316909c39813dee3ee9395204940500792b740",
+      "id": "sha256:08549194f96a812c7d497228d84d4600b79c22ff916830fe3b182f98e4707f06",
+      "architecture": "arm64"
+    }
+  },
+  "temporary_filesystem_bytes": 4194304,
+  "source_sha256": {
+    "log_disk.py": "1d5bcf7902b215321c63caea7fda9ff3d088a283320f4f46567b0226668f657c",
+    "log_client.py": "562be695cf887efc4b6bc2447c5b261bbafe333fae65934206150fed5389b97e",
+    "log_backend.mjs": "c77ea5f725a4dbf4385211ad8220b1776503b207d29bc6b6c71a1789964e6b5f"
+  },
+  "published_ports": [],
+  "connectivity_contacted": false,
+  "cleanup_remaining_containers": [],
+  "finished_utc": "2026-11-26T21:50:14.420629+00:00"
+}

@@ -1,0 +1,366 @@
+{
+  "suite": "collector-storage-real-docker",
+  "image": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+  "image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+  "run_id": "e843f3fdd100457a89cc2f99dfec8002",
+  "fixture": "Storage: examples/access-log.jsonl with deterministic IDs; logger handoff: real proxy events",
+  "host_disk_filled": false,
+  "docker_config": "inherited from invocation environment",
+  "cases": [
+    {
+      "name": "spool quota pause survives restart and explicit quota increase resumes",
+      "passed": true,
+      "initial_status": {
+        "delivery": "spool",
+        "pending_batches": 4,
+        "pending_events": 4,
+        "pending_bytes": 3616,
+        "oldest_batch_id": "2876385c-6579-4846-a24d-6c8d0dfe36e4",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 131072,
+        "spool_max_bytes": 4096
+      },
+      "restart_status": {
+        "delivery": "spool",
+        "pending_batches": 4,
+        "pending_events": 4,
+        "pending_bytes": 3616,
+        "oldest_batch_id": "2876385c-6579-4846-a24d-6c8d0dfe36e4",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 131072,
+        "spool_max_bytes": 4096
+      },
+      "recovered_status": {
+        "delivery": "spool",
+        "pending_batches": 24,
+        "pending_events": 24,
+        "pending_bytes": 21710,
+        "oldest_batch_id": "2876385c-6579-4846-a24d-6c8d0dfe36e4",
+        "checkpoints": 1,
+        "db_bytes": 57344,
+        "db_max_bytes": 262144,
+        "spool_max_bytes": 131072
+      },
+      "event_ids_exact": true,
+      "integrity_check": "ok",
+      "source_bytes": 19454,
+      "checkpoint_after_recovery": 19454,
+      "events": 24,
+      "checkpoint_at_quota": [
+        {
+          "dev": 112,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 3240,
+          "observed_size": 19454
+        }
+      ],
+      "checkpoint_after_recovery_rows": [
+        {
+          "dev": 112,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 19454,
+          "observed_size": 19454
+        }
+      ],
+      "integrity_at_quota_before_restart": "ok",
+      "integrity_at_quota_after_restart": "ok",
+      "stable_batch_ids": [
+        "2876385c-6579-4846-a24d-6c8d0dfe36e4",
+        "7856fb6c-c22c-407f-8473-27f7cb9f4679",
+        "491e732c-0e94-4091-8be4-d692f5f640c9",
+        "a8b6dd32-7987-4c81-b78a-f3a69c3cdc69"
+      ],
+      "next_event_json_bytes_lower_bound": 809,
+      "pending_plus_next_event_lower_bound": 4425,
+      "container_limits": {
+        "image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+        "state": "running",
+        "memory_bytes": 134217728,
+        "nano_cpus": 500000000,
+        "pids_limit": 32,
+        "readonly_rootfs": true,
+        "tmpfs": {
+          "/sandbox": "rw,size=8m,uid=10001,gid=10001,mode=0770,nr_inodes=1024"
+        },
+        "network_mode": "none",
+        "labels": {
+          "com.cauce.run": "e843f3fdd100457a89cc2f99dfec8002",
+          "com.cauce.test": "increment9-collector"
+        }
+      }
+    },
+    {
+      "name": "SIGKILL of live collector preserves spool and restart resumes exact events",
+      "passed": true,
+      "kill_signal": "SIGKILL",
+      "collector_pid": 55,
+      "detached_launch_returncode": 0,
+      "state_after_kill": {
+        "delivery": "spool",
+        "pending_batches": 4,
+        "pending_events": 4,
+        "pending_bytes": 3616,
+        "oldest_batch_id": "4f9f4598-1103-458f-92e5-5a18ee9742d0",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 131072,
+        "spool_max_bytes": 4096
+      },
+      "event_ids_after_kill": [
+        "1c7f8fb0-c5b6-5891-880f-57624acc1a71",
+        "eea14a14-241c-546f-a26e-fb8ef22e7af3",
+        "38cd8e13-d6e0-531b-b106-a5aca1e94332",
+        "ddb66c8e-0797-523f-bca3-2456198f4f61"
+      ],
+      "checkpoint_rows_after_kill": [
+        {
+          "dev": 124,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 3240,
+          "observed_size": 19454
+        }
+      ],
+      "integrity_after_kill": "ok",
+      "state_after_restart": {
+        "delivery": "spool",
+        "pending_batches": 24,
+        "pending_events": 24,
+        "pending_bytes": 21710,
+        "oldest_batch_id": "4f9f4598-1103-458f-92e5-5a18ee9742d0",
+        "checkpoints": 1,
+        "db_bytes": 57344,
+        "db_max_bytes": 262144,
+        "spool_max_bytes": 131072
+      },
+      "event_ids_after_restart_exact": true,
+      "checkpoint_rows_after_restart": [
+        {
+          "dev": 124,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 19454,
+          "observed_size": 19454
+        }
+      ],
+      "integrity_after_restart": "ok",
+      "container_limits": {
+        "image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+        "state": "running",
+        "memory_bytes": 134217728,
+        "nano_cpus": 500000000,
+        "pids_limit": 32,
+        "readonly_rootfs": true,
+        "tmpfs": {
+          "/sandbox": "rw,size=8m,uid=10001,gid=10001,mode=0770,nr_inodes=1024"
+        },
+        "network_mode": "none",
+        "labels": {
+          "com.cauce.run": "e843f3fdd100457a89cc2f99dfec8002",
+          "com.cauce.test": "increment9-collector"
+        }
+      }
+    },
+    {
+      "name": "proxy logger tail repair rotates checkpointed inode and collector resumes",
+      "passed": true,
+      "proxy_launch_returncodes": [
+        0,
+        0
+      ],
+      "baseline_request": {
+        "status": 200,
+        "body": "OK",
+        "request_id": "3c08bb7a-a6e4-4c7b-a769-653b8a8a43cb"
+      },
+      "recovery_request": {
+        "status": 200,
+        "body": "OK",
+        "request_id": "929c6f40-3b81-4e8b-9cf0-d613112a61c0"
+      },
+      "baseline_log_bytes": 810,
+      "injected_incomplete_tail_bytes": 53,
+      "collector_state_before_proxy_restart": {
+        "delivery": "spool",
+        "pending_batches": 1,
+        "pending_events": 1,
+        "pending_bytes": 895,
+        "oldest_batch_id": "ce0e871a-1784-4e6d-b650-eed55f978bd2",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 262144,
+        "spool_max_bytes": 131072
+      },
+      "checkpoint_rows_before_proxy_restart": [
+        {
+          "dev": 147,
+          "ino": 7,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 810,
+          "observed_size": 863
+        }
+      ],
+      "integrity_before_proxy_restart": "ok",
+      "proxy_pid_restarted": 66,
+      "rotated_log_bytes": 810,
+      "active_log_bytes_after_restart": 819,
+      "recovered_event_ids_exact": true,
+      "collector_state_after_repair": {
+        "delivery": "spool",
+        "pending_batches": 2,
+        "pending_events": 2,
+        "pending_bytes": 1799,
+        "oldest_batch_id": "ce0e871a-1784-4e6d-b650-eed55f978bd2",
+        "checkpoints": 2,
+        "db_bytes": 32768,
+        "db_max_bytes": 262144,
+        "spool_max_bytes": 131072
+      },
+      "checkpoint_rows_after_repair": [
+        {
+          "dev": 147,
+          "ino": 7,
+          "path": "/sandbox/logs/access.jsonl.1",
+          "offset": 810,
+          "observed_size": 810
+        },
+        {
+          "dev": 147,
+          "ino": 16,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 819,
+          "observed_size": 819
+        }
+      ],
+      "integrity_after_repair": "ok",
+      "container_limits": {
+        "image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+        "state": "running",
+        "memory_bytes": 134217728,
+        "nano_cpus": 500000000,
+        "pids_limit": 32,
+        "readonly_rootfs": true,
+        "tmpfs": {
+          "/sandbox": "rw,size=8m,uid=10001,gid=10001,mode=0770,nr_inodes=1024"
+        },
+        "network_mode": "i9-coll-repair-net-e843f3fdd1",
+        "labels": {
+          "com.cauce.run": "e843f3fdd100457a89cc2f99dfec8002",
+          "com.cauce.test": "increment9-collector"
+        }
+      }
+    },
+    {
+      "name": "real tmpfs ENOSPC rolls back checkpoint and recovers after filler removal",
+      "passed": true,
+      "tmpfs_limit": "8 MiB",
+      "filler_exit": 1,
+      "enospc_evidence": "dd: error writing '/sandbox/filler': No space left on device\n",
+      "failed_collector_exit": 1,
+      "tmpfs_full_df": "Filesystem     1K-blocks  Used Available Use% Mounted on\ntmpfs               8192  8192         0 100% /sandbox\n",
+      "failed_collector_error": "Error: database or disk is full\n\nCaused by:\n    Error code 13: Insertion failed because database is full\n",
+      "before_status": {
+        "delivery": "spool",
+        "pending_batches": 1,
+        "pending_events": 1,
+        "pending_bytes": 904,
+        "oldest_batch_id": "1f318f7d-d04c-425f-b87c-fec3405c25c7",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 1048576,
+        "spool_max_bytes": 524288
+      },
+      "status_after_failed_commit": {
+        "delivery": "spool",
+        "pending_batches": 1,
+        "pending_events": 1,
+        "pending_bytes": 904,
+        "oldest_batch_id": "1f318f7d-d04c-425f-b87c-fec3405c25c7",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 1048576,
+        "spool_max_bytes": 524288
+      },
+      "checkpoint_before": 810,
+      "checkpoint_after_failure": 810,
+      "checkpoint_rows_before": [
+        {
+          "dev": 159,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 810,
+          "observed_size": 810
+        }
+      ],
+      "checkpoint_rows_after_failure": [
+        {
+          "dev": 159,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 810,
+          "observed_size": 810
+        }
+      ],
+      "batch_ids_before": [
+        "1f318f7d-d04c-425f-b87c-fec3405c25c7"
+      ],
+      "batch_ids_after_failure": [
+        "1f318f7d-d04c-425f-b87c-fec3405c25c7"
+      ],
+      "batch_ids_after_recovery": [
+        "1f318f7d-d04c-425f-b87c-fec3405c25c7",
+        "76514adb-e5a9-47c9-b170-837f3b6ae9e6"
+      ],
+      "failed_commit_integrity": "ok",
+      "recovered_status": {
+        "delivery": "spool",
+        "pending_batches": 2,
+        "pending_events": 2,
+        "pending_bytes": 1808,
+        "oldest_batch_id": "1f318f7d-d04c-425f-b87c-fec3405c25c7",
+        "checkpoints": 1,
+        "db_bytes": 32768,
+        "db_max_bytes": 1048576,
+        "spool_max_bytes": 524288
+      },
+      "recovered_event_ids_exact": true,
+      "checkpoint_after_recovery": 1620,
+      "recovered_integrity_check": "ok",
+      "checkpoint_rows_after_recovery": [
+        {
+          "dev": 159,
+          "ino": 4,
+          "path": "/sandbox/logs/access.jsonl",
+          "offset": 1620,
+          "observed_size": 1620
+        }
+      ],
+      "container_limits": {
+        "image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+        "state": "running",
+        "memory_bytes": 134217728,
+        "nano_cpus": 500000000,
+        "pids_limit": 32,
+        "readonly_rootfs": true,
+        "tmpfs": {
+          "/sandbox": "rw,size=8m,uid=10001,gid=10001,mode=0770,nr_inodes=1024"
+        },
+        "network_mode": "none",
+        "labels": {
+          "com.cauce.run": "e843f3fdd100457a89cc2f99dfec8002",
+          "com.cauce.test": "increment9-collector"
+        }
+      }
+    }
+  ],
+  "failures": [],
+  "cleanup_remaining": [],
+  "cleanup_errors": [],
+  "passed": true,
+  "temporary_directory_remaining": false,
+  "cleanup_remaining_networks": []
+}

@@ -1,0 +1,51 @@
+   Compiling url v2.5.9
+   Compiling time v0.3.47
+   Compiling hickory-proto v0.26.4
+   Compiling tower-http v0.6.11
+   Compiling reqwest v0.12.28
+   Compiling hickory-net v0.26.4
+cargo(67101) MallocStackLogging: can't turn off malloc stack logging because it was not enabled.
+   Compiling hickory-resolver v0.26.4
+cargo(67110) MallocStackLogging: can't turn off malloc stack logging because it was not enabled.
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+cargo(67135) MallocStackLogging: can't turn off malloc stack logging because it was not enabled.
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 31s
+profile core
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 02s
+profile web
+{"acme":false,"compression":true,"disk_cache":true,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":true,"metrics":true,"scgi":false,"static_files":true,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 04s
+profile network
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 3m 27s
+profile edge
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":false,"memory_cache":true,"metrics":true,"scgi":false,"static_files":true,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2m 12s
+profile application
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":true,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1m 40s
+profile full
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+configuration valid
+configuration valid
+configuration valid
+configuration valid
+configuration valid

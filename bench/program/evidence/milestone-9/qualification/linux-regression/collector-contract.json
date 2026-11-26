@@ -1,0 +1,61 @@
+{
+  "result": "PASS",
+  "scope": "synthetic local HTTPS fixture; no Connectivity auth/service integration",
+  "completed_utc": "2026-11-26T21:56:45.081764+00:00",
+  "image": "cauce:milestone9-lab",
+  "image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+  "batch_max_events": 128,
+  "batch_max_bytes": 524288,
+  "cases": [
+    "HTTP 201 rejected; same durable batch recovered on HTTP 200",
+    "HTTP 202 rejected; same durable batch recovered on HTTP 200",
+    "HTTP 401 rejected; same durable batch recovered on HTTP 200",
+    "HTTP 403 rejected; same durable batch recovered on HTTP 200",
+    "extra ACK field rejected without logging untrusted names/values; retry recovered",
+    "lost ACK retried with stable batch/event IDs and drained after synthetic sink recovery",
+    "token file reread and rotated; retained batch/event IDs recovered on synthetic HTTP 200",
+    "untrusted-ca rejected before HTTP request; pending batch preserved",
+    "hostname-mismatch rejected before HTTP request; pending batch preserved"
+  ],
+  "observations": [
+    {
+      "case": "http-201",
+      "observed_status": 201,
+      "authorized": true,
+      "batch_id": "cc48af24-f199-4678-a9c2-959713c0df62",
+      "pending_after_recovery": 0
+    },
+    {
+      "case": "http-202",
+      "observed_status": 202,
+      "authorized": true,
+      "batch_id": "a0e067ce-a8c0-4273-a637-c3b4f3dce6fc",
+      "pending_after_recovery": 0
+    },
+    {
+      "case": "http-401",
+      "observed_status": 401,
+      "authorized": true,
+      "batch_id": "a7567473-cb0c-46bc-a0c2-9ef89cb4aebc",
+      "pending_after_recovery": 0
+    },
+    {
+      "case": "http-403",
+      "observed_status": 403,
+      "authorized": true,
+      "batch_id": "f924c68d-f65e-4152-9504-aa3335438802",
+      "pending_after_recovery": 0
+    },
+    {
+      "case": "lost-ack",
+      "observed_status": 200,
+      "authorized": true,
+      "batch_id": "c6a44896-de4a-4f43-a6c0-2f83e6540304",
+      "event_id": "ac8ae889-4946-446c-ac50-eaf116e129ea",
+      "unique_events_after_first_accept": 1,
+      "unique_events_after_retry": 1,
+      "pending_after_recovery": 0
+    }
+  ],
+  "fixture_requests_before_cases": 0
+}

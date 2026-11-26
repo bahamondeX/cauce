@@ -1,0 +1,54 @@
+cauce-full:
+Segment __PAGEZERO: 4294967296 (zero fill) 
+Segment __TEXT: 12730368
+	Section __text: 9391488
+	Section __stubs: 1848
+	Section __stub_helper: 1872
+	Section __gcc_except_tab: 487336
+	Section __const: 1702216
+	Section __cstring: 2908
+	Section __unwind_info: 164256
+	Section __eh_frame: 965504
+	total 12717428
+Segment __DATA_CONST: 442368
+	Section __got: 48
+	Section __const: 434272
+	total 434320
+Segment __DATA: 32768
+	Section __la_symbol_ptr: 1232
+	Section __data: 18448
+	Section __thread_vars: 744
+	Section __thread_data: 168
+	Section __thread_bss: 728 (zerofill)
+	Section __bss: 1256 (zerofill)
+	Section __common: 9008 (zerofill)
+	total 31584
+Segment __LINKEDIT: 376832
+total 4308549632
+cauce-core:
+Segment __PAGEZERO: 4294967296 (zero fill) 
+Segment __TEXT: 9388032
+	Section __text: 7184776
+	Section __stubs: 1524
+	Section __stub_helper: 1548
+	Section __const: 895304
+	Section __gcc_except_tab: 381524
+	Section __cstring: 2801
+	Section __unwind_info: 131872
+	Section __eh_frame: 773200
+	total 9372549
+Segment __DATA_CONST: 327680
+	Section __got: 24
+	Section __const: 312096
+	total 312120
+Segment __DATA: 32768
+	Section __la_symbol_ptr: 1016
+	Section __data: 14728
+	Section __thread_vars: 720
+	Section __thread_data: 168
+	Section __thread_bss: 712 (zerofill)
+	Section __bss: 1200 (zerofill)
+	Section __common: 9008 (zerofill)
+	total 27552
+Segment __LINKEDIT: 311296
+total 4305027072

@@ -1,0 +1,7 @@
+test_half_open_load_is_single_and_success_recovers (__main__.Resilience.test_half_open_load_is_single_and_success_recovers) ... ok
+test_only_empty_safe_request_retries_and_budget_limits_consecutive_failures (__main__.Resilience.test_only_empty_safe_request_retries_and_budget_limits_consecutive_failures) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 1.195s
+
+OK

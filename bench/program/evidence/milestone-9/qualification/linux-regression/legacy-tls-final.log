@@ -1,0 +1,29 @@
+ Network cauce-m9-lab-tls_default  Creating
+ Network cauce-m9-lab-tls_default  Created
+ Container cauce-m9-lab-tls-websocket-1  Creating
+ Container cauce-m9-lab-tls-websocket-1  Created
+ Container cauce-m9-lab-tls-websocket-1  Starting
+ Container cauce-m9-lab-tls-websocket-1  Started
+PASS: inbound TLSv1.2 with ALPN http/1.1
+PASS: inbound TLSv1.3 with ALPN http/1.1
+PASS: unsupported h2-only ALPN rejected
+PASS: stalled incoming TLS handshake times out
+PASS: invalid inbound certificate rejects reload and preserves working TLS
+PASS: valid certificate rotation takes effect on new connections
+PASS: invalid upstream CA file rejects entire reload
+PASS: changing trust drains old HTTPS pool; untrusted backend gives 502
+PASS: restored upstream trust establishes a working new generation
+Traceback (most recent call last):
+  File "/Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/scripts/test-tls-lifecycle.py", line 104, in <module>
+    config.write_text(base.replace('websocket:8766','cauce-tls-expired:8766'));hup('reloaded');request(502)
+                                                                                               ~~~~~~~^^^^^
+  File "/Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/scripts/test-tls-lifecycle.py", line 27, in request
+    c.request('GET','/http');r=c.getresponse();data=r.read();assert r.status==expected,(r.status,data);return data
+                                                                    ^^^^^^^^^^^^^^^^^^
+AssertionError: (504, b'tls_handshake_timeout')
+ Container cauce-m9-lab-tls-websocket-1  Stopping
+ Container cauce-m9-lab-tls-websocket-1  Stopped
+ Container cauce-m9-lab-tls-websocket-1  Removing
+ Container cauce-m9-lab-tls-websocket-1  Removed
+ Network cauce-m9-lab-tls_default  Removing
+ Network cauce-m9-lab-tls_default  Removed

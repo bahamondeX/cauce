@@ -1,0 +1,67 @@
+{
+  "result": "PASS",
+  "project": "cauce-headers-72658",
+  "platform": "arm64",
+  "runtime_image": "cauce:milestone9-lab",
+  "runtime_image_id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+  "runtime_architecture": "arm64",
+  "cases": [],
+  "sibling_request_ids": {
+    "proxy-clear": "0d241e54-399d-4827-9266-452b9d66d598",
+    "proxy-tls": "d28b05d8-df9f-4a06-ac95-e1c80d77376f"
+  },
+  "timeout_ms": 800,
+  "elapsed_seconds": 18.773,
+  "checks": [
+    "incomplete HEADERS payload (END_HEADERS set), clear: closed in 0.825s",
+    "one-byte HEADERS frame header, clear: closed in 0.847s",
+    "dripped initial HEADERS frame header, clear: closed in 0.850s",
+    "HEADERS awaits CONTINUATION, clear: closed in 0.851s",
+    "partial CONTINUATION frame-header drip, clear: closed in 0.846s",
+    "partial CONTINUATION payload drip, clear: closed in 0.852s",
+    "incomplete trailers, clear: closed in 0.849s",
+    "valid fragmented HEADERS then idle/reuse, clear: streams 1 and 3 returned 200",
+    "slow DATA body exceeds HEADERS budget, clear: request returned 200",
+    "stalled connection cancels active response-body sibling; fresh connection succeeds, clear: 0.803s",
+    "incomplete HEADERS payload (END_HEADERS set), TLS: closed in 0.851s",
+    "one-byte HEADERS frame header, TLS: closed in 0.845s",
+    "dripped initial HEADERS frame header, TLS: closed in 0.859s",
+    "HEADERS awaits CONTINUATION, TLS: closed in 0.848s",
+    "partial CONTINUATION frame-header drip, TLS: closed in 0.847s",
+    "partial CONTINUATION payload drip, TLS: closed in 0.848s",
+    "incomplete trailers, TLS: closed in 0.847s",
+    "valid fragmented HEADERS then idle/reuse, TLS: streams 1 and 3 returned 200",
+    "slow DATA body exceeds HEADERS budget, TLS: request returned 200",
+    "stalled connection cancels active response-body sibling; fresh connection succeeds, TLS: 0.803s"
+  ],
+  "proxy_images": {
+    "proxy-clear": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+    "proxy-tls": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257"
+  },
+  "sibling_cancellations": {
+    "proxy-clear": [
+      {
+        "request_id": "0d241e54-399d-4827-9266-452b9d66d598",
+        "traceparent": "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
+        "request_bytes": 0,
+        "response_bytes": 0,
+        "duration_ms": 808.0463589999999,
+        "outcome": "cancelled",
+        "error_phase": "transfer"
+      }
+    ],
+    "proxy-tls": [
+      {
+        "request_id": "d28b05d8-df9f-4a06-ac95-e1c80d77376f",
+        "traceparent": "00-0123456789abcdef0123456789abcdef-0123456789abcdef-01",
+        "request_bytes": 0,
+        "response_bytes": 0,
+        "duration_ms": 806.6382570000001,
+        "outcome": "cancelled",
+        "error_phase": "transfer"
+      }
+    ]
+  },
+  "access_log_records": 10,
+  "access_log_path": "headers-access.jsonl"
+}

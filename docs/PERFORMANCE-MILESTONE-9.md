@@ -38,6 +38,9 @@ manifest and workload listed with their evidence.
 - Rust ran 60 gateway tests and 14 collector tests. One local diagnostic
   is ignored by default. Formatting, Clippy and the cache publication Loom
   model passed.
+- The application wire codec completed 100,000 AddressSanitizer fuzz runs
+  in the Linux ARM64 guest on the runtime tree behind `cbb1a79`. The seed
+  was 381109 and the maximum input length was 4 KiB.
 - Stream and mail topology tests verified additions, failed-bind
   rollback, removals and retirement of established sessions. The
   retained-socket settings and certificate changes listed in the
@@ -81,3 +84,47 @@ changes have separate focused evidence. The staging and evidence
 manifests record the source tree, lockfile hash and binary hashes.
 [Linux ARM64 identities](../bench/program/evidence/milestone-9/linux-arm64-release.txt)
 [Evidence checksums](../bench/program/evidence/milestone-9/SHA256SUMS).
+
+## Distribution checks
+
+All six profiles independently compiled and passed CLI capability and
+configuration checks on Darwin ARM64. The Full debug binary's crate
+breakdown puts Quinn, ACME, compression and Hickory among the larger
+dependency contributions. The independent `cargo llvm-lines` debug
+analysis highlights TOML deserialization and the gateway request future.
+Those tools attribute debug code and monomorphizations. The following
+measurements use stripped release builds from the same `cbb1a79` tree.
+
+| Darwin ARM64 profile | Binary bytes | Median to ready | Median idle RSS | Median peak physical footprint |
+| --- | ---: | ---: | ---: | ---: |
+| Full, compression disabled | 13,575,712 | 12.47 ms | 6,224 KiB | 2,392,768 bytes |
+| Full, compression configured | 13,575,712 | 12.88 ms | 6,288 KiB | 2,417,344 bytes |
+| Core | 10,045,776 | 8.93 ms | 4,632 KiB | 1,729,216 bytes |
+
+Each row uses ten starts with one worker, a successful admin readiness
+request, 100 ms of idle time, and graceful shutdown. The optional
+compression setting applies to a route that receives no request in this
+fixture. Core is 26.0% smaller on disk and its `__TEXT` segment is
+3,342,336 bytes smaller. Startup and memory measurements are local
+diagnostics and include ambient host activity. Native throughput, tail
+latency, allocations per request and load with compression still require
+matched hardware and workloads.
+
+The ARM64 Linux lab image reports 135,155,426 bytes of uncompressed
+image content. It overlays the `36b73b1` binaries on the Milestone 8
+runtime image for regression. After one verified HTTP/1.1 direct
+response, `/proc/1/smaps_rollup` reported 8,348 KiB RSS, 7,495 KiB PSS
+and 896 KiB private dirty pages. These figures describe one observation
+inside the VM and are separate from the Darwin measurements.
+
+The same Darwin Full binary passed both pool layouts and the focused
+DNS, resilience, cache and listener rollout fixtures. In the Linux ARM64
+guest, the Full artifact from `36b73b1` passed the HTTP/2 and gRPC suite,
+20 header deadline cases, cleartext and TLS stress, and the proxy, log
+disk and collector storage resilience suite. Eleven TLS lifecycle cases,
+nine WebSocket cases and the collector contract against a synthetic HTTPS
+sink also passed. Setup retries corrected the Compose plugin path, fixture
+certificate setup and Docker fixture startup timing. The rejected runs
+remain in the evidence. The HTTPS sink exercises the collector wire
+contract locally.
+[Profile checks and debug attribution](../bench/program/evidence/milestone-9/qualification/).

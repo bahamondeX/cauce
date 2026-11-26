@@ -26,5 +26,10 @@ Linux ARM64 and AMD64. Pass `full arm64` after the revision to stage only
 that pair. Each pair has its own source identity and `SHA256SUMS` after
 the build and ELF architecture checks succeed.
 
+For the matched Darwin ARM64 release builds, Core was 26.0% smaller than
+Full. The feature checks, process samples, Mach-O sections and binary
+identities are in the milestone evidence.
+
 [Profile smoke checks](../scripts/check-build-profiles.sh)
-[Checksummed Linux staging](../scripts/stage-native-release.sh).
+[Checksummed Linux staging](../scripts/stage-native-release.sh)
+[Measured profile comparison](PERFORMANCE-MILESTONE-9.md#distribution-checks).

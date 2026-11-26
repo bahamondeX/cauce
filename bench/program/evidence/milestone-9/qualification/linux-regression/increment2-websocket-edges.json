@@ -1,0 +1,45 @@
+{
+  "platform": "Linux Docker ARM64",
+  "cases": [
+    {
+      "case": "upstream capacity retained after 101; second upgrade returns 503",
+      "passed": true
+    },
+    {
+      "case": "abrupt disconnect releases capacity; next tunnel closes normally with 1000",
+      "passed": true
+    },
+    {
+      "case": "idle tunnel closes within configured timeout",
+      "passed": true,
+      "elapsed_ms": 436.83
+    },
+    {
+      "case": "bidirectional activity resets idle; absolute websocket lifetime still closes",
+      "passed": true,
+      "exchanges": 17
+    },
+    {
+      "case": "tunnel outcomes recorded as versioned JSONL",
+      "passed": true
+    },
+    {
+      "case": "SIGTERM drains then aborts active tunnel within shared shutdown deadline",
+      "passed": true,
+      "elapsed_ms": 1451.66
+    },
+    {
+      "case": "plain ws listener to verified TLS WebSocket backend",
+      "passed": true
+    },
+    {
+      "case": "verified wss listener to plain WebSocket backend",
+      "passed": true
+    },
+    {
+      "case": "plain ws listener to plain WebSocket backend",
+      "passed": true
+    }
+  ],
+  "passed": 9
+}

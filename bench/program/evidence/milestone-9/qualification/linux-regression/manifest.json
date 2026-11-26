@@ -1,0 +1,176 @@
+{
+  "increment": 9,
+  "status": "COMPLETE",
+  "started_utc": "2026-11-26T21:49:15.264644+00:00",
+  "suites": [
+    {
+      "name": "proxy_failures",
+      "result": "PASS",
+      "exit_code": 0,
+      "report": "proxy_failures.json"
+    },
+    {
+      "name": "log_disk",
+      "result": "PASS",
+      "exit_code": 0,
+      "report": "log_disk.json"
+    },
+    {
+      "name": "collector_storage",
+      "result": "PASS",
+      "exit_code": 0,
+      "report": "collector_storage.json"
+    }
+  ],
+  "source_sha256": {
+    "Cargo.toml": "62c174e15972e42701f84035303ab1f2795e70a608898e3b7e353739d16bfc5c",
+    "Cargo.lock": "62c404cb963299564189a9abc4ad2c95c36ddf936a47245dfe26d203346fd46b",
+    "Dockerfile": "3eadaf67f20e11400e80755ad387f1be8dd52f08d8d2920ead0d1646d4681ec8",
+    "scripts/test-resilience-docker.py": "7560501ccaa61e68ffde40da493b4d79c24192707c7c83aeb93d73136969fdc3",
+    "examples/access-log.jsonl": "5af44227aff43bea3292da01fbf5f1662da85a801410d950294c5e1a545c41f4",
+    "bench/increment8/configs/cauce-h2-clear.toml": "e6f169a34c67ad3fd82a41133f5b43d8e31b7a3f4ff040b9534a131103839650",
+    "src/acme.rs": "2d29c31540ec6fe5bf22b9bac04eebdac2313c4a1104f4471f60f4acb9485b99",
+    "src/acme_config.rs": "e2ec9b45ee0e3cc97aa9290429d84b1acb60e6581734d9e54b521b1084b3a078",
+    "src/actions.rs": "0115a949d3dba5f1a185056cd150528685be03c9681811ac22623804e019db10",
+    "src/admission.rs": "db0a54cf0dc029fd01fbfa48eecc308cddc5a1c7b8e81921bbf74b12d1c4e644",
+    "src/application/cgi.rs": "5b47ee429dcf77bb4c830430f29fa8aefe47bf437fd07381af1ce06d26dc190e",
+    "src/application/config.rs": "a51e31d7c822ead5ea8afdb2f12f63bc268d1d65a6027e579edaf9a785b71dd4",
+    "src/application/envelope.rs": "0112bf7d983f147aaf33262c4500be8aaed5623eaa418668eb19b4b006035459",
+    "src/application/fastcgi.rs": "3c682e113548cce1f5dd0959473122e2bdc5e4422222688b7ee56e69ba71959d",
+    "src/application/mod.rs": "338d1b89d694a83f9b126ee6a2941a9f83598ba992b47151a8e00f7f8e44b236",
+    "src/application/response.rs": "121bda8e7cc309057f98476900a27fb1ba1a0071249d45ede89fd12df01345ad",
+    "src/balance.rs": "58807af365d4e6427ef304d20772ca716fbd2fade8c99ba161169382e98db42a",
+    "src/bin/cauce-collector.rs": "6aa0cbc439b8a974dc6df526a5afe9f79726e961d2427824cde5c115d152519d",
+    "src/body.rs": "1e8e96146d48f3485074f5c973faa12b82a4f62a92d2fcbf8df4d0ad87fa30f1",
+    "src/cache/disk.rs": "d1dc6264b49f1f255fecb8ff4bac2069168069c58f62886b25568ab562472814",
+    "src/cache/epoch.rs": "30a5747021a1604763d41b8b0c770148bf0ea16e3c2d7a93e42026c4e50732df",
+    "src/cache/selectors.rs": "911a0ab3aeb5d6159d6de2ed152e62b3f324da9b9bf8749c763cfc0303a0c6c0",
+    "src/cache/store.rs": "e6a1d1b2b25662d67a3b242290806e665adcd3b41d1429f9916d299b17bad6fb",
+    "src/cache.rs": "47110a0d5d1838cc8a0ddddad311248e33af8c8230201338c78390be1c143607",
+    "src/capabilities.rs": "9636c19a09923f4eaf6f508469b6bf004157a7f489ce9da77344267392b62429",
+    "src/collector.rs": "7d90f9545b3294d494a7e9f6c4bc387e37ccc9297cc9f2fd700c56ee2cde0f6e",
+    "src/compression.rs": "2b7659bc8b186898637ccde64de3ac84413666274c41e2c0934548d567a67a03",
+    "src/config.rs": "ae0f9dd722bd185b726f294b5664c111c91b3e118bd3711ca9e23a77c04df6c2",
+    "src/content.rs": "3428c0e46d36a8ab4ceb7fcd8625f37804012bc66784b6fc63592842f507519e",
+    "src/diagnostics.rs": "12c3915faf7f7405d4093bb50c5a620f1dd2c34cd16f90d92a97ab2db6865779",
+    "src/dns.rs": "8b15d481b7e56a175c8cd66f6583338b34b57d821259ec8fc89c26a59bbf9da1",
+    "src/headers.rs": "0aee9d8e7b7851cb6595f84c9ce1e19fc62a8a07846acb9a8130c6053303c97a",
+    "src/health.rs": "29b2ef88e01bcf4b8fdc9e6c451f3d6f96999ac43d0e53692da55a544e7e71ee",
+    "src/http3/mod.rs": "a4d03dc2033686a09bcbbea617c2acb07a5e5de47b6e361cebc1126261f7c61c",
+    "src/http3/quic.rs": "0ab24e43d285602d3719cdd296237a0b1158df310ca8464821f8b52ef0fa52ce",
+    "src/http3/runtime.rs": "5724393b735c31a564c07a3c7767726ad8a42156653734020dff62894b57b5e2",
+    "src/http_tcp.rs": "87960297bc7606fea69947370e45c1d10d1ecb96cd6c8347ce7a697804912ef7",
+    "src/identity.rs": "c111c9cdfc7537872a0ecc3dfa45dfa63c52ba73f40bda1ac6113c13f0525185",
+    "src/listeners.rs": "3a8e635fd6fa6ba61bc71e3c0ce4b94916189396e6fe2749ce4d71350a51994d",
+    "src/mail/auth.rs": "3db1ff1e7e3eaa39ff7e34c91de701a59bd7d681b63aefd101d6020afbabb3c8",
+    "src/mail/config.rs": "71799025cd64a65562f8bee1c54822f7ade5d24706e7c692fc05dc0ab3a25cb6",
+    "src/mail/mod.rs": "34dd3633ebaa8d659f25c146899c222e4a4e382f585b41702d78c4e8a99105e8",
+    "src/mail/protocol.rs": "2f652154c0c6efaeabc10adabe001ff85ee9659dda168d14b822fa1736206572",
+    "src/mail/wire.rs": "2b217840177e68194d29815248ab51d04db5be36de58b44c053b5fdfef69db27",
+    "src/main.rs": "5b22b8ebb8e69f007cbd91d81193df500badd0dfa7a429bd5e693733756e3845",
+    "src/pool.rs": "7b9dba119d5d15f80c46ba7702dcbd0b2b4ee5b11f3ea7b5747fd7ecab3445c2",
+    "src/proxy.rs": "ba3d23aa01f61dcfd70db2b98a3b7ed92f620060875f3939df48ac93c3ca4a50",
+    "src/resilience.rs": "6445b6ce3ae9752158f8b583f31d41251e3e2fc8090e26fcaad5c8eb1d9522f1",
+    "src/routing.rs": "3c5505582c79dcac7480f12cbaa02fbdad8da6713a62655be49c9ed70b067273",
+    "src/static_files/fs_path.rs": "f45fb6a8c47a64959472464a694d78ade38391cf6678e84660c7973c8299b8b1",
+    "src/static_files/ranges.rs": "da69c6903cb33c3c8ccfaa89f4cf4de07c5a360cd67f792e798242b38ac0b7fe",
+    "src/static_files.rs": "a718d542cabef472c9fff20cca904de435d6f0301603ae64800ae448ae064d99",
+    "src/stream/config.rs": "a1caea585ebec219cbc502518ecd1e3099e5594d537f420386e4d2e0aedf141d",
+    "src/stream/mod.rs": "25f4ea7a29285f82c24dd6fda0f45143be5d498acb5a5717ec19e0ebfa9c9d04",
+    "src/stream/proxy_encode.rs": "dc979be5c0eb62cf962cdbe9c4e4500dc861d933b7723fab92b4085af0d43838",
+    "src/stream/proxy_protocol.rs": "779484d0853d78fc7b68b839ed1da0d93f06ec793aa0787c5cfdf513ea22104a",
+    "src/stream/tcp.rs": "64877591664837d9e1a694180dbd601bf5eee86583dbba19fa9fb659486b821e",
+    "src/stream/udp.rs": "4652caac73f0374e5c76ef535056e4e4f757ee93cbd5e7d19e6612293e9c81c2",
+    "src/telemetry.rs": "b8527f7c8d5ee7ee8452fdcf2370d4ab3eaa889c730174bd65a0b1d17e7511c1",
+    "src/tls.rs": "6d1a1eceb0ae5d144b1dfc7a0c8f531c2e647eb9babc014342025d43cb2bf694",
+    "src/transport.rs": "ebbc4723a588702ef7b4edc11890a44d419833a302df0a14078fa660e577cd11",
+    "src/websocket.rs": "f4702279b232dafe152890a36ff59280291f392f590d64d540ec233d10911c63",
+    "tests/resilience/collector_storage.py": "fc98519bcbb40c844d5ccab4d14509aa59fa4cdb4b7796e3e720efb2db7e13b3",
+    "tests/resilience/log_backend.mjs": "c77ea5f725a4dbf4385211ad8220b1776503b207d29bc6b6c71a1789964e6b5f",
+    "tests/resilience/log_client.py": "562be695cf887efc4b6bc2447c5b261bbafe333fae65934206150fed5389b97e",
+    "tests/resilience/log_disk.py": "1d5bcf7902b215321c63caea7fda9ff3d088a283320f4f46567b0226668f657c",
+    "tests/resilience/proxy_backend.mjs": "2693f2e0ab93335b6919809403199cf69100dcc0aed46e2954ac931f127abee6",
+    "tests/resilience/proxy_failures.py": "20f9edba6d2e359839dc2003c2550a77446e6abd225ad35eb5e301f855f3db38"
+  },
+  "containers_before": {
+    "33bffc45dc5ac0483d6acc66b74411922c676b2b966864f6cfcfdbf88dd4a9f7": {
+      "name": "voz-p0-lab-auth",
+      "running": true,
+      "started_at": "2026-11-26T21:41:48.709304538Z"
+    },
+    "388bc2fab09bb1181125d7c9b946fe0c1e3c1159432317ca197b7c43774bdf5c": {
+      "name": "voz-p0-acceptance-tests",
+      "running": true,
+      "started_at": "2026-11-26T20:28:11.242855794Z"
+    },
+    "e4c21121018fa41401c838618955b3ee83861429b35b18cbf22382016b06ac4d": {
+      "name": "voz-commerce-test-pg",
+      "running": true,
+      "started_at": "2026-11-26T20:27:53.015661437Z"
+    },
+    "ff450d969ef7d3478c5d38b10ac28de7126629465944940b958987f203428743": {
+      "name": "buildx_buildkit_lucid_benz0",
+      "running": true,
+      "started_at": "2026-11-26T16:33:31.895115091Z"
+    }
+  },
+  "host_free_bytes_before": 85417283584,
+  "host_disk_filled": false,
+  "connectivity_contacted": false,
+  "limits": "Bounded 4/8 MiB tmpfs only. No host ports. No global cleanup.",
+  "errors": [],
+  "engine": {
+    "ServerVersion": "27.4.0",
+    "Architecture": "aarch64",
+    "NCPU": 4,
+    "MemTotal": 6198427648,
+    "OSType": "linux"
+  },
+  "image": {
+    "Id": "sha256:e373b3fe749e798e36b401b88b8f542546de30c9814453c8a843ac1df6f17257",
+    "Architecture": "arm64",
+    "Os": "linux",
+    "RepoDigests": [],
+    "reference": "cauce:milestone9-lab"
+  },
+  "containers_after": {
+    "33bffc45dc5ac0483d6acc66b74411922c676b2b966864f6cfcfdbf88dd4a9f7": {
+      "name": "voz-p0-lab-auth",
+      "running": true,
+      "started_at": "2026-11-26T21:41:48.709304538Z"
+    },
+    "388bc2fab09bb1181125d7c9b946fe0c1e3c1159432317ca197b7c43774bdf5c": {
+      "name": "voz-p0-acceptance-tests",
+      "running": true,
+      "started_at": "2026-11-26T20:28:11.242855794Z"
+    },
+    "e4c21121018fa41401c838618955b3ee83861429b35b18cbf22382016b06ac4d": {
+      "name": "voz-commerce-test-pg",
+      "running": true,
+      "started_at": "2026-11-26T20:27:53.015661437Z"
+    },
+    "ff450d969ef7d3478c5d38b10ac28de7126629465944940b958987f203428743": {
+      "name": "buildx_buildkit_lucid_benz0",
+      "running": true,
+      "started_at": "2026-11-26T16:33:31.895115091Z"
+    }
+  },
+  "preexisting_running_containers_preserved": true,
+  "remaining_test_containers": [],
+  "remaining_test_networks": [],
+  "finished_utc": "2026-11-26T21:50:36.398754+00:00",
+  "host_free_bytes_after": 85532319744,
+  "artifacts_sha256": {
+    "collector_storage.json": "7c808957150c2e15778e36b3dcb0caede3ac6b6a10a6a7a6a009d61aeabe993e",
+    "collector_storage.stdout.log": "7c808957150c2e15778e36b3dcb0caede3ac6b6a10a6a7a6a009d61aeabe993e",
+    "log_disk-enospc-logs.jsonl": "6661277deee52e81678a33ea1b5d6fe8289b7982bb1dfc5e4026a94c66fcf385",
+    "log_disk-enospc-requests.jsonl": "88e8070903fd20aeb6049c0fcb04844f2eb1a561d0c17e194f4d60b2816e841e",
+    "log_disk-rotation-logs.jsonl": "8b61ee8c8f9a5aac211370aebdb79d9f814296498b58bb1a778d6ccaa1f5980b",
+    "log_disk-rotation-requests.jsonl": "38f434c1cc092a768cd6d762c258ceb6125b0cabb361fbb777568f2ce4600ab7",
+    "log_disk.json": "95cbd2af440017c342fd534001410f6774479b380f6ae0c0a91448e60d5c9fb5",
+    "log_disk.stdout.log": "1b3ca1718cab8575c7290fa11b44d6616b22995e6f1c5cff6f2a082e56701cca",
+    "proxy_failures-access.jsonl": "3c5fa7149b418069b3a80d53165f09d2c88c99ab305d48506bbd3973ebf86f61",
+    "proxy_failures.json": "f33de476163f46d7cf5949cd77f0fba247e1a3cd56372ab74aec1549595ef9de",
+    "proxy_failures.stdout.log": "fddd88806d66b9f453b2f2552e0407d27469ce9d9f9cc01323dcd357313ba4dc"
+  }
+}

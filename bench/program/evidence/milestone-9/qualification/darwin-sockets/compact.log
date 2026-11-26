@@ -1,0 +1,29 @@
+test_accepts_clients_while_reload_reads_candidate (__main__.ProxyTests.test_accepts_clients_while_reload_reads_candidate) ... ok
+test_atomic_reload_and_invalid_reload_preserves_generation (__main__.ProxyTests.test_atomic_reload_and_invalid_reload_preserves_generation) ... ok
+test_backend_unexpected_close_no_retry (__main__.ProxyTests.test_backend_unexpected_close_no_retry) ... ok
+test_bad_upload_does_not_withdraw_healthy_backend (__main__.ProxyTests.test_bad_upload_does_not_withdraw_healthy_backend) ... ok
+test_body_limit_early (__main__.ProxyTests.test_body_limit_early) ... ok
+test_burst_reuse_and_eviction_during_reload (__main__.ProxyTests.test_burst_reuse_and_eviction_during_reload) ... ok
+test_cancel_and_stream_timeout_discard_upstream (__main__.ProxyTests.test_cancel_and_stream_timeout_discard_upstream) ... ok
+test_disabled_access_log_preserves_metrics_and_request_identity (__main__.ProxyTests.test_disabled_access_log_preserves_metrics_and_request_identity) ... ok
+test_header_policies_are_route_scoped (__main__.ProxyTests.test_header_policies_are_route_scoped) ... ok
+test_idle_and_max_age_retirement (__main__.ProxyTests.test_idle_and_max_age_retirement) ... ok
+test_log_io_failure_keeps_serving (__main__.ProxyTests.test_log_io_failure_keeps_serving) ... ok
+test_log_rotation_and_retention (__main__.ProxyTests.test_log_rotation_and_retention) ... ok
+test_overload_and_shutdown_deadline (__main__.ProxyTests.test_overload_and_shutdown_deadline) ... ok
+test_pool_capacity_wait_is_bounded (__main__.ProxyTests.test_pool_capacity_wait_is_bounded) ... ok
+test_pool_reuse_across_new_client_connections_and_logs (__main__.ProxyTests.test_pool_reuse_across_new_client_connections_and_logs) ... ok
+test_request_smuggling_rejected_or_canonicalized (__main__.ProxyTests.test_request_smuggling_rejected_or_canonicalized) ... ok
+test_round_robin_and_least_inflight (__main__.ProxyTests.test_round_robin_and_least_inflight) ... ok
+test_routing_framing_hops_and_forwarded (__main__.ProxyTests.test_routing_framing_hops_and_forwarded) ... ok
+test_schema_and_admin_auth (__main__.ProxyTests.test_schema_and_admin_auth) ... ok
+test_slowloris_and_header_limits (__main__.ProxyTests.test_slowloris_and_header_limits) ... ok
+test_unix_backend (__main__.ProxyTests.test_unix_backend) ... ok
+test_upload_and_sse_without_event_buffering (__main__.ProxyTests.test_upload_and_sse_without_event_buffering) ... ok
+test_upload_backpressure_and_early_response_discard (__main__.ProxyTests.test_upload_backpressure_and_early_response_discard) ... ok
+test_yaml_reload_routes_and_rollback (__main__.ProxyTests.test_yaml_reload_routes_and_rollback) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 26.934s
+
+OK

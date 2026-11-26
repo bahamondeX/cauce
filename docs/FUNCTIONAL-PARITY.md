@@ -193,3 +193,9 @@ remain in the source-derived backlog.
 
 [Gap analysis](CAUCE-1.0-GAP-ANALYSIS.md)
 [Milestone 9 evidence](PERFORMANCE-MILESTONE-9.md).
+
+The pinned Alpine Linux ARM64 reference passed 20 routing cases, 11
+gateway cases per pool layout and 15 content cases. The Stream TLS
+fixture checks SNI selection, mutual authentication and verified backend
+hostnames. The registry retains partial status for the corresponding
+directive registrations. [Pinned differential evidence](../bench/program/evidence/milestone-9/linux-nginx/).

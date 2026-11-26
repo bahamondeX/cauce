@@ -1,0 +1,26 @@
+Traceback (most recent call last):
+  File "/Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/scripts/test-collector-connectivity-contract.py", line 161, in <module>
+    main()
+    ~~~~^^
+  File "/Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/scripts/test-collector-connectivity-contract.py", line 25, in main
+    suite = suite_module.Suite(argparse.Namespace(docker=True, image=args.image,
+                                                  binary=ROOT/'target/debug/cauce-collector',
+                                                  tempdir=args.temp_dir))
+  File "/Users/oscarbahamonde/Desktop/cauce/work/increment9/legacy-regression/source/scripts/test-collector.py", line 102, in __init__
+    seen = subprocess.run(['docker','exec',self.sink_name,'python','-c',manifest_code,
+                           json.dumps(sorted(expected_hashes))],
+                          capture_output=True,text=True,timeout=2)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2154, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1268, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['docker', 'exec', 'cauce-collector-test-d439785115-sink', 'python', '-c', "import hashlib,json,pathlib,sys\np=pathlib.Path('/fixtures/sink')\nprint(json.dumps({n:hashlib.sha256((p/n).read_bytes()).hexdigest() for n in json.loads(sys.argv[1])},sort_keys=True))\n", '["ca.crt", "control.json", "server.crt", "server.key"]']' timed out after 2 seconds
