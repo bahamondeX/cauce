@@ -60,3 +60,11 @@ No stage retries a dispatched request or copies a streaming request body.
 [Envoy circuit breaking](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking.html)
 [HAProxy retry policies](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/reliability/retries/)
 [NGINX proxy_next_upstream](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream).
+
+Pingora separates connect failure from errors after dispatch. HAProxy
+offers additional redispatch and response-based triggers. Envoy accounts
+for retry concurrency and outliers by cluster. Cauce's retry hook is
+restricted to one pre-transmission alternate acquisition. Its ejection
+state tracks consecutive failures and one half-open probe independently
+from the retry budget.
+[Pingora failover](https://github.com/cloudflare/pingora/blob/main/docs/user_guide/failover.md).
