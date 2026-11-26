@@ -52,7 +52,7 @@ FILES = {
     "cache": ("Cauce fixture", "bench/program/evidence/milestone-9/swr-sockets.log"),
     "disk-cache": ("Cauce fixture", "bench/program/evidence/milestone-9/disk-sockets.log"),
     "nested-locations": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
-    "header-inheritance": ("shared cases", "bench/program/evidence/milestone-10/differential-nested.json"),
+    "header-inheritance": ("shared cases", "bench/program/evidence/milestone-10/differential-final.json"),
     "http-origin-sni": ("shared cases", "bench/program/evidence/milestone-10/differential-http-sni.json"),
 }
 

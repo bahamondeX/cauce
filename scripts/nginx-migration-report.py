@@ -440,7 +440,7 @@ def http_preview(directives, route_mappings):
         proxy["real_ip"] = identity
     endpoints = {}
     paths = set()
-    def translate(location, parents, parent_path, depth, inherited_headers):
+    def translate(location, parents, parent_path, depth, inherited_headers, inherited_additions, inherit_mode):
         if depth > 16:
             raise ValueError("preview exceeds the Cauce location nesting limit")
         mode = None
@@ -460,9 +460,33 @@ def http_preview(directives, route_mappings):
         children = [node for node in location.children if node.name == "location"]
         if children and mode == "exact":
             raise ValueError("exact locations cannot contain nested locations")
-        directives = [node for node in location.children if node.name != "location"]
+        directives = [node for node in location.children if node.name not in
+                      {"location", "add_header", "add_header_inherit"}]
+        mode_nodes = [node for node in location.children if node.name == "add_header_inherit"]
+        if mode_nodes:
+            inherit_mode = one_value(mode_nodes, "add_header_inherit")
+            if inherit_mode not in {"on", "off"}:
+                raise ValueError("literal response header preview supports inheritance on or off")
+        additions = []
+        for node in location.children:
+            if node.name != "add_header":
+                continue
+            if node.children is not None or len(node.args) not in (2, 3) or node.args[2:] not in ([], ["always"]):
+                raise ValueError("preview supports literal add_header fields with optional always")
+            name, value = node.args[:2]
+            name = name.lower()
+            if (not HEADER_NAME.fullmatch(name) or name in RESERVED_HEADERS
+                    or name.startswith(("x-forwarded-", "grpc-", "sec-websocket-"))
+                    or "$" in value or any(not 0x20 <= ord(character) <= 0x7e for character in value)):
+                raise ValueError("unsafe or dynamic response header addition requires manual mapping")
+            additions.append(dict(name=name, value=value, always=len(node.args) == 3))
+        if len(additions) > 16 or sum(len(row["name"]) + len(row["value"]) + 4 for row in additions) > 4096:
+            raise ValueError("preview response header additions exceed the Cauce edit or byte budget")
+        effective_additions = additions or (inherited_additions if inherit_mode == "on" else [])
         content = direct_preview(directives) or static_preview(directives, mode, path)
         action = None if content else redirect_preview(directives)
+        if action is not None and effective_additions:
+            raise ValueError("response header additions on redirect actions require manual mapping")
         policy = None
         upstreams = []
         if action is None and content is None:
@@ -497,15 +521,17 @@ def http_preview(directives, route_mappings):
                     row["action"] = action
                 if effective_headers:
                     row["headers"] = effective_headers if upstreams else {}
+                if effective_additions or inherited_additions:
+                    row["headers"] = {**row.get("headers", {}), "response_add": effective_additions}
                 proxy["routes"].append(row)
                 current[authority] = row["id"]
         route_mappings.append({"source": location.source, "line": location.line,
                                "target_routes": list(current.values())})
         for child in children:
-            translate(child, current, path, depth + 1, effective_headers)
+            translate(child, current, path, depth + 1, effective_headers, effective_additions, inherit_mode)
 
     for location in locations:
-        translate(location, {}, None, 0, {})
+        translate(location, {}, None, 0, {}, [], "on")
     return config
 
 

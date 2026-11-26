@@ -153,6 +153,16 @@ their handlers explicitly. It emits a parent ID per authority and resolves
 ordinary proxy request and response header inheritance independently.
 The report includes a minimum build distribution and preserves manual review.
 
+`headers.response_add` appends literal values on content, origin and cached
+responses. Each entry has a `name`, a `value`, and an optional `always` flag.
+Without `always`, the filter applies to the NGINX success, partial-content,
+and redirect status set. Empty values emit no field. Repeated names retain
+list order. An unset list inherits independently within nested locations.
+An empty child list clears inherited additions. The response edit and byte
+budgets include additions and retain protections for framing and cache
+policy fields. The migration preview handles literal location-level
+`add_header` and `add_header_inherit on|off`.
+
 ## Active upstream health
 
 Add `health_check` to an upstream to gate selection on probe results. The

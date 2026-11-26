@@ -190,4 +190,57 @@ def nested(config, reference_port, _resources, _folder):
     return reference, accepted, rejected
 
 
-MODULES = {"ngx_http_core_module": nested, "ngx_http_proxy_module": proxy}
+def header_filter(config, reference_port, _resources, _folder):
+    def direct(name, path, status, parent=None, additions=None):
+        route = {"id": name, "host": "compat.test", "path_prefix": path,
+                 "path_match": "literal_prefix" if parent is None else "exact",
+                 "content": {"type": "direct", "status": status,
+                             "body": "" if status == 204 else name}}
+        if parent:
+            route["parent"] = parent
+        if additions is not None:
+            route["headers"] = {"response_add": additions}
+        return route
+
+    fields = [{"name": "X-Result", "value": "first"}, {"name": "X-Result", "value": "second"},
+              {"name": "X-Empty", "value": ""}, {"name": "X-Always", "value": "present", "always": True}]
+    root = direct("root", "/status", 200, additions=fields)
+    config["routes"] = [root, direct("ok", "/status/ok", 200, "root"),
+                        direct("missing", "/status/missing", 404, "root"),
+                        direct("no-content", "/status/no-content", 204, "root"),
+                        direct("disabled", "/status/disabled", 200, "root", []),
+                        direct("local", "/status/local", 200, "root", [{"name": "X-Result", "value": "local"}])]
+    reference = f"""server {{ listen 127.0.0.1:{reference_port}; server_name compat.test;
+      location /status {{
+        add_header X-Result first;
+        add_header X-Result second;
+        add_header X-Empty "";
+        add_header X-Always present always;
+        location = /status/ok {{ return 200 ok; }}
+        location = /status/missing {{ return 404 missing; }}
+        location = /status/no-content {{ return 204; }}
+        location = /status/disabled {{ add_header_inherit off; return 200 disabled; }}
+        location = /status/local {{ add_header X-Result local; return 200 local; }}
+        return 200 root;
+      }}
+    }}"""
+    checks = [("ok", 200, ["first", "second"], ["present"]), ("missing", 404, [], ["present"]),
+              ("no-content", 204, ["first", "second"], ["present"]),
+              ("disabled", 200, [], []), ("local", 200, ["local"], [])]
+    accepted = [{"name": f"literal-response-headers-{name}", "target": f"/status/{name}", "status": status,
+                 "headers": ["x-result", "x-always", "x-empty"],
+                 "expected_headers": {"x-result": values, "x-always": always, "x-empty": []},
+                 "expected_body": "" if status == 204 else name} for name, status, values, always in checks]
+    rejected = [
+        {"name": "append-a-proxy-owned-header",
+         "routes": [direct("bad", "/status", 200, additions=[{"name": "Content-Length", "value": "7"}])],
+         "error": {"cauce": "invalid YAML configuration field, type or quantity"}},
+        {"name": "response-header-byte-budget",
+         "routes": [direct("bad", "/status", 200, additions=[{"name": "X-Large", "value": "a" * 4096}])],
+         "error": {"cauce": "response header policy exceeds its edit or byte budget"}},
+    ]
+    return reference, accepted, rejected
+
+
+MODULES = {"ngx_http_core_module": nested, "ngx_http_headers_filter_module": header_filter,
+           "ngx_http_proxy_module": proxy}

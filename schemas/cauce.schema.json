@@ -998,7 +998,18 @@
           "additionalProperties": false,
           "properties": {
             "request": {"$ref": "#/$defs/headerEdits"},
-            "response": {"$ref": "#/$defs/headerEdits"}
+            "response": {"$ref": "#/$defs/headerEdits"},
+            "response_add": {
+              "type": "array", "maxItems": 16,
+              "items": {
+                "type": "object", "additionalProperties": false, "required": ["name", "value"],
+                "properties": {
+                  "name": {"type": "string", "minLength": 1, "maxLength": 64},
+                  "value": {"type": "string", "maxLength": 4096, "pattern": "^[ -~]*$"},
+                  "always": {"type": "boolean"}
+                }
+              }
+            }
           }
         },
           "action": {

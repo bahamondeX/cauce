@@ -560,20 +560,34 @@ impl Config {
         for (index, ancestor) in parents.iter().copied().enumerate() {
             let mut ancestor = ancestor;
             let mut headers = None;
+            let mut response_add = None;
             let mut clients = None;
             let mut rate_zone = None;
             while let Some(parent) = ancestor {
                 let route = &self.routes[parent];
                 headers = headers.or(route.headers.as_ref());
+                response_add = response_add.or(route
+                    .headers
+                    .as_ref()
+                    .and_then(|policy| policy.response_add.as_ref()));
                 clients = clients.or(route.allow_clients.as_ref());
                 rate_zone = rate_zone.or(route.rate_zone.as_ref());
                 ancestor = parents[parent];
             }
-            let (headers, clients, rate_zone) =
-                (headers.cloned(), clients.cloned(), rate_zone.cloned());
+            let (headers, response_add, clients, rate_zone) = (
+                headers.cloned(),
+                response_add.cloned(),
+                clients.cloned(),
+                rate_zone.cloned(),
+            );
             let route = &mut self.routes[index];
             if route.headers.is_none() {
                 route.headers = headers;
+            }
+            if let Some(policy) = &mut route.headers {
+                if policy.response_add.is_none() {
+                    policy.response_add = response_add;
+                }
             }
             if route.allow_clients.is_none() {
                 route.allow_clients = clients;
@@ -972,6 +986,9 @@ impl Config {
                 matches.insert((&r.host, r.parent.as_deref(), path, match_kind)),
                 "duplicate route match"
             );
+            if let Some(headers) = &r.headers {
+                headers.validate()?;
+            }
             if let Some(spec) = &r.cache {
                 spec.validate()?;
                 if let Some(disk) = &spec.disk {
@@ -989,7 +1006,7 @@ impl Config {
                 );
                 if let Some(headers) = &r.headers {
                     ensure!(!headers.request.touches(&["cookie", "authorization", "range", "if-range", "if-match", "if-none-match", "if-modified-since", "if-unmodified-since"])
-                        && !headers.response.touches(&["cache-control", "vary", "set-cookie", "set-cookie2", "expires", "etag", "last-modified", "age", "cache-status"]),
+                        && !headers.response_touches(&["cache-control", "vary", "set-cookie", "set-cookie2", "expires", "etag", "last-modified", "age", "cache-status"]),
                         "cache route headers cannot change authentication, conditionals or cache controls");
                 }
                 cache_budget += spec.max_size;

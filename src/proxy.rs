@@ -830,7 +830,7 @@ where
             reject!(GATEWAY_TIMEOUT, "content_deadline");
         };
         if let Some(policy) = &route.headers {
-            policy.response.apply(response.headers_mut());
+            policy.apply_response(&mut response);
         }
         if headers_exceed_limits(response.headers(), limits) {
             reject!(INTERNAL_SERVER_ERROR, "content_header_limit");
@@ -855,7 +855,7 @@ where
         ($response:expr) => {{
             let mut response = $response;
             if let Some(policy) = &route.headers {
-                policy.response.apply(response.headers_mut());
+                policy.apply_response(&mut response);
             }
             if headers_exceed_limits(response.headers(), limits) {
                 reject!(BAD_GATEWAY, "cache_header_policy_limit");
@@ -1453,8 +1453,7 @@ where
         .headers_mut()
         .insert(X_REQUEST_ID, request_id_header);
     if let Some(policy) = &route.headers {
-        if policy.response.apply(response.headers_mut())
-            && headers_exceed_limits(response.headers(), limits)
+        if policy.apply_response(&mut response) && headers_exceed_limits(response.headers(), limits)
         {
             reject!(BAD_GATEWAY, "upstream_header_policy_limit");
         }

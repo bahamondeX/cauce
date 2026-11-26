@@ -223,6 +223,27 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIsNone(config)
 
+    def test_response_additions_preview_preserves_status_modes_and_rejects_merge(self):
+        code, _, config = self.run_preview("example.org", """
+            location /api {
+                add_header X-Result first;
+                add_header X-Result second always;
+                return 200 ok;
+                location = /api/disabled { add_header_inherit off; return 200 ok; }
+                location = /api/default { return 200 ok; }
+            }
+        """)
+        self.assertEqual(code, 0)
+        routes = {row["path_prefix"]: row for row in config["proxy"]["routes"]}
+        self.assertEqual(routes["/api/disabled"]["headers"]["response_add"], [])
+        self.assertEqual(routes["/api/default"]["headers"]["response_add"], [
+            {"name": "x-result", "value": "first", "always": False},
+            {"name": "x-result", "value": "second", "always": True},
+        ])
+        code, _, config = self.run_preview("example.org", "location / { add_header_inherit merge; return 200 ok; }")
+        self.assertEqual(code, 1)
+        self.assertIsNone(config)
+
     def test_real_ip_and_literal_redirect_preview(self):
         code, _, config = self.run_preview("example.org",
             'location / { proxy_pass http://127.0.0.1:2010; } location = /old { return 308 /new; }',
