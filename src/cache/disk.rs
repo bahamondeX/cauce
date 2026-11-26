@@ -15,7 +15,7 @@ use std::{
     os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt},
     path::{Path, PathBuf},
     sync::{
-        atomic::{AtomicU64, AtomicUsize, Ordering},
+        atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
         Arc, Mutex,
     },
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
@@ -84,6 +84,8 @@ pub(super) struct Disk {
     max_entries: usize,
     index: Mutex<Index>,
     io: Arc<Semaphore>,
+    invalidate_io: Arc<Semaphore>,
+    disabled: AtomicBool,
     epoch: AtomicU64,
     pending_invalidations: AtomicUsize,
     sequence: AtomicU64,
@@ -243,6 +245,8 @@ impl Disk {
             max_entries,
             index: Mutex::new(Index::default()),
             io: Arc::new(Semaphore::new(8)),
+            invalidate_io: Arc::new(Semaphore::new(8)),
+            disabled: AtomicBool::new(false),
             epoch: AtomicU64::new(0),
             pending_invalidations: AtomicUsize::new(0),
             sequence: AtomicU64::new(1),
@@ -310,6 +314,7 @@ impl Disk {
             let _permit = permit;
             let mut index = disk.index.lock().unwrap();
             if index.closed
+                || disk.disabled.load(Ordering::Acquire)
                 || disk.pending_invalidations.load(Ordering::Acquire) != 0
                 || disk.epoch.load(Ordering::Acquire) != epoch.epoch
             {
@@ -322,7 +327,9 @@ impl Disk {
                 .and_then(|bytes| decode(bytes, disk.max_object))
             {
                 if stored.key == *key {
-                    return (disk.epoch.load(Ordering::Acquire) == epoch.epoch).then_some(entry);
+                    return (!disk.disabled.load(Ordering::Acquire)
+                        && disk.epoch.load(Ordering::Acquire) == epoch.epoch)
+                        .then_some(entry);
                 }
             }
             let _ = disk.remove(&mut index, &key);
@@ -369,6 +376,7 @@ impl Disk {
         }
         let mut index = self.index.lock().unwrap();
         if index.closed
+            || self.disabled.load(Ordering::Acquire)
             || self.pending_invalidations.load(Ordering::Acquire) != 0
             || self.epoch.load(Ordering::Acquire) != fence.epoch
             || index
@@ -454,6 +462,15 @@ impl Disk {
         family: Family,
         fence: Option<Fence>,
     ) -> Option<tokio::task::JoinHandle<()>> {
+        if self.disabled.load(Ordering::Acquire) {
+            return None;
+        }
+        let Ok(permit) = self.invalidate_io.clone().try_acquire_owned() else {
+            // Falling back to memory prevents an unbounded invalidation queue.
+            // The missing clean marker forces safe reconstruction after restart.
+            self.disabled.store(true, Ordering::Release);
+            return None;
+        };
         let disk = self.clone();
         // Stop reads immediately. Enqueued older fills cannot become visible
         // while deletion is waiting for a blocking worker.
@@ -479,6 +496,7 @@ impl Disk {
             }
         }
         Some(tokio::task::spawn_blocking(move || {
+            let _permit = permit;
             let mut index = disk.index.lock().unwrap();
             let victims: Vec<_> = index
                 .objects

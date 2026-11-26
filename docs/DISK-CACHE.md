@@ -19,7 +19,9 @@ for persistence. Files are synced before atomic rename. Generation and
 invalidation fences prevent obsolete updates from being published in the
 current process. Readers hold independent in-memory bytes during delivery.
 The disk tier can miss under I/O saturation or storage errors, leaving
-normal origin forwarding and the memory cache available.
+normal origin forwarding and the memory cache available. Invalidation uses
+a separate bounded I/O budget. If it saturates, the disk tier stays
+disabled until a cold restart.
 
 A clean shutdown records the configuration identity and syncs the cache
 directory. Startup validates the marker, file type, metadata, checksum,

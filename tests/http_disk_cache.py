@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Disk-tier read, quota, recovery, and invalidation over real HTTP sockets."""
 from collections import Counter
+import errno
 from pathlib import Path
 import http.server
 import json
@@ -22,7 +23,12 @@ class DiskCache(unittest.TestCase):
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         self.path = Path(temp.name).resolve()
-        self.storage = self.path / "disk"
+        if mount := os.environ.get("CAUCE_DISK_CACHE_MOUNT"):
+            storage = tempfile.TemporaryDirectory(dir=mount)
+            self.addCleanup(storage.cleanup)
+            self.storage = Path(storage.name)
+        else:
+            self.storage = self.path / "disk"
         self.config = self.path / "cauce.yaml"
         self.origin = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Origin)
         self.origin.calls, self.origin.lock = Counter(), threading.Lock()
@@ -100,6 +106,23 @@ class DiskCache(unittest.TestCase):
         self.start()
         self.assertEqual(self.get("/default", cache_only=True)[0], 504)
         self.assertEqual(self.objects(), [])
+
+    @unittest.skipUnless(os.environ.get("CAUCE_DISK_CACHE_MOUNT"), "requires a small dedicated tmpfs mount")
+    def test_enospc_then_recovers(self):
+        filler = self.storage / "filler"
+        with filler.open("wb", buffering=0) as file:
+            with self.assertRaises(OSError) as exhausted:
+                while True:
+                    file.write(b"x" * 4096)
+            self.assertEqual(exhausted.exception.errno, errno.ENOSPC)
+        self.assertEqual(self.get("/first")[0], 200)
+        self.await_disk(lambda: "disk_cache_write_failed" in self.log.read_text())
+        self.assertFalse(self.objects())
+        self.assertEqual(self.get("/first", cache_only=True)[0], 200)
+        filler.unlink()
+        self.assertEqual(self.get("/second")[0], 200)
+        self.await_disk(lambda: len(self.objects()) == 1)
+        self.assertFalse(list(self.storage.glob("*.cauce-part")))
 
     def test_write_invalidates_disk_and_fifo_eviction_respects_quota(self):
         self.assertEqual(self.get("/mutation")[2], b"response 1")
