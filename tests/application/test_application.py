@@ -106,7 +106,10 @@ class FastCGI(socketserver.BaseRequestHandler):
                         self.server.closed.set()
                     return
                 response = json.dumps({"fields": fields, "bytes": len(body), "body": hashlib.sha256(body).hexdigest()}).encode()
-                head = b"Status: 201 Created\r\nSet-Cookie: a=b\r\nSet-Cookie: c=d\r\nContent-Length: "
+                if mode == "cache":
+                    head = b"Status: 200 OK\r\nContent-Type: application/json\r\nCache-Control: public, max-age=60\r\nContent-Length: "
+                else:
+                    head = b"Status: 201 Created\r\nSet-Cookie: a=b\r\nSet-Cookie: c=d\r\nContent-Length: "
                 self.request.sendall(record(7, b"redacted diagnostic") + record(6, head, b"\0\0"))
                 self.request.sendall(record(6, str(len(response)).encode() + b"\r\n\r\n" + response))
                 self.request.sendall(record(6) + record(3, bytes(8)))
@@ -151,8 +154,11 @@ class FastCGITests(unittest.TestCase):
         self.admin = free_port()
         self.config = self.tmp / "cauce.yaml"
 
-    def serve(self, backend, **options):
-        self.config.write_text(json.dumps(app_config(self.port, self.admin, backend, **options)))
+    def serve(self, backend, route_options=None, **options):
+        config = app_config(self.port, self.admin, backend, **options)
+        if route_options:
+            config["proxy"]["routes"][0].update(route_options)
+        self.config.write_text(json.dumps(config))
         log = self.tmp / "cauce.log"
         proc = start_process(self.stack, [CAUCE, str(self.config)], log, env={**os.environ, "CAUCE_ADMIN_TOKEN": TOKEN})
         try:
@@ -207,6 +213,18 @@ class FastCGITests(unittest.TestCase):
         self.assertEqual(call(self.port)[0], 201)
         self.assertEqual(self.metric("upstream_connections_created_total"), 1)
         self.assertEqual(self.metric("upstream_reused_total"), 1)
+
+    def test_application_response_uses_shared_http_cache(self):
+        server, backend = self.fixture()
+        self.serve(backend, route_options={"cache": {"max_size": "128KiB", "max_entry_size": "8KiB",
+                                                    "max_entries": 3, "ttl": "60s"}})
+        status, _, first = call(self.port, "/?cache")
+        self.assertEqual(status, 200)
+        status, headers, second = call(self.port, "/?cache")
+        self.assertEqual(status, 200)
+        self.assertEqual(second, first)
+        self.assertIn("hit", {name.lower(): value for name, value in headers}["cache-status"])
+        self.assertEqual(len(server.exchanges), 1)
 
     def test_bounded_chunked_request_and_opt_out(self):
         _, backend = self.fixture()

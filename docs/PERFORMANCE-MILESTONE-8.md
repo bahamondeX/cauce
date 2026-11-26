@@ -10,7 +10,7 @@ still passes the existing HTTP regression suite.
 
 | Suite | Verified scope |
 | --- | --- |
-| FastCGI | Seven test groups. Seven shared cases through PHP-FPM 8.4.22 and NGINX 1.30.8 cover GET, POST, multipart, large responses, redirects, cookies and errors. Independent Unix framing covers reuse, client cancellation, malformed records, truncation and fixed script paths. |
+| FastCGI | Eight test groups. Seven shared cases through PHP-FPM 8.4.22 and NGINX 1.30.8 cover GET, POST, multipart, large responses, redirects, cookies and errors. Independent Unix framing covers reuse, client cancellation, malformed records, truncation, fixed script paths and shared HTTP cache hits. |
 | uWSGI and SCGI | Four test groups. Each wire mode of uWSGI 2.0.21 served a Python WSGI app and matched NGINX on five cases. Unix fixtures independently decode environment frames and verify known-length and buffered uploads, malformed and truncated heads, and subsequent recovery. |
 | Mail | Six interoperability and security groups, plus a socket drain case. Postfix 3.7.11 and Dovecot 2.3.19.1 worked with Python SMTP, IMAP and POP3 clients. STARTTLS and STLS exercised the same backends through NGINX. The candidate also passed implicit TLS, SMTP LOGIN, IMAP PLAIN, verified backend TLS, wrong backend hostname, auth service denial, untrusted backend selection, overlong commands, admission, rollback and authenticated SIGTERM draining. |
 | Existing regressions | HTTP integration on compact and sharded pools, HTTP/3 with aioquic 1.3.0 and pinned NGINX, TCP and UDP with the pinned Stream reference, content handlers, memory cache, mTLS, collector and collector storage. |
@@ -26,11 +26,21 @@ It exercises the production FastCGI header parser, CGI response header
 parser and native uWSGI and SCGI prefix encoders.
 [ASan log](../bench/program/evidence/milestone-8/application-wire-asan.log.gz).
 
+Colima ARM64 also passed the wire-only application fixtures, HTTP/2 and
+gRPC interoperability, 20 header deadline cases, cleartext and TLS
+HTTP/2 stress, the legacy TLS and WebSocket suites, and the collector
+HTTPS contract fixture. The isolated resilience run passed the transport,
+log disk and collector storage suites. The pinned Linux
+NGINX reference passed 20 routing cases, 11 gateway cases per pool
+strategy and 15 content cases. [Linux regressions](../bench/program/evidence/milestone-8/regression-linux-arm64.tar.gz).
+
 An initial concurrent Layer 4 run timed out in the IPv6-to-Unix
 half-close case and the full isolated rerun passed. An initial SCGI run failed during fixture startup. The updated
 readiness gate verifies an actual native response over the backend wire. Mail fixture startup allowance was increased after delayed
 Postfix startup during concurrent compilation. The rejected runs are
-included with the raw evidence. [Evidence](../bench/program/evidence/milestone-8/).
+included with the raw evidence. The first Docker resilience run passed
+all three suites but failed its global container preservation check while
+other suites were active. The isolated rerun passed cleanup and all suites. [Evidence](../bench/program/evidence/milestone-8/).
 
 ## Disabled-protocol diagnostics
 
@@ -67,6 +77,12 @@ on disk compared with `e612f84`. The text segment accounts for 1.36 MiB.
 The loaded snapshot shows +160 KiB RSS, +96 KiB physical footprint, and
 +144 KiB resident text. Live nodes are a point-in-time measure. Allocation
 calls per request require a repeated allocator trace.
+
+A separate Colima ARM64 snapshot served 200 identical direct HTTP
+responses per image. Compared with the `e612f84` image, the loaded
+candidate had +580 KiB RSS, +588 KiB PSS, +516 KiB private clean pages
+and +80 KiB private dirty pages. These are single observations from
+`smaps_rollup` under VM conditions. [Linux memory evidence](../bench/program/evidence/milestone-8/linux-footprint.json).
 
 The runtime dependency lock is unchanged. The dependency inventory
 still shows duplicate Base64, getrandom, hashbrown and syn versions in
@@ -113,6 +129,15 @@ The local smoke exercised both proxies on all three protocol modes with
 8 measured 128 KiB uploads and 128 KiB responses per mode. Those runs
 qualify harness behavior. They give no competitive performance result.
 [Runner](../bench/program/network-benchmark.py) [Native methodology](PERFORMANCE-NATIVE.md).
+
+## Staged Linux artifacts
+
+The local OCI archive at `work/milestone-8/cauce-linux-multiarch.oci.tar`
+contains release builds for Linux ARM64 and AMD64. The ARM64 regression
+image's proxy binary matches the staged OCI executable. The AMD64
+emulated smoke verified binary hashes and configuration loading in
+Colima. [Build identities](../bench/program/evidence/milestone-8/build-identities.json)
+[AMD64 smoke](../bench/program/evidence/milestone-8/amd64-smoke.log).
 
 ## Release boundary
 

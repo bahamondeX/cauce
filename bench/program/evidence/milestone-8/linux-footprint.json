@@ -1,0 +1,36 @@
+{
+  "cauce:milestone7-arm64": {
+    "idle_kib": {
+      "Rss": 6124,
+      "Pss": 5274,
+      "Shared_Clean": 1436,
+      "Private_Clean": 4092,
+      "Private_Dirty": 596
+    },
+    "loaded_kib": {
+      "Rss": 6504,
+      "Pss": 6102,
+      "Shared_Clean": 800,
+      "Private_Clean": 4984,
+      "Private_Dirty": 720
+    },
+    "binary_sha256": "a5871af76f93817a1504461281e1e18330f9868d831eff81ae3c3b8986ffcaad"
+  },
+  "cauce:milestone8-arm64": {
+    "idle_kib": {
+      "Rss": 6504,
+      "Pss": 6110,
+      "Shared_Clean": 784,
+      "Private_Clean": 5052,
+      "Private_Dirty": 668
+    },
+    "loaded_kib": {
+      "Rss": 7084,
+      "Pss": 6690,
+      "Shared_Clean": 784,
+      "Private_Clean": 5500,
+      "Private_Dirty": 800
+    },
+    "binary_sha256": "aaedc6dee4b54cfc8939d60297f3a84cce77193c7d241f9e39514886cdf70e8b"
+  }
+}

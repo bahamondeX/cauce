@@ -1,0 +1,30 @@
+{
+  "arm64": {
+    "manifest": "sha256:33dfceb12a80898db796b76bc0f34b2941afb5ac230d3e4c7a0667df46b52732",
+    "config": "sha256:dfe9b1869542ab421e7e0af529e106b70ad6285cfa448c6004086dad91667ce9",
+    "binaries": {
+      "cauce-collector": {
+        "sha256": "aa0c6eac3fe045181eb5eff40eb66b2f7fb7a1c8fd5b84b25f277f23f5916e95",
+        "bytes": 5860480
+      },
+      "cauce": {
+        "sha256": "aaedc6dee4b54cfc8939d60297f3a84cce77193c7d241f9e39514886cdf70e8b",
+        "bytes": 10830456
+      }
+    }
+  },
+  "amd64": {
+    "manifest": "sha256:6c8e7fbd6dfe9ca47ed65de9f2600c066d5c6fb592d3724ff4c2619e5ba0e485",
+    "config": "sha256:aa950663abd45e3a9384ee074a639ee944d4320e84e0cb4fd9a3b9dfc90bb7e7",
+    "binaries": {
+      "cauce-collector": {
+        "sha256": "47be0f44d717d02a850b3461bd468ef601e95dcb255ee3ad28aa5a0ef89b134f",
+        "bytes": 6609520
+      },
+      "cauce": {
+        "sha256": "f76fefc6a1d3f5bf13b9cf0052692da2d2d33477a263c39b617bb45281ff8b00",
+        "bytes": 12477192
+      }
+    }
+  }
+}
