@@ -91,10 +91,6 @@ impl Group {
         }
     }
 
-    fn eligible(&self, index: usize) -> bool {
-        self.members[index].eligible()
-    }
-
     fn load(&self, index: usize, weighted: bool) -> (u128, u128) {
         (
             self.members[index].inflight.load(Ordering::Relaxed) as u128,
@@ -112,8 +108,17 @@ impl Group {
         (an * bd).cmp(&(bn * ad))
     }
 
-    pub fn select(&self, kind: Balance, client: IpAddr) -> Option<Arc<Endpoint>> {
+    pub fn select(
+        &self,
+        kind: Balance,
+        client: IpAddr,
+        exclude: Option<&Endpoint>,
+    ) -> Option<Arc<Endpoint>> {
         let count = self.members.len();
+        let eligible = |index: usize| {
+            let member = self.members[index].as_ref();
+            exclude.is_none_or(|excluded| !std::ptr::eq(member, excluded)) && member.eligible()
+        };
         let result = match kind {
             Balance::ConsistentHash => {
                 let key = key(client);
@@ -124,7 +129,7 @@ impl Group {
                     -uniform.ln() / self.weights[i] as f64
                 };
                 (0..count)
-                    .filter(|&i| self.eligible(i))
+                    .filter(|&i| eligible(i))
                     .map(|i| (i, score(i)))
                     .min_by(|(a, left), (b, right)| {
                         left.total_cmp(right).then_with(|| {
@@ -138,20 +143,20 @@ impl Group {
                 let start = (mix(key(client)) % total as u64) as usize;
                 (0..total)
                     .map(|offset| self.ticket_order[(start + offset) % total])
-                    .find(|&i| self.eligible(i))
+                    .find(|&i| eligible(i))
             }
             Balance::WeightedRoundRobin => (0..self.ticket_order.len())
                 .map(|_| {
                     self.ticket_order
                         [self.cursor.fetch_add(1, Ordering::Relaxed) % self.ticket_order.len()]
                 })
-                .find(|&i| self.eligible(i))
-                .or_else(|| (0..count).find(|&i| self.eligible(i))),
+                .find(|&i| eligible(i))
+                .or_else(|| (0..count).find(|&i| eligible(i))),
             other => {
                 let start = self.cursor.fetch_add(1, Ordering::Relaxed) % count;
                 let mut peers = (0..count)
                     .map(|offset| (start + offset) % count)
-                    .filter(|&i| self.eligible(i));
+                    .filter(|&i| eligible(i));
                 match other {
                     Balance::RoundRobin => peers.next(),
                     Balance::LeastInflight
@@ -166,7 +171,7 @@ impl Group {
                             + mix(self.cursor.load(Ordering::Relaxed) as u64) as usize
                                 % (count - 1))
                             % count;
-                        match (self.eligible(a), self.eligible(b)) {
+                        match (eligible(a), eligible(b)) {
                             (true, true) => Some(if self.less(a, b, true).is_le() { a } else { b }),
                             (true, false) => Some(a),
                             (false, true) => Some(b),

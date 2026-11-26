@@ -653,6 +653,14 @@
           "minimum": 0,
           "maximum": 100000
         },
+        "resilience": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "failures": {"type": "integer", "minimum": 1, "maximum": 100},
+            "max_backoff_ms": {"anyOf": [{"$ref": "#/$defs/durationString"}, {"type": "integer", "minimum": 1, "maximum": 300000}]},
+            "eject_on_gateway_status": {"type": "boolean"}
+          }
+        },
         "failure_backoff_ms": {
           "anyOf": [
             {
@@ -898,6 +906,13 @@
           "required": ["path_match", "path_pattern"],
           "not": {"required": ["path_prefix"]},
           "properties": {
+        "connect_retry": {
+          "type": "object", "additionalProperties": false, "required": ["rate", "concurrent"],
+          "properties": {
+            "rate": {"type": "integer", "minimum": 1, "maximum": 1000},
+            "concurrent": {"type": "integer", "minimum": 1, "maximum": 128}
+          }
+        },
             "path_match": {
               "anyOf": [
                 {"$ref": "#/$defs/environment"},

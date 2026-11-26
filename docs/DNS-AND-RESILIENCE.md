@@ -37,3 +37,26 @@ HTTP, application or opaque Stream or mail traffic.
 [Hickory resolver documentation](https://docs.rs/hickory-resolver/0.26.4/hickory_resolver/)
 [Resolver fixture](../src/dns.rs)
 [Socket tests](../tests/dns_upstream.py).
+
+## Passive ejection and connection retries
+
+HTTP and application endpoints can set `resilience` with a consecutive
+failure threshold, maximum backoff and optional ejection for HTTP 502–504.
+The existing `failure_backoff_ms` supplies the base. Backoff increases
+after failed recovery and uses per-endpoint jitter. One request at a time
+can probe an ejected endpoint. A valid upstream response resets the
+counter, and cancellation releases the recovery permit after a cooldown.
+Configured active health probes remain a separate selection requirement.
+TCP, UDP and mail retain their existing transport-specific failure behavior.
+
+Routes with two or more upstreams of the same protocol can opt into
+`connect_retry` with `rate` attempts per second and a `concurrent` cap.
+Only empty GET, HEAD and OPTIONS requests can make one alternate acquisition,
+after a confirmed transport establishment failure and within the original
+request deadline. Each retry consumes a rate token and an acquisition slot.
+No stage retries a dispatched request or copies a streaming request body.
+
+[Real-socket tests](../tests/upstream_resilience.py)
+[Envoy circuit breaking](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking.html)
+[HAProxy retry policies](https://www.haproxy.com/documentation/haproxy-configuration-tutorials/reliability/retries/)
+[NGINX proxy_next_upstream](https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_next_upstream).

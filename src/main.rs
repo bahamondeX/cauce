@@ -17,6 +17,7 @@ mod identity;
 mod mail;
 mod pool;
 mod proxy;
+mod resilience;
 mod routing;
 mod static_files;
 mod stream;

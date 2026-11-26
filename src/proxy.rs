@@ -710,7 +710,7 @@ where
             }
         };
     }
-    let endpoint = match generation.select(route, client_ip) {
+    let mut endpoint = match generation.select(route, client_ip) {
         Some(e) => e,
         None => {
             stale_on_error!(StatusCode::SERVICE_UNAVAILABLE);
@@ -761,13 +761,61 @@ where
             "acquire_ms": limits.acquire_ms,
         })
     });
-    let acquired = tokio::time::timeout_at(
+    let mut acquired = tokio::time::timeout_at(
         deadline,
         state
             .pool
             .acquire(generation.clone(), endpoint.clone(), event.is_some()),
     )
     .await;
+    let mut attempt_number = 1;
+    if route.connect_retry.is_some()
+        && acquired
+            .as_ref()
+            .is_ok_and(|result| result.as_ref().is_err_and(crate::pool::is_connect_failure))
+        && matches!(
+            *req.method(),
+            hyper::Method::GET | hyper::Method::HEAD | hyper::Method::OPTIONS
+        )
+        && req.body().is_end_stream()
+        && !grpc
+        && websocket.is_none()
+        && tokio::time::Instant::now() < deadline
+    {
+        if let Some((alternate, _permit)) = generation
+            .select_other(route, client_ip, &endpoint)
+            .and_then(|alternate| {
+                generation.retry_budgets[&route.id]
+                    .take()
+                    .map(|permit| (alternate, permit))
+            })
+        {
+            if let Some(event) = &mut event {
+                event.attempts.push(Attempt {
+                    number: 1,
+                    outcome: "upstream_connect_retry",
+                    connection_id: None,
+                    reused: None,
+                    pool_wait_ms: None,
+                    connect_gate_ms: None,
+                    dns_ms: None,
+                    tcp_ms: None,
+                    tls_ms: None,
+                    headers_ms: None,
+                });
+                event.upstream_id = Some(alternate.config.id.clone());
+            }
+            attempt_number = 2;
+            endpoint = alternate;
+            acquired = tokio::time::timeout_at(
+                deadline,
+                state
+                    .pool
+                    .acquire(generation.clone(), endpoint.clone(), event.is_some()),
+            )
+            .await;
+        }
+    }
     let (mut lease, attempt) = match acquired {
         Ok(Ok(pair)) => pair,
         failure => {
@@ -787,6 +835,7 @@ where
                     "pool_capacity_timeout" => "pool_capacity_timeout",
                     "connect_capacity_timeout" => "connect_capacity_timeout",
                     "dns_timeout" => "dns_timeout",
+                    "upstream_circuit_open" => "upstream_circuit_open",
                     "dns_no_answers" => "dns_no_answers",
                     "tcp_connect_timeout" => "tcp_connect_timeout",
                     "unix_connect_timeout" => "unix_connect_timeout",
@@ -798,7 +847,7 @@ where
             };
             if let Some(event) = &mut event {
                 event.attempts.push(Attempt {
-                    number: 1,
+                    number: attempt_number,
                     outcome: reason,
                     connection_id: None,
                     reused: None,
@@ -810,7 +859,12 @@ where
                     headers_ms: None,
                 });
             }
-            let status = if ["pool_capacity_timeout", "connect_capacity_timeout"].contains(&reason)
+            let status = if [
+                "pool_capacity_timeout",
+                "connect_capacity_timeout",
+                "upstream_circuit_open",
+            ]
+            .contains(&reason)
             {
                 StatusCode::SERVICE_UNAVAILABLE
             } else if reason.ends_with("timeout") || reason == "request_deadline" {
@@ -832,7 +886,10 @@ where
     });
     lease.arm_deadline(hard_deadline);
     if let Some(event) = &mut event {
-        event.attempts.extend(attempt);
+        event.attempts.extend(attempt.map(|mut attempt| {
+            attempt.number = attempt_number;
+            attempt
+        }));
     }
     let path = req
         .uri()
@@ -1024,8 +1081,11 @@ where
                 }
                 return Ok(record_error(&state, event, started, status, reason));
             }
-            if uploaded.load(Ordering::Acquire) && !upstream_h2 {
-                state.pool.mark_failed(&endpoint);
+            if uploaded.load(Ordering::Acquire) {
+                lease.health_result(false);
+                if !upstream_h2 {
+                    state.pool.mark_failed(&endpoint);
+                }
             }
             if let Some(attempt) = event.as_mut().and_then(|e| e.attempts.last_mut()) {
                 attempt.outcome = "headers_failed";
@@ -1065,6 +1125,10 @@ where
     if invalid_framing(response.headers()) || headers_exceed_limits(response.headers(), limits) {
         reject!(BAD_GATEWAY, "invalid_upstream_headers");
     }
+    let is_outlier = endpoint.config.resilience.as_ref().is_some_and(|settings| {
+        settings.eject_on_gateway_status && matches!(response.status().as_u16(), 502..=504)
+    });
+    lease.health_result(!is_outlier);
     if response.status() == StatusCode::SWITCHING_PROTOCOLS {
         let Some(handshake) = websocket else {
             reject!(BAD_GATEWAY, "unexpected_upgrade");

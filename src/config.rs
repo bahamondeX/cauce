@@ -336,6 +336,8 @@ pub struct Upstream {
     pub idle_connections: usize,
     #[serde(deserialize_with = "milliseconds")]
     pub failure_backoff_ms: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) resilience: Option<crate::resilience::Settings>,
     #[serde(default)]
     pub health_check: Option<HealthCheck>,
     #[serde(default)]
@@ -454,6 +456,8 @@ pub struct Route {
     pub(crate) cache: Option<Box<crate::cache::Spec>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub(crate) application: Option<Box<crate::application::config::Settings>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) connect_retry: Option<crate::resilience::RetrySettings>,
     #[serde(default)]
     pub balance: Balance,
     #[serde(default)]
@@ -765,6 +769,9 @@ impl Config {
                 u.failure_backoff_ms > 0 && u.failure_backoff_ms <= 60_000,
                 "invalid backoff"
             );
+            if let Some(settings) = &u.resilience {
+                settings.validate(u.failure_backoff_ms)?;
+            }
             ensure!(
                 !u.isolation.is_empty() && u.isolation.len() <= 64,
                 "missing isolation boundary"
@@ -974,6 +981,17 @@ impl Config {
                         && r.upstreams.iter().all(|name| protocols.get(name.as_str()).is_some_and(|(protocol, idle)|
                             protocol.application() == Some(application) && (settings.keep_connection || *idle == 0))),
                     "application routes require a common protocol and explicit keepalive for idle sockets"
+                );
+            }
+            if let Some(retry) = &r.connect_retry {
+                retry.validate()?;
+                ensure!(
+                    r.upstreams.len() >= 2
+                        && r.upstreams
+                            .windows(2)
+                            .all(|pair| protocols[pair[0].as_str()].0
+                                == protocols[pair[1].as_str()].0),
+                    "connect retry requires at least two upstreams using one protocol"
                 );
             }
             let unique: HashSet<_> = r.upstreams.iter().collect();

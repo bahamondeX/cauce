@@ -3,7 +3,7 @@
 use crate::{
     body::ProxyBody,
     config::{Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol, MAX_UPSTREAMS},
-    diagnostics, dns,
+    diagnostics, dns, resilience,
     routing::Routes,
     telemetry::{Attempt, Metrics},
     tls,
@@ -63,6 +63,7 @@ pub struct Endpoint {
     pub inflight: AtomicUsize,
     pub active_healthy: AtomicBool,
     pub failed_until: Mutex<Option<Instant>>,
+    circuit: Option<Arc<resilience::Circuit>>,
     dns: Mutex<Option<(Instant, Vec<SocketAddr>)>>,
     resolver: Option<Arc<dns::Resolver>>,
     // A semaphore limits DNS refresh concurrency; no mutex is held over network IO.
@@ -80,6 +81,7 @@ pub struct Generation {
     pub endpoints: HashMap<String, Arc<Endpoint>>,
     pub draining: AtomicBool,
     groups: HashMap<String, crate::balance::Group>,
+    pub(crate) retry_budgets: HashMap<String, resilience::RetryBudget>,
     pub caches: HashMap<String, Arc<crate::cache::Cache>>,
     pub(crate) applications: HashMap<String, crate::application::config::Route>,
     pub(crate) application_buffers: Option<Arc<Semaphore>>,
@@ -130,6 +132,15 @@ impl Generation {
                         inflight: AtomicUsize::new(0),
                         active_healthy: AtomicBool::new(u.health_check.is_none()),
                         failed_until: Mutex::new(None),
+                        circuit: u.resilience.clone().map(|settings| {
+                            resilience::Circuit::new(
+                                settings,
+                                u.failure_backoff_ms,
+                                crate::balance::hash(u.id.as_bytes())
+                                    ^ version.rotate_left(17)
+                                    ^ u64::from(std::process::id()),
+                            )
+                        }),
                         dns: Mutex::new(None),
                         resolver: resolver.clone().filter(|_| {
                             !u.address.starts_with("unix:")
@@ -152,6 +163,16 @@ impl Generation {
                     route.id.clone(),
                     crate::balance::Group::compile(route, &endpoints),
                 )
+            })
+            .collect();
+        let retry_budgets = config
+            .routes
+            .iter()
+            .filter_map(|route| {
+                route
+                    .connect_retry
+                    .as_ref()
+                    .map(|settings| (route.id.clone(), resilience::RetryBudget::new(settings)))
             })
             .collect();
         let caches = config
@@ -192,6 +213,7 @@ impl Generation {
             endpoints,
             draining: AtomicBool::new(false),
             groups,
+            retry_budgets,
             caches,
             applications,
             application_buffers,
@@ -208,7 +230,19 @@ impl Generation {
             let endpoint = &self.endpoints[id];
             return endpoint.eligible().then(|| endpoint.clone());
         }
-        self.groups.get(&route.id)?.select(route.balance, client)
+        self.groups
+            .get(&route.id)?
+            .select(route.balance, client, None)
+    }
+    pub(crate) fn select_other(
+        &self,
+        route: &Route,
+        client: std::net::IpAddr,
+        exclude: &Endpoint,
+    ) -> Option<Arc<Endpoint>> {
+        self.groups
+            .get(&route.id)?
+            .select(route.balance, client, Some(exclude))
     }
 }
 impl Endpoint {
@@ -232,11 +266,14 @@ impl Endpoint {
 
     pub(crate) fn eligible(&self) -> bool {
         self.active_healthy.load(Ordering::Acquire)
-            && self
-                .failed_until
-                .lock()
-                .unwrap()
-                .is_none_or(|until| until <= Instant::now())
+            && if let Some(circuit) = &self.circuit {
+                circuit.eligible(Instant::now())
+            } else {
+                self.failed_until
+                    .lock()
+                    .unwrap()
+                    .is_none_or(|until| until <= Instant::now())
+            }
     }
 }
 
@@ -510,6 +547,7 @@ impl Drop for DriverCapacity {
     }
 }
 pub struct Lease {
+    health_attempt: Option<resilience::Attempt>,
     pub connection: Option<Connection>,
     pool: Arc<Pool>,
     generation: Arc<Generation>,
@@ -620,6 +658,12 @@ impl Drop for Lease {
     }
 }
 impl Lease {
+    pub(crate) fn health_result(&mut self, success: bool) {
+        if let Some(attempt) = self.health_attempt.take() {
+            attempt.finish(success, Instant::now());
+        }
+    }
+
     pub fn connection_id(&self) -> u64 {
         self.h2.as_ref().map_or_else(
             || self.connection.as_ref().expect("HTTP/1 lease").id,
@@ -1001,6 +1045,40 @@ impl Pool {
         endpoint: Arc<Endpoint>,
         log_attempt: bool,
     ) -> Result<(Lease, Option<Attempt>)> {
+        let health_attempt = endpoint
+            .circuit
+            .as_ref()
+            .map(|circuit| {
+                circuit
+                    .begin(Instant::now())
+                    .ok_or_else(|| anyhow!("upstream_circuit_open"))
+            })
+            .transpose()?;
+        let result = self
+            .acquire_transport(generation, endpoint, log_attempt)
+            .await;
+        match result {
+            Ok((mut lease, attempt)) => {
+                lease.health_attempt = health_attempt;
+                Ok((lease, attempt))
+            }
+            Err(error) => {
+                if let Some(attempt) = health_attempt {
+                    if is_connect_failure(&error) {
+                        attempt.finish(false, Instant::now());
+                    }
+                }
+                Err(error)
+            }
+        }
+    }
+
+    async fn acquire_transport(
+        self: &Arc<Self>,
+        generation: Arc<Generation>,
+        endpoint: Arc<Endpoint>,
+        log_attempt: bool,
+    ) -> Result<(Lease, Option<Attempt>)> {
         let begin = Instant::now();
         let key = Key {
             generation: generation.version,
@@ -1102,13 +1180,10 @@ impl Pool {
             }
             let connected = self.connect(&endpoint, capacity, &mut attempt).await;
             if connected.is_err() {
-                *endpoint.failed_until.lock().unwrap() = Some(
-                    Instant::now() + Duration::from_millis(endpoint.config.failure_backoff_ms),
-                );
-                self.metrics.failures.fetch_add(1, Ordering::Relaxed);
+                self.mark_failed(&endpoint);
                 self.notify.notify_waiters();
             }
-            connected?
+            connected.map_err(connect_failure)?
         };
         if let Some(attempt) = &mut attempt {
             attempt.connection_id = Some(format!("c{}", connection.id));
@@ -1116,6 +1191,7 @@ impl Pool {
         endpoint.inflight.fetch_add(1, Ordering::Relaxed);
         Ok((
             Lease {
+                health_attempt: None,
                 connection: Some(connection),
                 pool: self.clone(),
                 generation,
@@ -1275,12 +1351,8 @@ impl Pool {
                     Err(e) => {
                         drop(gate);
                         drop(open_gate);
-                        *endpoint.failed_until.lock().unwrap() = Some(
-                            Instant::now()
-                                + Duration::from_millis(endpoint.config.failure_backoff_ms),
-                        );
-                        self.metrics.failures.fetch_add(1, Ordering::Relaxed);
-                        return Err(e);
+                        self.mark_failed(&endpoint);
+                        return Err(connect_failure(e));
                     }
                 }
             }
@@ -1317,6 +1389,7 @@ impl Pool {
         });
         Ok((
             Lease {
+                health_attempt: None,
                 connection: None,
                 pool: self.clone(),
                 generation,
@@ -1596,10 +1669,44 @@ impl Pool {
     }
 
     pub fn mark_failed(&self, e: &Endpoint) {
-        *e.failed_until.lock().unwrap() =
-            Some(Instant::now() + Duration::from_millis(e.config.failure_backoff_ms));
+        if e.circuit.is_none() {
+            *e.failed_until.lock().unwrap() =
+                Some(Instant::now() + Duration::from_millis(e.config.failure_backoff_ms));
+        }
         self.metrics.failures.fetch_add(1, Ordering::Relaxed);
     }
+}
+
+#[derive(Debug)]
+struct ConnectFailure(anyhow::Error);
+
+impl std::fmt::Display for ConnectFailure {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+
+impl std::error::Error for ConnectFailure {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        Some(self.0.as_ref())
+    }
+}
+
+fn connect_failure(error: anyhow::Error) -> anyhow::Error {
+    if error.downcast_ref::<std::io::Error>().is_some_and(|error| {
+        matches!(
+            error.raw_os_error(),
+            Some(libc::ENFILE | libc::EMFILE | libc::ENOMEM | libc::ENOBUFS)
+        )
+    }) || error.to_string() == "dns_address_retired"
+    {
+        return error;
+    }
+    ConnectFailure(error).into()
+}
+
+pub(crate) fn is_connect_failure(error: &anyhow::Error) -> bool {
+    error.downcast_ref::<ConnectFailure>().is_some()
 }
 
 #[cfg(test)]
@@ -1706,6 +1813,7 @@ mod pool_tests {
                 connections: 2,
                 idle_connections: 2,
                 failure_backoff_ms: 100,
+                resilience: None,
                 tls: None,
                 protocol: UpstreamProtocol::Http2,
                 streams_per_connection: 8,
@@ -1722,6 +1830,7 @@ mod pool_tests {
                 compression: None,
                 cache: None,
                 application: None,
+                connect_retry: None,
                 allow_clients: None,
                 rate_zone: None,
                 balance: crate::config::Balance::RoundRobin,
@@ -2009,6 +2118,7 @@ mod pool_tests {
             endpoint.slots.clone().try_acquire_owned().unwrap(),
         );
         let mut lease = Lease {
+            health_attempt: None,
             connection: Some(Connection {
                 address: None,
                 transport: Exclusive::Http1 {

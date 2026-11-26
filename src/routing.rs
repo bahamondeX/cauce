@@ -340,6 +340,7 @@ mod tests {
             compression: None,
             cache: None,
             application: None,
+            connect_retry: None,
             allow_clients: None,
             rate_zone: None,
             balance: Balance::RoundRobin,
