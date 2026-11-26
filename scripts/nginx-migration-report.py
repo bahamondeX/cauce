@@ -132,6 +132,23 @@ def ipv4_socket(value):
     return f"{address}:{int(port)}"
 
 
+def server_names(items):
+    directives = [node for node in items if node.name == "server_name"]
+    if len(directives) != 1 or not directives[0].args or directives[0].children is not None:
+        raise ValueError("preview requires one server_name directive with explicit DNS names")
+    names = []
+    for value in directives[0].args:
+        name = value.lower()
+        domain = name[2:] if name.startswith("*.") else name.removesuffix(".*")
+        if not value.isascii() or len(domain) > 253 or not all(
+            DNS_LABEL.fullmatch(label) for label in domain.split(".")
+        ):
+            raise ValueError("preview supports DNS names and complete leading or trailing wildcard labels")
+        if name not in names:
+            names.append(name)
+    return names
+
+
 def preview(directives):
     http = [d for d in directives if d.name == "http" and d.children is not None and not d.args]
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
@@ -142,9 +159,7 @@ def preview(directives):
         raise ValueError("preview supports one HTTP server block")
     items = servers[0].children
     listener = ipv4_socket(one_value(items, "listen"))
-    host = one_value(items, "server_name").lower()
-    if len(host) > 253 or not all(DNS_LABEL.fullmatch(label) for label in host.split(".")):
-        raise ValueError("preview requires one exact DNS server name")
+    hosts = server_names(items)
     locations = [node for node in items if node.name == "location"]
     if not locations or len(locations) + 2 != len(items):
         raise ValueError("preview supports only listen, server_name, and location in the server")
@@ -156,13 +171,15 @@ def preview(directives):
     endpoints = {}
     paths = set()
     for location in locations:
-        if (location.children is None or len(location.children) != 1 or len(location.args) != 1
-                or not re.fullmatch(r"/[A-Za-z0-9_~./-]{0,255}", location.args[0])):
-            raise ValueError("preview requires plain path prefix blocks with a single proxy_pass")
-        path = location.args[0]
-        if path in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
-            raise ValueError("preview requires unique and unambiguous path prefixes")
-        paths.add(path)
+        exact = len(location.args) == 2 and location.args[0] == "="
+        if (location.children is None or len(location.children) != 1 or len(location.args) != (2 if exact else 1)
+                or not re.fullmatch(r"/[A-Za-z0-9_~./-]{0,255}", location.args[-1])):
+            raise ValueError("preview requires a literal prefix or exact location with a single proxy_pass")
+        path = location.args[-1]
+        key = (path, exact)
+        if key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
+            raise ValueError("preview requires unique and unambiguous paths")
+        paths.add(key)
         target = one_value(location.children, "proxy_pass")
         if not target.startswith("http://"):
             raise ValueError("preview requires clear HTTP IPv4 upstreams")
@@ -174,13 +191,15 @@ def preview(directives):
                 dict(id=endpoint, address=address, host=address, isolation="migration",
                      connections=32, idle_connections=16, failure_backoff_ms="500ms")
             )
-        for authority in [host, f"{host}:{listener.rsplit(':', 1)[1]}"]:
-            proxy["routes"].append(
-                dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
-                     balance="round_robin", upstreams=[endpoints[address]])
-            )
-    if len(proxy["routes"]) > 1024:
-        raise ValueError("preview exceeds Cauce route capacity")
+        for host in hosts:
+            for authority in (host, f"{host}:{listener.rsplit(':', 1)[1]}"):
+                if len(proxy["routes"]) == 1024:
+                    raise ValueError("preview exceeds Cauce route capacity")
+                row = dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
+                           balance="round_robin", upstreams=[endpoints[address]])
+                if exact:
+                    row["path_match"] = "exact"
+                proxy["routes"].append(row)
     return config
 
 
@@ -203,7 +222,8 @@ def main():
     report = {"nginx_reference": matrix["reference"]["version"],
               "directives": list(audit(directives, inventory(matrix))),
               "semantic_differences": [
-                  "Cauce matches exact authorities and segment-bounded prefixes. NGINX has server defaults and other location matching modes.",
+                  "Cauce matches literal paths or segment-bounded prefixes. NGINX normalizes URIs and supports additional location modes.",
+                  "The preview matches explicit server names with the listener port or no port. NGINX also has default-server behavior.",
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Review socket exposure and the loopback admin listener before deployment.",
@@ -213,10 +233,12 @@ def main():
             config = preview(directives)
             with args.preview.open("x", encoding="utf-8") as output:
                 yaml.safe_dump(config, output, sort_keys=False)
-            report["preview"] = {"status": "generated_for_review"}
+            report["preview"] = {"status": "generated_for_review", "confidence": "manual_review",
+                                 "validation": ["cauce", "check", str(args.preview)]}
         except (ValueError, FileExistsError) as error:
             reason = "output path already exists" if isinstance(error, FileExistsError) else str(error)
-            report["preview"] = {"status": "unavailable", "diagnostic": reason}
+            report["preview"] = {"status": "unavailable", "confidence": "unsupported_subset",
+                                 "diagnostic": reason}
     print(json.dumps(report, indent=2))
     if args.preview and report["preview"]["status"] != "generated_for_review":
         return 1
