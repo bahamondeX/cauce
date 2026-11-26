@@ -1,0 +1,20 @@
+#14 354.9      Removed 16 files, 30.5MiB total
+#14 355.3    Compiling cauce v0.9.1 (/src)
+#14 437.5     Finished `release` profile [optimized] target(s) in 1m 22s
+#14 DONE 437.7s
+
+#23 [linux/arm64 release-artifacts 1/2] COPY --from=builder /usr/local/bin/cauce-built /cauce
+#23 DONE 0.0s
+
+#24 [linux/arm64 release-artifacts 2/2] COPY --from=builder /usr/local/bin/cauce-collector-built /cauce-collector
+#24 DONE 0.0s
+
+#25 exporting to client directory
+#25 copying files linux/arm64 5.83MB 0.1s
+#25 copying files linux/amd64 5.74MB 0.1s
+#25 copying files linux/arm64 15.91MB 0.2s done
+#25 copying files linux/amd64 18.28MB 0.2s done
+#25 DONE 0.2s
+
+View build details: docker-desktop://dashboard/build/lucid_benz/lucid_benz0/vt0ms2xwfr9n9wm7szfk8unr5
+scripts/stage-native-release.sh: line 56: profiles[@]: unbound variable

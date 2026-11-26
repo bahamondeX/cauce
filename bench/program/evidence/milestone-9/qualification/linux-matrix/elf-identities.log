@@ -1,0 +1,14 @@
+SOURCE: OK
+cauce: OK
+cauce-collector: OK
+full/linux_arm64/cauce:           ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=e1a3012e87810a7e0d2686453dd79c106a47c020, for GNU/Linux 3.7.0, stripped
+full/linux_arm64/cauce-collector: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=bbb2bb15522e3157429d8610fa1eec263b198b75, for GNU/Linux 3.7.0, stripped
+core/linux_arm64/cauce:           ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=a58b26be9e2eb8f287a10b89d9b09b473bd62604, for GNU/Linux 3.7.0, stripped
+core/linux_arm64/cauce-collector: ELF 64-bit LSB pie executable, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=feb6384ce8c5163376e543e2701dccaf39deeb81, for GNU/Linux 3.7.0, stripped
+SOURCE: OK
+cauce: OK
+cauce-collector: OK
+full/linux_amd64/cauce:           ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=a073b2361ca964415ed073143edfc6bb7ea7c463, for GNU/Linux 3.2.0, stripped
+full/linux_amd64/cauce-collector: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2b1cf43a5825a54641d55f15fb169c3b2a5efe85, for GNU/Linux 3.2.0, stripped
+core/linux_amd64/cauce:           ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=cd872cc402672959da2fd8fbae74fc7bd4e0fc22, for GNU/Linux 3.2.0, stripped
+core/linux_amd64/cauce-collector: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=7fdaf93c9b88ac24128025c692b74308d2750fbc, for GNU/Linux 3.2.0, stripped

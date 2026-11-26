@@ -1,0 +1,14 @@
+linux/arm64
+aarch64
+80e22d538d1f1bb8cfe17f6e6b4bb0f9e19a5e8a0dafd0e7287face44f5fa324  /milestone9/cauce
+127bab78fa3d95977e1f54233c6a2af5abd69a9a9cc8de14682138e7a9cce688  /milestone9/cauce-collector
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+Error: HTTP cache requires the web build feature
+linux/amd64
+x86_64
+f57773e13a8da09da5dad567e9d09b490e8783d2adb6c8d03f13387f4709daec  /milestone9/cauce
+05126dcf6281846655d62f4ebcae00f96d29db44e6e78be7ca5e9a9143ca78d0  /milestone9/cauce-collector
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+Error: HTTP cache requires the web build feature

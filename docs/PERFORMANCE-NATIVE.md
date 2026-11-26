@@ -310,9 +310,10 @@ remain release gates. This checkpoint uses local infrastructure.
 The ARM64 and AMD64 Full builds staged from `36b73b1` have ELF and
 checksum verification. The ARM64 binary ran the Linux guest regressions
 and the AMD64 binary passed an emulated configuration smoke test. The
-ARM64 Core build from `cbb1a79` also passed its configuration checks.
-The current four-pair release matrix and its runtime verification remain
-open, including AMD64 Core.
+matching Core binaries passed configuration checks on both architectures.
+A newer ARM64 Core build from `cbb1a79` passed the same checks. A complete
+matrix from the final runtime tree and native performance qualification
+remain open.
 Existing HTTP, gRPC and network runners cover the shared protocol
 workloads, and the content runner now has a disk-restart mode. Use the
 exact artifact and scenario identities in the workload reports.

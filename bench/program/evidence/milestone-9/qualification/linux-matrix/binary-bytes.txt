@@ -1,0 +1,8 @@
+core/linux_arm64/cauce 10044120
+core/linux_arm64/cauce-collector 5860480
+core/linux_amd64/cauce 11666288
+core/linux_amd64/cauce-collector 6609520
+full/linux_arm64/cauce 13717976
+full/linux_arm64/cauce-collector 5860480
+full/linux_amd64/cauce 15766136
+full/linux_amd64/cauce-collector 6609520

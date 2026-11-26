@@ -82,11 +82,20 @@ The corresponding cross-built Linux AMD64 proxy is 15,766,136 bytes
 and the collector is 6,609,520 bytes. The AMD64 fixture verified the ELF
 architecture and hashes, then ran capability discovery and configuration
 validation under emulation.
+
+The matched `36b73b1` staging matrix contains all four Full and Core
+builds. Core is 10,044,120 bytes on ARM64 and 11,666,288 bytes on AMD64,
+26.8% and 26.0% smaller than Full on the same architecture. Both Core
+binaries accepted the base configuration and rejected an HTTP disk cache
+configuration with an explicit feature error. The AMD64 smokes ran under
+emulation. The initial batch script stopped after export because its
+source changed during execution. Independent per-target staging produced
+the same Core binary hashes and verified the completed exports.
+
 The separate Linux ARM64 Core build from `cbb1a79` is 10,109,656 bytes.
 It passed capability discovery and an explicit configuration rejection
 for the disk-cache example. The source boundary differs from the Linux
-Full snapshot. The matched Darwin comparison below measures build size
-with source held fixed.
+Full snapshot. The matched Linux and Darwin comparisons hold source fixed.
 The main Darwin socket regression used a debug snapshot from that
 checkpoint. Later disk invalidation, listener retirement and mail DNS
 changes have separate focused evidence. The staging and evidence
@@ -94,6 +103,7 @@ manifests record the source tree, lockfile hash and binary hashes.
 [Linux ARM64 identities](../bench/program/evidence/milestone-9/linux-arm64-release.txt)
 [Linux AMD64 identities and smoke check](../bench/program/evidence/milestone-9/qualification/linux-amd64/)
 [Linux ARM64 Core identities and smoke check](../bench/program/evidence/milestone-9/qualification/linux-arm64-core/)
+[Matched Linux staging matrix](../bench/program/evidence/milestone-9/qualification/linux-matrix/)
 [Evidence checksums](../bench/program/evidence/milestone-9/SHA256SUMS).
 
 ## Distribution checks
