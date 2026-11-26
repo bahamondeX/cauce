@@ -16,6 +16,8 @@ pub struct Config {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub(crate) listeners: Vec<crate::http_tcp::Settings>,
     pub admin: SocketAddr,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) dns: Option<crate::dns::Settings>,
     pub limits: Limits,
     pub logs: Logs,
     #[serde(default)]
@@ -539,6 +541,9 @@ impl Config {
     }
     pub fn validate(&self) -> Result<()> {
         ensure!(identifier(&self.name), "invalid product name");
+        if let Some(dns) = &self.dns {
+            dns.validate()?;
+        }
         ensure!(
             self.admin.ip().is_loopback(),
             "admin must bind loopback; use an authenticated local tunnel"
@@ -606,7 +611,7 @@ impl Config {
             http3.validate(self)?;
         }
         if let Some(stream) = &self.stream {
-            stream.validate(tcp_addresses)?;
+            stream.validate(tcp_addresses, self.dns.is_some())?;
         }
         let l = &self.limits;
         let h = &self.http2;
@@ -782,6 +787,12 @@ impl Config {
                     a.port_u16().is_some() && !a.as_str().contains('@'),
                     "explicit upstream port required"
                 );
+                if self.dns.is_some() && u.address.parse::<SocketAddr>().is_err() {
+                    ensure!(
+                        crate::dns::valid_destination(&u.address),
+                        "invalid DNS upstream destination"
+                    );
+                }
             }
         }
         ensure!(
@@ -985,6 +996,7 @@ impl Config {
             || self.admin != next.admin
             || self.limits != next.limits
             || self.http2 != next.http2
+            || self.dns != next.dns
             || match (&self.http3, &next.http3) {
                 (Some(a), Some(b)) => !a.reload_compatible(b),
                 (None, None) => false,
@@ -997,7 +1009,7 @@ impl Config {
             || self.stream != next.stream
             || self.mail != next.mail
         {
-            bail!("reload supports routes/upstreams only; listener, stream, mail, limits, log, name and admission zone changes require restart");
+            bail!("reload supports routes/upstreams only; listener, stream, mail, DNS, limits, log, name and admission zone changes require restart");
         }
         Ok(())
     }

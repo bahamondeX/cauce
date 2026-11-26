@@ -1,0 +1,12 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.19s
+     Running unittests src/bin/cauce-collector.rs (target/debug/deps/cauce_collector-335b862dea0b9557)
+
+running 1 test
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 1.40s
+

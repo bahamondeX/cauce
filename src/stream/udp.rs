@@ -106,9 +106,11 @@ impl Relay {
         _peer: PeerSlot,
     ) -> SocketAddr {
         let counters = &accounting.0;
-        let address = self.group.members[member].endpoint.address.unwrap();
         let deadline = Instant::now() + ms(self.options.session_timeout);
         let result = async {
+            let address = tokio::time::timeout_at(deadline, self.group.address(member))
+                .await??
+                .expect("validated UDP destination");
             let wildcard: SocketAddr = if address.is_ipv4() {
                 (std::net::Ipv4Addr::UNSPECIFIED, 0).into()
             } else {

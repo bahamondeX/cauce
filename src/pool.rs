@@ -3,7 +3,7 @@
 use crate::{
     body::ProxyBody,
     config::{Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol, MAX_UPSTREAMS},
-    diagnostics,
+    diagnostics, dns,
     routing::Routes,
     telemetry::{Attempt, Metrics},
     tls,
@@ -64,6 +64,7 @@ pub struct Endpoint {
     pub active_healthy: AtomicBool,
     pub failed_until: Mutex<Option<Instant>>,
     dns: Mutex<Option<(Instant, Vec<SocketAddr>)>>,
+    resolver: Option<Arc<dns::Resolver>>,
     // A semaphore limits DNS refresh concurrency; no mutex is held over network IO.
     resolving: Arc<Semaphore>,
     // Serialize cold HTTP/2 connection creation for this endpoint, while allowing
@@ -91,7 +92,14 @@ impl Generation {
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
     ) -> Arc<Self> {
         let routes = Routes::compile(&config.routes).unwrap();
-        Self::with_strategy(config, routes, version, tls_clients, PoolStrategy::Compact)
+        Self::with_strategy(
+            config,
+            routes,
+            version,
+            tls_clients,
+            PoolStrategy::Compact,
+            None,
+        )
     }
 
     pub fn with_strategy(
@@ -100,6 +108,7 @@ impl Generation {
         version: u64,
         tls_clients: &HashMap<String, Arc<ClientConfig>>,
         strategy: PoolStrategy,
+        resolver: Option<Arc<dns::Resolver>>,
     ) -> Arc<Self> {
         let endpoints: HashMap<_, _> = config
             .upstreams
@@ -122,6 +131,10 @@ impl Generation {
                         active_healthy: AtomicBool::new(u.health_check.is_none()),
                         failed_until: Mutex::new(None),
                         dns: Mutex::new(None),
+                        resolver: resolver.clone().filter(|_| {
+                            !u.address.starts_with("unix:")
+                                && u.address.parse::<SocketAddr>().is_err()
+                        }),
                         resolving: Arc::new(Semaphore::new(1)),
                         h2_opening: Arc::new(Semaphore::new(1)),
                         dns_cursor: AtomicUsize::new(0),
@@ -199,6 +212,24 @@ impl Generation {
     }
 }
 impl Endpoint {
+    async fn refresh_addresses(&self) -> Result<()> {
+        if let Some(resolver) = &self.resolver {
+            resolver.refresh(&self.config.address).await?;
+        }
+        Ok(())
+    }
+
+    pub(crate) async fn resolved_address(&self) -> Result<Option<(SocketAddr, dns::Address)>> {
+        let Some(resolver) = &self.resolver else {
+            return Ok(None);
+        };
+        Ok(Some(
+            resolver
+                .choose(&self.config.address, &self.dns_cursor)
+                .await?,
+        ))
+    }
+
     pub(crate) fn eligible(&self) -> bool {
         self.active_healthy.load(Ordering::Acquire)
             && self
@@ -230,6 +261,7 @@ impl Exclusive {
 }
 
 pub struct Connection {
+    address: Option<dns::Address>,
     transport: Exclusive,
     id: u64,
     born: Instant,
@@ -238,6 +270,7 @@ pub struct Connection {
     idle_credit: Option<IdleCredit>,
 }
 struct H2Connection {
+    address: Option<dns::Address>,
     sender: H2SendRequest<ProxyBody>,
     id: u64,
     born: Instant,
@@ -682,6 +715,7 @@ impl Lease {
                     .and_then(|output| output.lock().unwrap().take());
             }
             if !upload_complete
+                || !dns::Address::current(&c.address)
                 || c.transport.is_closed()
                 || c.born.elapsed().as_millis() >= self.pool.limits.max_connection_age_ms as u128
             {
@@ -699,7 +733,9 @@ impl Lease {
             let mut idle = self.pool.lock_idle(key, "return_http1");
             // A sweep may have already removed this generation while the
             // response was finishing. Never publish an idle socket after it.
-            if self.generation.draining.load(Ordering::Acquire) {
+            if self.generation.draining.load(Ordering::Acquire)
+                || !dns::Address::current(&c.address)
+            {
                 drop(idle);
                 diagnostics::emit(
                     "upstream_lease_discarded",
@@ -824,7 +860,10 @@ impl Pool {
         else {
             return;
         };
-        if !connection.draining.load(Ordering::Acquire) && !connection.sender.is_closed() {
+        if !connection.draining.load(Ordering::Acquire)
+            && !connection.sender.is_closed()
+            && dns::Address::current(&connection.address)
+        {
             if let Some(credit) = self.try_idle_credit(endpoint) {
                 let mut idle = connection.idle.lock().unwrap();
                 idle.since = Instant::now();
@@ -879,7 +918,8 @@ impl Pool {
                 return false;
             }
             list.retain(|c| {
-                !c.transport.is_closed()
+                dns::Address::current(&c.address)
+                    && !c.transport.is_closed()
                     && c.idle_since.elapsed().as_millis() < self.limits.idle_connection_ms as u128
                     && c.born.elapsed().as_millis() < self.limits.max_connection_age_ms as u128
             });
@@ -891,7 +931,8 @@ impl Pool {
                 return false;
             }
             list.retain(|c| {
-                !c.sender.is_closed()
+                dns::Address::current(&c.address)
+                    && !c.sender.is_closed()
                     && c.born.elapsed().as_millis() < self.limits.max_connection_age_ms as u128
                     && (c.streams.available_permits() < c.capacity
                         || (c.idle.lock().unwrap().since.elapsed().as_millis()
@@ -972,6 +1013,7 @@ impl Pool {
         }
         let acquired = timeout(Duration::from_millis(self.limits.acquire_ms), async {
             loop {
+                endpoint.refresh_addresses().await?;
                 let notified = self.notify.notified();
                 tokio::pin!(notified);
                 notified.as_mut().enable();
@@ -986,13 +1028,14 @@ impl Pool {
                         while let Some(mut c) = list.pop() {
                             *h1_count -= 1;
                             c.idle_credit.take();
-                            if !c.transport.is_closed()
+                            if dns::Address::current(&c.address)
+                                && !c.transport.is_closed()
                                 && c.idle_since.elapsed().as_millis()
                                     < self.limits.idle_connection_ms as u128
                                 && c.born.elapsed().as_millis()
                                     < self.limits.max_connection_age_ms as u128
                             {
-                                return (Some(c), None);
+                                return Ok::<_, anyhow::Error>((Some(c), None));
                             }
                         }
                     }
@@ -1009,7 +1052,7 @@ impl Pool {
                                 idle.reclaim_h2(None);
                             }
                             if let Ok(global) = self.global.clone().try_acquire_owned() {
-                                return (None, Some((global, ep, opening)));
+                                return Ok((None, Some((global, ep, opening))));
                             }
                             drop(ep);
                             drop(idle);
@@ -1023,7 +1066,7 @@ impl Pool {
             }
         })
         .await
-        .map_err(|_| anyhow!("pool_capacity_timeout"))?;
+        .map_err(|_| anyhow!("pool_capacity_timeout"))??;
         let wait = ms(begin);
         self.metrics
             .pool_wait_us
@@ -1094,6 +1137,7 @@ impl Pool {
         let mut reserved = None;
         let mut attempt = log_attempt.then(empty_attempt);
         let (connection, stream_permit, newly_connected) = loop {
+            endpoint.refresh_addresses().await?;
             let notified = self.notify.notified();
             tokio::pin!(notified);
             notified.as_mut().enable();
@@ -1103,6 +1147,7 @@ impl Pool {
                 if let Some(list) = idle.h2.get_mut(&key) {
                     list.retain(|c| {
                         !c.draining.load(Ordering::Acquire)
+                            && dns::Address::current(&c.address)
                             && !c.sender.is_closed()
                             && c.born.elapsed().as_millis()
                                 < self.limits.max_connection_age_ms as u128
@@ -1176,6 +1221,7 @@ impl Pool {
                 if let Some(attempt) = &mut attempt {
                     attempt.connect_gate_ms = started.map(ms);
                 }
+                endpoint.refresh_addresses().await?;
                 // A concurrent opener may have created a usable socket while we waited.
                 let existing = {
                     let idle = self.lock_idle(key, "recheck_http2");
@@ -1183,6 +1229,7 @@ impl Pool {
                         xs.iter()
                             .filter(|c| {
                                 !c.draining.load(Ordering::Acquire)
+                                    && dns::Address::current(&c.address)
                                     && !c.sender.is_closed()
                                     && c.born.elapsed().as_millis()
                                         < self.limits.max_connection_age_ms as u128
@@ -1287,7 +1334,7 @@ impl Pool {
         attempt: &mut Option<Attempt>,
     ) -> Result<Arc<H2Connection>> {
         let duration = Duration::from_millis(self.limits.connect_ms);
-        let tcp_start = attempt.is_some().then(Instant::now);
+        let mut address = None;
         let io: Box<dyn PoolIo> = if let Some(path) = e.config.address.strip_prefix("unix:") {
             Box::new(
                 timeout(duration, UnixStream::connect(path))
@@ -1295,48 +1342,8 @@ impl Pool {
                     .map_err(|_| anyhow!("unix_connect_timeout"))??,
             )
         } else {
-            let dns_start = attempt.is_some().then(Instant::now);
-            let _refresh = timeout(duration, e.resolving.acquire())
-                .await
-                .map_err(|_| anyhow!("dns_timeout"))??;
-            let cached = e
-                .dns
-                .lock()
-                .unwrap()
-                .as_ref()
-                .filter(|(t, _)| t.elapsed().as_millis() < self.limits.dns_cache_ms as u128)
-                .map(|(_, ips)| ips.clone());
-            let addresses = match cached {
-                Some(ips) => ips,
-                None => {
-                    let ips: Vec<_> = timeout(duration, tokio::net::lookup_host(&e.config.address))
-                        .await
-                        .map_err(|_| anyhow!("dns_timeout"))??
-                        .take(64)
-                        .collect();
-                    if ips.is_empty() {
-                        return Err(anyhow!("dns_no_answers"));
-                    }
-                    *e.dns.lock().unwrap() = Some((Instant::now(), ips.clone()));
-                    ips
-                }
-            };
-            drop(_refresh);
-            if let Some(attempt) = attempt {
-                attempt.dns_ms = dns_start.map(ms);
-            }
-            let addr = addresses[e.dns_cursor.fetch_add(1, Ordering::Relaxed) % addresses.len()];
-            let socket = timeout(duration, TcpStream::connect(addr))
-                .await
-                .map_err(|_| anyhow!("tcp_connect_timeout"))??;
-            socket.set_nodelay(true)?;
-            socket2::SockRef::from(&socket).set_tcp_keepalive(
-                &socket2::TcpKeepalive::new()
-                    .with_time(Duration::from_secs(self.limits.tcp_keepalive_secs)),
-            )?;
-            if let Some(attempt) = attempt {
-                attempt.tcp_ms = tcp_start.map(ms);
-            }
+            let (socket, token) = self.connect_tcp(e, attempt, duration).await?;
+            address = token;
             if let Some(tls_config) = &e.config.tls {
                 let client = e
                     .tls_client
@@ -1387,10 +1394,12 @@ impl Pool {
         )
         .await
         .map_err(|_| anyhow!("http2_handshake_timeout"))??;
+        anyhow::ensure!(dns::Address::current(&address), "dns_address_retired");
         let id = capacity.id;
         let driver = spawn_driver(conn, capacity, "upstream_http2");
         self.metrics.new_connections.fetch_add(1, Ordering::Relaxed);
         Ok(Arc::new(H2Connection {
+            address,
             sender,
             id,
             born: Instant::now(),
@@ -1436,6 +1445,7 @@ impl Pool {
         attempt: &mut Option<Attempt>,
     ) -> Result<Connection> {
         let duration = Duration::from_millis(self.limits.connect_ms);
+        let mut address = None;
         let transport = if e.config.protocol.application().is_some() {
             let socket: crate::application::Socket =
                 if let Some(path) = e.config.address.strip_prefix("unix:") {
@@ -1445,7 +1455,9 @@ impl Pool {
                             .map_err(|_| anyhow!("unix_connect_timeout"))??,
                     )
                 } else {
-                    Box::new(self.connect_tcp(e, attempt, duration).await?)
+                    let (socket, token) = self.connect_tcp(e, attempt, duration).await?;
+                    address = token;
+                    Box::new(socket)
                 };
             Exclusive::Application {
                 socket: Some(socket),
@@ -1467,7 +1479,8 @@ impl Pool {
                     spawn_driver(conn.with_upgrades(), capacity.clone(), "upstream_http1"),
                 )
             } else {
-                let socket = self.connect_tcp(e, attempt, duration).await?;
+                let (socket, token) = self.connect_tcp(e, attempt, duration).await?;
+                address = token;
                 let io: Box<dyn PoolIo> = if let Some(tls_config) = &e.config.tls {
                     let client = e
                         .tls_client
@@ -1506,52 +1519,67 @@ impl Pool {
             Exclusive::Http1 { sender, driver }
         };
         self.metrics.new_connections.fetch_add(1, Ordering::Relaxed);
-        Ok(Connection {
+        let connection = Connection {
+            address,
             transport,
             id: capacity.id,
             born: Instant::now(),
             idle_since: Instant::now(),
             _capacity: capacity,
             idle_credit: None,
-        })
+        };
+        anyhow::ensure!(
+            dns::Address::current(&connection.address),
+            "dns_address_retired"
+        );
+        Ok(connection)
     }
     async fn connect_tcp(
         &self,
         e: &Endpoint,
         attempt: &mut Option<Attempt>,
         duration: Duration,
-    ) -> Result<TcpStream> {
+    ) -> Result<(TcpStream, Option<dns::Address>)> {
         let dns_start = attempt.is_some().then(Instant::now);
-        let _refresh = timeout(duration, e.resolving.acquire())
-            .await
-            .map_err(|_| anyhow!("dns_timeout"))??;
-        let cached = e
-            .dns
-            .lock()
-            .unwrap()
-            .as_ref()
-            .filter(|(t, _)| t.elapsed().as_millis() < self.limits.dns_cache_ms as u128)
-            .map(|(_, ips)| ips.clone());
-        let addresses = match cached {
-            Some(ips) => ips,
-            None => {
-                let ips: Vec<_> = timeout(duration, tokio::net::lookup_host(&e.config.address))
-                    .await
-                    .map_err(|_| anyhow!("dns_timeout"))??
-                    .take(64)
-                    .collect();
-                if ips.is_empty() {
-                    return Err(anyhow!("dns_no_answers"));
+        let (chosen, address) = if let Some(resolved) = e.resolved_address().await? {
+            (resolved.0, Some(resolved.1))
+        } else if let Ok(address) = e.config.address.parse::<SocketAddr>() {
+            (address, None)
+        } else {
+            let _refresh = timeout(duration, e.resolving.acquire())
+                .await
+                .map_err(|_| anyhow!("dns_timeout"))??;
+            let cached = e
+                .dns
+                .lock()
+                .unwrap()
+                .as_ref()
+                .filter(|(t, _)| t.elapsed().as_millis() < self.limits.dns_cache_ms as u128)
+                .map(|(_, ips)| ips.clone());
+            let addresses = match cached {
+                Some(ips) => ips,
+                None => {
+                    let ips: Vec<_> = timeout(duration, tokio::net::lookup_host(&e.config.address))
+                        .await
+                        .map_err(|_| anyhow!("dns_timeout"))??
+                        .take(64)
+                        .collect();
+                    if ips.is_empty() {
+                        return Err(anyhow!("dns_no_answers"));
+                    }
+                    *e.dns.lock().unwrap() = Some((Instant::now(), ips.clone()));
+                    ips
                 }
-                *e.dns.lock().unwrap() = Some((Instant::now(), ips.clone()));
-                ips
-            }
+            };
+            drop(_refresh);
+            (
+                addresses[e.dns_cursor.fetch_add(1, Ordering::Relaxed) % addresses.len()],
+                None,
+            )
         };
-        drop(_refresh);
         if let Some(attempt) = attempt {
             attempt.dns_ms = dns_start.map(ms);
         }
-        let chosen = addresses[e.dns_cursor.fetch_add(1, Ordering::Relaxed) % addresses.len()];
         let tcp_start = attempt.is_some().then(Instant::now);
         let socket = timeout(duration, TcpStream::connect(chosen))
             .await
@@ -1564,7 +1592,7 @@ impl Pool {
         if let Some(attempt) = attempt {
             attempt.tcp_ms = tcp_start.map(ms);
         }
-        Ok(socket)
+        Ok((socket, address))
     }
 
     pub fn mark_failed(&self, e: &Endpoint) {
@@ -1625,6 +1653,7 @@ mod pool_tests {
 
     fn config(address: String) -> Config {
         Config {
+            dns: None,
             name: "pooltest".into(),
             stream: None,
             mail: Vec::new(),
@@ -1756,7 +1785,7 @@ mod pool_tests {
                 cfg.upstreams[0].protocol = protocol;
                 let routes = Routes::compile(&cfg.routes).unwrap();
                 let generation =
-                    Generation::with_strategy(cfg, routes, 1, &HashMap::new(), strategy);
+                    Generation::with_strategy(cfg, routes, 1, &HashMap::new(), strategy, None);
                 let pool = Pool::with_strategy(
                     generation.config.limits.clone(),
                     generation.config.http2.clone(),
@@ -1824,8 +1853,14 @@ mod pool_tests {
                 PoolStrategy::Sharded,
             );
             let routes = Routes::compile(&cfg.routes).unwrap();
-            let generation =
-                Generation::with_strategy(cfg, routes, 1, &HashMap::new(), PoolStrategy::Sharded);
+            let generation = Generation::with_strategy(
+                cfg,
+                routes,
+                1,
+                &HashMap::new(),
+                PoolStrategy::Sharded,
+                None,
+            );
             let a = generation.endpoints["backend"].clone();
             let b = generation.endpoints["second"].clone();
             let (mut first, _) = pool
@@ -1975,6 +2010,7 @@ mod pool_tests {
         );
         let mut lease = Lease {
             connection: Some(Connection {
+                address: None,
                 transport: Exclusive::Http1 {
                     sender,
                     driver: spawn_driver(driver, capacity.clone(), "upstream_http1"),

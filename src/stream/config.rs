@@ -34,6 +34,8 @@ pub(crate) struct Upstream {
 #[serde(deny_unknown_fields)]
 pub(crate) struct Endpoint {
     pub address: Option<SocketAddr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dns_address: Option<String>,
     pub unix: Option<PathBuf>,
     #[serde(default = "weight")]
     pub weight: u16,
@@ -247,7 +249,7 @@ impl StreamConfig {
         !self.tcp.is_empty() || !self.tls_passthrough.is_empty() || !self.udp.is_empty()
     }
 
-    pub(crate) fn validate(&self, mut tcp_addrs: Vec<SocketAddr>) -> Result<()> {
+    pub(crate) fn validate(&self, mut tcp_addrs: Vec<SocketAddr>, dns_enabled: bool) -> Result<()> {
         let count = self.tcp.len() + self.tls_passthrough.len() + self.udp.len();
         ensure!(
             count <= 64 && self.upstreams.len() <= 256,
@@ -266,18 +268,20 @@ impl StreamConfig {
             let mut seen = HashSet::new();
             for endpoint in &upstream.endpoints {
                 ensure!(
-                    match (&endpoint.address, &endpoint.unix) {
-                        (Some(addr), None) =>
+                    match (&endpoint.address, &endpoint.unix, &endpoint.dns_address) {
+                        (Some(addr), None, None) =>
                             addr.port() != 0
                                 && !addr.ip().is_unspecified()
                                 && !addr.ip().is_multicast(),
-                        (None, Some(path)) =>
+                        (None, Some(path), None) =>
                             path.is_absolute()
                                 && !path.as_os_str().as_encoded_bytes().contains(&0)
                                 && path.as_os_str().len() <= 103,
+                        (None, None, Some(destination)) =>
+                            dns_enabled && crate::dns::valid_destination(destination),
                         _ => false,
                     } && (1..=100).contains(&endpoint.weight)
-                        && seen.insert((&endpoint.address, &endpoint.unix)),
+                        && seen.insert((&endpoint.address, &endpoint.unix, &endpoint.dns_address)),
                     "invalid or duplicate stream endpoint"
                 );
             }
@@ -368,7 +372,7 @@ impl StreamConfig {
                     .is_some_and(|group| group
                         .endpoints
                         .iter()
-                        .all(|endpoint| endpoint.address.is_some())),
+                        .all(|endpoint| endpoint.unix.is_none())),
                 "UDP requires an IP upstream group"
             );
             memory +=

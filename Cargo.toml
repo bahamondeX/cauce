@@ -20,6 +20,7 @@ base64 = "0.22"
 h3 = "0.0.8"
 h3-quinn = "0.0.10"
 http-body-util = "0.1"
+hickory-resolver = { version = "=0.26.4", default-features = false, features = ["tokio"] }
 hyper = { version = "1.12", features = ["client", "server", "http1", "http2"] }
 hyper-util = { version = "0.1", features = ["tokio", "server-auto", "http1", "http2"] }
 fs2 = "0.4"

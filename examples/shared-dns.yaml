@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../schemas/cauce.schema.json
+version: 1
+proxy:
+  name: shared-dns
+  admin: 127.0.0.1:9001
+  limits:
+    clients: 1024
+    requests: 256
+    connections: 64
+    idle_connections: 32
+    connecting: 8
+    acquire_ms: 250ms
+    connect_ms: 1s
+    headers_ms: 5s
+    stream_idle_ms: 15s
+    request_ms: 2m
+    client_headers_ms: 5s
+    idle_connection_ms: 10s
+    max_connection_age_ms: 1m
+    dns_cache_ms: 5s
+    tcp_keepalive_secs: 30s
+    max_header_bytes: 32KiB
+    max_headers: 64
+    max_body_bytes: 16MiB
+    shutdown_ms: 5s
+
+  logs:
+    enabled: false
+    path: logs/access.jsonl
+    queue: 4096
+    rotate_bytes: 16MiB
+    retained_files: 3
+
+  dns:
+    servers: ["127.0.0.1:5353"]
+    max_hosts: 128
+    max_concurrent: 8
+    timeout_ms: 750ms
+    failure_cooldown_ms: 250ms
+  stream:
+    upstreams:
+      - id: tcp-origin
+        endpoints:
+          - dns_address: echo.service.example:8000
+    tcp:
+      - listen: 127.0.0.1:9000
+        upstream: tcp-origin

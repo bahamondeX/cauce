@@ -50,12 +50,14 @@ impl Drop for Session {
 }
 
 struct Member {
+    dns_cursor: AtomicUsize,
     endpoint: Endpoint,
     seed: u64,
     failed_until: AtomicU64,
 }
 
 struct Group {
+    resolver: Option<Arc<crate::dns::Resolver>>,
     members: Vec<Member>,
     tickets: Vec<usize>,
     cursor: AtomicUsize,
@@ -64,7 +66,7 @@ struct Group {
 }
 
 impl Group {
-    fn compile(config: &Upstream) -> Self {
+    fn compile(config: &Upstream, resolver: Option<Arc<crate::dns::Resolver>>) -> Self {
         use std::os::unix::ffi::OsStrExt;
         let members = config
             .endpoints
@@ -72,10 +74,13 @@ impl Group {
             .map(|endpoint| {
                 let seed = if let Some(address) = endpoint.address {
                     crate::balance::hash(address.to_string().as_bytes())
+                } else if let Some(destination) = &endpoint.dns_address {
+                    crate::balance::hash(destination.as_bytes())
                 } else {
                     crate::balance::hash(endpoint.unix.as_ref().unwrap().as_os_str().as_bytes())
                 };
                 Member {
+                    dns_cursor: AtomicUsize::new(0),
                     endpoint: endpoint.clone(),
                     seed,
                     failed_until: AtomicU64::new(0),
@@ -94,12 +99,31 @@ impl Group {
             Vec::new()
         };
         Self {
+            resolver,
             members,
             tickets,
             cursor: AtomicUsize::new(0),
             started: Instant::now(),
             balance: config.balance,
         }
+    }
+
+    async fn address(&self, index: usize) -> std::io::Result<Option<SocketAddr>> {
+        let member = &self.members[index];
+        if let Some(destination) = &member.endpoint.dns_address {
+            let (address, token) = self
+                .resolver
+                .as_ref()
+                .expect("validated Stream DNS")
+                .choose(destination, &member.dns_cursor)
+                .await
+                .map_err(std::io::Error::other)?;
+            if !crate::dns::Address::current(&Some(token)) {
+                return Err(std::io::Error::other("dns_address_retired"));
+            }
+            return Ok(Some(address));
+        }
+        Ok(member.endpoint.address)
     }
 
     fn select(&self, ip: IpAddr) -> Option<usize> {
@@ -170,12 +194,18 @@ pub(crate) struct Listeners {
 }
 
 impl Listeners {
-    pub(crate) fn bind(config: StreamConfig) -> Result<Self> {
+    pub(crate) fn bind(
+        config: StreamConfig,
+        resolver: Option<Arc<crate::dns::Resolver>>,
+    ) -> Result<Self> {
         let mut tcp_groups = HashMap::new();
         let mut udp_groups = HashMap::new();
         // Health and selection state are specific to the transport.
         for group in &config.upstreams {
-            tcp_groups.insert(group.id.as_str(), Arc::new(Group::compile(group)));
+            tcp_groups.insert(
+                group.id.as_str(),
+                Arc::new(Group::compile(group, resolver.clone())),
+            );
         }
         let mut listeners = Self {
             tcp: Vec::new(),
@@ -208,6 +238,7 @@ impl Listeners {
                         .iter()
                         .find(|group| group.id == entry.upstream)
                         .unwrap(),
+                    resolver.clone(),
                 ))
             });
             let socket = socket(entry.listen, Type::DGRAM, entry.options.reuse_port)

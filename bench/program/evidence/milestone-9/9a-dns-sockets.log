@@ -1,0 +1,6 @@
+test_pool_and_stream_rotate_while_existing_session_continues (__main__.Rotation.test_pool_and_stream_rotate_while_existing_session_continues) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 5.804s
+
+OK

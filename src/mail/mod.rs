@@ -54,24 +54,31 @@ pub(crate) struct Listener {
     backends: HashMap<SocketAddr, Option<(TlsConnector, ServerName<'static>)>>,
 }
 
-pub(crate) async fn prepare(specs: &[Settings]) -> Result<Vec<Listener>> {
+pub(crate) async fn prepare(
+    specs: &[Settings],
+    resolver: Option<Arc<crate::dns::Resolver>>,
+) -> Result<Vec<Listener>> {
     if specs.is_empty() {
         return Ok(Vec::new());
     }
     let specs = specs.to_owned();
     tokio::task::spawn_blocking(move || -> Result<_> {
-        specs.into_iter().map(Listener::prepare).collect()
+        specs
+            .into_iter()
+            .map(|spec| Listener::prepare(spec, resolver.clone()))
+            .collect()
     })
     .await
     .context("mail preparation task")?
 }
 
 impl Listener {
-    fn prepare(config: Settings) -> Result<Self> {
+    fn prepare(config: Settings, resolver: Option<Arc<crate::dns::Resolver>>) -> Result<Self> {
         let tls = TlsAcceptor::from(tls::load_mail_server(&config.tls)?);
         let auth = Service::new(
             config.auth_url()?,
             Duration::from_millis(config.auth_timeout_ms),
+            resolver,
         )?;
         let mut backends = HashMap::with_capacity(config.backends.len());
         for backend in &config.backends {

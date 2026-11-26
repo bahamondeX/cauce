@@ -17,15 +17,22 @@ pub(super) struct Service {
 }
 
 impl Service {
-    pub(super) fn new(url: reqwest::Url, timeout: Duration) -> Result<Self> {
-        let client = reqwest::Client::builder()
+    pub(super) fn new(
+        url: reqwest::Url,
+        timeout: Duration,
+        resolver: Option<std::sync::Arc<crate::dns::Resolver>>,
+    ) -> Result<Self> {
+        let mut client = reqwest::Client::builder()
             .no_proxy()
             .http1_only()
             .redirect(reqwest::redirect::Policy::none())
             .retry(reqwest::retry::never())
             .timeout(timeout)
-            .pool_max_idle_per_host(0)
-            .build()?;
+            .pool_max_idle_per_host(0);
+        if let Some(resolver) = resolver {
+            client = client.dns_resolver(std::sync::Arc::new(crate::dns::HttpResolver(resolver)));
+        }
+        let client = client.build()?;
         Ok(Self { client, url })
     }
 

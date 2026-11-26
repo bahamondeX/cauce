@@ -103,7 +103,10 @@ async fn probe(endpoint: &Endpoint, health: &HealthCheck) -> anyhow::Result<bool
     let io: Box<dyn Io> = if let Some(path) = endpoint.config.address.strip_prefix("unix:") {
         Box::new(UnixStream::connect(path).await?)
     } else {
-        let tcp = TcpStream::connect(&endpoint.config.address).await?;
+        let tcp = match endpoint.resolved_address().await? {
+            Some((address, _)) => TcpStream::connect(address).await?,
+            None => TcpStream::connect(&endpoint.config.address).await?,
+        };
         if let Some(config) = &endpoint.config.tls {
             let client = endpoint
                 .tls_client

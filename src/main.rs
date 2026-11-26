@@ -8,6 +8,7 @@ mod compression;
 mod config;
 mod content;
 mod diagnostics;
+mod dns;
 mod headers;
 mod health;
 mod http3;
@@ -77,7 +78,8 @@ async fn run() -> Result<()> {
     let mut server_tls = prepare_server_tls(config.tls.clone(), config.http2.enabled).await?;
     let extra_tls = prepare_explicit_listeners(&config).await?;
     let quic_config = http3::prepare(&config).await?;
-    let mail = mail::prepare(&config.mail).await?;
+    let resolver = config.dns.as_ref().map(dns::Resolver::new).transpose()?;
+    let mail = mail::prepare(&config.mail, resolver.clone()).await?;
     if check {
         println!("configuration valid");
         return Ok(());
@@ -100,7 +102,7 @@ async fn run() -> Result<()> {
     let stream = config
         .stream
         .as_ref()
-        .map(|spec| stream::Listeners::bind((**spec).clone()))
+        .map(|spec| stream::Listeners::bind((**spec).clone(), resolver.clone()))
         .transpose()?;
     let mail = mail
         .into_iter()
@@ -141,6 +143,7 @@ async fn run() -> Result<()> {
             1,
             &tls_clients,
             strategy,
+            resolver.clone(),
         )),
         pool,
         logger,
@@ -229,7 +232,7 @@ async fn run() -> Result<()> {
             _ = tasks.join_next(), if !tasks.is_empty() => {},
             _ = hup.recv(), if reload.is_empty() => {
                 let version = state.generation.read().unwrap().version + 1;
-                reload.spawn(prepare_reload(path.clone(), config.clone(), version, strategy));
+                reload.spawn(prepare_reload(path.clone(), config.clone(), version, strategy, resolver.clone()));
             },
             prepared = reload.join_next(), if !reload.is_empty() => {
                 match prepared {
@@ -383,6 +386,7 @@ async fn prepare_reload(
     baseline: Arc<Config>,
     version: u64,
     strategy: PoolStrategy,
+    resolver: Option<Arc<dns::Resolver>>,
 ) -> Result<Prepared> {
     let (candidate, routes) = Config::load(&path).await?;
     baseline.reload_compatible(&candidate)?;
@@ -391,7 +395,7 @@ async fn prepare_reload(
     let explicit_tls = prepare_explicit_listeners(&candidate).await?;
     let quic = http3::prepare(&candidate).await?;
     let generation = tokio::task::spawn_blocking(move || {
-        Generation::with_strategy(candidate, routes, version, &clients, strategy)
+        Generation::with_strategy(candidate, routes, version, &clients, strategy, resolver)
     })
     .await?;
     Ok(Prepared {

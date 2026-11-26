@@ -305,3 +305,12 @@ autenticación y abre una conexión exclusiva autorizada. Tras verificar
 el login del backend, el relay compartido de TCP mantiene los límites
 de deadline y backpressure. El cierre deja drenar sesiones autenticadas
 dentro del plazo global. [ADR 0017](adr/0017-tls-gated-mail-listeners.md).
+
+## Resolución DNS compartida
+
+Con `proxy.dns`, HTTP y los gateways de aplicación comparten Hickory con
+las sondas, Stream y el servicio HTTP de autenticación de correo. Las
+conexiones del pool retienen un token de dirección. Una publicación DNS
+retira los tokens de las direcciones que salieron del conjunto. Los
+arriendos ya activos conservan su socket y su configuración TLS.
+[Configuración y límites](DNS-AND-RESILIENCE.md).

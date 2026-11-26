@@ -199,13 +199,14 @@ impl Listener {
             .context("no eligible TCP upstream")?;
         let endpoint = &group.members[member].endpoint;
         let connect = async {
-            let mut upstream: Box<dyn crate::ClientIo> = if let Some(address) = endpoint.address {
-                let stream = TcpStream::connect(address).await?;
-                apply_options(&stream, opts)?;
-                Box::new(stream)
-            } else {
-                Box::new(UnixStream::connect(endpoint.unix.as_ref().unwrap()).await?)
-            };
+            let mut upstream: Box<dyn crate::ClientIo> =
+                if let Some(address) = group.address(member).await? {
+                    let stream = TcpStream::connect(address).await?;
+                    apply_options(&stream, opts)?;
+                    Box::new(stream)
+                } else {
+                    Box::new(UnixStream::connect(endpoint.unix.as_ref().unwrap()).await?)
+                };
             if let Some(version) = opts.proxy_out {
                 upstream
                     .write_all(proxy_encode::encode(version, addresses).as_ref())
