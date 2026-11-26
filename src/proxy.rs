@@ -515,7 +515,11 @@ pub async fn handle(
     {
         reject!(PAYLOAD_TOO_LARGE, "body_limit");
     }
-    let endpoint = match generation.select(route) {
+    let client_ip = identity
+        .as_ref()
+        .map_or(peer_ip, |value| value.client)
+        .to_canonical();
+    let endpoint = match generation.select(route, client_ip) {
         Some(e) => e,
         None => {
             reject!(SERVICE_UNAVAILABLE, "no_healthy_upstream");

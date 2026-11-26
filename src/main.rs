@@ -1,4 +1,5 @@
 mod actions;
+mod balance;
 mod body;
 mod config;
 mod diagnostics;

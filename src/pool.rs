@@ -2,9 +2,7 @@
 //! until both the upload and downstream response have finished.
 use crate::{
     body::ProxyBody,
-    config::{
-        Balance, Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol, MAX_UPSTREAMS,
-    },
+    config::{Config, Http2Config, Limits, Route, Upstream, UpstreamProtocol, MAX_UPSTREAMS},
     diagnostics,
     routing::Routes,
     telemetry::{Attempt, Metrics},
@@ -80,7 +78,7 @@ pub struct Generation {
     routes: Routes,
     pub endpoints: HashMap<String, Arc<Endpoint>>,
     pub draining: AtomicBool,
-    cursor: AtomicUsize,
+    groups: HashMap<String, crate::balance::Group>,
 }
 impl Generation {
     #[cfg(test)]
@@ -129,13 +127,24 @@ impl Generation {
                 )
             })
             .collect();
+        let groups = config
+            .routes
+            .iter()
+            .filter(|route| route.upstreams.len() > 1)
+            .map(|route| {
+                (
+                    route.id.clone(),
+                    crate::balance::Group::compile(route, &endpoints),
+                )
+            })
+            .collect();
         Arc::new(Self {
             version,
             routes,
             config,
             endpoints,
             draining: AtomicBool::new(false),
-            cursor: AtomicUsize::new(0),
+            groups,
         })
     }
     pub fn route(&self, host: &str, path: &str) -> Option<&Route> {
@@ -144,23 +153,25 @@ impl Generation {
     pub fn named_route(&self, host: &str, name: &str) -> Option<&Route> {
         self.routes.named(&self.config.routes, host, name)
     }
-    pub fn select(&self, route: &Route) -> Option<Arc<Endpoint>> {
-        let start = self.cursor.fetch_add(1, Ordering::Relaxed);
-        let mut candidates = (0..route.upstreams.len()).filter_map(|i| {
-            let e = self.endpoints[&route.upstreams[(start + i) % route.upstreams.len()]].clone();
-            let healthy = e
+    pub fn select(&self, route: &Route, client: std::net::IpAddr) -> Option<Arc<Endpoint>> {
+        if let [id] = route.upstreams.as_slice() {
+            let endpoint = &self.endpoints[id];
+            return endpoint.eligible().then(|| endpoint.clone());
+        }
+        self.groups.get(&route.id)?.select(route.balance, client)
+    }
+}
+impl Endpoint {
+    pub(crate) fn eligible(&self) -> bool {
+        self.active_healthy.load(Ordering::Acquire)
+            && self
                 .failed_until
                 .lock()
                 .unwrap()
-                .is_none_or(|until| until <= Instant::now());
-            (healthy && e.active_healthy.load(Ordering::Acquire)).then_some(e)
-        });
-        match route.balance {
-            Balance::RoundRobin => candidates.next(),
-            Balance::LeastInflight => candidates.min_by_key(|e| e.inflight.load(Ordering::Relaxed)),
-        }
+                .is_none_or(|until| until <= Instant::now())
     }
 }
+
 pub struct Connection {
     pub sender: SendRequest<ProxyBody>,
     id: u64,
@@ -1538,6 +1549,7 @@ mod pool_tests {
                 address,
                 host: "backend.test".into(),
                 isolation: "test".into(),
+                weight: 1,
                 connections: 2,
                 idle_connections: 2,
                 failure_backoff_ms: 100,
@@ -1553,10 +1565,54 @@ mod pool_tests {
                 path_pattern: None,
                 headers: None,
                 action: None,
-                balance: Balance::RoundRobin,
+                balance: crate::config::Balance::RoundRobin,
                 upstreams: vec!["backend".into()],
             }],
         }
+    }
+
+    #[test]
+    fn weighted_groups_balance_concurrently_and_preserve_hashes_on_recovery() {
+        let mut cfg = config("127.0.0.1:8000".into());
+        let mut second = cfg.upstreams[0].clone();
+        second.id = "second".into();
+        cfg.upstreams.push(second);
+        cfg.upstreams[0].weight = 3;
+        cfg.routes[0].upstreams.push("second".into());
+        cfg.routes[0].balance = crate::config::Balance::WeightedRoundRobin;
+        let mut hashed = cfg.routes[0].clone();
+        hashed.id = "hashed".into();
+        hashed.path_prefix = "/hash".into();
+        hashed.balance = crate::config::Balance::ConsistentHash;
+        cfg.routes.push(hashed);
+        let generation = Generation::new(cfg, 1, &HashMap::new());
+        let route = &generation.config.routes[0];
+        let client = "192.0.2.1".parse().unwrap();
+        let first = AtomicUsize::new(0);
+        std::thread::scope(|scope| {
+            for _ in 0..8 {
+                scope.spawn(|| {
+                    for _ in 0..100 {
+                        if generation.select(route, client).unwrap().config.id == "backend" {
+                            first.fetch_add(1, Ordering::Relaxed);
+                        }
+                    }
+                });
+            }
+        });
+        assert_eq!(first.into_inner(), 600);
+        let route = &generation.config.routes[1];
+        let selected = generation.select(route, client).unwrap();
+        *selected.failed_until.lock().unwrap() = Some(Instant::now() + Duration::from_secs(2));
+        assert_ne!(
+            generation.select(route, client).unwrap().config.id,
+            selected.config.id
+        );
+        *selected.failed_until.lock().unwrap() = None;
+        assert_eq!(
+            generation.select(route, client).unwrap().config.id,
+            selected.config.id
+        );
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

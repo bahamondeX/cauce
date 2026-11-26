@@ -239,7 +239,7 @@ mod tests {
         });
         let mut route = g.config.routes[0].clone();
         route.upstreams = vec![e.config.id.clone()];
-        assert!(g.select(&route).is_none());
+        assert!(g.select(&route, "127.0.0.1".parse().unwrap()).is_none());
         let runner = start(&g);
         for expected in [true, false, true] {
             ready.store(expected, Ordering::Release);
@@ -250,7 +250,10 @@ mod tests {
             })
             .await
             .unwrap();
-            assert_eq!(g.select(&route).is_some(), expected);
+            assert_eq!(
+                g.select(&route, "127.0.0.1".parse().unwrap()).is_some(),
+                expected
+            );
         }
         runner.abort();
         let _ = runner.await;

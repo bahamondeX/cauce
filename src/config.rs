@@ -260,6 +260,8 @@ pub struct Upstream {
     pub address: String,
     pub host: String,
     pub isolation: String,
+    #[serde(default = "default_weight")]
+    pub weight: u16,
     pub connections: usize,
     pub idle_connections: usize,
     #[serde(deserialize_with = "milliseconds")]
@@ -284,6 +286,10 @@ pub struct HealthCheck {
     pub rise: u32,
     pub fall: u32,
 }
+fn default_weight() -> u16 {
+    1
+}
+
 fn default_streams_per_connection() -> usize {
     128
 }
@@ -358,6 +364,12 @@ impl PathMatch {
 pub enum Balance {
     RoundRobin,
     LeastInflight,
+    WeightedRoundRobin,
+    LeastConnections,
+    WeightedLeastConnections,
+    IpHash,
+    ConsistentHash,
+    PowerOfTwoChoices,
 }
 pub(crate) fn identifier(s: &str) -> bool {
     !s.is_empty()
@@ -481,6 +493,10 @@ impl Config {
         );
         let mut ids = HashSet::new();
         for u in &self.upstreams {
+            ensure!(
+                (1..=64).contains(&u.weight),
+                "upstream weight must be 1 to 64"
+            );
             if let Some(h) = &u.health_check {
                 ensure!(
                     u.protocol == UpstreamProtocol::Http1,
@@ -571,6 +587,12 @@ impl Config {
                 <= 128,
             "at most 128 action patterns"
         );
+        let weights: std::collections::HashMap<_, _> = self
+            .upstreams
+            .iter()
+            .map(|upstream| (upstream.id.as_str(), usize::from(upstream.weight)))
+            .collect();
+        let mut ticket_budget = 0;
         let mut route_ids = HashSet::new();
         let mut matches = HashSet::new();
         for r in &self.routes {
@@ -639,6 +661,14 @@ impl Config {
                     && r.upstreams.iter().all(|id| ids.contains(id)),
                 "unknown or empty route upstreams"
             );
+            if matches!(r.balance, Balance::WeightedRoundRobin | Balance::IpHash) {
+                let tickets: usize = r.upstreams.iter().map(|id| weights[id.as_str()]).sum();
+                ticket_budget += tickets;
+                ensure!(
+                    tickets <= 4096 && ticket_budget <= 65536,
+                    "weighted route ticket budget exceeded"
+                );
+            }
             let unique: HashSet<_> = r.upstreams.iter().collect();
             ensure!(
                 unique.len() == r.upstreams.len(),
