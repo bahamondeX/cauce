@@ -66,7 +66,7 @@ def main():
     parser.add_argument("generator", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--protocol", choices=("http1", "http2"), required=True)
-    parser.add_argument("--proxy-kind", choices=("cauce", "nginx"), default="cauce")
+    parser.add_argument("--proxy-kind", choices=("cauce", "nginx", "haproxy", "pingora"), default="cauce")
     parser.add_argument("--strategy", choices=("compact", "sharded"), default="compact")
     parser.add_argument("--endpoints", type=int, choices=range(1, 1025), metavar="1..1024", default=1)
     parser.add_argument("--logs", action="store_true")
@@ -87,11 +87,11 @@ def main():
     parser.add_argument("--p99-ms", type=float, required=True)
     parser.add_argument("--p999-ms", type=float, required=True)
     args = parser.parse_args()
-    if args.proxy_kind == "nginx" and (
+    if args.proxy_kind != "cauce" and (
         args.protocol != "http1" or args.workers != 1 or args.logs or args.endpoints != 1
         or args.strategy != "compact"
     ):
-        parser.error("the NGINX adapter currently qualifies one-worker cleartext HTTP/1.1 with logs off")
+        parser.error("reference adapters qualify one-worker cleartext HTTP/1.1 with logs off")
     if args.matched and len(args.rates) != 1:
         parser.error("--matched requires exactly one offered rate")
 
@@ -116,6 +116,16 @@ def main():
         config = root / "nginx.conf"
         config.write_text(nginx_config(listen, backend_port))
         launch = [str(args.proxy), "-e", "stderr", "-p", str(root) + "/", "-c", str(config)]
+        readiness = lambda: http(listen, "/ready")
+    elif args.proxy_kind == "haproxy":
+        config = root / "haproxy.cfg"
+        source = (Path(__file__).with_name("references") / "haproxy-clear.cfg").read_text()
+        config.write_text(source.replace("0.0.0.0:8080", f"127.0.0.1:{listen}")
+                          .replace("server fixture backend:8000", f"server fixture 127.0.0.1:{backend_port}"))
+        launch = [str(args.proxy), "-db", "-f", str(config)]
+        readiness = lambda: http(listen, "/ready")
+    elif args.proxy_kind == "pingora":
+        launch = [str(args.proxy), f"127.0.0.1:{listen}", f"127.0.0.1:{backend_port}"]
         readiness = lambda: http(listen, "/ready")
     else:
         source = proxy_config(args, listen, admin, backend_port, root / "access.jsonl", args.logs)

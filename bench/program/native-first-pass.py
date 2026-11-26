@@ -64,7 +64,11 @@ def main():
     generator = args.bin / "cauce-load"
     paths = {name: args.bin / name for name in ("cauce", "nginx")}
     output = args.output
-    identities = {name: digest(path) for name, path in {**paths, "generator": generator}.items()}
+    references = [name for name in ("haproxy", "pingora") if (args.bin / name).is_file()]
+    identities = {name: digest(args.bin / name) for name in [*paths, *references]}
+    identities["generator"] = digest(generator)
+    pool_binary = "cauce-fixed" if (args.bin / "cauce-fixed").is_file() else "cauce"
+    identities["pool_binary"] = digest(args.bin / pool_binary)
     write_json(output / "identities.json", identities)
     rng = random.Random(SEED)
     results = {}
@@ -74,7 +78,7 @@ def main():
         dest = output / label
         command = [
             sys.executable, str(PROGRAM / "capacity-workload.py"), str(paths.get(name, args.bin / name)),
-            str(generator), str(dest), "--proxy-kind", "nginx" if name == "nginx" else "cauce",
+            str(generator), str(dest), "--proxy-kind", name if name in ("nginx", *references) else "cauce",
             "--protocol", protocol, "--strategy", strategy, "--endpoints", str(endpoints),
             "--workers", str(workers), "--proxy-cpus", *map(str, range(workers)),
             "--backend-cpu", "10", "--client-cpu", "8", "9", "--sampler-cpu", "11",
@@ -95,7 +99,13 @@ def main():
     order = list(paths)
     rng.shuffle(order)
     for name in order:
-        run(f"{name}-1w", name)
+        primary = run(f"{name}-1w", name)
+        if primary.get("status") in ("REJECTED_POSTFLIGHT", "CONFIRMATION_FAILED"):
+            bound = primary.get("highest_passing_ramp")
+            lower_rates = tuple(rate for rate in (500, 1000, 2000, 4000, 8000)
+                                if bound and rate <= bound // 2)
+            if lower_rates:
+                run(f"{name}-1w-conservative", name, rates=lower_rates)
     pairs = []
     for repeat in range(1, 8):
         rng.shuffle(order)
@@ -108,12 +118,21 @@ def main():
         write_json(output / "paired.json", paired(pairs))
 
     for workers in (2, 4, 8):
-        run(f"cauce-{workers}w", "cauce", workers, stability=90 if workers == 4 else 0)
+        primary = run(f"cauce-{workers}w", "cauce", workers, stability=90 if workers == 4 else 0)
+        if primary.get("status") in ("REJECTED_POSTFLIGHT", "CONFIRMATION_FAILED", "STABILITY_FAILED"):
+            bound = primary.get("highest_passing_ramp")
+            lower_rates = tuple(rate for rate in (500, 1000, 2000, 4000, 8000)
+                                if bound and rate <= bound // 2)
+            if lower_rates:
+                run(f"cauce-{workers}w-conservative", "cauce", workers,
+                    rates=lower_rates, stability=90 if workers == 4 else 0)
     if (args.bin / "cauce-published").is_file():
         run("published-1w", "cauce-published", rates=(500, 1000, 2000, 4000, 8000))
+    for name in references:
+        run(f"{name}-1w", name, rates=(500, 1000, 2000, 4000, 8000))
     run("cauce-h2-1w", "cauce", protocol="http2", rates=(500, 1000, 2000, 4000, 8000))
     for strategy, endpoints in itertools.product(("compact", "sharded"), (1, 4, 16, 64, 256)):
-        run(f"pool-{strategy}-{endpoints}", "cauce", 4, rates=(RATE,), matched=True,
+        run(f"pool-{strategy}-{endpoints}", pool_binary, 4, rates=(RATE,), matched=True,
             strategy=strategy, endpoints=endpoints)
 
 

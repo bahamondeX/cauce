@@ -21,5 +21,9 @@ printf '%s\n' "$status" >"$results/campaign-exit-status"
 if [[ $status == 0 ]]; then
     timeout -k 5s 4m python3 bench/program/replay-transport.py bin/cauce bin/cauce-load \
         "$results/transport" --worker-counts 2 --sample-linux >"$results/transport.log" 2>&1 || true
+    if [[ -x bench/program/native-profile-staged.sh ]]; then
+        timeout -k 10s 12m bench/program/native-profile-staged.sh "$results/profile" \
+            >"$results/profile.log" 2>&1 || true
+    fi
 fi
 exit "$status"
