@@ -1,0 +1,12 @@
+{"check": "recursive-ipv4", "observed": [200, null, ["/identity", "198.51.100.42", "a"]]}
+{"check": "recursive-ipv6", "observed": [200, null, ["/identity", "2001:db8:2::42", "a"]]}
+{"check": "capture-and-query", "observed": [200, null, ["/final/alpha?new=1&keep=2", "127.0.0.1", "a"]]}
+{"check": "redirect", "observed": [308, "/final/", null]}
+{"check": "named-location", "observed": [200, null, ["/internal", "127.0.0.1", "a"]]}
+{"check": "access-denial", "observed": [403, null, null]}
+{"check": "resolved-address-access", "observed": [200, null, ["/allowed", "198.51.100.42", "a"]]}
+{"check": "shared-zone-and-weight-ratio", "observed": {"rate": [200, 429], "weighted": [15, 5]}}
+{"check": "malformed-and-untrusted-forwarding-loop-and-hash", "observed": "passed"}
+{"check": "http2-concurrent-admission-survives-reload", "observed": [200, 429]}
+{"check": "selected-x-real-ip", "observed": [200, null, ["/identity-real", "2001:db8:2::42", "a"]]}
+{"check": "physical-peer-tcp-admission", "observed": "passed"}

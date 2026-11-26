@@ -163,3 +163,19 @@ Native capacity, profiling and comparative work carried into Milestone 3.
   `LoginRefreshRequired` for the authorized profile. AMD64 cleanup
   and the prior invoice still need control-plane verification, so
   this checkpoint launched no new resources. [Lifecycle evidence](docs/PERFORMANCE-MILESTONE-4.md#aws-lifecycle).
+
+## Milestone 5 checkpoint
+
+- Trusted IPv4/IPv6 client identity, bounded rewrites and redirects, private
+  named locations, per-route balancing groups, shared rate zones and HTTP/TCP
+  admission are configurable in YAML and TOML. Compact pooling remains the
+  default. [Production YAML](examples/production-gateway.yaml)
+  [Policy ordering](docs/adr/0011-compiled-gateway-policies.md).
+- Both pool strategies passed the pinned NGINX gateway socket comparison and
+  existing proxy regression. The registry records 10 verified observable
+  behaviors, 13 partial NGINX modules and 43 partial directive registrations.
+  [Compatibility report](docs/FUNCTIONAL-PARITY.md#milestone-5-production-gateway).
+- The 8,000/s warm-up lost 237 offers after the generator dispatch pipeline filled.
+  The cause of the 41.663 ms completion gap remains unattributed. AWS
+  reauthentication blocks prior lifecycle reconciliation and fresh native
+  performance qualification. [Milestone 5 evidence](docs/PERFORMANCE-MILESTONE-5.md).

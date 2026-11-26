@@ -89,3 +89,45 @@ cargo run --locked -- check candidate.yaml
 The report identifies each directive's line, context, reference registrations, coverage and known semantic differences. The registry includes the pinned NGINX source release, njs HTTP and stream modules, and the nginx-acme module and its issuer-block directives. Analyze included files separately. Directive arguments stay out of the report. The preview accepts a single cleartext HTTP server with an explicit IPv4 listener, explicit DNS names or edge wildcards, and flat literal exact, prefix, or `^~` locations that proxy to literal IPv4 upstreams. Regex locations require manual migration because PCRE and Rust regex syntax differ. It generates a review-only file with Cauce defaults and records its confidence and a validation command. Review route matching, host forwarding, buffering, timeouts and capacity before use. Unsupported structures cause the preview command to exit unsuccessfully, and an existing output file is protected.
 
 Regenerate the source inventory with `python3 scripts/nginx-inventory.py` or verify the generated file with `--check`. Pass `--tarball`, `--njs-tarball` and `--acme-tarball` to use local copies of the checksummed sources. Maintain Cauce feature statuses and test references in [nginx-coverage.json](../compatibility/nginx-coverage.json).
+
+## Gateway policies
+
+[Production gateway example](../examples/production-gateway.yaml) uses
+the existing version-1 YAML model. The same fields are available in TOML.
+
+- `real_ip` enables trusted peer CIDRs and selects `x_forwarded_for` or
+  `x_real_ip`. Recursive X-Forwarded-For walks from right to left and
+  stops at the first untrusted address. Repeated X-Forwarded-For fields
+  follow wire order. Malformed, duplicated X-Real-IP or oversized input
+  falls back to the socket peer. `preserve_trusted_chain` keeps the
+  canonical trusted suffix and appends the socket peer.
+- Route `action` accepts `rewrite`, `redirect` and `named`. Rewrites
+  and redirects can use a bounded byte regex and `$1` through `$9`.
+  `query: preserve` appends the original query to configured arguments.
+  `query: replace` emits only configured arguments. A named route uses
+  `path_match: named` and the location identifier in `path_pattern`.
+  Conditional actions require an upstream for requests that miss their
+  pattern. An unconditional route action may use `upstreams: []`.
+- Upstream `weight` ranges from 1 to 64. Supported algorithms are
+  `round_robin`, `least_inflight`, `weighted_round_robin`,
+  `least_connections`, `weighted_least_connections`, `ip_hash`,
+  `consistent_hash` and `power_of_two_choices`. Least-connection modes
+  count active leases, including HTTP/2 streams. Hashing uses the
+  resolved client address. Endpoint IDs are stable hash identities.
+- Route `allow_clients` lists CIDRs. Route `rate_zone` references a named
+  `rate_zones` entry. A `client_ip` key shares a client's budget across
+  routes using the zone. A `route` key gives each route a separate
+  budget. `rate_per_second` and `burst` define pace and excess capacity.
+  An optional `max_delay_ms` enables bounded scheduling. `max_concurrent`
+  limits active HTTP requests or streams. `reject_status` and
+  `error_body` set the HTTP rejection. The separate
+  `max_connections_per_peer` caps physical TCP sockets before TLS.
+  Zone specifications and the peer cap require restart.
+
+The NGINX migration preview also translates server-local
+`set_real_ip_from`, `real_ip_header` and `real_ip_recursive`
+with literal IPv4 or IPv6 addresses. It translates flat, static
+origin-relative `return` redirects alongside proxied locations.
+Complex rewrites, inherited policies and NGINX-specific balancing
+and admission tables require review.
+[Policy ordering](adr/0011-compiled-gateway-policies.md).

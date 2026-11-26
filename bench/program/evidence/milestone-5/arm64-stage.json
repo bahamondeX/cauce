@@ -1,0 +1,14 @@
+{
+  "artifact": "work/milestone-5/native-arm64-stage.tar.gz",
+  "bytes": 94565644,
+  "sha256": "948d743f00708b9275b364fa39b56662ccb1ad60bb7af1262eea17100b47360d",
+  "architecture": "aarch64-unknown-linux-gnu",
+  "qualification": "unexecuted",
+  "cauce": "89b0632",
+  "published": "ba6f952",
+  "checkpoint": "47da8fe",
+  "nginx": "1.30.8",
+  "haproxy": "3.4.8",
+  "pingora": "0.9.1",
+  "entrypoint": "bench/program/native-run-staged.sh"
+}

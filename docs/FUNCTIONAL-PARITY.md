@@ -76,3 +76,36 @@ nginx-acme 0.4.2 with 15. The registry counts registrations independently
 of directive names. Its six verified behaviors do not confer full
 coverage on any module or directive.
 [Machine-readable coverage counts](../bench/program/evidence/milestone-4/coverage-counts.json).
+
+## Milestone 5 production gateway
+
+NGINX OSS 1.30.8 and Cauce exchanged real requests for the shared trusted
+client, route action, access, admission and weighted balancing fixtures.
+The same suite exercised both compact and sharded pooling. The Cauce-only
+security and lifecycle cases cover consistent placement, reload with an
+in-flight HTTP/2 stream and physical per-peer socket admission.
+[Socket fixture](../tests/compare_nginx_gateway.py)
+[Compact results](../bench/program/evidence/milestone-5/gateway-compact.jsonl)
+[Sharded results](../bench/program/evidence/milestone-5/gateway-sharded.jsonl).
+
+| Inventory scope | Verified | Implemented | Partial | Unsupported or unmapped |
+| --- | ---: | ---: | ---: | ---: |
+| NGINX OSS module definitions | 0 | 0 | 13 | 107 |
+| Directive registrations | 0 | 0 | 43 | 711 |
+| Recorded observable behaviors | 10 | 0 | 11 | 16 |
+| Configure option patterns | 0 | 0 | 0 | 149 |
+| njs 1.0.2 registrations | 0 | 0 | 0 | 55 |
+| nginx-acme 0.4.2 registrations | 0 | 0 | 0 | 15 |
+
+These totals keep full-module and full-directive coverage separate from the
+behaviors observed in shared fixtures. Cauce's rewrite syntax supports
+bounded Rust regular expressions and numbered captures. NGINX-specific
+PCRE constructs, nested location precedence and complex rewrite scripts
+still require manual review. Weight proportions were compared in the
+socket fixture. IP and consistent-hash placement, connection-limit
+semantics and broader `limit_req` behavior remain partial. The
+migration preview supports literal server-level real-IP settings and
+origin-relative static returns within its existing configuration subset.
+[Machine-readable coverage](../bench/program/evidence/milestone-5/compatibility.json)
+[Scope and evidence registry](../compatibility/nginx-oss.yaml)
+[Production YAML](../examples/production-gateway.yaml).

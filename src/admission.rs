@@ -259,6 +259,54 @@ impl Drop for PeerSlot {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{
+        alloc::{GlobalAlloc, Layout, System},
+        cell::Cell,
+    };
+
+    thread_local! {
+        static ALLOCATIONS: Cell<Option<(usize, usize)>> = const { Cell::new(None) };
+    }
+
+    struct Counter;
+
+    #[global_allocator]
+    static ALLOCATOR: Counter = Counter;
+
+    unsafe impl GlobalAlloc for Counter {
+        unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+            let ptr = unsafe { System.alloc(layout) };
+            if !ptr.is_null() {
+                let _ = ALLOCATIONS.try_with(|count| {
+                    if let Some((calls, bytes)) = count.get() {
+                        count.set(Some((calls + 1, bytes + layout.size())));
+                    }
+                });
+            }
+            ptr
+        }
+
+        unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+            unsafe { System.dealloc(ptr, layout) }
+        }
+    }
+
+    #[test]
+    fn disabled_admission_reuses_the_baseline_permit_allocation() {
+        let slots = Arc::new(tokio::sync::Semaphore::new(2));
+        let prior = slots.clone().try_acquire_owned().unwrap();
+        let current = slots.clone().try_acquire_owned().unwrap();
+        ALLOCATIONS.with(|count| count.set(Some((0, 0))));
+        let prior = std::hint::black_box(Arc::new(prior));
+        let baseline = ALLOCATIONS.with(|count| count.replace(Some((0, 0))).unwrap());
+        let current = std::hint::black_box(RequestSlot::new(current, None));
+        let candidate = ALLOCATIONS.with(|count| count.replace(None).unwrap());
+        drop((prior, current));
+        assert_eq!(baseline.0, 1);
+        assert_eq!(candidate, baseline);
+        println!("request_permit baseline_allocations={} baseline_bytes={} disabled_allocations={} disabled_bytes={}",
+                 baseline.0, baseline.1, candidate.0, candidate.1);
+    }
 
     #[test]
     fn burst_delay_and_live_entry_budget_fail_closed() {

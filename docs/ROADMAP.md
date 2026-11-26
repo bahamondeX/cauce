@@ -120,3 +120,18 @@ The revised auditor distinguishes warm-up and generator queue loss from
 an attributable saturation boundary. The ARM64 artifacts are staged.
 Control-plane reconciliation remains the prerequisite for any new
 AWS run. [Performance and lifecycle](PERFORMANCE-MILESTONE-4.md).
+
+## Milestone 5
+
+The checkpoint covers trusted IPv4/IPv6 forwarding, bounded internal and
+external route actions, weighted and hash balancing, and shared bounded
+admission. Nested NGINX locations, full PCRE and variable semantics,
+directive inheritance, exact hash compatibility and combined admission
+zones remain open. [Gateway coverage](FUNCTIONAL-PARITY.md#milestone-5-production-gateway).
+
+The next functional increments cover DNS TTL and connection retirement,
+upstream backoff, active HTTP/2 and gRPC health, and SNI and mutual TLS.
+Retries require separate request-transmission and replay-safety gates.
+Native capacity and feature-overhead qualification resumes after AWS
+identity, previous resources and charges are verified.
+[Performance and lifecycle](PERFORMANCE-MILESTONE-5.md).

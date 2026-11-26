@@ -26,7 +26,7 @@ HEADER_NAME = re.compile(r"[!#$%&'*+.^_`|~0-9a-z-]{1,64}\Z")
 RESERVED_HEADERS = {
     "host", "connection", "keep-alive", "proxy-connection", "transfer-encoding",
     "content-length", "content-type", "content-encoding", "trailer", "te", "upgrade",
-    "proxy-authenticate", "proxy-authorization", "forwarded", "x-request-id",
+    "proxy-authenticate", "proxy-authorization", "forwarded", "x-real-ip", "x-request-id",
     "traceparent", "tracestate", "baggage",
 }
 
@@ -187,6 +187,48 @@ def header_preview(nodes):
     return policy
 
 
+def real_ip_preview(items):
+    names = {"set_real_ip_from", "real_ip_header", "real_ip_recursive"}
+    declarations = [item for item in items if item.name in names]
+    if not declarations:
+        return None
+    trusted = []
+    for item in declarations:
+        if item.children is not None or len(item.args) != 1:
+            raise ValueError("preview requires literal real-IP settings")
+        if item.name == "set_real_ip_from":
+            try:
+                network = str(ipaddress.ip_network(item.args[0], strict=False))
+            except ValueError:
+                raise ValueError("preview requires literal trusted IPv4 or IPv6 addresses") from None
+            if network not in trusted:
+                trusted.append(network)
+    if not 1 <= len(trusted) <= 256:
+        raise ValueError("preview requires 1 to 256 trusted networks")
+    headers = [item.args[0].lower() for item in declarations if item.name == "real_ip_header"]
+    recursive = [item.args[0] for item in declarations if item.name == "real_ip_recursive"]
+    if len(headers) > 1 or (headers and headers[0] not in {"x-forwarded-for", "x-real-ip"}):
+        raise ValueError("preview requires X-Forwarded-For or X-Real-IP")
+    if len(recursive) > 1 or (recursive and recursive[0] not in {"on", "off"}):
+        raise ValueError("preview requires real_ip_recursive on or off")
+    return {"trusted_proxies":trusted, "header":headers[0].replace("-", "_") if headers else "x_real_ip",
+            "recursive": recursive == ["on"], "forwarding":"replace"}
+
+
+def redirect_preview(nodes):
+    if len(nodes) != 1 or nodes[0].name != "return":
+        return None
+    node = nodes[0]
+    if node.children is not None or len(node.args) != 2 or node.args[0] not in {"301", "302", "303", "307", "308"}:
+        raise ValueError("preview supports only literal redirect return statements")
+    target = node.args[1]
+    if (not re.fullmatch(r"/[A-Za-z0-9_~./?&=-]{0,255}", target) or target.startswith("//")
+            or "//" in target.split("?",1)[0]
+            or any(p in {".",".."} for p in target.split("?",1)[0].split("/"))):
+        raise ValueError("preview requires a static origin-relative redirect")
+    return dict(kind="redirect", status=int(node.args[0]), target=target, query="replace")
+
+
 def preview(directives):
     http = [d for d in directives if d.name == "http" and d.children is not None and not d.args]
     events = [d for d in directives if d.name == "events" and d.children == [] and not d.args]
@@ -199,13 +241,16 @@ def preview(directives):
     listener = ipv4_socket(one_value(items, "listen"))
     hosts = server_names(items)
     locations = [node for node in items if node.name == "location"]
-    if not locations or len(locations) + 2 != len(items):
-        raise ValueError("preview supports only listen, server_name, and location in the server")
+    allowed = {"listen", "server_name", "location", "set_real_ip_from", "real_ip_header", "real_ip_recursive"}
+    if not locations or any(item.name not in allowed for item in items):
+        raise ValueError("preview supports listen, server_name, flat locations and literal real-IP policy")
     config = yaml.safe_load((ROOT / "examples/cauce.yaml").read_text())
     proxy = config["proxy"]
     if listener == proxy["admin"]:
         raise ValueError("preview listener conflicts with the default admin socket")
     proxy.update(listen=listener, routes=[], upstreams=[])
+    if identity := real_ip_preview(items):
+        proxy["real_ip"] = identity
     endpoints = {}
     paths = set()
     for location in locations:
@@ -222,27 +267,36 @@ def preview(directives):
         if key in paths or "//" in path or any(p in {".", ".."} for p in path.split("/")):
             raise ValueError("preview requires unique and unambiguous paths")
         paths.add(key)
-        target = one_value(location.children, "proxy_pass")
-        policy = header_preview(location.children)
-        if not target.startswith("http://"):
-            raise ValueError("preview requires clear HTTP IPv4 upstreams")
-        address = ipv4_socket(target.removeprefix("http://"))
-        if address not in endpoints:
-            endpoint = f"origin{len(endpoints) + 1}"
-            endpoints[address] = endpoint
-            proxy["upstreams"].append(
-                dict(id=endpoint, address=address, host=address, isolation="migration",
-                     connections=32, idle_connections=16, failure_backoff_ms="500ms")
-            )
+        action = redirect_preview(location.children)
+        policy = None
+        upstreams = []
+        if action is None:
+            target = one_value(location.children, "proxy_pass")
+            policy = header_preview(location.children)
+            if not target.startswith("http://"):
+                raise ValueError("preview requires clear HTTP IPv4 upstreams")
+            address = ipv4_socket(target.removeprefix("http://"))
+            if address not in endpoints:
+                endpoint = f"origin{len(endpoints) + 1}"
+                endpoints[address] = endpoint
+                proxy["upstreams"].append(
+                    dict(id=endpoint, address=address, host=address, isolation="migration",
+                         connections=32, idle_connections=16, failure_backoff_ms="500ms")
+                )
+            upstreams = [endpoints[address]]
         for host in hosts:
             for authority in (host, f"{host}:{listener.rsplit(':', 1)[1]}"):
                 if len(proxy["routes"]) == 1024:
                     raise ValueError("preview exceeds Cauce route capacity")
                 row = dict(id=f"route{len(proxy['routes']) + 1}", host=authority, path_prefix=path,
-                           path_match=mode, balance="round_robin", upstreams=[endpoints[address]])
+                           path_match=mode, balance="round_robin", upstreams=upstreams)
+                if action:
+                    row["action"] = action
                 if policy:
                     row["headers"] = policy
                 proxy["routes"].append(row)
+    if not proxy["upstreams"]:
+        raise ValueError("preview requires at least one proxied location")
     return config
 
 
@@ -270,6 +324,7 @@ def main():
                   "The preview supplies Cauce defaults for budgets, logging and timeouts. Uploads and responses stream.",
                   "Forwarded identity and upstream HTTP Host follow Cauce policy. The preview uses explicit local upstream addresses.",
                   "Static proxy header policies omit NGINX inheritance and implicit hide rules.",
+                  "Local return redirects use origin-relative Location. Check NGINX absolute_redirect behavior.",
                   "Review socket exposure and the loopback admin listener before deployment.",
               ]}
     if args.preview:

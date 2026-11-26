@@ -1,0 +1,50 @@
+{
+  "cauce-1w/ramp-8000": {
+    "offers": 16000,
+    "observed_starts": 15763,
+    "queue_rejections": 237,
+    "rate": 8000,
+    "first_rejection_ns": 342017980,
+    "last_rejection_ns": 371518022,
+    "arrivals_before_first": 2736,
+    "started_not_finished_at_first": 32,
+    "arrived_without_start_at_first": 64,
+    "completions_during_rejections": 0,
+    "last_completion_before_loss_ns": 329968614,
+    "first_completion_after_loss_ns": 371631783
+  },
+  "cauce-1w/control-before-8000": {
+    "offers": 32000,
+    "observed_starts": 32000,
+    "queue_rejections": 0,
+    "rate": 16000
+  },
+  "cauce-2w/control-after": {
+    "offers": 64000,
+    "observed_starts": 62754,
+    "queue_rejections": 1246,
+    "rate": 32000,
+    "first_rejection_ns": 3093825,
+    "last_rejection_ns": 42000050,
+    "arrivals_before_first": 99,
+    "started_not_finished_at_first": 32,
+    "arrived_without_start_at_first": 64,
+    "completions_during_rejections": 1,
+    "last_completion_before_loss_ns": 1706230,
+    "first_completion_after_loss_ns": 42023931
+  },
+  "cauce-8w/control-before-16000": {
+    "offers": 64000,
+    "observed_starts": 62040,
+    "queue_rejections": 1960,
+    "rate": 32000,
+    "first_rejection_ns": 3093827,
+    "last_rejection_ns": 64343791,
+    "arrivals_before_first": 99,
+    "started_not_finished_at_first": 32,
+    "arrived_without_start_at_first": 64,
+    "completions_during_rejections": 2,
+    "last_completion_before_loss_ns": 1682051,
+    "first_completion_after_loss_ns": 64369251
+  }
+}

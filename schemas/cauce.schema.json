@@ -548,6 +548,12 @@
         "host": {
           "$ref": "#/$defs/authority"
         },
+          "weight": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 64,
+            "default": 1
+          },
         "isolation": {
           "anyOf": [
             {
@@ -625,6 +631,7 @@
         }
       }
     },
+    "cidrs": {"type":"array","minItems":1,"maxItems":256,"uniqueItems":true,"items":{"type":"string","minLength":3,"maxLength":49}},
     "route": {
       "type": "object",
       "additionalProperties": false,
@@ -640,7 +647,7 @@
           "not": {
             "anyOf": [
               {"required": ["path_pattern"]},
-              {"required": ["path_match"], "properties": {"path_match": {"enum": ["regex", "regex_insensitive"]}}}
+              {"required": ["path_match"], "properties": {"path_match": {"enum": ["regex", "regex_insensitive", "named"]}}}
             ]
           }
         },
@@ -651,7 +658,7 @@
             "path_match": {
               "anyOf": [
                 {"$ref": "#/$defs/environment"},
-                {"enum": ["regex", "regex_insensitive"]}
+                {"enum": ["regex", "regex_insensitive", "named"]}
               ]
             }
           }
@@ -697,7 +704,7 @@
               "$ref": "#/$defs/environment"
             },
             {
-              "enum": ["prefix", "exact", "literal_prefix", "prefix_no_regex", "regex", "regex_insensitive"]
+              "enum": ["prefix", "exact", "literal_prefix", "prefix_no_regex", "regex", "regex_insensitive", "named"]
             }
           ]
         },
@@ -714,6 +721,98 @@
             "response": {"$ref": "#/$defs/headerEdits"}
           }
         },
+          "action": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "location"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "named"
+                  },
+                  "location": {
+                    "$ref": "#/$defs/identifier"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "target"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "rewrite"
+                  },
+                  "target": {
+                    "type": "string",
+                    "maxLength": 512,
+                    "pattern": "^/"
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "query": {
+                    "enum": [
+                      "preserve",
+                      "replace"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "status",
+                  "target"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "redirect"
+                  },
+                  "status": {
+                    "enum": [
+                      301,
+                      302,
+                      303,
+                      307,
+                      308
+                    ]
+                  },
+                  "target": {
+                    "type": "string",
+                    "maxLength": 512,
+                    "pattern": "^/"
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "maxLength": 256
+                  },
+                  "query": {
+                    "enum": [
+                      "preserve",
+                      "replace"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "allow_clients": {
+            "$ref": "#/$defs/cidrs"
+          },
+          "rate_zone": {
+            "$ref": "#/$defs/identifier"
+          },
         "balance": {
           "anyOf": [
             {
@@ -722,14 +821,19 @@
             {
               "enum": [
                 "round_robin",
-                "least_inflight"
+                "least_inflight",
+                "weighted_round_robin",
+                "least_connections",
+                "weighted_least_connections",
+                "ip_hash",
+                "consistent_hash",
+                "power_of_two_choices"
               ]
             }
           ]
         },
         "upstreams": {
           "type": "array",
-          "minItems": 1,
           "items": {
             "$ref": "#/$defs/identifier"
           },
@@ -898,6 +1002,106 @@
           },
           "maxItems": 1024
         },
+          "real_ip": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "trusted_proxies"
+            ],
+            "properties": {
+              "trusted_proxies": {
+                "$ref": "#/$defs/cidrs"
+              },
+              "header": {
+                "enum": [
+                  "x_forwarded_for",
+                  "x_real_ip"
+                ]
+              },
+              "recursive": {
+                "type": "boolean"
+              },
+              "forwarding": {
+                "enum": [
+                  "replace",
+                  "preserve_trusted_chain"
+                ]
+              }
+            }
+          },
+          "max_connections_per_peer": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "rate_zones": {
+            "type": "object",
+            "maxProperties": 32,
+            "propertyNames": {
+              "$ref": "#/$defs/identifier"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "key",
+                "max_keys"
+              ],
+              "anyOf": [
+                {
+                  "required": [
+                    "rate_per_second"
+                  ]
+                },
+                {
+                  "required": [
+                    "max_concurrent"
+                  ]
+                }
+              ],
+              "properties": {
+                "key": {
+                  "enum": [
+                    "route",
+                    "client_ip"
+                  ]
+                },
+                "max_keys": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "rate_per_second": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 1000000
+                },
+                "burst": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 65536
+                },
+                "max_delay_ms": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 30000
+                },
+                "max_concurrent": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "reject_status": {
+                  "type": "integer",
+                  "minimum": 400,
+                  "maximum": 599
+                },
+                "error_body": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              }
+            }
+          },
         "routes": {
           "type": "array",
           "minItems": 1,

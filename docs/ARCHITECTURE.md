@@ -231,3 +231,16 @@ envía con `END_STREAM` en los HEADERS iniciales. Los cuerpos con datos o
 trailers pendientes conservan el guard de subida y sus límites. El lease
 de respuesta y el watchdog siguen abarcando el intercambio.
 [ADR 0005](adr/0005-http2-empty-upstream-uploads.md).
+
+## Políticas HTTP compiladas
+
+La preparación de cada generación valida los rangos de confianza y compila
+las rutas, las acciones y los grupos de balanceo. El dataplane separa la
+dirección del socket de la identidad de cliente. Los saltos internos tienen
+un límite fijo y la ruta final aplica los controles de acceso y admisión.
+Los grupos de balanceo mantienen un estado independiente por ruta.
+
+Las zonas de admisión pertenecen al proceso y conservan su estado al
+recargar las rutas. La autorización concurrente dura hasta la finalización
+de la subida y de la respuesta, incluso para flujos HTTP/2 y túneles.
+[Orden y límites de las políticas](adr/0011-compiled-gateway-policies.md).

@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../schemas/cauce.schema.json
+version: 1
+proxy:
+  name: cauce
+  listen: "127.0.0.1:8080"
+  admin: "127.0.0.1:9090"
+
+  limits:
+    clients: 1024
+    requests: 256
+    connections: 64
+    idle_connections: 32
+    connecting: 8
+    acquire_ms: 250ms
+    connect_ms: 1s
+    headers_ms: 5s
+    stream_idle_ms: 15s
+    request_ms: 2m
+    client_headers_ms: 5s
+    idle_connection_ms: 10s
+    max_connection_age_ms: 1m
+    dns_cache_ms: 5s
+    tcp_keepalive_secs: 30s
+    max_header_bytes: 32KiB
+    max_headers: 64
+    max_body_bytes: 16MiB
+    shutdown_ms: 5s
+
+  logs:
+    enabled: true
+    path: logs/access.jsonl
+    queue: 4096
+    rotate_bytes: 16MiB
+    retained_files: 3
+
+  real_ip:
+    trusted_proxies: ["10.0.0.0/8", "2001:db8:1::/48"]
+    header: x_forwarded_for
+    recursive: true
+    forwarding: replace
+  max_connections_per_peer: 64
+  rate_zones:
+    api-clients:
+      key: client_ip
+      max_keys: 1024
+      rate_per_second: 100
+      burst: 20
+      max_concurrent: 12
+      reject_status: 429
+      error_body: "request budget exceeded"
+  upstreams:
+    - id: python
+      weight: 3
+      address: "127.0.0.1:8000"
+      host: "localhost:8000"
+      isolation: default
+      connections: 32
+      idle_connections: 16
+      failure_backoff_ms: 500ms
+    - id: node
+      address: "127.0.0.1:8001"
+      host: "localhost:8001"
+      isolation: default
+      connections: 32
+      idle_connections: 16
+      failure_backoff_ms: 500ms
+
+  routes:
+    - id: api
+      host: localhost:8080
+      path_prefix: /v1
+      allow_clients: ["198.51.100.0/24", "127.0.0.1/32"]
+      rate_zone: api-clients
+      balance: weighted_round_robin
+      upstreams: [python, node]
+    - id: legacy
+      host: localhost:8080
+      path_prefix: /legacy
+      action:
+        kind: rewrite
+        pattern: '^/legacy/([a-z0-9-]+)$'
+        target: '/v1/$1'
+      balance: round_robin
+      upstreams: [python]
+    - id: old-entry
+      host: localhost:8080
+      path_match: exact
+      path_prefix: /old
+      action: {kind: redirect, status: 308, target: /v1}
+      balance: round_robin
+      upstreams: []
+    - id: stable-entry
+      host: localhost:8080
+      path_match: exact
+      path_prefix: /stable
+      action: {kind: named, location: stable}
+      balance: round_robin
+      upstreams: []
+    - id: stable-origin
+      host: localhost:8080
+      path_match: named
+      path_pattern: stable
+      balance: consistent_hash
+      upstreams: [python, node]

@@ -13,13 +13,14 @@ TOOL = ROOT / "scripts/nginx-migration-report.py"
 
 
 class MigrationTests(unittest.TestCase):
-    def run_preview(self, names, locations):
+    def run_preview(self, names, locations, server_extra=''):
         with tempfile.TemporaryDirectory() as tmp:
             source, destination = (Path(tmp) / f for f in ("nginx.conf", "preview.yaml"))
             source.write_text(f"""http {{
               server {{
                 listen 127.0.0.1:8080;
                 server_name {names};
+                {server_extra}
                 {locations}
               }}
             }}""")
@@ -72,6 +73,17 @@ class MigrationTests(unittest.TestCase):
                     "location / { proxy_pass http://127.0.0.1:2010; " + directive + " }")
                 self.assertEqual(code, 1)
                 self.assertIsNone(config)
+
+    def test_real_ip_and_literal_redirect_preview(self):
+        code, _, config = self.run_preview("example.org",
+            'location / { proxy_pass http://127.0.0.1:2010; } location = /old { return 308 /new; }',
+            'set_real_ip_from 10.0.0.0/8; set_real_ip_from 2001:db8::/32; '
+            'real_ip_header X-Forwarded-For; real_ip_recursive on;')
+        self.assertEqual(code, 0)
+        self.assertEqual(config["proxy"]["real_ip"]["trusted_proxies"], ["10.0.0.0/8", "2001:db8::/32"])
+        self.assertTrue(config["proxy"]["real_ip"]["recursive"])
+        redirects = [route for route in config["proxy"]["routes"] if "action" in route]
+        self.assertTrue(all(route["action"]["status"] == 308 and not route["upstreams"] for route in redirects))
 
     def test_unsupported_host_or_location_refuses_partial_preview(self):
         for names, locations in [

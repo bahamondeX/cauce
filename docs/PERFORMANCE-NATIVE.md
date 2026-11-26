@@ -230,3 +230,20 @@ archive index. The paired comparisons, host facts, profiles and
 independent audit summaries are checked in.
 [Archive index](../bench/program/evidence/milestone-3/raw-archives.json)
 [Repository evidence checksums](../bench/program/evidence/milestone-3/SHA256SUMS).
+
+## Milestone 5 staging and warm-up diagnosis
+
+The new ARM64 bundle includes the Milestone 5 gateway runtime and pinned
+reference builds. Its local checksums were verified and the native
+campaign remains unexecuted. STS requires interactive sign-in for the
+authorized profile before AMD64 state, cleanup and charges can be
+reconciled. No new AWS resources were launched.
+[ARM64 bundle identity](../bench/program/evidence/milestone-5/arm64-stage.json)
+[Recovery evidence](../bench/program/evidence/milestone-5/aws-recovery.json).
+
+The 8,000/s AMD64 warm-up archive shows a full 32-request in-flight and
+64-offer dispatch pipeline at the first of 237 generator queue
+rejections. The observed 41.663 ms gap between adjacent completions
+remains unattributed. Native throughput and scaling for the new gateway
+still require qualification.
+[Milestone 5 results](PERFORMANCE-MILESTONE-5.md).

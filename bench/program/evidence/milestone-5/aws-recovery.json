@@ -1,0 +1,11 @@
+{
+  "region": "us-east-1",
+  "authorized_account_suffix": "6271",
+  "aws_core_sts": "reauthentication_required",
+  "local_sdk_sts": "LoginRefreshRequired",
+  "blocking_command": "aws login --profile default",
+  "browser_retry_attempts": 0,
+  "new_temporary_resources": 0,
+  "actual_invoiced_usd": null,
+  "remaining": ["verify AMD64 termination", "reconcile EC2, EBS, security group and IAM cleanup", "verify spending", "run qualified ARM64"]
+}
