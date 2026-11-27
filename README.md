@@ -26,6 +26,8 @@ curl -NsS --max-time 5 http://127.0.0.1:8080/sse
 docker compose down
 ```
 
+> **Collector safety:** Use the default Compose profile for this quickstart. Keep the optional SQLite log collector disabled until a patched public build is available. See [RUSTSEC-2026-0459](https://rustsec.org/advisories/RUSTSEC-2026-0459.html).
+
 The example exposes the proxy on loopback and includes sample backends. The SSE example uses a five-second limit so it does not hold the terminal open. For a native build with Rust 1.88 or newer:
 
 ```sh

@@ -26,6 +26,8 @@ curl -NsS --max-time 5 http://127.0.0.1:8080/sse
 docker compose down
 ```
 
+> **Seguridad del recolector:** Usa el perfil predeterminado de Compose para esta prueba. Mantén desactivado el recolector opcional de logs con SQLite hasta que haya una versión pública corregida. Consulta [RUSTSEC-2026-0459](https://rustsec.org/advisories/RUSTSEC-2026-0459.html).
+
 El ejemplo expone el proxy solo en la interfaz de loopback e incluye servicios de prueba. La prueba SSE tiene un límite de cinco segundos para no dejar abierta la terminal. Para compilar de forma nativa con Rust 1.88 o posterior:
 
 ```sh
