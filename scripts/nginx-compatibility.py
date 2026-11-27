@@ -80,6 +80,27 @@ def report():
     }
 
 
+def manifest(registration):
+    reviewed = json.loads(MANIFEST.read_text())["registrations"]
+    for line in REGISTRY.read_text().splitlines():
+        row = json.loads(line)
+        if row.get("task_id") != registration:
+            continue
+        contract = reviewed.get(registration)
+        common = ("valid_arguments", "invalid_arguments", "defaults", "contexts",
+                  "inheritance", "boundary", "interactions", "observable", "reload")
+        return {
+            "registration": registration, "module": row["module"], "source": row["source"],
+            "reference_line": row["registration"]["line"], "context": row["context"],
+            "arity": row["accepted_arity"], "argument_grammar": row["arguments"],
+            "default": row["reference_default"], "inheritance": row["reference_inheritance"],
+            "assessment": row["assessment"], "executed_evidence": row["evidence"],
+            "known_differences": row["semantic_differences"], "contract": contract,
+            "obligations_pending_review": [] if contract else list(common),
+        }
+    raise ValueError(f"unknown directive registration {registration}")
+
+
 def available_ports(count):
     with ExitStack() as sockets:
         listeners = [sockets.enter_context(socket.socket()) for _ in range(count)]
@@ -196,12 +217,18 @@ def run_module(module, nginx, cauce, folder, proof=None):
         rejection_results = []
         for case in rejected:
             invalid_cauce = folders["cauce"] / "invalid.yaml"
-            invalid_cauce.write_text(json.dumps({"version": 1, "proxy": {
-                **config, "routes": case["routes"], **case.get("proxy_edits", {})}}))
+            invalid = json.dumps({"version": 1, "proxy": {
+                **config, "routes": case["routes"], **case.get("proxy_edits", {})}})
+            if field := case.get("duplicate_cauce"):
+                item = json.dumps({field: case["routes"][0][field]})[1:-1]
+                invalid = invalid.replace(item, item + ", " + item, 1)
+            invalid_cauce.write_text(invalid)
             commands = {"cauce": [cauce, "check", invalid_cauce]}
+            rejected_configurations = {"cauce": invalid}
             if "reference" in case:
                 invalid_nginx = folders["nginx"] / "invalid.conf"
-                invalid_nginx.write_text(nginx_prologue + case["reference"] + "\n}\n")
+                rejected_configurations["nginx"] = nginx_prologue + case["reference"] + "\n}\n"
+                invalid_nginx.write_text(rejected_configurations["nginx"])
                 commands["nginx"] = [nginx, "-t", "-p", str(folders["nginx"]) + "/", "-c", "invalid.conf"]
             outputs = {}
             for key, command in commands.items():
@@ -209,10 +236,11 @@ def run_module(module, nginx, cauce, folder, proof=None):
                 outputs[key] = {"exit_status": probe.returncode,
                                 "expected_diagnostic": case["error"][key] in probe.stderr,
                                 "stderr": probe.stderr, "stdout": probe.stdout}
-            rejection_results.append({"case": case["name"], "observations": outputs,
+            passed = all(item["exit_status"] != 0 and item["expected_diagnostic"] for item in outputs.values())
+            rejection_results.append({"case": case["name"], "observations": outputs, "passed": passed,
                                       "input": case,
-                                      "passed": all(item["exit_status"] != 0 and item["expected_diagnostic"]
-                                                    for item in outputs.values())})
+                                      "configurations": rejected_configurations,
+                                      "reason": "expected rejection" if passed else "unexpected configuration verdict"})
         with ExitStack() as children:
             runs = {
                 "nginx": children.enter_context(launch(nginx, ["-p", str(folders["nginx"]) + "/",
@@ -248,10 +276,11 @@ def run_module(module, nginx, cauce, folder, proof=None):
                     expected_body is None or left.get("body_base64") == base64.b64encode(expected_body.encode()).decode())
                 expected_match = expected_match and all(left["headers"].get(name) == values
                     for name, values in case.get("expected_headers", {}).items())
+                passed = left == right and expected_match
                 results.append({"case": case["name"], "target": case["target"],
                                 "input": case, "raw": {"nginx": left_raw, "cauce": right_raw},
                                 "transient_errors": transient_errors,
-                                "passed": left == right and expected_match,
+                                "passed": passed, "reason": "observables match" if passed else "observables differ",
                                 "nginx": left, "cauce": right,
                                 "uncompared_headers": sorted(set(ignored_left + ignored_right)),
                                 "compared_body": case.get("compare_body", True)})
@@ -301,6 +330,8 @@ def main():
         audit.add_argument("--" + name, required=True, type=Path)
     output = commands.add_parser("report")
     output.add_argument("--format", choices=["json"], default="json")
+    plan = commands.add_parser("manifest")
+    plan.add_argument("registration")
     task = commands.add_parser("queue")
     task.add_argument("--module")
     compare = commands.add_parser("test")
@@ -329,6 +360,9 @@ def main():
         for item in sorted(tasks, key=lambda item: (item["priority"], item["module"], item["directive"])):
             if args.module is None or args.module == item["module"]:
                 print(json.dumps(item, sort_keys=True))
+        return 0
+    if args.command == "manifest":
+        print(json.dumps(manifest(args.registration), indent=2, sort_keys=True))
         return 0
     result = test(args) if args.command == "test" else report()
     print(json.dumps(result, indent=2, sort_keys=True))

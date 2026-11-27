@@ -351,9 +351,9 @@ def internal(config, port, _resources, _folder):
         {"name": "reject-server-context", "routes": [], "proxy_edits": {"internal": True},
          "reference": server + " internal; }",
          "error": {"cauce": invalid, "nginx": "directive is not allowed here"}},
-        {"name": "reject-duplicate", "routes": [route("bad", "/bad", internal=[True, True])],
+        {"name": "reject-duplicate", "routes": [route("bad", "/bad", internal=True)], "duplicate_cauce": "internal",
          "reference": server + " location / { internal; internal; } }",
-         "error": {"cauce": invalid, "nginx": "directive is duplicate"}},
+         "error": {"cauce": "invalid YAML", "nginx": "directive is duplicate"}},
     ], reload
 
 
