@@ -460,8 +460,11 @@ def http_preview(directives, route_mappings):
         children = [node for node in location.children if node.name == "location"]
         if children and mode == "exact":
             raise ValueError("exact locations cannot contain nested locations")
+        private = [node for node in location.children if node.name == "internal"]
+        if len(private) > 1 or any(node.args or node.children is not None for node in private):
+            raise ValueError("internal must appear once without arguments in a location")
         directives = [node for node in location.children if node.name not in
-                      {"location", "add_header", "add_header_inherit"}]
+                      {"location", "add_header", "add_header_inherit", "internal"}]
         mode_nodes = [node for node in location.children if node.name == "add_header_inherit"]
         if mode_nodes:
             inherit_mode = one_value(mode_nodes, "add_header_inherit")
@@ -515,6 +518,8 @@ def http_preview(directives, route_mappings):
                            path_match=mode, balance="round_robin", upstreams=upstreams)
                 if authority in parents:
                     row["parent"] = parents[authority]
+                if private:
+                    row["internal"] = True
                 if content:
                     row["content"] = content
                 if action:

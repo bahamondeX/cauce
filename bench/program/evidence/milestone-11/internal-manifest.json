@@ -1,0 +1,94 @@
+{
+  "argument_grammar": [
+    "no arguments"
+  ],
+  "arity": {
+    "accepted_counts": [
+      0
+    ],
+    "block": false,
+    "variadic_minimum": null
+  },
+  "assessment": "verified_equivalent",
+  "context": [
+    "NGX_HTTP_LOC_CONF"
+  ],
+  "contract": {
+    "arguments": "No arguments. A second declaration in the same location is invalid.",
+    "context": [
+      "NGX_HTTP_LOC_CONF"
+    ],
+    "default": "External requests may enter a location without the inherited flag.",
+    "excluded_comparisons": "Default 404 bodies and runtime-generated headers differ outside the access decision. Successful response bodies in this fixture must match.",
+    "fixture": "http-core-internal",
+    "implementation": [
+      "src/config.rs:merge_location",
+      "src/proxy.rs:handle"
+    ],
+    "inheritance": "The nearest declared location flag applies to nested locations.",
+    "module": "ngx_http_core_module",
+    "required": {
+      "boundary": [
+        "guard-before-location-rewrite"
+      ],
+      "contexts": [
+        "external-private",
+        "reject-server-context"
+      ],
+      "defaults": [
+        "public-default-and-sibling"
+      ],
+      "inheritance": [
+        "inherited-private",
+        "rewrite-into-inherited-private",
+        "public-default-and-sibling"
+      ],
+      "interactions": [
+        "guard-before-location-rewrite",
+        "rewrite-into-inherited-private"
+      ],
+      "invalid_arguments": [
+        "reject-argument",
+        "reject-duplicate"
+      ],
+      "observable": [
+        "external-private",
+        "rewrite-into-inherited-private"
+      ],
+      "reload": [
+        "generation-before",
+        "generation-after"
+      ],
+      "valid_arguments": [
+        "external-private",
+        "rewrite-into-inherited-private"
+      ]
+    }
+  },
+  "default": "External requests are allowed unless the enclosing location inherited internal.",
+  "executed_evidence": [
+    {
+      "cases": [
+        "external-private",
+        "generation-after",
+        "generation-before",
+        "guard-before-location-rewrite",
+        "inherited-private",
+        "public-default-and-sibling",
+        "reject-argument",
+        "reject-duplicate",
+        "reject-server-context",
+        "rewrite-into-inherited-private"
+      ],
+      "path": "bench/program/evidence/milestone-11/internal-proof.json",
+      "scope": "equivalence review"
+    }
+  ],
+  "inheritance": "An unset location inherits the nearest declared flag.",
+  "known_differences": "Default 404 pages are outside the access decision. Cauce also permits explicit false in native YAML to disable inherited restriction.",
+  "module": "ngx_http_core_module",
+  "obligations_pending_review": [],
+  "reference_line": 554,
+  "registration": "oss/src/http/ngx_http_core_module.c/ngx_http_core_module/internal/29",
+  "source": "src/http/ngx_http_core_module.c"
+}

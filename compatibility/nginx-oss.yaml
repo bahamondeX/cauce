@@ -355,7 +355,7 @@ modules:
           - {"name": "gzip_vary", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_FLAG"], "status": "partial", "notes": "Vary: Accept-Encoding added on eligible representations."}
           - {"name": "if_modified_since", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "ignore_invalid_headers", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_CONF_FLAG"]}
-          - {"name": "internal", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_NOARGS"]}
+          - {"name": "internal", "flags": ["NGX_HTTP_LOC_CONF", "NGX_CONF_NOARGS"], "status": "verified_equivalent", "notes": "Inherited route entry restriction. Public selection returns 404 before location rewrite. Trusted internal reselection can enter.", "semantic_differences": "Default 404 pages are outside the access decision. Cauce also permits explicit false in native YAML to disable inherited restriction.", "verification": {"differential_report": "bench/program/evidence/milestone-11/internal-proof.json"}}
           - {"name": "keepalive_disable", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE12"]}
           - {"name": "keepalive_min_timeout", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}
           - {"name": "keepalive_requests", "flags": ["NGX_HTTP_MAIN_CONF", "NGX_HTTP_SRV_CONF", "NGX_HTTP_LOC_CONF", "NGX_CONF_TAKE1"]}

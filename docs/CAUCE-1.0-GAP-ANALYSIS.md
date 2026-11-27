@@ -10,7 +10,7 @@ until their full supported semantics have evidence.
 | Reference | Entries | Partial or mapped | Unmapped | Equivalent |
 | --- | ---: | ---: | ---: | ---: |
 | OSS modules | 120 | 40 partial | 80 | 0 |
-| OSS directive registrations | 754 | 137 partial, 2 mapped but unimplemented | 615 | 0 |
+| OSS directive registrations | 754 | 137 partial, 2 mapped but unimplemented | 614 | 1 |
 | OSS configure patterns | 149 | 60 mapped | 89 | Build scope |
 | njs modules | 4 | 0 | 4 | 0 |
 | njs directives | 55 | 0 | 55 | 0 |
@@ -25,6 +25,12 @@ choices. Official add-ons are separate.
 [Source registry](../compatibility/nginx-oss.yaml)
 [Machine-readable backlog](../compatibility/nginx-gap-backlog.jsonl)
 [Generator](../scripts/nginx-gap-audit.py).
+
+The verified registration is HTTP core `internal`. Request variables
+and location inheritance support its proof. The semantic graph
+identifies the larger configuration, expression and execution-phase
+dependencies before expanding the exact-equivalence batch.
+[Semantic architecture](SEMANTIC-ARCHITECTURE.md).
 
 ## Release gates
 

@@ -36,10 +36,23 @@ contexts, defaults, inheritance, failures and interaction coverage.
 
 The machine-readable assessment distinguishes unmapped, mapped but
 unimplemented, partial, implemented but unverified, verified equivalent
-and platform or build scope. An exact classification requires all eight
-review criteria and named passing cases from a differential report within
-Cauce. Every named case must compare both engines. A module also requires
-exact classifications for every registration.
+and platform or build scope. Milestone 11 requires a registration-specific
+manifest. The verification report binds the pinned source, both binaries,
+the Cauce revision, and the committed harness and fixture. The audit
+recomputes normalized comparisons from the raw responses and verifies
+every required configuration, behavior and lifecycle case.
+
+```sh
+registration=oss/src/http/ngx_http_core_module.c/ngx_http_core_module/internal/29
+python3 -IB "$PWD/scripts/nginx-compatibility.py" manifest "$registration"
+python3 -IB "$PWD/scripts/nginx-compatibility.py" test \
+  --registration "$registration" --source "$(git rev-parse HEAD)" \
+  --nginx "$PWD/work/nginx/objs/nginx" --cauce "$PWD/target/debug/cauce"
+```
+
+Use the full Git hash of the runtime used to build `--cauce`. The
+current HEAD is the expected source only when the selected executable
+was built from it.
 
 Migration and JSON Schema fixtures use a repository-local lock. From the
 Cauce root, select an installed Python 3.11–3.14 interpreter explicitly.

@@ -223,6 +223,22 @@ class MigrationTests(unittest.TestCase):
                 self.assertEqual(code, 1)
                 self.assertIsNone(config)
 
+    def test_internal_preview_preserves_the_flag_and_rejects_invalid_arguments(self):
+        code, _, config = self.run_preview("example.org", """
+            location /private {
+                internal;
+                return 200 hidden;
+                location /private/child { return 200 nested; }
+            }
+        """)
+        self.assertEqual(code, 0)
+        routes = config["proxy"]["routes"]
+        self.assertTrue(all(row["internal"] is True for row in routes if row["path_prefix"] == "/private"))
+        self.assertTrue(all("parent" in row for row in routes if row["path_prefix"] == "/private/child"))
+        code, _, config = self.run_preview("example.org", "location / { internal off; return 200 ok; }")
+        self.assertNotEqual(code, 0)
+        self.assertIsNone(config)
+
     def test_response_additions_preview_preserves_status_modes_and_rejects_merge(self):
         code, _, config = self.run_preview("example.org", """
             location /api {

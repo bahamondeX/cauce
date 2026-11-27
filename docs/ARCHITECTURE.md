@@ -314,3 +314,12 @@ conexiones del pool retienen un token de dirección. Una publicación DNS
 retira los tokens de las direcciones que salieron del conjunto. Los
 arriendos ya activos conservan su socket y su configuración TLS.
 [Configuración y límites](DNS-AND-RESILIENCE.md).
+
+## Shared compatibility semantics
+
+Location policies compile in a bounded parent-first traversal.
+External entry checks precede location rewrite. Direct body
+expressions compile to typed operations and resolve only referenced
+request values. The final URI is visible after internal reselection
+through the existing bounded route pipeline.
+[Semantic architecture](SEMANTIC-ARCHITECTURE.md).

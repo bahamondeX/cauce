@@ -271,3 +271,13 @@ and OCI layouts. Native competitive qualification remains open.
 [Milestone evidence](docs/PERFORMANCE-MILESTONE-10.md)
 [Compatibility tooling](docs/COMPATIBILITY-TOOLING.md)
 [SQLite remediation](docs/SQLITE-SECURITY.md).
+
+## Milestone 11 semantic checkpoint
+
+Cauce now compiles effective location policies parent-first and
+supports bounded direct-response request expressions. HTTP core
+`internal` is the first verified-equivalent directive registration.
+The fixed inventory still contains 754 OSS registrations. The
+current verified count is one.
+[Milestone evidence](docs/PERFORMANCE-MILESTONE-11.md)
+[Source audit](docs/MILESTONE-10-SOURCE-AUDIT.md).

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Export every pinned NGINX registration into a reviewable JSONL backlog."""
 import argparse
+import base64
 from collections import Counter
 from hashlib import sha256
 import json
@@ -18,7 +19,7 @@ MANIFEST = OUTPUT.with_name("verification-manifests.json")
 # continue to be enforced by nginx-migration-report.py before emitting YAML.
 TRANSLATIONS = {
     "ngx_http_core_module": {"listen", "server", "server_name", "location", "root", "alias",
-                             "try_files"},
+                             "try_files", "internal"},
     "ngx_http_index_module": {"index"},
     "ngx_http_proxy_module": {"proxy_pass", "proxy_set_header", "proxy_hide_header"},
     "ngx_http_realip_module": {"set_real_ip_from", "real_ip_header", "real_ip_recursive"},
@@ -264,6 +265,29 @@ def configure(option, modules, mappings):
     }
 
 
+def observed_both(case):
+    raw = case.get("raw", {})
+    contract = case.get("input")
+    if not contract or raw.keys() != {"nginx", "cauce"} or case.get("passed") is not True:
+        return False
+    for engine, output in raw.items():
+        fields = {}
+        for key, value in output["headers"]:
+            fields.setdefault(key.lower(), []).append(value)
+        normalized = {"status": output["status"],
+                      "headers": {key: fields.get(key, []) for key in contract.get("headers", ())}}
+        if contract.get("compare_body", True):
+            normalized["body_base64"] = output["body_base64"]
+        if normalized != case.get(engine):
+            return False
+    actual = case["nginx"]
+    expected_body = contract.get("expected_body")
+    if expected_body is not None and actual.get("body_base64") != base64.b64encode(expected_body.encode()).decode():
+        return False
+    return (actual == case["cauce"] and actual["status"] == contract["status"]
+            and all(actual["headers"].get(name) == values for name, values in contract.get("expected_headers", {}).items()))
+
+
 def verify_claim(module, directive, mapping, task_id=None, contexts=()):
     def require(condition, message):
         if not condition:
@@ -302,12 +326,13 @@ def verify_claim(module, directive, mapping, task_id=None, contexts=()):
             side["started"] and side["exit_status"] == 0 and not side["forced_kill"]
             for side in lifecycle.values()),
             "missing clean process lifecycle")
-    compared = {case["case"] for case in section["cases"] if case.get("passed") is True and case.get("input")
-                and set(case.get("raw", ())) == {"nginx", "cauce"} and case["nginx"] == case["cauce"]}
+    compared = {case["case"] for case in section["cases"] if observed_both(case)}
     rejected = {case["case"] for case in section["configuration_rejections"] if case.get("passed") is True
                 and case.get("input") and set(case.get("observations", ())) == {"nginx", "cauce"}
+                and set(case.get("configurations", ())) == {"nginx", "cauce"}
                 and all(side["exit_status"] != 0 and side["expected_diagnostic"]
-                        for side in case["observations"].values())}
+                        and case["input"]["error"][engine] in side["stderr"]
+                        for engine, side in case["observations"].items())}
     required = manifest["required"]
     obligations = {"valid_arguments", "invalid_arguments", "defaults", "contexts", "inheritance",
                    "boundary", "interactions", "observable"}
@@ -348,7 +373,7 @@ def coverage(module, directive, mapping, reference, task_id=None, contexts=()):
                           "implemented_unverified", "verified_equivalent", "platform_or_build_scope"}
     return {
         "status": status, "assessment": assessment, "cauce_equivalent": notes,
-        "semantic_differences": notes or "No Cauce behavior mapping established.",
+        "semantic_differences": mapping.get("semantic_differences", notes or "No Cauce behavior mapping established."),
         "migration": migrations, "evidence": sources, "verified_equivalent": status == "verified_equivalent",
         "platform": PLATFORMS.get(module),
         "priority": priority(module, directive or "") if reference == "oss" else "add-on",

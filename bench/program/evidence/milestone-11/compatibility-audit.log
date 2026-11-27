@@ -1,0 +1,15 @@
+120 modules, 754 directive registrations, 149 configure option patterns, 70 add-on directive registrations
+nginx-acme directive mapped_unimplemented 5
+nginx-acme directive partial 10
+nginx-acme module partial 1
+njs directive unmapped 55
+njs module unmapped 4
+oss configure mapped 60
+oss configure unmapped 89
+oss directive mapped_unimplemented 2
+oss directive partial 137
+oss directive unmapped 614
+oss directive verified_equivalent 1
+oss module partial 40
+oss module unmapped 80
+sha256 ac77933517c50f6454f5adc3da9036b53dbb96a7c12f307635284a44a60804ec

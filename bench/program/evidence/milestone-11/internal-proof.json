@@ -1,0 +1,748 @@
+{
+  "cauce_revision": "0f629521183c763910d6677fb79a13f84d52ffb0",
+  "cauce_sha256": "54a7888ed914b89773a90edc4cc764c0e2b00ed7896dd6a5e3999d24a6554076",
+  "fixture": "http-core-internal",
+  "fixture_sha256": "9e6f32d4846a8acedf2f23659c1bf622492129ce9d2972c0824bd12464610421",
+  "harness_revision": "3b615390f9e45dda765c883a05a6933ad366d311",
+  "harness_sha256": "cda639834c7e729770621ff5d4310611305e8c853cf1e547a8356bbc89345d2e",
+  "manifest_sha256": "bb7658cb50da1f87fc82068bad1643818285faf177aa6678f6218ca8d4a1d907",
+  "modules": [
+    {
+      "cases": [
+        {
+          "case": "public-default-and-sibling",
+          "cauce": {
+            "body_base64": "cHVibGlj",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "input": {
+            "expected_body": "public",
+            "name": "public-default-and-sibling",
+            "status": 200,
+            "target": "/public"
+          },
+          "nginx": {
+            "body_base64": "cHVibGlj",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "cHVibGlj",
+              "headers": [
+                [
+                  "content-type",
+                  "text/plain; charset=utf-8"
+                ],
+                [
+                  "content-length",
+                  "6"
+                ],
+                [
+                  "x-request-id",
+                  "70ebc0bb-ddc2-4ac0-bfb4-8d4db2b3aac3"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 200
+            },
+            "nginx": {
+              "body_base64": "cHVibGlj",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/plain"
+                ],
+                [
+                  "Content-Length",
+                  "6"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ]
+              ],
+              "status": 200
+            }
+          },
+          "reason": "observables match",
+          "target": "/public",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "external-private",
+          "cauce": {
+            "headers": {},
+            "status": 404
+          },
+          "compared_body": false,
+          "input": {
+            "compare_body": false,
+            "name": "external-private",
+            "status": 404,
+            "target": "/private"
+          },
+          "nginx": {
+            "headers": {},
+            "status": 404
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "cm91dGVfbm90X2ZvdW5k",
+              "headers": [
+                [
+                  "content-length",
+                  "15"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 404
+            },
+            "nginx": {
+              "body_base64": "PGh0bWw+DQo8aGVhZD48dGl0bGU+NDA0IE5vdCBGb3VuZDwvdGl0bGU+PC9oZWFkPg0KPGJvZHk+DQo8Y2VudGVyPjxoMT40MDQgTm90IEZvdW5kPC9oMT48L2NlbnRlcj4NCjxocj48Y2VudGVyPm5naW54LzEuMzAuODwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/html"
+                ],
+                [
+                  "Content-Length",
+                  "153"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ]
+              ],
+              "status": 404
+            }
+          },
+          "reason": "observables match",
+          "target": "/private",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server"
+          ]
+        },
+        {
+          "case": "inherited-private",
+          "cauce": {
+            "headers": {},
+            "status": 404
+          },
+          "compared_body": false,
+          "input": {
+            "compare_body": false,
+            "name": "inherited-private",
+            "status": 404,
+            "target": "/private/child"
+          },
+          "nginx": {
+            "headers": {},
+            "status": 404
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "cm91dGVfbm90X2ZvdW5k",
+              "headers": [
+                [
+                  "content-length",
+                  "15"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 404
+            },
+            "nginx": {
+              "body_base64": "PGh0bWw+DQo8aGVhZD48dGl0bGU+NDA0IE5vdCBGb3VuZDwvdGl0bGU+PC9oZWFkPg0KPGJvZHk+DQo8Y2VudGVyPjxoMT40MDQgTm90IEZvdW5kPC9oMT48L2NlbnRlcj4NCjxocj48Y2VudGVyPm5naW54LzEuMzAuODwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/html"
+                ],
+                [
+                  "Content-Length",
+                  "153"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ]
+              ],
+              "status": 404
+            }
+          },
+          "reason": "observables match",
+          "target": "/private/child",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server"
+          ]
+        },
+        {
+          "case": "guard-before-location-rewrite",
+          "cauce": {
+            "headers": {},
+            "status": 404
+          },
+          "compared_body": false,
+          "input": {
+            "compare_body": false,
+            "name": "guard-before-location-rewrite",
+            "status": 404,
+            "target": "/guarded"
+          },
+          "nginx": {
+            "headers": {},
+            "status": 404
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "cm91dGVfbm90X2ZvdW5k",
+              "headers": [
+                [
+                  "content-length",
+                  "15"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 404
+            },
+            "nginx": {
+              "body_base64": "PGh0bWw+DQo8aGVhZD48dGl0bGU+NDA0IE5vdCBGb3VuZDwvdGl0bGU+PC9oZWFkPg0KPGJvZHk+DQo8Y2VudGVyPjxoMT40MDQgTm90IEZvdW5kPC9oMT48L2NlbnRlcj4NCjxocj48Y2VudGVyPm5naW54LzEuMzAuODwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/html"
+                ],
+                [
+                  "Content-Length",
+                  "153"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ]
+              ],
+              "status": 404
+            }
+          },
+          "reason": "observables match",
+          "target": "/guarded",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server"
+          ]
+        },
+        {
+          "case": "rewrite-into-inherited-private",
+          "cauce": {
+            "body_base64": "R0VUfGNvbXBhdC50ZXN0fC9wcml2YXRlL2NoaWxkfGE9MnxodHRwfDEyNy4wLjAuMQ==",
+            "headers": {},
+            "status": 200
+          },
+          "compared_body": true,
+          "input": {
+            "expected_body": "GET|compat.test|/private/child|a=2|http|127.0.0.1",
+            "name": "rewrite-into-inherited-private",
+            "status": 200,
+            "target": "/enter?a=2"
+          },
+          "nginx": {
+            "body_base64": "R0VUfGNvbXBhdC50ZXN0fC9wcml2YXRlL2NoaWxkfGE9MnxodHRwfDEyNy4wLjAuMQ==",
+            "headers": {},
+            "status": 200
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "R0VUfGNvbXBhdC50ZXN0fC9wcml2YXRlL2NoaWxkfGE9MnxodHRwfDEyNy4wLjAuMQ==",
+              "headers": [
+                [
+                  "content-type",
+                  "text/plain; charset=utf-8"
+                ],
+                [
+                  "content-length",
+                  "49"
+                ],
+                [
+                  "x-request-id",
+                  "6752a58c-ad7b-42ee-b3a9-784f5f66355c"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 200
+            },
+            "nginx": {
+              "body_base64": "R0VUfGNvbXBhdC50ZXN0fC9wcml2YXRlL2NoaWxkfGE9MnxodHRwfDEyNy4wLjAuMQ==",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/plain"
+                ],
+                [
+                  "Content-Length",
+                  "49"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ]
+              ],
+              "status": 200
+            }
+          },
+          "reason": "observables match",
+          "target": "/enter?a=2",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "generation-before",
+          "cauce": {
+            "body_base64": "dG9nZ2xl",
+            "headers": {
+              "x-generation": [
+                "one"
+              ]
+            },
+            "status": 200
+          },
+          "compared_body": true,
+          "input": {
+            "expected_body": "toggle",
+            "expected_headers": {
+              "x-generation": [
+                "one"
+              ]
+            },
+            "headers": [
+              "x-generation"
+            ],
+            "name": "generation-before",
+            "status": 200,
+            "target": "/toggle"
+          },
+          "nginx": {
+            "body_base64": "dG9nZ2xl",
+            "headers": {
+              "x-generation": [
+                "one"
+              ]
+            },
+            "status": 200
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "dG9nZ2xl",
+              "headers": [
+                [
+                  "content-type",
+                  "text/plain; charset=utf-8"
+                ],
+                [
+                  "content-length",
+                  "6"
+                ],
+                [
+                  "x-generation",
+                  "one"
+                ],
+                [
+                  "x-request-id",
+                  "07bad18c-c611-47e0-a78b-d5e30e3eb60f"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 200
+            },
+            "nginx": {
+              "body_base64": "dG9nZ2xl",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/plain"
+                ],
+                [
+                  "Content-Length",
+                  "6"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ],
+                [
+                  "X-Generation",
+                  "one"
+                ]
+              ],
+              "status": 200
+            }
+          },
+          "reason": "observables match",
+          "target": "/toggle",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server",
+            "x-request-id"
+          ]
+        },
+        {
+          "case": "generation-after",
+          "cauce": {
+            "headers": {},
+            "status": 404
+          },
+          "compared_body": false,
+          "input": {
+            "after_reload": true,
+            "compare_body": false,
+            "name": "generation-after",
+            "status": 404,
+            "target": "/toggle"
+          },
+          "nginx": {
+            "headers": {},
+            "status": 404
+          },
+          "passed": true,
+          "raw": {
+            "cauce": {
+              "body_base64": "cm91dGVfbm90X2ZvdW5k",
+              "headers": [
+                [
+                  "content-length",
+                  "15"
+                ],
+                [
+                  "date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ]
+              ],
+              "status": 404
+            },
+            "nginx": {
+              "body_base64": "PGh0bWw+DQo8aGVhZD48dGl0bGU+NDA0IE5vdCBGb3VuZDwvdGl0bGU+PC9oZWFkPg0KPGJvZHk+DQo8Y2VudGVyPjxoMT40MDQgTm90IEZvdW5kPC9oMT48L2NlbnRlcj4NCjxocj48Y2VudGVyPm5naW54LzEuMzAuODwvY2VudGVyPg0KPC9ib2R5Pg0KPC9odG1sPg0K",
+              "headers": [
+                [
+                  "Server",
+                  "nginx/1.30.8"
+                ],
+                [
+                  "Date",
+                  "Fri, 27 Nov 2026 00:58:33 GMT"
+                ],
+                [
+                  "Content-Type",
+                  "text/html"
+                ],
+                [
+                  "Content-Length",
+                  "153"
+                ],
+                [
+                  "Connection",
+                  "keep-alive"
+                ]
+              ],
+              "status": 404
+            }
+          },
+          "reason": "observables match",
+          "target": "/toggle",
+          "transient_errors": [],
+          "uncompared_headers": [
+            "connection",
+            "content-length",
+            "content-type",
+            "date",
+            "server"
+          ]
+        }
+      ],
+      "configuration_rejections": [
+        {
+          "case": "reject-argument",
+          "configurations": {
+            "cauce": "{\"version\": 1, \"proxy\": {\"name\": \"cauce\", \"listen\": \"127.0.0.1:64749\", \"admin\": \"127.0.0.1:64751\", \"limits\": {\"clients\": 1024, \"requests\": 256, \"connections\": 64, \"idle_connections\": 32, \"connecting\": 8, \"acquire_ms\": 250, \"connect_ms\": 1000, \"headers_ms\": 5000, \"stream_idle_ms\": 15000, \"request_ms\": 120000, \"client_headers_ms\": 5000, \"idle_connection_ms\": 10000, \"max_connection_age_ms\": 60000, \"dns_cache_ms\": 5000, \"tcp_keepalive_secs\": 30, \"max_header_bytes\": 32768, \"max_headers\": 64, \"max_body_bytes\": 16777216, \"shutdown_ms\": 5000}, \"logs\": {\"enabled\": false, \"path\": \"logs/access.jsonl\", \"queue\": 4096, \"rotate_bytes\": 16777216, \"retained_files\": 3}, \"upstreams\": [], \"routes\": [{\"id\": \"bad\", \"host\": \"compat.test\", \"path_prefix\": \"/bad\", \"content\": {\"type\": \"direct\", \"status\": 200, \"body\": \"bad\"}, \"internal\": \"off\"}]}}",
+            "nginx": "master_process on;\nworker_processes 1;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\nevents { worker_connections 64; }\nhttp { access_log off;\nclient_body_temp_path client_body; proxy_temp_path proxy;\nfastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\nserver { listen 127.0.0.1:64750; server_name compat.test; location / { internal off; } }\n}\n"
+          },
+          "input": {
+            "error": {
+              "cauce": "invalid YAML configuration field, type or quantity",
+              "nginx": "invalid number of arguments"
+            },
+            "name": "reject-argument",
+            "reference": "server { listen 127.0.0.1:64750; server_name compat.test; location / { internal off; } }",
+            "routes": [
+              {
+                "content": {
+                  "body": "bad",
+                  "status": 200,
+                  "type": "direct"
+                },
+                "host": "compat.test",
+                "id": "bad",
+                "internal": "off",
+                "path_prefix": "/bad"
+              }
+            ]
+          },
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true,
+              "stderr": "Error: invalid YAML configuration field, type or quantity\n\nStack backtrace:\n   0: std::backtrace_rs::backtrace::libunwind::trace\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9\n   1: std::backtrace_rs::backtrace::trace_unsynchronized\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14\n   2: std::backtrace::Backtrace::create\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/backtrace.rs:331:13\n   3: anyhow::error::<impl anyhow::Error>::msg\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/backtrace.rs:10:14\n   4: anyhow::__private::format_err\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/lib.rs:687:13\n   5: cauce::config::deserialize_yaml::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:176:22\n   6: core::result::Result<T,E>::map_err\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/result.rs:914:27\n   7: cauce::config::deserialize_yaml\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:176:10\n   8: cauce::config::Config::load::{{closure}}::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:544:17\n   9: <tokio::runtime::blocking::task::BlockingTask<T> as core::future::future::Future>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/task.rs:42:21\n  10: tokio::runtime::task::core::Core<T,S>::poll::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/core.rs:380:24\n  11: tokio::loom::std::unsafe_cell::UnsafeCell<T>::with_mut\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/loom/std/unsafe_cell.rs:16:9\n  12: tokio::runtime::task::core::Core<T,S>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/core.rs:369:30\n  13: tokio::runtime::task::harness::poll_future::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:537:30\n  14: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/panic/unwind_safe.rs:272:9\n  15: std::panicking::catch_unwind::do_call\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:589:40\n  16: ___rust_try\n  17: std::panicking::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:552:19\n  18: std::panic::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panic.rs:359:14\n  19: tokio::runtime::task::harness::poll_future\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:525:18\n  20: tokio::runtime::task::harness::Harness<T,S>::poll_inner\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:210:27\n  21: tokio::runtime::task::harness::Harness<T,S>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:155:20\n  22: tokio::runtime::task::raw::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/raw.rs:337:13\n  23: tokio::runtime::task::raw::RawTask::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/raw.rs:267:18\n  24: tokio::runtime::task::UnownedTask<S>::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/mod.rs:560:13\n  25: tokio::runtime::blocking::pool::Task::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:220:19\n  26: tokio::runtime::blocking::pool::LockedImpl::run_worker\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:660:22\n  27: tokio::runtime::blocking::pool::InnerImpl::run_worker\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:571:39\n  28: tokio::runtime::blocking::pool::Inner::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:764:18\n  29: tokio::runtime::blocking::pool::Spawner::spawn_thread::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:525:47\n  30: std::sys::backtrace::__rust_begin_short_backtrace\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/sys/backtrace.rs:152:18\n  31: std::thread::Builder::spawn_unchecked_::{{closure}}::{{closure}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/thread/mod.rs:559:17\n  32: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/panic/unwind_safe.rs:272:9\n  33: std::panicking::catch_unwind::do_call\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:589:40\n  34: ___rust_try\n  35: std::panicking::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:552:19\n  36: std::panic::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panic.rs:359:14\n  37: std::thread::Builder::spawn_unchecked_::{{closure}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/thread/mod.rs:557:30\n  38: core::ops::function::FnOnce::call_once{{vtable.shim}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/ops/function.rs:250:5\n  39: <alloc::boxed::Box<F,A> as core::ops::function::FnOnce<Args>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/alloc/src/boxed.rs:1966:9\n  40: std::sys::pal::unix::thread::Thread::new::thread_start\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/sys/pal/unix/thread.rs:107:17\n  41: __pthread_cond_wait\n",
+              "stdout": ""
+            },
+            "nginx": {
+              "exit_status": 1,
+              "expected_diagnostic": true,
+              "stderr": "nginx: [emerg] invalid number of arguments in \"internal\" directive in /Users/oscarbahamonde/Desktop/cauce/work/increment11/tmp/nginx-differential-2gk88vrj/ngx_http_core_module/nginx/invalid.conf:10\nnginx: configuration file /Users/oscarbahamonde/Desktop/cauce/work/increment11/tmp/nginx-differential-2gk88vrj/ngx_http_core_module/nginx/invalid.conf test failed\n",
+              "stdout": ""
+            }
+          },
+          "passed": true,
+          "reason": "expected rejection"
+        },
+        {
+          "case": "reject-server-context",
+          "configurations": {
+            "cauce": "{\"version\": 1, \"proxy\": {\"name\": \"cauce\", \"listen\": \"127.0.0.1:64749\", \"admin\": \"127.0.0.1:64751\", \"limits\": {\"clients\": 1024, \"requests\": 256, \"connections\": 64, \"idle_connections\": 32, \"connecting\": 8, \"acquire_ms\": 250, \"connect_ms\": 1000, \"headers_ms\": 5000, \"stream_idle_ms\": 15000, \"request_ms\": 120000, \"client_headers_ms\": 5000, \"idle_connection_ms\": 10000, \"max_connection_age_ms\": 60000, \"dns_cache_ms\": 5000, \"tcp_keepalive_secs\": 30, \"max_header_bytes\": 32768, \"max_headers\": 64, \"max_body_bytes\": 16777216, \"shutdown_ms\": 5000}, \"logs\": {\"enabled\": false, \"path\": \"logs/access.jsonl\", \"queue\": 4096, \"rotate_bytes\": 16777216, \"retained_files\": 3}, \"upstreams\": [], \"routes\": [], \"internal\": true}}",
+            "nginx": "master_process on;\nworker_processes 1;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\nevents { worker_connections 64; }\nhttp { access_log off;\nclient_body_temp_path client_body; proxy_temp_path proxy;\nfastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\nserver { listen 127.0.0.1:64750; server_name compat.test; internal; }\n}\n"
+          },
+          "input": {
+            "error": {
+              "cauce": "invalid YAML configuration field, type or quantity",
+              "nginx": "directive is not allowed here"
+            },
+            "name": "reject-server-context",
+            "proxy_edits": {
+              "internal": true
+            },
+            "reference": "server { listen 127.0.0.1:64750; server_name compat.test; internal; }",
+            "routes": []
+          },
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true,
+              "stderr": "Error: invalid YAML configuration field, type or quantity\n\nStack backtrace:\n   0: std::backtrace_rs::backtrace::libunwind::trace\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9\n   1: std::backtrace_rs::backtrace::trace_unsynchronized\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14\n   2: std::backtrace::Backtrace::create\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/backtrace.rs:331:13\n   3: anyhow::error::<impl anyhow::Error>::msg\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/backtrace.rs:10:14\n   4: anyhow::__private::format_err\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/lib.rs:687:13\n   5: cauce::config::deserialize_yaml::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:176:22\n   6: core::result::Result<T,E>::map_err\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/result.rs:914:27\n   7: cauce::config::deserialize_yaml\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:176:10\n   8: cauce::config::Config::load::{{closure}}::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:544:17\n   9: <tokio::runtime::blocking::task::BlockingTask<T> as core::future::future::Future>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/task.rs:42:21\n  10: tokio::runtime::task::core::Core<T,S>::poll::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/core.rs:380:24\n  11: tokio::loom::std::unsafe_cell::UnsafeCell<T>::with_mut\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/loom/std/unsafe_cell.rs:16:9\n  12: tokio::runtime::task::core::Core<T,S>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/core.rs:369:30\n  13: tokio::runtime::task::harness::poll_future::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:537:30\n  14: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/panic/unwind_safe.rs:272:9\n  15: std::panicking::catch_unwind::do_call\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:589:40\n  16: ___rust_try\n  17: std::panicking::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:552:19\n  18: std::panic::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panic.rs:359:14\n  19: tokio::runtime::task::harness::poll_future\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:525:18\n  20: tokio::runtime::task::harness::Harness<T,S>::poll_inner\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:210:27\n  21: tokio::runtime::task::harness::Harness<T,S>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:155:20\n  22: tokio::runtime::task::raw::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/raw.rs:337:13\n  23: tokio::runtime::task::raw::RawTask::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/raw.rs:267:18\n  24: tokio::runtime::task::UnownedTask<S>::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/mod.rs:560:13\n  25: tokio::runtime::blocking::pool::Task::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:220:19\n  26: tokio::runtime::blocking::pool::LockedImpl::run_worker\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:660:22\n  27: tokio::runtime::blocking::pool::InnerImpl::run_worker\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:571:39\n  28: tokio::runtime::blocking::pool::Inner::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:764:18\n  29: tokio::runtime::blocking::pool::Spawner::spawn_thread::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:525:47\n  30: std::sys::backtrace::__rust_begin_short_backtrace\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/sys/backtrace.rs:152:18\n  31: std::thread::Builder::spawn_unchecked_::{{closure}}::{{closure}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/thread/mod.rs:559:17\n  32: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/panic/unwind_safe.rs:272:9\n  33: std::panicking::catch_unwind::do_call\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:589:40\n  34: ___rust_try\n  35: std::panicking::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:552:19\n  36: std::panic::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panic.rs:359:14\n  37: std::thread::Builder::spawn_unchecked_::{{closure}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/thread/mod.rs:557:30\n  38: core::ops::function::FnOnce::call_once{{vtable.shim}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/ops/function.rs:250:5\n  39: <alloc::boxed::Box<F,A> as core::ops::function::FnOnce<Args>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/alloc/src/boxed.rs:1966:9\n  40: std::sys::pal::unix::thread::Thread::new::thread_start\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/sys/pal/unix/thread.rs:107:17\n  41: __pthread_cond_wait\n",
+              "stdout": ""
+            },
+            "nginx": {
+              "exit_status": 1,
+              "expected_diagnostic": true,
+              "stderr": "nginx: [emerg] \"internal\" directive is not allowed here in /Users/oscarbahamonde/Desktop/cauce/work/increment11/tmp/nginx-differential-2gk88vrj/ngx_http_core_module/nginx/invalid.conf:10\nnginx: configuration file /Users/oscarbahamonde/Desktop/cauce/work/increment11/tmp/nginx-differential-2gk88vrj/ngx_http_core_module/nginx/invalid.conf test failed\n",
+              "stdout": ""
+            }
+          },
+          "passed": true,
+          "reason": "expected rejection"
+        },
+        {
+          "case": "reject-duplicate",
+          "configurations": {
+            "cauce": "{\"version\": 1, \"proxy\": {\"name\": \"cauce\", \"listen\": \"127.0.0.1:64749\", \"admin\": \"127.0.0.1:64751\", \"limits\": {\"clients\": 1024, \"requests\": 256, \"connections\": 64, \"idle_connections\": 32, \"connecting\": 8, \"acquire_ms\": 250, \"connect_ms\": 1000, \"headers_ms\": 5000, \"stream_idle_ms\": 15000, \"request_ms\": 120000, \"client_headers_ms\": 5000, \"idle_connection_ms\": 10000, \"max_connection_age_ms\": 60000, \"dns_cache_ms\": 5000, \"tcp_keepalive_secs\": 30, \"max_header_bytes\": 32768, \"max_headers\": 64, \"max_body_bytes\": 16777216, \"shutdown_ms\": 5000}, \"logs\": {\"enabled\": false, \"path\": \"logs/access.jsonl\", \"queue\": 4096, \"rotate_bytes\": 16777216, \"retained_files\": 3}, \"upstreams\": [], \"routes\": [{\"id\": \"bad\", \"host\": \"compat.test\", \"path_prefix\": \"/bad\", \"content\": {\"type\": \"direct\", \"status\": 200, \"body\": \"bad\"}, \"internal\": true, \"internal\": true}]}}",
+            "nginx": "master_process on;\nworker_processes 1;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\nevents { worker_connections 64; }\nhttp { access_log off;\nclient_body_temp_path client_body; proxy_temp_path proxy;\nfastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\nserver { listen 127.0.0.1:64750; server_name compat.test; location / { internal; internal; } }\n}\n"
+          },
+          "input": {
+            "duplicate_cauce": "internal",
+            "error": {
+              "cauce": "invalid YAML",
+              "nginx": "directive is duplicate"
+            },
+            "name": "reject-duplicate",
+            "reference": "server { listen 127.0.0.1:64750; server_name compat.test; location / { internal; internal; } }",
+            "routes": [
+              {
+                "content": {
+                  "body": "bad",
+                  "status": 200,
+                  "type": "direct"
+                },
+                "host": "compat.test",
+                "id": "bad",
+                "internal": true,
+                "path_prefix": "/bad"
+              }
+            ]
+          },
+          "observations": {
+            "cauce": {
+              "exit_status": 1,
+              "expected_diagnostic": true,
+              "stderr": "Error: invalid YAML at line 1, column 690\n\nStack backtrace:\n   0: std::backtrace_rs::backtrace::libunwind::trace\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9\n   1: std::backtrace_rs::backtrace::trace_unsynchronized\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14\n   2: std::backtrace::Backtrace::create\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/backtrace.rs:331:13\n   3: anyhow::error::<impl anyhow::Error>::msg\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/anyhow-1.0.104/src/backtrace.rs:10:14\n   4: cauce::config::deserialize_yaml::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:164:13\n   5: core::result::Result<T,E>::map_err\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/result.rs:914:27\n   6: cauce::config::deserialize_yaml\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:162:57\n   7: cauce::config::Config::load::{{closure}}::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/src/config.rs:544:17\n   8: <tokio::runtime::blocking::task::BlockingTask<T> as core::future::future::Future>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/task.rs:42:21\n   9: tokio::runtime::task::core::Core<T,S>::poll::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/core.rs:380:24\n  10: tokio::loom::std::unsafe_cell::UnsafeCell<T>::with_mut\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/loom/std/unsafe_cell.rs:16:9\n  11: tokio::runtime::task::core::Core<T,S>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/core.rs:369:30\n  12: tokio::runtime::task::harness::poll_future::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:537:30\n  13: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/panic/unwind_safe.rs:272:9\n  14: std::panicking::catch_unwind::do_call\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:589:40\n  15: ___rust_try\n  16: std::panicking::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:552:19\n  17: std::panic::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panic.rs:359:14\n  18: tokio::runtime::task::harness::poll_future\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:525:18\n  19: tokio::runtime::task::harness::Harness<T,S>::poll_inner\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:210:27\n  20: tokio::runtime::task::harness::Harness<T,S>::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/harness.rs:155:20\n  21: tokio::runtime::task::raw::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/raw.rs:337:13\n  22: tokio::runtime::task::raw::RawTask::poll\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/raw.rs:267:18\n  23: tokio::runtime::task::UnownedTask<S>::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/task/mod.rs:560:13\n  24: tokio::runtime::blocking::pool::Task::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:220:19\n  25: tokio::runtime::blocking::pool::LockedImpl::run_worker\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:660:22\n  26: tokio::runtime::blocking::pool::InnerImpl::run_worker\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:571:39\n  27: tokio::runtime::blocking::pool::Inner::run\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:764:18\n  28: tokio::runtime::blocking::pool::Spawner::spawn_thread::{{closure}}\n             at /Users/oscarbahamonde/Desktop/cauce/work/increment10/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.54.1/src/runtime/blocking/pool.rs:525:47\n  29: std::sys::backtrace::__rust_begin_short_backtrace\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/sys/backtrace.rs:152:18\n  30: std::thread::Builder::spawn_unchecked_::{{closure}}::{{closure}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/thread/mod.rs:559:17\n  31: <core::panic::unwind_safe::AssertUnwindSafe<F> as core::ops::function::FnOnce<()>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/panic/unwind_safe.rs:272:9\n  32: std::panicking::catch_unwind::do_call\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:589:40\n  33: ___rust_try\n  34: std::panicking::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panicking.rs:552:19\n  35: std::panic::catch_unwind\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/panic.rs:359:14\n  36: std::thread::Builder::spawn_unchecked_::{{closure}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/thread/mod.rs:557:30\n  37: core::ops::function::FnOnce::call_once{{vtable.shim}}\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/core/src/ops/function.rs:250:5\n  38: <alloc::boxed::Box<F,A> as core::ops::function::FnOnce<Args>>::call_once\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/alloc/src/boxed.rs:1966:9\n  39: std::sys::pal::unix::thread::Thread::new::thread_start\n             at /rustc/29483883eed69d5fb4db01964cdf2af4d86e9cb2/library/std/src/sys/pal/unix/thread.rs:107:17\n  40: __pthread_cond_wait\n",
+              "stdout": ""
+            },
+            "nginx": {
+              "exit_status": 1,
+              "expected_diagnostic": true,
+              "stderr": "nginx: [emerg] \"internal\" directive is duplicate in /Users/oscarbahamonde/Desktop/cauce/work/increment11/tmp/nginx-differential-2gk88vrj/ngx_http_core_module/nginx/invalid.conf:10\nnginx: configuration file /Users/oscarbahamonde/Desktop/cauce/work/increment11/tmp/nginx-differential-2gk88vrj/ngx_http_core_module/nginx/invalid.conf test failed\n",
+              "stdout": ""
+            }
+          },
+          "passed": true,
+          "reason": "expected rejection"
+        }
+      ],
+      "configurations": {
+        "initial": {
+          "cauce": "{\n  \"version\": 1,\n  \"proxy\": {\n    \"name\": \"cauce\",\n    \"listen\": \"127.0.0.1:64749\",\n    \"admin\": \"127.0.0.1:64751\",\n    \"limits\": {\n      \"clients\": 1024,\n      \"requests\": 256,\n      \"connections\": 64,\n      \"idle_connections\": 32,\n      \"connecting\": 8,\n      \"acquire_ms\": 250,\n      \"connect_ms\": 1000,\n      \"headers_ms\": 5000,\n      \"stream_idle_ms\": 15000,\n      \"request_ms\": 120000,\n      \"client_headers_ms\": 5000,\n      \"idle_connection_ms\": 10000,\n      \"max_connection_age_ms\": 60000,\n      \"dns_cache_ms\": 5000,\n      \"tcp_keepalive_secs\": 30,\n      \"max_header_bytes\": 32768,\n      \"max_headers\": 64,\n      \"max_body_bytes\": 16777216,\n      \"shutdown_ms\": 5000\n    },\n    \"logs\": {\n      \"enabled\": false,\n      \"path\": \"logs/access.jsonl\",\n      \"queue\": 4096,\n      \"rotate_bytes\": 16777216,\n      \"retained_files\": 3\n    },\n    \"upstreams\": [],\n    \"routes\": [\n      {\n        \"id\": \"public\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/public\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body\": \"public\"\n        }\n      },\n      {\n        \"id\": \"private\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/private\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body\": \"private\"\n        },\n        \"internal\": true\n      },\n      {\n        \"id\": \"child\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/private/child\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body_expression\": \"$request_method|$host|$uri|$args|$scheme|$remote_addr\"\n        },\n        \"parent\": \"private\"\n      },\n      {\n        \"id\": \"enter\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/enter\",\n        \"action\": {\n          \"kind\": \"rewrite\",\n          \"target\": \"/private/child\"\n        }\n      },\n      {\n        \"id\": \"guarded\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/guarded\",\n        \"internal\": true,\n        \"action\": {\n          \"kind\": \"rewrite\",\n          \"target\": \"/public\"\n        }\n      },\n      {\n        \"id\": \"toggle\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/toggle\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body\": \"toggle\"\n        },\n        \"headers\": {\n          \"response_add\": [\n            {\n              \"name\": \"X-Generation\",\n              \"value\": \"one\"\n            }\n          ]\n        }\n      }\n    ]\n  }\n}\n",
+          "nginx": "master_process on;\nworker_processes 1;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\nevents { worker_connections 64; }\nhttp { access_log off;\nclient_body_temp_path client_body; proxy_temp_path proxy;\nfastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\nserver { listen 127.0.0.1:64750; server_name compat.test;\n        location /public { return 200 public; }\n        location /private {\n            internal;\n            return 200 private;\n            location /private/child { return 200 \"$request_method|$host|$uri|$args|$scheme|$remote_addr\"; }\n        }\n        location /enter { rewrite ^ /private/child last; }\n        location /guarded { internal; rewrite ^ /public last; }\n        location /toggle { add_header X-Generation one; return 200 toggle; }\n    }\n}\n"
+        },
+        "reload": {
+          "cauce": "{\n  \"version\": 1,\n  \"proxy\": {\n    \"name\": \"cauce\",\n    \"listen\": \"127.0.0.1:64749\",\n    \"admin\": \"127.0.0.1:64751\",\n    \"limits\": {\n      \"clients\": 1024,\n      \"requests\": 256,\n      \"connections\": 64,\n      \"idle_connections\": 32,\n      \"connecting\": 8,\n      \"acquire_ms\": 250,\n      \"connect_ms\": 1000,\n      \"headers_ms\": 5000,\n      \"stream_idle_ms\": 15000,\n      \"request_ms\": 120000,\n      \"client_headers_ms\": 5000,\n      \"idle_connection_ms\": 10000,\n      \"max_connection_age_ms\": 60000,\n      \"dns_cache_ms\": 5000,\n      \"tcp_keepalive_secs\": 30,\n      \"max_header_bytes\": 32768,\n      \"max_headers\": 64,\n      \"max_body_bytes\": 16777216,\n      \"shutdown_ms\": 5000\n    },\n    \"logs\": {\n      \"enabled\": false,\n      \"path\": \"logs/access.jsonl\",\n      \"queue\": 4096,\n      \"rotate_bytes\": 16777216,\n      \"retained_files\": 3\n    },\n    \"upstreams\": [],\n    \"routes\": [\n      {\n        \"id\": \"public\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/public\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body\": \"public\"\n        }\n      },\n      {\n        \"id\": \"private\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/private\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body\": \"private\"\n        },\n        \"internal\": true\n      },\n      {\n        \"id\": \"child\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/private/child\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body_expression\": \"$request_method|$host|$uri|$args|$scheme|$remote_addr\"\n        },\n        \"parent\": \"private\"\n      },\n      {\n        \"id\": \"enter\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/enter\",\n        \"action\": {\n          \"kind\": \"rewrite\",\n          \"target\": \"/private/child\"\n        }\n      },\n      {\n        \"id\": \"guarded\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/guarded\",\n        \"internal\": true,\n        \"action\": {\n          \"kind\": \"rewrite\",\n          \"target\": \"/public\"\n        }\n      },\n      {\n        \"id\": \"toggle\",\n        \"host\": \"compat.test\",\n        \"path_prefix\": \"/toggle\",\n        \"content\": {\n          \"type\": \"direct\",\n          \"status\": 200,\n          \"body\": \"toggle\"\n        },\n        \"internal\": true\n      }\n    ]\n  }\n}\n",
+          "nginx": "master_process on;\nworker_processes 1;\ndaemon off;\nerror_log stderr;\npid nginx.pid;\nevents { worker_connections 64; }\nhttp { access_log off;\nclient_body_temp_path client_body; proxy_temp_path proxy;\nfastcgi_temp_path fastcgi; uwsgi_temp_path uwsgi; scgi_temp_path scgi;\nserver { listen 127.0.0.1:64750; server_name compat.test;\n        location /public { return 200 public; }\n        location /private {\n            internal;\n            return 200 private;\n            location /private/child { return 200 \"$request_method|$host|$uri|$args|$scheme|$remote_addr\"; }\n        }\n        location /enter { rewrite ^ /private/child last; }\n        location /guarded { internal; rewrite ^ /public last; }\n        location /toggle { internal; return 200 toggle; }\n    }\n}\n"
+        }
+      },
+      "lifecycle": {
+        "cauce": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "ready_seconds": 0.03297341599682113,
+          "shutdown_seconds": 0.0015732079991721548,
+          "started": true
+        },
+        "nginx": {
+          "exit_status": 0,
+          "forced_kill": false,
+          "ready_seconds": 0.03949099999954342,
+          "shutdown_seconds": 0.022488250000606058,
+          "started": true
+        }
+      },
+      "module": "ngx_http_core_module",
+      "resources_after": {
+        "cauce": {
+          "cpu_time_ps": "0:00.02",
+          "rss_kib": 16000
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5872
+        }
+      },
+      "resources_before": {
+        "cauce": {
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 14288
+        },
+        "nginx": {
+          "cpu_time_ps": "0:00.01",
+          "rss_kib": 5584
+        }
+      }
+    }
+  ],
+  "nginx_sha256": "4f1e7975ebdc1eaa3d00fad3b0033185fb12d69b8aca5b0baf41b1bc7d829a20",
+  "nginx_version": "nginx version: nginx/1.30.8\nbuilt by clang 17.0.0 (clang-1700.0.13.5)\nbuilt with OpenSSL 3.6.4 25 Aug 2026\nTLS SNI support enabled\nconfigure arguments: --with-stream --with-stream_realip_module --with-stream_ssl_module --with-stream_ssl_preread_module --with-http_ssl_module --with-http_v3_module --with-http_gzip_static_module --with-cc-opt='-I/opt/homebrew/opt/openssl@3/include -I/opt/homebrew/opt/pcre2/include' --with-ld-opt='-L/opt/homebrew/opt/openssl@3/lib -L/opt/homebrew/opt/pcre2/lib'",
+  "passed": true,
+  "reference_source_sha256": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+  "registration": "oss/src/http/ngx_http_core_module.c/ngx_http_core_module/internal/29"
+}

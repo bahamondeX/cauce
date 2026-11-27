@@ -213,3 +213,13 @@ advisory is resolved. Release qualification follows mandatory compatibility
 and native performance gates.
 [Compatibility evidence](PERFORMANCE-MILESTONE-10.md)
 [Source-derived queue](COMPATIBILITY-TOOLING.md).
+
+## Milestone 11 semantic foundations
+
+Registration manifests now gate equivalent classifications. The
+first proof covers `internal`. Shared work continues on context
+merges, expressions, bounded PCRE2, and ordered execution phases.
+Eligibility for release continues to depend on all mandatory
+compatibility, operational, and native performance gates.
+[Semantic dependency graph](../compatibility/semantic-dependency-graph.json)
+[Milestone report](PERFORMANCE-MILESTONE-11.md).

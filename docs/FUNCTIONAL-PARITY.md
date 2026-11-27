@@ -212,3 +212,12 @@ three partial registrations and records two security-related implementation
 gaps for method-scoped policies and access-handler composition.
 The fixed denominator and exact-equivalence count remain unchanged.
 [Coverage and observed differences](PERFORMANCE-MILESTONE-10.md).
+
+## Milestone 11 registration proof
+
+HTTP core `internal` is the first verified-equivalent registration.
+Its manifest requires independent execution of argument, context,
+default, inheritance, rewrite and reload cases. The parent module
+remains partial. The registry keeps directive, module, configure and
+add-on assessments separate.
+[Proof and scope](PERFORMANCE-MILESTONE-11.md).
