@@ -436,6 +436,8 @@ pub struct Route {
     pub host: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parent: Option<Box<str>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) internal: Option<bool>,
     #[serde(
         default,
         deserialize_with = "nonempty_path_prefix",
@@ -557,44 +559,9 @@ impl Config {
         }
         ensure!(self.routes.len() <= 1024, "too many routes");
         let parents = crate::routing::location_parents(&self.routes)?;
-        for (index, ancestor) in parents.iter().copied().enumerate() {
-            let mut ancestor = ancestor;
-            let mut headers = None;
-            let mut response_add = None;
-            let mut clients = None;
-            let mut rate_zone = None;
-            while let Some(parent) = ancestor {
-                let route = &self.routes[parent];
-                headers = headers.or(route.headers.as_ref());
-                response_add = response_add.or(route
-                    .headers
-                    .as_ref()
-                    .and_then(|policy| policy.response_add.as_ref()));
-                clients = clients.or(route.allow_clients.as_ref());
-                rate_zone = rate_zone.or(route.rate_zone.as_ref());
-                ancestor = parents[parent];
-            }
-            let (headers, response_add, clients, rate_zone) = (
-                headers.cloned(),
-                response_add.cloned(),
-                clients.cloned(),
-                rate_zone.cloned(),
-            );
-            let route = &mut self.routes[index];
-            if route.headers.is_none() {
-                route.headers = headers;
-            }
-            if let Some(policy) = &mut route.headers {
-                if policy.response_add.is_none() {
-                    policy.response_add = response_add;
-                }
-            }
-            if route.allow_clients.is_none() {
-                route.allow_clients = clients;
-            }
-            if route.rate_zone.is_none() {
-                route.rate_zone = rate_zone;
-            }
+        let mut merged = vec![false; self.routes.len()];
+        for index in 0..self.routes.len() {
+            merge_location(index, &mut self.routes, &parents, &mut merged);
         }
         Ok(())
     }
@@ -1111,6 +1078,38 @@ impl Config {
         }
         Ok(())
     }
+}
+
+fn merge_location(
+    index: usize,
+    routes: &mut [Route],
+    parents: &[Option<usize>],
+    merged: &mut [bool],
+) {
+    if merged[index] {
+        return;
+    }
+    if let Some(parent) = parents[index] {
+        merge_location(parent, routes, parents, merged);
+        let [local, parent] = routes
+            .get_disjoint_mut([index, parent])
+            .expect("validated location tree");
+        match (&mut local.headers, &parent.headers) {
+            (None, parent) => local.headers = parent.clone(),
+            (Some(local), Some(parent)) if local.response_add.is_none() => {
+                local.response_add = parent.response_add.clone();
+            }
+            _ => {}
+        }
+        if local.allow_clients.is_none() {
+            local.allow_clients = parent.allow_clients.clone();
+        }
+        if local.rate_zone.is_none() {
+            local.rate_zone = parent.rate_zone.clone();
+        }
+        local.internal = local.internal.or(parent.internal);
+    }
+    merged[index] = true;
 }
 #[cfg(test)]
 mod tests {

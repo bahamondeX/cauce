@@ -13,6 +13,7 @@ mod config;
 mod content;
 mod diagnostics;
 mod dns;
+mod expression;
 mod headers;
 mod health;
 mod http3;

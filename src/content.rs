@@ -3,6 +3,7 @@ use crate::{
     admission::RequestSlot,
     body::{self, BoxError, ProxyBody},
     config::{Limits, Route},
+    expression::{Expression, RequestValues},
     pool::ms,
     static_files,
     telemetry::{Event, Logger},
@@ -38,6 +39,7 @@ pub(crate) struct Direct {
     spec: DirectSpec,
     text: Bytes,
     content_type: HeaderValue,
+    expression: Option<Result<Expression, &'static str>>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -46,6 +48,8 @@ struct DirectSpec {
     status: u16,
     #[serde(default)]
     body: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    body_expression: Option<String>,
     #[serde(default)]
     content_type: Option<String>,
 }
@@ -61,6 +65,14 @@ impl TryFrom<DirectSpec> for Direct {
             "invalid direct response status or body"
         );
         let text = Bytes::copy_from_slice(spec.body.as_bytes());
+        let expression = spec.body_expression.as_deref().map(|source| {
+            if !spec.body.is_empty() || matches!(spec.status, 204 | 205) {
+                return Err(
+                    "body expression requires a response body and cannot accompany literal content",
+                );
+            }
+            Expression::compile(source)
+        });
         let content_type = HeaderValue::from_str(
             spec.content_type
                 .as_deref()
@@ -70,6 +82,7 @@ impl TryFrom<DirectSpec> for Direct {
             spec,
             text,
             content_type,
+            expression,
         })
     }
 }
@@ -81,33 +94,63 @@ impl From<Direct> for DirectSpec {
 
 impl Handler {
     pub fn validate(&self, route: &Route) -> Result<()> {
-        if let Self::Static(policy) = self {
-            policy.validate(route)?;
+        match self {
+            Self::Static(policy) => policy.validate(route)?,
+            Self::Direct(direct) => {
+                if let Some(Err(reason)) = direct.expression {
+                    anyhow::bail!("{reason}");
+                }
+            }
         }
         Ok(())
     }
-    pub async fn response<B>(
+    pub async fn response<'a, B>(
         &self,
-        request: &Request<B>,
+        request: &'a Request<B>,
         route: &Route,
         compression: Option<(&crate::compression::Policy, crate::compression::Choice)>,
+        values: impl FnOnce() -> RequestValues<'a, B>,
     ) -> Response<ProxyBody> {
         match self {
             Self::Static(policy) => policy.response(request, route, compression).await,
             Self::Direct(direct) => {
+                let text = if let Some(expression) = &direct.expression {
+                    let result = expression
+                        .as_ref()
+                        .expect("validated body expression")
+                        .evaluate(
+                            direct
+                                .spec
+                                .body_expression
+                                .as_deref()
+                                .expect("expression source"),
+                            values(),
+                        );
+                    match result {
+                        Ok(rendered) => Bytes::from(rendered),
+                        Err(()) => {
+                            return Response::builder()
+                                .status(500)
+                                .body(body::full(""))
+                                .unwrap()
+                        }
+                    }
+                } else {
+                    direct.text.clone()
+                };
                 let status =
                     StatusCode::from_u16(direct.spec.status).expect("validated direct status");
                 let mut response = Response::builder().status(status);
                 if !matches!(status.as_u16(), 204 | 205) {
                     response = response
                         .header("content-type", &direct.content_type)
-                        .header("content-length", direct.text.len());
+                        .header("content-length", text.len());
                 }
                 response
                     .body(body::full(if request.method() == Method::HEAD {
                         Bytes::new()
                     } else {
-                        direct.text.clone()
+                        text
                     }))
                     .unwrap()
             }

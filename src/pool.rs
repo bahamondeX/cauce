@@ -1838,6 +1838,7 @@ mod pool_tests {
                 id: "route".into(),
                 host: "example.test".into(),
                 parent: None,
+                internal: None,
                 path_prefix: "/".into(),
                 path_match: crate::config::PathMatch::Prefix,
                 path_pattern: None,

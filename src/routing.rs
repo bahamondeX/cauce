@@ -462,6 +462,7 @@ mod tests {
             id: format!("r{id}"),
             host: host.into(),
             parent: None,
+            internal: None,
             path_prefix: path.into(),
             path_match: PathMatch::Prefix,
             path_pattern: None,

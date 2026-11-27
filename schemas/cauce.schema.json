@@ -835,6 +835,7 @@
               "type": "string",
               "maxLength": 16384
             },
+            "body_expression": {"type": "string", "maxLength": 4096},
             "content_type": {
               "type": "string"
             }
@@ -920,6 +921,7 @@
           "required": ["path_match", "path_pattern"],
           "not": {"required": ["path_prefix"]},
           "properties": {
+        "internal": {"type": "boolean"},
         "connect_retry": {
           "type": "object", "additionalProperties": false, "required": ["rate", "concurrent"],
           "properties": {

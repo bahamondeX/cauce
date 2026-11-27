@@ -706,6 +706,9 @@ where
             reject!(NOT_FOUND, "route_not_found");
         }
     };
+    if route.internal == Some(true) {
+        reject!(NOT_FOUND, "route_not_found");
+    }
     if route.action.is_some() {
         let mut rewritten: Option<hyper::http::uri::PathAndQuery> = None;
         for hop in 0..=10 {
@@ -824,8 +827,15 @@ where
         .filter(|_| cfg!(feature = "web"))
         .map(|policy| (policy, policy.choice(&req, grpc, websocket.is_some())));
     if let Some(handler) = &route.content {
+        let values = || crate::expression::RequestValues {
+            request: &req,
+            secure,
+            client: client_ip,
+            request_id: &id,
+        };
         let Ok(mut response) =
-            tokio::time::timeout_at(deadline, handler.response(&req, route, compression)).await
+            tokio::time::timeout_at(deadline, handler.response(&req, route, compression, values))
+                .await
         else {
             reject!(GATEWAY_TIMEOUT, "content_deadline");
         };
