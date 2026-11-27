@@ -242,6 +242,18 @@ class MigrationTests(unittest.TestCase):
         self.assertNotEqual(code, 0)
         self.assertIsNone(config)
 
+    def test_direct_body_expression_preview_handles_only_cross_engine_variables(self):
+        body = "$request_method $uri $args $scheme"
+        code, report, config = self.run_preview("example.org", f'location / {{ return 200 "{body}"; }}')
+        self.assertEqual(code, 0)
+        self.assertEqual(report["preview"]["confidence"], "manual_review")
+        self.assertTrue(all(row["content"]["body_expression"] == body for row in config["proxy"]["routes"]))
+        for expression in ("$request_id", "${uri}", "$unknown"):
+            with self.subTest(expression=expression):
+                code, _, config = self.run_preview("example.org", f'location / {{ return 200 "{expression}"; }}')
+                self.assertNotEqual(code, 0)
+                self.assertIsNone(config)
+
     def test_response_additions_preview_preserves_status_modes_and_rejects_merge(self):
         code, _, config = self.run_preview("example.org", """
             location /api {

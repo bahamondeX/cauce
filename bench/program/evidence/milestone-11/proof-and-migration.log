@@ -1,0 +1,24 @@
+test_accepts_a_complete_registration_proof (test_nginx_compatibility.EquivalenceEvidence.test_accepts_a_complete_registration_proof) ... ok
+test_rejects_a_missing_or_one_engine_case (test_nginx_compatibility.EquivalenceEvidence.test_rejects_a_missing_or_one_engine_case) ... ok
+test_rejects_module_only_evidence (test_nginx_compatibility.EquivalenceEvidence.test_rejects_module_only_evidence) ... ok
+test_application_and_mail_recognition_require_manual_mapping (test_nginx_migration.MigrationTests.test_application_and_mail_recognition_require_manual_mapping) ... ok
+test_deployment_fixtures_validate_or_report_blocking_directives (test_nginx_migration.MigrationTests.test_deployment_fixtures_validate_or_report_blocking_directives) ... ok
+test_direct_body_expression_preview_handles_only_cross_engine_variables (test_nginx_migration.MigrationTests.test_direct_body_expression_preview_handles_only_cross_engine_variables) ... ok
+test_explicit_static_root_alias_and_direct_preview (test_nginx_migration.MigrationTests.test_explicit_static_root_alias_and_direct_preview) ... ok
+test_include_cycle_and_root_escape_are_rejected (test_nginx_migration.MigrationTests.test_include_cycle_and_root_escape_are_rejected) ... ok
+test_include_expansion_provenance_and_validated_preview (test_nginx_migration.MigrationTests.test_include_expansion_provenance_and_validated_preview) ... ok
+test_internal_preview_preserves_the_flag_and_rejects_invalid_arguments (test_nginx_migration.MigrationTests.test_internal_preview_preserves_the_flag_and_rejects_invalid_arguments) ... ok
+test_literal_locations_and_aliases_have_review_and_validation_metadata (test_nginx_migration.MigrationTests.test_literal_locations_and_aliases_have_review_and_validation_metadata) ... ok
+test_literal_nested_routes_preserve_authorities_and_header_inheritance (test_nginx_migration.MigrationTests.test_literal_nested_routes_preserve_authorities_and_header_inheritance) ... ok
+test_literal_proxy_headers_are_previewed_without_reporting_values (test_nginx_migration.MigrationTests.test_literal_proxy_headers_are_previewed_without_reporting_values) ... ok
+test_literal_tls_and_mandatory_client_auth_preview (test_nginx_migration.MigrationTests.test_literal_tls_and_mandatory_client_auth_preview) ... ok
+test_no_regex_prefix_is_preserved (test_nginx_migration.MigrationTests.test_no_regex_prefix_is_preserved) ... ok
+test_real_ip_and_literal_redirect_preview (test_nginx_migration.MigrationTests.test_real_ip_and_literal_redirect_preview) ... ok
+test_response_additions_preview_preserves_status_modes_and_rejects_merge (test_nginx_migration.MigrationTests.test_response_additions_preview_preserves_status_modes_and_rejects_merge) ... ok
+test_stream_preview_validates_literal_listeners_and_requires_proxy_trust (test_nginx_migration.MigrationTests.test_stream_preview_validates_literal_listeners_and_requires_proxy_trust) ... ok
+test_unsupported_host_or_location_refuses_partial_preview (test_nginx_migration.MigrationTests.test_unsupported_host_or_location_refuses_partial_preview) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 12.628s
+
+OK

@@ -309,12 +309,24 @@ def direct_preview(nodes):
     if len(nodes) != 1 or nodes[0].name != "return":
         return None
     node = nodes[0]
-    if (node.children is None and len(node.args) == 2
-            and node.args[0] == "200"
-            and re.fullmatch(r"[ -~]{0,4096}", node.args[1])
-            and "$" not in node.args[1]):
-        return {"type": "direct", "status": 200, "body": node.args[1], "content_type": "text/plain"}
-    return None
+    if (node.children is not None or len(node.args) != 2 or node.args[0] != "200"
+            or not re.fullmatch(r"[ -~]{0,4096}", node.args[1])):
+        return None
+    body = node.args[1]
+    content = {"type": "direct", "status": 200, "content_type": "text/plain"}
+    if "$" not in body:
+        return {**content, "body": body}
+    cursor, operations = 0, 0
+    for variable in re.finditer(r"\$([A-Za-z0-9_]+)", body):
+        literal = body[cursor:variable.start()]
+        if "$" in literal or variable[1] not in {"uri", "request_method", "args", "scheme"}:
+            raise ValueError("return body preview requires supported bare request variables")
+        operations += 1 + bool(literal)
+        cursor = variable.end()
+    remainder = body[cursor:]
+    if "$" in remainder or operations + bool(remainder) > 64:
+        raise ValueError("return body preview has unsupported syntax or exceeds the expression budget")
+    return {**content, "body_expression": body}
 
 
 def static_preview(nodes, location_mode, location_path):
@@ -695,6 +707,7 @@ def main():
                   "Preview inheritance covers literal real-IP and TLS policy and ordinary proxy header rules across literal children. Other inherited settings require review.",
                   "Static file previews bind literal directories with symlinks and hidden files denied by default. Index handling stays inside the selected document root.",
                   "Local return redirects use origin-relative Location. Check NGINX absolute_redirect behavior.",
+                  "Return body previews support a bounded set of bare request variables. Review raw URI and rewrite behavior.",
                   "TLS previews use one server certificate and rustls defaults for chain verification and resumption. Review SNI mappings and required client certificates.",
                   "Review socket exposure and the loopback admin listener before deployment.",
               ]}

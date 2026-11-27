@@ -41,6 +41,27 @@ maps, named captures, upstream and response variables, and
 header interpolation still require their own lifetime and publication
 rules. The expression compiler accepts bare variable names. YAML's
 existing whole-value environment references remain separate.
+The migration preview accepts a narrower set of bare variables in
+`return 200` bodies. It keeps its manual review status because NGINX
+and Cauce can derive different URI values before evaluation.
+
+```yaml
+routes:
+  - id: private
+    host: example.test
+    path_prefix: /private
+    internal: true
+    content:
+      type: direct
+      status: 200
+      body_expression: "$request_method $uri"
+  - id: entry
+    host: example.test
+    path_prefix: /entry
+    action:
+      kind: rewrite
+      target: /private
+```
 
 ## Proof and dependency graph
 
