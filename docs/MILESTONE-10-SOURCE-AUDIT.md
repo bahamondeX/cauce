@@ -31,6 +31,13 @@ verified, and the retained collector reported linked SQLite 3.54.1.
   behaviors. The previous harness projected selected headers and
   sometimes excluded the body. Those results establish their stated
   claims and require scoped disclosure.
+- In the baseline schema, `connect_retry` sits in the regex alternative
+  while the outer route rejects additional properties. The runtime
+  accepts valid retry configuration independently of that editor schema
+  defect.
+- The baseline `scripts/check.sh` calls uv without a scoped cache and
+  lets collector checks use their default report destinations. The
+  workflow now uses the compatibility lock and repository-local state.
 - Core rewrite and route selection already have typed outcomes and a
   ten-hop limit in `src/actions.rs` and `src/proxy.rs`. HTTP, HTTP/2
   and HTTP/3 share the policy path. Runtime expression support is

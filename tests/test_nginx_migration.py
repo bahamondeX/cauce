@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 import yaml
+from jsonschema import Draft202012Validator
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -232,6 +233,8 @@ class MigrationTests(unittest.TestCase):
             }
         """)
         self.assertEqual(code, 0)
+        schema = json.loads((ROOT / "schemas/cauce.schema.json").read_text())
+        Draft202012Validator(schema).validate(config)
         routes = config["proxy"]["routes"]
         self.assertTrue(all(row["internal"] is True for row in routes if row["path_prefix"] == "/private"))
         self.assertTrue(all("parent" in row for row in routes if row["path_prefix"] == "/private/child"))

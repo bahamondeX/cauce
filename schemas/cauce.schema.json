@@ -921,14 +921,6 @@
           "required": ["path_match", "path_pattern"],
           "not": {"required": ["path_prefix"]},
           "properties": {
-        "internal": {"type": "boolean"},
-        "connect_retry": {
-          "type": "object", "additionalProperties": false, "required": ["rate", "concurrent"],
-          "properties": {
-            "rate": {"type": "integer", "minimum": 1, "maximum": 1000},
-            "concurrent": {"type": "integer", "minimum": 1, "maximum": 128}
-          }
-        },
             "path_match": {
               "anyOf": [
                 {"$ref": "#/$defs/environment"},
@@ -939,6 +931,14 @@
         }
       ],
       "properties": {
+        "internal": {"type": "boolean"},
+        "connect_retry": {
+          "type": "object", "additionalProperties": false, "required": ["rate", "concurrent"],
+          "properties": {
+            "rate": {"type": "integer", "minimum": 1, "maximum": 1000},
+            "concurrent": {"type": "integer", "minimum": 1, "maximum": 128}
+          }
+        },
         "cache": {"$ref": "#/$defs/memoryCache"},
         "application": {"$ref": "#/$defs/application"},
         "compression": {"$ref": "#/$defs/compression"},
