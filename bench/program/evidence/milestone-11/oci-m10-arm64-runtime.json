@@ -1,0 +1,83 @@
+{
+  "host": "linux/aarch64",
+  "images": [
+    {
+      "profile": "full",
+      "manifest": "sha256:010b1058a4606ac1cbd7ad6b8e7ed569e73ad9cc6dea60f766b634a732982452",
+      "config": "sha256:d5ce36feb5688f86c802ba938012c0e92b707597f3a6bfd0adda041c671890e7",
+      "source_revision": "6aa4c261939ffcb04b8b17e101fd5aedac4dae9e",
+      "entrypoint": [
+        "/usr/local/bin/cauce"
+      ],
+      "user": "10001:10001",
+      "default_config_check": "configuration valid",
+      "permissions": "Uid:\t10001\t10001\t10001\t10001",
+      "executables": "021fb5d29a4f67a7c43849fb5402908232b9af0fe4b6915394acb3dd6834d81e  /usr/local/bin/cauce\n731e318cf99f0ceb87a20c47c9ca8bdb6eab122a2c0d3fc33f001b100295fccf  /usr/local/bin/cauce-collector",
+      "readiness": "ready",
+      "https_status": 200,
+      "capabilities": {
+        "acme": true,
+        "compression": true,
+        "disk_cache": true,
+        "dns": true,
+        "fastcgi": true,
+        "grpc": true,
+        "http1": true,
+        "http2": true,
+        "http3": true,
+        "mail": true,
+        "memory_cache": true,
+        "metrics": true,
+        "scgi": true,
+        "static_files": true,
+        "stream_tls": true,
+        "tcp": true,
+        "tls": true,
+        "udp": true,
+        "uwsgi": true,
+        "version": "0.9.1"
+      },
+      "linked_sqlite": "3.54.1",
+      "sigterm_exit": 0
+    },
+    {
+      "profile": "core",
+      "manifest": "sha256:449af595256926cf1ba90cbdec0fcb7ed5863ec01ed585c45ee7a7e2d36ec32f",
+      "config": "sha256:4ff4e8cbe074747f08a956ba7efd166f8c93d86d2233813bbfae75138f9512da",
+      "source_revision": "6aa4c261939ffcb04b8b17e101fd5aedac4dae9e",
+      "entrypoint": [
+        "/usr/local/bin/cauce"
+      ],
+      "user": "10001:10001",
+      "default_config_check": "configuration valid",
+      "permissions": "Uid:\t10001\t10001\t10001\t10001",
+      "executables": "fdbeba24b64a580b4a75cb5179254b5f407bc97327546f608203aa096a2d69ca  /usr/local/bin/cauce\n06e2dc44fc3a00f3d8070a9335671fb93ce7437e57d91086e38ff8052ac14e29  /usr/local/bin/cauce-collector",
+      "readiness": "ready",
+      "https_status": 200,
+      "capabilities": {
+        "acme": false,
+        "compression": false,
+        "disk_cache": false,
+        "dns": true,
+        "fastcgi": false,
+        "grpc": true,
+        "http1": true,
+        "http2": true,
+        "http3": false,
+        "mail": false,
+        "memory_cache": false,
+        "metrics": true,
+        "scgi": false,
+        "static_files": false,
+        "stream_tls": false,
+        "tcp": false,
+        "tls": true,
+        "udp": false,
+        "uwsgi": false,
+        "version": "0.9.1"
+      },
+      "linked_sqlite": "3.54.1",
+      "sigterm_exit": 0
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "result": "PASS",
+  "mode": "native",
+  "architecture": "arm64",
+  "fixture": "Local proposal-1 only; no Connectivity ingestion",
+  "scope": "native independent storage verification; local proposal-1 only; no Connectivity ingestion",
+  "cases": [
+    "state database rejects a changed source path without consuming it",
+    "state path symlink to access log is rejected before opening SQLite",
+    "same-inode atomic rename race does not crash the tailer",
+    "disk-full fixture reached the configured SQLite page ceiling",
+    "SQLite FULL rolls back spool and source checkpoint together",
+    "copytruncate fixture preserves inode and is at least the prior byte offset",
+    "copytruncate with same-size replacement is detected before loss",
+    "first batch is durable before quota test",
+    "full spool pauses source at its prior durable checkpoint",
+    "evicted generation with observed but unspooled bytes fails closed after debounce",
+    "corrupt state fails closed and is left intact",
+    "read-only checkpoint storage fails without accepting new input",
+    "state database rejects endpoint changes before sending a request"
+  ],
+  "failures": [],
+  "binary_sha256": "192877173c8d60f6bd97919c8662a20f0c264f2ff89ba7f7b6f2afce47db958c"
+}

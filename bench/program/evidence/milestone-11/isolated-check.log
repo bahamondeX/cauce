@@ -1,0 +1,594 @@
+Resolved 20 packages in 9ms
+Audited 6 packages in 0.27ms
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libc v0.2.191
+   Compiling syn v3.0.10
+    Checking cfg-if v1.0.5
+    Checking memchr v2.8.3
+    Checking pin-project-lite v0.2.17
+   Compiling portable-atomic v1.15.0
+    Checking itoa v1.0.19
+    Checking bytes v1.12.1
+    Checking errno v0.3.15
+   Compiling shlex v2.0.1
+    Checking critical-section v1.2.0
+   Compiling synstructure v0.14.0
+   Compiling find-msvc-tools v0.1.15
+   Compiling cc v1.11.2
+   Compiling zerofrom-derive v0.1.8
+   Compiling displaydoc v0.2.7
+    Checking once_cell v1.21.4
+    Checking futures-core v0.3.34
+   Compiling serde_core v1.0.229
+    Checking zerofrom v0.1.8
+   Compiling yoke-derive v0.8.4
+    Checking socket2 v0.6.5
+    Checking smallvec v1.16.5
+    Checking stable_deref_trait v1.2.1
+    Checking yoke v0.8.4
+   Compiling tokio-macros v2.7.2
+    Checking signal-hook-registry v1.4.8
+    Checking mio v1.2.5
+    Checking slab v0.4.12
+   Compiling serde v1.0.229
+    Checking futures-sink v0.3.34
+    Checking tokio v1.54.1
+   Compiling zerovec-derive v0.11.7
+   Compiling serde_derive v1.0.229
+    Checking zerovec v0.11.9
+    Checking futures-channel v0.3.34
+    Checking tracing-core v0.1.36
+   Compiling ring v0.17.14
+    Checking zeroize v1.9.1
+    Checking futures-io v0.3.34
+    Checking rustls-pki-types v1.16.0
+    Checking tracing v0.1.44
+   Compiling futures-macro v0.3.34
+   Compiling autocfg v1.5.1
+    Checking futures-task v0.3.34
+   Compiling thiserror v2.0.21
+    Checking foldhash v0.2.0
+    Checking hashbrown v0.17.1
+    Checking futures-util v0.3.34
+   Compiling num-traits v0.2.19
+    Checking tinystr v0.8.5
+   Compiling thiserror-impl v2.0.21
+    Checking getrandom v0.2.17
+    Checking writeable v0.6.4
+    Checking litemap v0.8.3
+    Checking utf_types v1.0.0
+    Checking equivalent v1.0.3
+    Checking untrusted v0.9.0
+    Checking utf8_iter v1.1.0
+    Checking icu_locale_core v2.4.0
+    Checking potential_utf v0.1.6
+    Checking zerotrie v0.2.5
+    Checking http v1.5.0
+   Compiling icu_normalizer_data v2.4.0
+   Compiling icu_properties_data v2.4.0
+    Checking percent-encoding v2.3.2
+    Checking rand_core v0.10.1
+    Checking icu_provider v2.4.0
+    Checking icu_collections v2.4.0
+    Checking bitflags v2.13.2
+   Compiling rustls v0.23.46
+   Compiling getrandom v0.4.3
+    Checking rustls-webpki v0.103.17
+    Checking indexmap v2.14.2
+   Compiling syn v2.0.119
+   Compiling num-conv v0.2.2
+    Checking powerfmt v0.2.1
+   Compiling time-core v0.1.8
+    Checking subtle v2.6.1
+   Compiling time-macros v0.2.27
+    Checking deranged v0.5.9
+    Checking icu_properties v2.4.0
+    Checking icu_normalizer v2.4.0
+    Checking ipnet v2.12.2
+   Compiling version_check v0.9.5
+    Checking core-foundation-sys v0.8.7
+    Checking idna_adapter v1.2.2
+   Compiling generic-array v0.14.7
+    Checking time v0.3.47
+    Checking http-body v1.1.0
+    Checking chacha20 v0.10.2
+    Checking form_urlencoded v1.2.3
+    Checking tokio-util v0.7.20
+   Compiling cfg_aliases v0.2.2
+   Compiling httparse v1.10.1
+    Checking rand v0.10.4
+    Checking idna v1.1.0
+    Checking security-framework-sys v2.17.0
+    Checking core-foundation v0.10.1
+    Checking typenum v1.20.1
+    Checking fnv v1.0.7
+    Checking try-lock v0.2.5
+    Checking base64 v0.23.1
+    Checking tower-service v0.3.3
+   Compiling crossbeam-utils v0.8.23
+    Checking minimal-lexical v0.2.1
+    Checking tinyvec v1.13.3
+    Checking atomic-waker v1.1.2
+    Checking h2 v0.4.20
+    Checking nom v7.1.3
+    Checking want v0.3.2
+    Checking security-framework v3.7.0
+    Checking url v2.5.9
+   Compiling synstructure v0.13.2
+    Checking httpdate v1.0.3
+   Compiling parking_lot_core v0.9.12
+   Compiling anyhow v1.0.104
+    Checking alloc-no-stdlib v3.0.0
+   Compiling crc32fast v1.5.6
+   Compiling getrandom v0.3.4
+    Checking alloc-stdlib v0.3.0
+   Compiling asn1-rs-derive v0.6.0
+    Checking hyper v1.12.0
+    Checking rusticata-macros v4.1.0
+   Compiling quinn-udp v0.5.16
+   Compiling asn1-rs-impl v0.2.0
+   Compiling array-const-fn-init v0.1.1
+    Checking log v0.4.35
+    Checking data-encoding v2.11.1
+   Compiling vcpkg v0.2.15
+    Checking scopeguard v1.2.0
+    Checking simd-adler32 v0.3.10
+    Checking either v1.19.0
+   Compiling pkg-config v0.3.34
+    Checking adler2 v2.0.1
+   Compiling crossbeam-epoch v0.9.21
+   Compiling zmij v1.0.23
+   Compiling libsqlite3-sys v0.39.1
+    Checking miniz_oxide v0.9.1
+    Checking prefix-trie v0.10.2
+    Checking lock_api v0.4.14
+    Checking rustls-platform-verifier v0.7.1
+    Checking asn1-rs v0.7.2
+    Checking hyper-util v0.1.21
+    Checking brotli-decompressor v6.4.0
+    Checking rustls-native-certs v0.8.5
+    Checking block-buffer v0.10.4
+    Checking crypto-common v0.1.7
+   Compiling quinn v0.11.12
+    Checking tokio-rustls v0.26.6
+    Checking num-integer v0.1.47
+    Checking rand_pcg v0.10.2
+    Checking webpki-roots v1.0.12
+    Checking sync_wrapper v1.0.2
+   Compiling async-trait v0.1.92
+    Checking ryu v1.0.23
+    Checking fastrand v2.5.0
+   Compiling oid-registry v0.8.1
+    Checking lru-slab v0.1.3
+   Compiling serde_json v1.0.154
+    Checking rustc-hash v2.1.3
+    Checking tower-layer v0.3.3
+    Checking tower v0.5.3
+    Checking quinn-proto v0.11.19
+   Compiling itertools v0.15.0
+    Checking hyper-rustls v0.27.10
+    Checking num-bigint v0.4.8
+    Checking flate2 v1.1.11
+    Checking digest v0.10.7
+    Checking brotli v9.1.3
+    Checking uuid v1.18.1
+    Checking parking_lot v0.12.5
+    Checking hickory-proto v0.26.4
+    Checking crossbeam-channel v0.5.17
+    Checking pem v4.0.0
+    Checking yasna v0.6.0
+    Checking http-body-util v0.1.5
+    Checking futures-executor v0.3.34
+    Checking toml_datetime v0.6.11
+    Checking serde_spanned v0.6.9
+    Checking aho-corasick v1.1.5
+    Checking cpufeatures v0.2.17
+    Checking tagptr v0.2.0
+    Checking winnow v0.7.15
+    Checking base64 v0.22.1
+    Checking regex-syntax v0.8.12
+    Checking compression-core v0.4.34
+    Checking toml_write v0.1.2
+    Checking toml_edit v0.22.27
+    Checking regex-automata v0.4.19
+    Checking compression-codecs v0.4.49
+    Checking moka v0.12.16
+    Checking futures v0.3.34
+    Checking rcgen v0.14.10
+   Compiling prost-derive v0.14.6
+    Checking hickory-net v0.26.4
+    Checking der-parser v10.0.0
+    Checking tower-http v0.6.11
+    Checking h3 v0.0.8
+    Checking serde_urlencoded v0.7.1
+    Checking hashlink v0.12.2
+    Checking lazy_static v1.5.1
+    Checking fallible-iterator v0.3.0
+    Checking fallible-streaming-iterator v0.1.9
+    Checking libyaml-rs v0.3.0
+   Compiling rustix v1.1.6
+    Checking yaml_serde v0.10.7
+    Checking rusqlite v0.41.1
+    Checking h3-quinn v0.0.10
+    Checking x509-parser v0.18.1
+    Checking reqwest v0.12.28
+    Checking hickory-resolver v0.26.4
+    Checking prost v0.14.6
+    Checking instant-acme v0.8.5
+    Checking regex v1.13.2
+    Checking async-compression v0.4.54
+    Checking toml v0.8.23
+    Checking sha1 v0.10.7
+    Checking sha2 v0.10.9
+    Checking fs2 v0.4.3
+    Checking cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Checking tempfile v3.27.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 36.79s
+   Compiling libc v0.2.191
+   Compiling cfg-if v1.0.5
+   Compiling pin-project-lite v0.2.17
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.19
+   Compiling bytes v1.12.1
+   Compiling portable-atomic v1.15.0
+   Compiling errno v0.3.15
+   Compiling critical-section v1.2.0
+   Compiling once_cell v1.21.4
+   Compiling futures-core v0.3.34
+   Compiling zerofrom v0.1.8
+   Compiling socket2 v0.6.5
+   Compiling stable_deref_trait v1.2.1
+   Compiling smallvec v1.16.5
+   Compiling yoke v0.8.4
+   Compiling serde_core v1.0.229
+   Compiling signal-hook-registry v1.4.8
+   Compiling mio v1.2.5
+   Compiling futures-sink v0.3.34
+   Compiling slab v0.4.12
+   Compiling tokio v1.54.1
+   Compiling serde v1.0.229
+   Compiling zerovec v0.11.9
+   Compiling futures-channel v0.3.34
+   Compiling tracing-core v0.1.36
+   Compiling futures-io v0.3.34
+   Compiling zeroize v1.9.1
+   Compiling rustls-pki-types v1.16.0
+   Compiling tracing v0.1.44
+   Compiling futures-task v0.3.34
+   Compiling foldhash v0.2.0
+   Compiling hashbrown v0.17.1
+   Compiling futures-util v0.3.34
+   Compiling tinystr v0.8.5
+   Compiling getrandom v0.2.17
+   Compiling utf_types v1.0.0
+   Compiling equivalent v1.0.3
+   Compiling untrusted v0.9.0
+   Compiling litemap v0.8.3
+   Compiling writeable v0.6.4
+   Compiling ring v0.17.14
+   Compiling icu_locale_core v2.4.0
+   Compiling utf8_iter v1.1.0
+   Compiling thiserror v2.0.21
+   Compiling potential_utf v0.1.6
+   Compiling zerotrie v0.2.5
+   Compiling http v1.5.0
+   Compiling percent-encoding v2.3.2
+   Compiling rand_core v0.10.1
+   Compiling icu_provider v2.4.0
+   Compiling icu_collections v2.4.0
+   Compiling num-traits v0.2.19
+   Compiling bitflags v2.13.2
+   Compiling icu_normalizer_data v2.4.0
+   Compiling icu_properties_data v2.4.0
+   Compiling rustls-webpki v0.103.17
+   Compiling indexmap v2.14.2
+   Compiling num-conv v0.2.2
+   Compiling subtle v2.6.1
+   Compiling powerfmt v0.2.1
+   Compiling time-core v0.1.8
+   Compiling time-macros v0.2.27
+   Compiling deranged v0.5.9
+   Compiling rustls v0.23.46
+   Compiling icu_properties v2.4.0
+   Compiling icu_normalizer v2.4.0
+   Compiling getrandom v0.4.3
+   Compiling ipnet v2.12.2
+   Compiling core-foundation-sys v0.8.7
+   Compiling idna_adapter v1.2.2
+   Compiling time v0.3.47
+   Compiling http-body v1.1.0
+   Compiling chacha20 v0.10.2
+   Compiling form_urlencoded v1.2.3
+   Compiling tokio-util v0.7.20
+   Compiling rand v0.10.4
+   Compiling idna v1.1.0
+   Compiling security-framework-sys v2.17.0
+   Compiling core-foundation v0.10.1
+   Compiling atomic-waker v1.1.2
+   Compiling try-lock v0.2.5
+   Compiling fnv v1.0.7
+   Compiling base64 v0.23.1
+   Compiling tinyvec v1.13.3
+   Compiling tower-service v0.3.3
+   Compiling typenum v1.20.1
+   Compiling minimal-lexical v0.2.1
+   Compiling nom v7.1.3
+   Compiling generic-array v0.14.7
+   Compiling h2 v0.4.20
+   Compiling want v0.3.2
+   Compiling security-framework v3.7.0
+   Compiling url v2.5.9
+   Compiling httparse v1.10.1
+   Compiling alloc-no-stdlib v3.0.0
+   Compiling httpdate v1.0.3
+   Compiling alloc-stdlib v0.3.0
+   Compiling crossbeam-utils v0.8.23
+   Compiling hyper v1.12.0
+   Compiling rusticata-macros v4.1.0
+   Compiling adler2 v2.0.1
+   Compiling scopeguard v1.2.0
+   Compiling log v0.4.35
+   Compiling data-encoding v2.11.1
+   Compiling either v1.19.0
+   Compiling simd-adler32 v0.3.10
+   Compiling prefix-trie v0.10.2
+   Compiling miniz_oxide v0.9.1
+   Compiling hyper-util v0.1.21
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling lock_api v0.4.14
+   Compiling asn1-rs v0.7.2
+   Compiling parking_lot_core v0.9.12
+   Compiling crc32fast v1.5.6
+   Compiling brotli-decompressor v6.4.0
+   Compiling getrandom v0.3.4
+   Compiling rustls-native-certs v0.8.5
+   Compiling crypto-common v0.1.7
+   Compiling block-buffer v0.10.4
+   Compiling tokio-rustls v0.26.6
+   Compiling num-integer v0.1.47
+   Compiling rand_pcg v0.10.2
+   Compiling webpki-roots v1.0.12
+   Compiling sync_wrapper v1.0.2
+   Compiling lru-slab v0.1.3
+   Compiling tower-layer v0.3.3
+   Compiling rustc-hash v2.1.3
+   Compiling fastrand v2.5.0
+   Compiling ryu v1.0.23
+   Compiling quinn-proto v0.11.19
+   Compiling tower v0.5.3
+   Compiling hyper-rustls v0.27.10
+   Compiling num-bigint v0.4.8
+   Compiling digest v0.10.7
+   Compiling uuid v1.18.1
+   Compiling brotli v9.1.3
+   Compiling flate2 v1.1.11
+   Compiling parking_lot v0.12.5
+   Compiling quinn-udp v0.5.16
+   Compiling anyhow v1.0.104
+   Compiling crossbeam-epoch v0.9.21
+   Compiling zmij v1.0.23
+   Compiling hickory-proto v0.26.4
+   Compiling crossbeam-channel v0.5.17
+   Compiling pem v4.0.0
+   Compiling http-body-util v0.1.5
+   Compiling yasna v0.6.0
+   Compiling futures-executor v0.3.34
+   Compiling toml_datetime v0.6.11
+   Compiling serde_spanned v0.6.9
+   Compiling cpufeatures v0.2.17
+   Compiling aho-corasick v1.1.5
+   Compiling regex-syntax v0.8.12
+   Compiling toml_write v0.1.2
+   Compiling compression-core v0.4.34
+   Compiling winnow v0.7.15
+   Compiling base64 v0.22.1
+   Compiling tagptr v0.2.0
+   Compiling moka v0.12.16
+   Compiling toml_edit v0.22.27
+   Compiling compression-codecs v0.4.49
+   Compiling regex-automata v0.4.19
+   Compiling futures v0.3.34
+   Compiling rcgen v0.14.10
+   Compiling hickory-net v0.26.4
+   Compiling serde_json v1.0.154
+   Compiling prost-derive v0.14.6
+   Compiling libsqlite3-sys v0.39.1
+   Compiling quinn v0.11.12
+   Compiling der-parser v10.0.0
+   Compiling oid-registry v0.8.1
+   Compiling rustix v1.1.6
+   Compiling tower-http v0.6.11
+   Compiling h3 v0.0.8
+   Compiling serde_urlencoded v0.7.1
+   Compiling hashlink v0.12.2
+   Compiling libyaml-rs v0.3.0
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling fallible-iterator v0.3.0
+   Compiling lazy_static v1.5.1
+   Compiling x509-parser v0.18.1
+   Compiling yaml_serde v0.10.7
+   Compiling rusqlite v0.41.1
+   Compiling reqwest v0.12.28
+   Compiling h3-quinn v0.0.10
+   Compiling tempfile v3.27.0
+   Compiling prost v0.14.6
+   Compiling instant-acme v0.8.5
+   Compiling hickory-resolver v0.26.4
+   Compiling regex v1.13.2
+   Compiling toml v0.8.23
+   Compiling async-compression v0.4.54
+   Compiling sha2 v0.10.9
+   Compiling sha1 v0.10.7
+   Compiling fs2 v0.4.3
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 46.44s
+     Running unittests src/main.rs (work/increment10/target/debug/deps/cauce-1cd4a3ff0be23b2a)
+
+running 65 tests
+test application::fastcgi::tests::record_direction_request_id_and_lengths ... ok
+test application::envelope::tests::native_prefix_and_netstring_bounds ... ok
+test application::response::tests::fragmented_head_boundary ... ok
+test admission::tests::disabled_admission_reuses_the_baseline_permit_allocation ... ok
+test admission::tests::peer_cap_uses_canonical_address_and_recovers_on_drop ... ok
+test admission::tests::burst_delay_and_live_entry_budget_fail_closed ... ok
+test balance::tests::smooth_order_and_weights ... ok
+test application::response::tests::response_rejects_ambiguous_framing_and_origins ... ok
+test actions::tests::query_modes_and_capture_safety ... ok
+test config::tests::a_nested_leaf_inherits_nearest_access_and_rate_policy ... ok
+test config::tests::h2_defaults_caps_and_reload ... ok
+test expression::tests::compiles_variables_and_uses_current_uri ... ok
+test config::tests::example_and_fail_closed ... ok
+test admission::tests::capture_rewrite_allocation_sample ... ok
+test config::tests::yaml_expands_whole_values_and_redacts_failed_substitutions ... ok
+test config::tests::yaml_and_toml_compile_to_the_same_configuration ... ok
+test headers::tests::additions_use_the_same_protocol_ownership_and_value_guards ... ok
+test expression::tests::rejects_undefined_wrong_phase_and_oversized_programs ... ok
+test health::tests::invalid_config_rejected ... ok
+test headers::tests::policies_protect_protocol_identity_and_budgets ... ok
+test identity::tests::recursive_trust_stops_at_first_untrusted_address ... ok
+test mail::wire::tests::bounded_credentials_and_imap_quoting ... ok
+test config::tests::yaml_rejects_invalid_fields_versions_and_durations ... ok
+test health::tests::thresholds_and_disabled_default ... ok
+test pool::pool_tests::cancelled_opening_wakes_capacity_waiters ... ok
+test config::tests::byte_units_compile_to_native_limits_and_reject_overflow ... ok
+test pool::pool_tests::reused_http1_sender_waits_for_the_driver_after_complete_response ... ok
+test pool::pool_tests::sharded_eviction_preserves_a_live_lease_and_endpoint_identity ... ok
+test health::tests::actual_http_status_and_timeout ... ok
+test pool::pool_tests::weighted_groups_balance_concurrently_and_preserve_hashes_on_recovery ... ok
+test proxy::tests::framing_and_hop_headers ... ok
+test proxy::tests::grpc_deadlines_and_trailer_header ... ok
+test proxy::tests::percent_encoded_path_filter_is_ascii_case_insensitive ... ok
+test proxy::tests::rejects_ambiguous_paths ... ok
+test resilience::tests::cancelled_recovery_delays_and_releases_probe ... ok
+test resilience::tests::stale_completions_cannot_close_breaker_and_only_one_probe_enters ... ok
+test routing::tests::exact_location_precedes_prefix_only_for_the_identical_path ... ok
+test routing::tests::flat_locations_order_exact_longest_prefix_and_first_regex ... ok
+test routing::tests::lookup_benchmark ... ignored, release-mode route lookup measurement
+test routing::tests::preserves_linear_match_semantics ... ok
+test routing::tests::regex_location_count_and_diagnostics_are_bounded ... ok
+test routing::tests::wildcard_config_accepts_a_complete_edge_label_only ... ok
+test routing::tests::wildcard_hosts_use_nginx_name_precedence_before_path_lookup ... ok
+test stream::proxy_protocol::tests::validated_tlvs_and_checksum ... ok
+test telemetry::tests::failed_buffer_is_discarded_without_a_drop_flush_retry ... ok
+test telemetry::tests::failed_rotation_after_tail_repair_still_hands_off_inode_on_retry ... ok
+test telemetry::tests::reopen_preserves_complete_records_and_removes_only_unterminated_tail ... ok
+test telemetry::tests::trace_validation ... ok
+test telemetry::tests::typed_log_fields_keep_the_wire_encoding ... ok
+test transport::tests::absolute_deadline_covers_fragments_and_continuation_gaps ... ok
+test transport::tests::coalesced_frames_and_fragmented_preface_keep_next_block_deadline ... ok
+test transport::tests::connection_guard_cancels_stream_tasks_and_rejects_late_tasks ... ok
+test transport::tests::data_and_idle_are_not_header_timed_but_partial_frame_headers_are ... ok
+test transport::tests::end_headers_waits_for_all_payload_including_padding ... ok
+test pool::pool_tests::multiplexes_two_leases_over_one_h2_socket ... ok
+test transport::tests::http1_passthrough_and_preface_have_separate_lifetimes ... ok
+test transport::tests::invalid_interleaving_does_not_disarm_or_reset_deadline ... ok
+test websocket::tests::rfc6455_handshake_and_rejections ... ok
+test transport::tests::header_watch_expires_without_further_io_polls ... ok
+test health::tests::http2_and_grpc_probes_validate_responses_over_real_sockets ... ok
+test pool::pool_tests::absent_peer_stream_limit_releases_initial_zero_gate ... ok
+test pool::pool_tests::initial_peer_settings_bound_cold_start_streams ... ok
+test pool::pool_tests::watchdog_retires_stalled_early_response_without_leaking_pool_capacity ... ok
+test health::tests::scheduler_ejects_recovers_and_stops ... ok
+test dns::tests::resolves_dual_stack_aliases_rotates_and_recovers_from_negative_answers ... ok
+
+test result: ok. 64 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.23s
+
+     Running unittests src/bin/cauce-collector.rs (work/increment10/target/debug/deps/cauce_collector-a026704e104a8b03)
+
+running 14 tests
+test collector::tests::invalid_ack_error_does_not_echo_untrusted_field_names ... ok
+test collector::tests::export_retains_queued_batches_and_lock_is_exclusive ... ok
+test collector::tests::checkpoint_and_spool_commit_together_then_resume ... ok
+test collector::tests::observed_frontier_shrink_while_full_is_rejected ... ok
+test collector::tests::observed_frontier_shrink_after_resume_is_rejected ... ok
+test collector::tests::schema_rejects_unknown_missing_and_bad_values ... ok
+test collector::tests::partial_line_is_not_checkpointed_until_complete ... ok
+test collector::tests::a_present_inode_resets_missing_debounce_before_early_return ... ok
+test collector::tests::lost_unread_log_fails_even_when_spool_is_full ... ok
+test collector::tests::spool_quota_pauses_at_a_durable_checkpoint ... ok
+test collector::tests::same_inode_same_size_rewrite_is_rejected ... ok
+test collector::tests::rename_rotation_follows_inode_and_truncation_stops ... ok
+test collector::tests::rotated_tail_repair_accepts_only_a_scanned_fragment ... ok
+test collector::tests::fast_same_inode_rename_gaps_do_not_confirm_missing_generation ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.90s
+
+   Compiling security-framework v3.7.0
+   Compiling tower-http v0.6.11
+   Compiling rusqlite v0.41.1
+   Compiling rustls-platform-verifier v0.7.1
+   Compiling rustls-native-certs v0.8.5
+   Compiling hyper-rustls v0.27.10
+   Compiling instant-acme v0.8.5
+   Compiling reqwest v0.12.28
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.74s
+test_accepts_clients_while_reload_reads_candidate (__main__.ProxyTests.test_accepts_clients_while_reload_reads_candidate) ... ok
+test_atomic_reload_and_invalid_reload_preserves_generation (__main__.ProxyTests.test_atomic_reload_and_invalid_reload_preserves_generation) ... ok
+test_backend_unexpected_close_no_retry (__main__.ProxyTests.test_backend_unexpected_close_no_retry) ... ok
+test_bad_upload_does_not_withdraw_healthy_backend (__main__.ProxyTests.test_bad_upload_does_not_withdraw_healthy_backend) ... ok
+test_body_limit_early (__main__.ProxyTests.test_body_limit_early) ... ok
+test_burst_reuse_and_eviction_during_reload (__main__.ProxyTests.test_burst_reuse_and_eviction_during_reload) ... ok
+test_cancel_and_stream_timeout_discard_upstream (__main__.ProxyTests.test_cancel_and_stream_timeout_discard_upstream) ... ok
+test_disabled_access_log_preserves_metrics_and_request_identity (__main__.ProxyTests.test_disabled_access_log_preserves_metrics_and_request_identity) ... ok
+test_header_policies_are_route_scoped (__main__.ProxyTests.test_header_policies_are_route_scoped) ... ok
+test_idle_and_max_age_retirement (__main__.ProxyTests.test_idle_and_max_age_retirement) ... ok
+test_log_io_failure_keeps_serving (__main__.ProxyTests.test_log_io_failure_keeps_serving) ... ok
+test_log_rotation_and_retention (__main__.ProxyTests.test_log_rotation_and_retention) ... ok
+test_overload_and_shutdown_deadline (__main__.ProxyTests.test_overload_and_shutdown_deadline) ... ok
+test_pool_capacity_wait_is_bounded (__main__.ProxyTests.test_pool_capacity_wait_is_bounded) ... ok
+test_pool_reuse_across_new_client_connections_and_logs (__main__.ProxyTests.test_pool_reuse_across_new_client_connections_and_logs) ... ok
+test_request_smuggling_rejected_or_canonicalized (__main__.ProxyTests.test_request_smuggling_rejected_or_canonicalized) ... ok
+test_round_robin_and_least_inflight (__main__.ProxyTests.test_round_robin_and_least_inflight) ... ok
+test_routing_framing_hops_and_forwarded (__main__.ProxyTests.test_routing_framing_hops_and_forwarded) ... ok
+test_schema_and_admin_auth (__main__.ProxyTests.test_schema_and_admin_auth) ... ok
+test_slowloris_and_header_limits (__main__.ProxyTests.test_slowloris_and_header_limits) ... ok
+test_unix_backend (__main__.ProxyTests.test_unix_backend) ... ok
+test_upload_and_sse_without_event_buffering (__main__.ProxyTests.test_upload_and_sse_without_event_buffering) ... ok
+test_upload_backpressure_and_early_response_discard (__main__.ProxyTests.test_upload_backpressure_and_early_response_discard) ... ok
+test_yaml_reload_routes_and_rollback (__main__.ProxyTests.test_yaml_reload_routes_and_rollback) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 25.407s
+
+OK
+PASS: complete-line tail, durable restart checkpoints and non-destructive export
+PASS: rename rotation preserves inode checkpoint and discovers new generation
+PASS: startup discovers retained rotated files oldest first
+PASS: bounded spool pauses input without advancing checkpoint past durable events
+PASS: invalid source is rejected without checkpointing or uploading
+PASS: oversized source is rejected without checkpointing or uploading
+PASS: HTTPS with trusted CA sends proposal batch and validates ACK
+PASS: HTTP 401 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 403 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 429 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 500 retains stable batch; retry succeeds; redirects never followed
+PASS: HTTP 307 retains stable batch; retry succeeds; redirects never followed
+PASS: wrong_id retains durable batch and stable event IDs for retry/dedup
+PASS: wrong_count retains durable batch and stable event IDs for retry/dedup
+PASS: large_ack retains durable batch and stable event IDs for retry/dedup
+PASS: drop_ack retains durable batch and stable event IDs for retry/dedup
+PASS: delay_ms retains durable batch and stable event IDs for retry/dedup
+PASS: TLS rejects untrusted ca before sending credentials/events
+PASS: TLS rejects untrusted hostname before sending credentials/events
+PASS: credential file is reread on retry; rotated token accepted
+PASS: ACK received but dequeue transaction fails: durable batch is retried intact
+PASS: SIGKILL after receiver acceptance: restart resends identical durable batch
+PASS: bounded retry backoff, exclusive state ownership, clean SIGTERM
+PASS: 23 collector cases (arm64)
+PASS: state database rejects a changed source path without consuming it
+PASS: state path symlink to access log is rejected before opening SQLite
+PASS: same-inode atomic rename race does not crash the tailer
+PASS: disk-full fixture reached the configured SQLite page ceiling
+PASS: SQLite FULL rolls back spool and source checkpoint together
+PASS: copytruncate fixture preserves inode and is at least the prior byte offset
+PASS: copytruncate with same-size replacement is detected before loss
+PASS: first batch is durable before quota test
+PASS: full spool pauses source at its prior durable checkpoint
+PASS: evicted generation with observed but unspooled bytes fails closed after debounce
+PASS: corrupt state fails closed and is left intact
+PASS: read-only checkpoint storage fails without accepting new input
+PASS: state database rejects endpoint changes before sending a request
+PASS: 13 collector storage cases, 0 failures (arm64)

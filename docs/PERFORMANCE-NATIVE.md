@@ -335,3 +335,14 @@ matched ARM64 and AMD64 hardware under the established authorization policy.
 
 [Milestone 10 report](PERFORMANCE-MILESTONE-10.md)
 [Artifact identities](../bench/program/evidence/milestone-10/artifact-identities.json).
+
+## Milestone 11 preparation
+
+The latest binary-bearing revision is `0f62952`. Full and Core
+executables have checksummed Linux ARM64 and AMD64 outputs. ARM64
+OCI runtime evidence covers a trusted TLS request, readiness and
+SIGTERM. AMD64 smoke is emulated. The native workload and multicore
+qualification gates continue to apply.
+
+[Executable and OCI identities](../bench/program/evidence/milestone-11/artifact-identities.json)
+[Local measurement scope](PERFORMANCE-MILESTONE-11.md).

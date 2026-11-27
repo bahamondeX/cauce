@@ -1,0 +1,9 @@
+test_uwsgi_reference (__main__.GatewayTests.test_uwsgi_reference) ... uwsgi cases 5, NGINX differential True
+ok
+test_scgi_reference (__main__.GatewayTests.test_scgi_reference) ... scgi cases 5, NGINX differential True
+ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 11.433s
+
+OK

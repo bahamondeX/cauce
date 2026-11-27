@@ -1,0 +1,89 @@
+{
+  "source_commit": "0f629521183c763910d6677fb79a13f84d52ffb0",
+  "source_tree": "125ddb7a8734fcd4959c935ca5645766465c38d8",
+  "cargo_lock_sha256": "6d35b2121668f7b1287216ed5a45a487a7cc47bd04a053c0fd880b38185c12ae",
+  "reference_archive_sha256": {
+    "nginx-1.30.8.tar.gz": "f867314ada32e717b949930859656c48a72dc6657aec598db58af2f98a40e1c1",
+    "njs-1.0.2.tar.gz": "93043e263131feadfd664356b989d86aa009a0e453e33c246ee08e39d96ca45c",
+    "nginx-acme-0.4.2.tar.gz": "c8b1d5abe878e8233a4cdc710614d8114fd94bc7ebf1f4ece720180f794ff836"
+  },
+  "darwin_host": {
+    "platform": "macOS-15.8.1-arm64-arm-64bit-Mach-O",
+    "gateway_sha256": "54a7888ed914b89773a90edc4cc764c0e2b00ed7896dd6a5e3999d24a6554076",
+    "collector_sha256": "192877173c8d60f6bd97919c8662a20f0c264f2ff89ba7f7b6f2afce47db958c"
+  },
+  "linux": [
+    {
+      "profile": "full",
+      "architecture": "arm64",
+      "artifacts": {
+        "cauce": {
+          "bytes": 13917088,
+          "sha256": "f7af7462a4ef3ea7ed4c5c082d47d8a1efd06e2540971a391a0bbf2d46b36401",
+          "path": "work/increment11/linux/full/linux_arm64/cauce"
+        },
+        "cauce-collector": {
+          "bytes": 5796912,
+          "sha256": "731e318cf99f0ceb87a20c47c9ca8bdb6eab122a2c0d3fc33f001b100295fccf",
+          "path": "work/increment11/linux/full/linux_arm64/cauce-collector"
+        }
+      },
+      "oci_manifest": "sha256:3d5581c73df7f61b80ec8abe4e272c0a3d3ffa3d0ad693834e19eb050779268b",
+      "oci_compressed_layer_bytes": 37367243
+    },
+    {
+      "profile": "full",
+      "architecture": "amd64",
+      "artifacts": {
+        "cauce": {
+          "bytes": 15835856,
+          "sha256": "52489d7af68b8a3021c0fe54a2c0fe24d4a8743215d5a950b0affcc14a6d106c",
+          "path": "work/increment11/linux/full/linux_amd64/cauce"
+        },
+        "cauce-collector": {
+          "bytes": 6402360,
+          "sha256": "30cee8462b15deadbd5decd4ce059754bbcb09cd55b09d979b6bf9f4ba984c46",
+          "path": "work/increment11/linux/full/linux_amd64/cauce-collector"
+        }
+      },
+      "oci_manifest": "sha256:67bd976ab2cce67885d816ced5511c8df8a69685332e812dd04900c334474ec5",
+      "oci_compressed_layer_bytes": 38017555
+    },
+    {
+      "profile": "core",
+      "architecture": "arm64",
+      "artifacts": {
+        "cauce": {
+          "bytes": 10221016,
+          "sha256": "342e45178f6f9f9593c5182400975b3fda2ea024ca8b2a46dd40b0cdbabb42f9",
+          "path": "work/increment11/linux/core/linux_arm64/cauce"
+        },
+        "cauce-collector": {
+          "bytes": 5796912,
+          "sha256": "06e2dc44fc3a00f3d8070a9335671fb93ce7437e57d91086e38ff8052ac14e29",
+          "path": "work/increment11/linux/core/linux_arm64/cauce-collector"
+        }
+      },
+      "oci_manifest": "sha256:17720206abcf69bce79873feb29221e97df50098dd5e0d3c89dea877b7b65fcd",
+      "oci_compressed_layer_bytes": 35686857
+    },
+    {
+      "profile": "core",
+      "architecture": "amd64",
+      "artifacts": {
+        "cauce": {
+          "bytes": 11754608,
+          "sha256": "e751909c86c794ede7ca718510a5ca985d7f2ad18fba7384d34293c367de6a6f",
+          "path": "work/increment11/linux/core/linux_amd64/cauce"
+        },
+        "cauce-collector": {
+          "bytes": 6402360,
+          "sha256": "e565fd14b3c63a6bc76f9bd58ce26a2f24275fea2f36143245964977c17e910d",
+          "path": "work/increment11/linux/core/linux_amd64/cauce-collector"
+        }
+      },
+      "oci_manifest": "sha256:0c9ba679bb510039c6b2460144d6616c4c82d939459fed2b5fca9d85415f0b95",
+      "oci_compressed_layer_bytes": 36281916
+    }
+  ]
+}

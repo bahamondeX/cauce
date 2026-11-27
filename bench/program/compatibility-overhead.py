@@ -16,10 +16,10 @@ ROOT = Path(__file__).resolve().parents[2]
 support = runpy.run_path(str(ROOT / "scripts/nginx-compatibility.py"))
 
 
-def measure(binary, variant, count, folder, compression_fixture):
+def measure(binary, variant, count, folder, compression_fixture, expressions=False):
     port, admin = support["available_ports"](2)
     configuration = tomllib.loads((ROOT / "examples/cauce.toml").read_text())
-    body = "same" * (1024 if compression_fixture else 1)
+    body = "GET|compat.test|/api/child?a=1|http" if expressions else "same" * (1024 if compression_fixture else 1)
     parent = {"id": "parent", "host": "compat.test", "path_prefix": "/api", "path_match": "literal_prefix",
               "content": {"type": "direct", "status": 200, "body": body}}
     leaf = {**parent, "id": "leaf", "path_prefix": "/api/child", "path_match": "exact"}
@@ -27,6 +27,9 @@ def measure(binary, variant, count, folder, compression_fixture):
         leaf["parent"] = "parent"
     if variant == "response-addition":
         leaf["headers"] = {"response_add": [{"name": "X-Fixture", "value": "enabled"}]}
+    if variant == "expression-evaluated":
+        leaf["content"] = {"type": "direct", "status": 200,
+                           "body_expression": "$request_method|$host|$uri?$args|$scheme"}
     compressed = variant == "full-compression-on"
     if compressed:
         leaf["compression"] = {"algorithms": ["gzip"]}
@@ -47,7 +50,7 @@ def measure(binary, variant, count, folder, compression_fixture):
             before = support["resource_sample"](process)
             for index in range(count + 64):
                 start = time.perf_counter_ns()
-                connection.request("GET", "/api/child", headers=request_headers)
+                connection.request("GET", "/api/child?a=1" if expressions else "/api/child", headers=request_headers)
                 response = connection.getresponse()
                 wire_body = response.read()
                 elapsed = time.perf_counter_ns() - start
@@ -77,7 +80,8 @@ def measure(binary, variant, count, folder, compression_fixture):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cauce", type=Path, required=True)
-    parser.add_argument("--core", type=Path, help="compare Full gzip on/off with this separately built Core executable")
+    parser.add_argument("--core", type=Path, help="include this separately built Core executable as a control")
+    parser.add_argument("--expressions", action="store_true", help="compare literal and evaluated response bodies")
     parser.add_argument("--source", required=True)
     parser.add_argument("--requests", type=int, default=1024, choices=range(64, 65537), metavar="64..65536")
     parser.add_argument("--work", type=support["local_output"], default=ROOT / "work/compatibility-overhead")
@@ -88,13 +92,19 @@ def main():
     print(json.dumps({"source": args.source, "cauce_sha256": support["digest"](binary),
                       "core_sha256": support["digest"](core_binary) if core_binary else None,
                       "scope": "single-client persistent HTTP/1 loopback diagnostic"}))
-    variants = (["full-compression-off", "full-compression-on", "core-compression-absent"]
-                if core_binary else ["features-disabled", "nested-location", "response-addition"])
+    if args.expressions:
+        variants = ["features-disabled", "expression-evaluated"]
+        if core_binary:
+            variants.append("core-expression-disabled")
+    else:
+        variants = (["full-compression-off", "full-compression-on", "core-compression-absent"]
+                    if core_binary else ["features-disabled", "nested-location", "response-addition"])
     for repeat in range(3):
         for variant in variants[repeat:] + variants[:repeat]:
             with tempfile.TemporaryDirectory(prefix="cauce-overhead-", dir=args.work) as folder:
-                executable = core_binary if variant == "core-compression-absent" else binary
-                result = measure(executable, variant, args.requests, Path(folder), core_binary is not None)
+                executable = core_binary if variant.startswith("core-") else binary
+                result = measure(executable, variant, args.requests, Path(folder),
+                                 core_binary is not None and not args.expressions, args.expressions)
             print(json.dumps({"repeat": repeat, **result}))
 
 

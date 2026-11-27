@@ -31,5 +31,11 @@ The RustSec scan used advisory database commit
 and zero warnings for the updated Cargo lock. The test sink establishes the
 collector-side contract locally.
 
+Milestone 11 kept the dependency lock and SBOM unchanged. The rebuilt
+collector reported SQLite 3.54.1. It reopened the prior collector's
+database and preserved its checkpoint on ENOSPC. Once space returned,
+the fixture recovered 65 events and passed the integrity check.
+[Milestone 11 preservation evidence](../bench/program/evidence/milestone-11/sqlite-preservation.json).
+
 [Collector verification and raw scan](../bench/program/evidence/milestone-10/)
 [Updated CycloneDX SBOM](../third-party/cauce.cdx.json).

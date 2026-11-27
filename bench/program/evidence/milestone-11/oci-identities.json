@@ -1,0 +1,62 @@
+{
+  "source_commit": "0f629521183c763910d6677fb79a13f84d52ffb0",
+  "base_index": "sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc",
+  "images": [
+    {
+      "architecture": "arm64",
+      "profile": "full",
+      "manifest": "sha256:3d5581c73df7f61b80ec8abe4e272c0a3d3ffa3d0ad693834e19eb050779268b",
+      "base_manifest": "sha256:ec8534cda2cb30f29f44f23e135297af7a1496f2990fd8e4e84aa36b081a757a",
+      "layer_bytes": 37367243,
+      "cauce_layer_bytes": 9222885,
+      "cauce_layer_digest": "sha256:20edd22324b56fef904995ad1497a1bba1d11926b0ff198f9fe63424726befb6",
+      "executable_sha256": {
+        "cauce": "sha256:f7af7462a4ef3ea7ed4c5c082d47d8a1efd06e2540971a391a0bbf2d46b36401",
+        "cauce-collector": "sha256:731e318cf99f0ceb87a20c47c9ca8bdb6eab122a2c0d3fc33f001b100295fccf"
+      },
+      "index_sha256": "sha256:078f508c0327742667470e49b2a87452472bb04205ecaff9e5796dca65b4aa0d"
+    },
+    {
+      "architecture": "amd64",
+      "profile": "full",
+      "manifest": "sha256:67bd976ab2cce67885d816ced5511c8df8a69685332e812dd04900c334474ec5",
+      "base_manifest": "sha256:c67e92c8099ba22853ab4cfda7cfb494d253d6012ca82dee98ba8976772af018",
+      "layer_bytes": 38017555,
+      "cauce_layer_bytes": 9769573,
+      "cauce_layer_digest": "sha256:07aa08d89ca4b5d6ef6a528b17341b7820d1dbbc11ba3b90e22848eed3ecca46",
+      "executable_sha256": {
+        "cauce": "sha256:52489d7af68b8a3021c0fe54a2c0fe24d4a8743215d5a950b0affcc14a6d106c",
+        "cauce-collector": "sha256:30cee8462b15deadbd5decd4ce059754bbcb09cd55b09d979b6bf9f4ba984c46"
+      },
+      "index_sha256": "sha256:078f508c0327742667470e49b2a87452472bb04205ecaff9e5796dca65b4aa0d"
+    },
+    {
+      "architecture": "arm64",
+      "profile": "core",
+      "manifest": "sha256:17720206abcf69bce79873feb29221e97df50098dd5e0d3c89dea877b7b65fcd",
+      "base_manifest": "sha256:ec8534cda2cb30f29f44f23e135297af7a1496f2990fd8e4e84aa36b081a757a",
+      "layer_bytes": 35686857,
+      "cauce_layer_bytes": 7542499,
+      "cauce_layer_digest": "sha256:7212e6cc99d5571f8d3c6ddc05b0f2b38ab7cc9ea8c989fa6ac8924e85285561",
+      "executable_sha256": {
+        "cauce": "sha256:342e45178f6f9f9593c5182400975b3fda2ea024ca8b2a46dd40b0cdbabb42f9",
+        "cauce-collector": "sha256:06e2dc44fc3a00f3d8070a9335671fb93ce7437e57d91086e38ff8052ac14e29"
+      },
+      "index_sha256": "sha256:feba7077df4fa01a340cfc529676f97e467a9ca78426c4904b61681b44534508"
+    },
+    {
+      "architecture": "amd64",
+      "profile": "core",
+      "manifest": "sha256:0c9ba679bb510039c6b2460144d6616c4c82d939459fed2b5fca9d85415f0b95",
+      "base_manifest": "sha256:c67e92c8099ba22853ab4cfda7cfb494d253d6012ca82dee98ba8976772af018",
+      "layer_bytes": 36281916,
+      "cauce_layer_bytes": 8033934,
+      "cauce_layer_digest": "sha256:fdf21f5bc1484cd92eac48b6d90b5ff0b5a45a25cb12b1077209808b63697673",
+      "executable_sha256": {
+        "cauce": "sha256:e751909c86c794ede7ca718510a5ca985d7f2ad18fba7384d34293c367de6a6f",
+        "cauce-collector": "sha256:e565fd14b3c63a6bc76f9bd58ce26a2f24275fea2f36143245964977c17e910d"
+      },
+      "index_sha256": "sha256:feba7077df4fa01a340cfc529676f97e467a9ca78426c4904b61681b44534508"
+    }
+  ]
+}

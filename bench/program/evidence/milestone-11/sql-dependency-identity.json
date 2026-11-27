@@ -1,0 +1,6 @@
+{
+  "linked_sqlite": "3.54.1",
+  "cargo_lock_sha256": "6d35b2121668f7b1287216ed5a45a487a7cc47bd04a053c0fd880b38185c12ae",
+  "m10_retained_audit_sha256": "2b39b56aed3708903324ecfe74be2ab2cff98b5a0ab87c04b7b6722aaf16c861",
+  "dependency_lock_unchanged": true
+}

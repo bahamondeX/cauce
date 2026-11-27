@@ -1,0 +1,24 @@
+Linux arm64 full
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+3.54.1
+f7af7462a4ef3ea7ed4c5c082d47d8a1efd06e2540971a391a0bbf2d46b36401  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/full/linux_arm64/cauce
+731e318cf99f0ceb87a20c47c9ca8bdb6eab122a2c0d3fc33f001b100295fccf  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/full/linux_arm64/cauce-collector
+Linux arm64 core
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+3.54.1
+342e45178f6f9f9593c5182400975b3fda2ea024ca8b2a46dd40b0cdbabb42f9  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/core/linux_arm64/cauce
+06e2dc44fc3a00f3d8070a9335671fb93ce7437e57d91086e38ff8052ac14e29  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/core/linux_arm64/cauce-collector
+Linux amd64 full
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+3.54.1
+52489d7af68b8a3021c0fe54a2c0fe24d4a8743215d5a950b0affcc14a6d106c  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/full/linux_amd64/cauce
+30cee8462b15deadbd5decd4ce059754bbcb09cd55b09d979b6bf9f4ba984c46  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/full/linux_amd64/cauce-collector
+Linux amd64 core
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+3.54.1
+e751909c86c794ede7ca718510a5ca985d7f2ad18fba7384d34293c367de6a6f  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/core/linux_amd64/cauce
+e565fd14b3c63a6bc76f9bd58ce26a2f24275fea2f36143245964977c17e910d  /Users/oscarbahamonde/Desktop/cauce/work/increment11/linux/core/linux_amd64/cauce-collector

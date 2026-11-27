@@ -1,0 +1,7 @@
+test_issue_renew_preserve_session_and_restore_private_state (__main__.Pebble.test_issue_renew_preserve_session_and_restore_private_state) ... configuration valid
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 17.748s
+
+OK

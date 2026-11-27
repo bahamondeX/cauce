@@ -1,0 +1,10 @@
+test_postfix_dovecot_and_optional_nginx (__main__.MailTests.test_postfix_dovecot_and_optional_nginx) ... backend versions 2.3.19.1 (9b53102964) / 3.7.11
+SMTP, IMAP and POP3 STARTTLS with Postfix/Dovecot, NGINX differential True
+ok
+test_implicit_tls_to_real_origins (__main__.MailTests.test_implicit_tls_to_real_origins) ... backend versions 2.3.19.1 (9b53102964) / 3.7.11
+ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 9.101s
+
+OK

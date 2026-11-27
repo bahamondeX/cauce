@@ -278,6 +278,8 @@ Cauce now compiles effective location policies parent-first and
 supports bounded direct-response request expressions. HTTP core
 `internal` is the first verified-equivalent directive registration.
 The fixed inventory still contains 754 OSS registrations. The
-current verified count is one.
+current verified count is one. Full and Core ARM64 OCI layouts
+passed local runtime verification. The five previously skipped
+interoperability cases passed against their local service fixtures.
 [Milestone evidence](docs/PERFORMANCE-MILESTONE-11.md)
 [Source audit](docs/MILESTONE-10-SOURCE-AUDIT.md).

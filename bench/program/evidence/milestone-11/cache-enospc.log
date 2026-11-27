@@ -1,0 +1,6 @@
+test_enospc_then_recovers (__main__.DiskCache.test_enospc_then_recovers) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.891s
+
+OK

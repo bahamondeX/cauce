@@ -1,0 +1,41 @@
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 20.50s
+profile core
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 29.51s
+profile web
+{"acme":false,"compression":true,"disk_cache":true,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":true,"metrics":true,"scgi":false,"static_files":true,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.25s
+profile network
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":false,"static_files":false,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.60s
+profile edge
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":false,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":false,"memory_cache":true,"metrics":true,"scgi":false,"static_files":true,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":false,"version":"0.9.1"}
+configuration valid
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 16.87s
+profile application
+{"acme":false,"compression":false,"disk_cache":false,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":false,"mail":false,"memory_cache":false,"metrics":true,"scgi":true,"static_files":false,"stream_tls":false,"tcp":false,"tls":true,"udp":false,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+configuration valid
+configuration valid
+   Compiling cauce v0.9.1 (/Users/oscarbahamonde/Desktop/cauce)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 29.91s
+profile full
+{"acme":true,"compression":true,"disk_cache":true,"dns":true,"fastcgi":true,"grpc":true,"http1":true,"http2":true,"http3":true,"mail":true,"memory_cache":true,"metrics":true,"scgi":true,"static_files":true,"stream_tls":true,"tcp":true,"tls":true,"udp":true,"uwsgi":true,"version":"0.9.1"}
+configuration valid
+configuration valid
+configuration valid
+configuration valid
+configuration valid
+configuration valid

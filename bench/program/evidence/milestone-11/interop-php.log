@@ -1,0 +1,8 @@
+test_php_fpm_and_optional_nginx (__main__.FastCGITests.test_php_fpm_and_optional_nginx) ... PHP 8.4.22 (fpm-fcgi) (built: Jun 24 2026 01:28:42) (NTS)
+PHP-FPM cases 7, NGINX differential True
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.000s
+
+OK
