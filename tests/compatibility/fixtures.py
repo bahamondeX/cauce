@@ -290,3 +290,71 @@ def access(config, reference_port, _resources, folder):
 
 MODULES = {"ngx_http_access_module": access, "ngx_http_core_module": nested,
            "ngx_http_headers_filter_module": header_filter, "ngx_http_proxy_module": proxy}
+
+
+def internal(config, port, _resources, _folder):
+    host = "compat.test"
+    variable_body = "$request_method|$host|$uri|$args|$scheme|$remote_addr"
+
+    def route(id_, path, **settings):
+        return {
+            "id": id_, "host": host, "path_prefix": path,
+            "content": {"type": "direct", "status": 200, "body": id_},
+            **settings,
+        }
+
+    def rewrite(id_, path, target, **settings):
+        value = route(id_, path, **settings)
+        del value["content"]
+        value["action"] = {"kind": "rewrite", "target": target}
+        return value
+
+    config["routes"] = [
+        route("public", "/public"),
+        route("private", "/private", internal=True),
+        route("child", "/private/child", parent="private", content={
+            "type": "direct", "status": 200, "body_expression": variable_body,
+        }),
+        rewrite("enter", "/enter", "/private/child"),
+        rewrite("guarded", "/guarded", "/public", internal=True),
+        route("toggle", "/toggle", headers={"response_add": [{"name": "X-Generation", "value": "one"}]}),
+    ]
+    server = f"server {{ listen 127.0.0.1:{port}; server_name {host};"
+    reference = server + """
+        location /public { return 200 public; }
+        location /private {
+            internal;
+            return 200 private;
+            location /private/child { return 200 "EXPRESSION"; }
+        }
+        location /enter { rewrite ^ /private/child last; }
+        location /guarded { internal; rewrite ^ /public last; }
+        location /toggle { add_header X-Generation one; return 200 toggle; }
+    }""".replace("EXPRESSION", variable_body)
+    updated = {**config, "routes": config["routes"][:-1] + [route("toggle", "/toggle", internal=True)]}
+    reload = (reference.replace("add_header X-Generation one;", "internal;"), updated)
+    invalid = "invalid YAML configuration field, type or quantity"
+    return reference, [
+        {"name": "public-default-and-sibling", "target": "/public", "status": 200, "expected_body": "public"},
+        {"name": "external-private", "target": "/private", "status": 404, "compare_body": False},
+        {"name": "inherited-private", "target": "/private/child", "status": 404, "compare_body": False},
+        {"name": "guard-before-location-rewrite", "target": "/guarded", "status": 404, "compare_body": False},
+        {"name": "rewrite-into-inherited-private", "target": "/enter?a=2", "status": 200,
+         "expected_body": "GET|compat.test|/private/child|a=2|http|127.0.0.1"},
+        {"name": "generation-before", "target": "/toggle", "status": 200,
+         "headers": ["x-generation"], "expected_headers": {"x-generation": ["one"]}, "expected_body": "toggle"},
+        {"name": "generation-after", "target": "/toggle", "status": 404, "compare_body": False, "after_reload": True},
+    ], [
+        {"name": "reject-argument", "routes": [route("bad", "/bad", internal="off")],
+         "reference": server + " location / { internal off; } }",
+         "error": {"cauce": invalid, "nginx": "invalid number of arguments"}},
+        {"name": "reject-server-context", "routes": [], "proxy_edits": {"internal": True},
+         "reference": server + " internal; }",
+         "error": {"cauce": invalid, "nginx": "directive is not allowed here"}},
+        {"name": "reject-duplicate", "routes": [route("bad", "/bad", internal=[True, True])],
+         "reference": server + " location / { internal; internal; } }",
+         "error": {"cauce": invalid, "nginx": "directive is duplicate"}},
+    ], reload
+
+
+PROOF_FIXTURES = {"http-core-internal": internal}

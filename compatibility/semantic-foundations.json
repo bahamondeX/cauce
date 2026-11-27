@@ -1,0 +1,138 @@
+{
+  "configuration": {
+    "depends_on": [],
+    "components": ["src/config.rs:Config::load", "src/routing.rs:location_parents", "scripts/nginx-migration-report.py:expanded_config"],
+    "missing": "Server and protocol scopes and module-specific scalar and list merge rules.",
+    "tests": ["context rejection", "ancestry and siblings", "reload rollback"],
+    "complexity": "high",
+    "selectors": ["(?:include|location|server|internal|.*_inherit)$"]
+  },
+  "variables": {
+    "depends_on": ["configuration"],
+    "components": ["src/expression.rs:Expression", "src/actions.rs:Action"],
+    "missing": "Map dependency analysis, captures, later-phase variables and lifetime-specific storage.",
+    "tests": ["undefined and invalid phase", "lazy evaluation", "rewrite URI change", "expansion bound"],
+    "complexity": "high",
+    "selectors": ["ngx_(?:http|stream)_(?:map|split_clients|geo)_module", "(?:set|map|geo|volatile)$"]
+  },
+  "regex": {
+    "depends_on": ["configuration"],
+    "components": ["src/routing.rs:Routes::compile", "src/actions.rs:Action"],
+    "missing": "Bounded PCRE2 bridge, named captures and execution budget across candidates.",
+    "tests": ["PCRE compatibility", "capture boundaries", "work-limit rejection", "literal fast path"],
+    "complexity": "high",
+    "selectors": ["(?:rewrite|server_name|proxy_cookie_.*|proxy_redirect)$"]
+  },
+  "phases": {
+    "depends_on": ["configuration", "variables", "regex"],
+    "components": ["src/proxy.rs:handle", "src/actions.rs:Outcome"],
+    "missing": "Server rewrite, synthetic error pages and bounded subrequest execution.",
+    "tests": ["phase order", "internal entry", "redirect budgets", "stream cancellation"],
+    "complexity": "high",
+    "selectors": ["ngx_http_rewrite_module", "(?:return|break|internal|error_page|try_files|mirror|auth_request)$"]
+  },
+  "headers": {
+    "depends_on": ["configuration", "variables", "phases"],
+    "components": ["src/headers.rs:Policy"],
+    "missing": "Expression-enabled fields with module-specific merge and consistent filter ordering.",
+    "tests": ["duplicates and status gating", "protected headers", "cache isolation"],
+    "complexity": "high",
+    "selectors": ["ngx_http_headers_filter_module", "(?:.*_set_header|.*_hide_header|.*_pass_header)$"]
+  },
+  "access": {
+    "depends_on": ["configuration", "phases"],
+    "components": ["src/identity.rs:Policy", "src/admission.rs"],
+    "missing": "Ordered rules, credential providers and method-specific access composition.",
+    "tests": ["real IP trust", "ordered rules", "satisfy", "constant policy isolation"],
+    "complexity": "high",
+    "selectors": ["ngx_http_(?:access|auth.*|limit.*|realip)_module", "(?:satisfy|limit_except|allow|deny)$"]
+  },
+  "upstream": {
+    "depends_on": ["configuration", "phases"],
+    "components": ["src/pool.rs:Generation", "src/resilience.rs", "src/dns.rs"],
+    "missing": "Equivalent group selection, affinity, retry and keepalive policy controls.",
+    "tests": ["origin selection", "retry safety", "lease and DNS retirement"],
+    "complexity": "high",
+    "selectors": ["ngx_http_upstream", "(?:.*_next_upstream.*|.*_connect_timeout|.*_pass)$"]
+  },
+  "buffering": {
+    "depends_on": ["configuration", "upstream"],
+    "components": ["src/body.rs", "src/application/config.rs"],
+    "missing": "Explicit request/response buffers, bounded spool and slow-client delivery policies.",
+    "tests": ["upload limits", "partial read", "ENOSPC", "cancellation", "backpressure"],
+    "complexity": "high",
+    "selectors": ["(?:.*buffer.*|.*temp.*|client_body.*|client_max_body_size)$"]
+  },
+  "filters": {
+    "depends_on": ["headers", "buffering"],
+    "components": ["src/compression.rs", "src/proxy.rs:handle"],
+    "missing": "Compiled filter ordering and optional transformations.",
+    "tests": ["unchanged disabled response", "coded variants", "conditional and trailers"],
+    "complexity": "high",
+    "selectors": ["ngx_http_.*filter_module", "(?:gzip.*|gunzip.*|proxy_redirect|proxy_cookie_.*)$"]
+  },
+  "content": {
+    "depends_on": ["configuration", "phases"],
+    "components": ["src/content.rs:Handler", "src/static_files.rs:Policy"],
+    "missing": "Exact static defaults, validators, MIME mappings and optional handlers.",
+    "tests": ["root confinement", "conditional responses", "metadata", "MIME inheritance"],
+    "complexity": "high",
+    "selectors": ["ngx_http_(?:static|autoindex|index|dav|flv|mp4|secure_link|random_index|empty_gif)_module", "(?:root|alias|default_type|types|etag|if_modified_since)$"]
+  },
+  "cache": {
+    "depends_on": ["headers", "upstream"],
+    "components": ["src/cache.rs:Cache", "src/cache/disk.rs"],
+    "missing": "NGINX cache keys, bypass expressions and policy differences.",
+    "tests": ["privacy", "restart and corruption", "variants", "cache invalidation"],
+    "complexity": "high",
+    "selectors": ["(?:.*_cache.*)$"]
+  },
+  "tls": {
+    "depends_on": ["configuration"],
+    "components": ["src/tls.rs", "src/acme_config.rs"],
+    "missing": "Per-scope certificate and trust merges, exact knobs and add-on issuance variants.",
+    "tests": ["identity and trust", "reload", "SNI", "certificate selection"],
+    "complexity": "high",
+    "selectors": ["(?:.*ssl.*|.*quic.*|.*acme.*|.*tls.*)$"]
+  },
+  "logging": {
+    "depends_on": ["configuration", "variables"],
+    "components": ["src/telemetry.rs", "src/bin/cauce-collector.rs"],
+    "missing": "Compiled log formats, inheritance, variable privacy and conditional routing.",
+    "tests": ["log timing", "redaction", "collector replay", "format inheritance"],
+    "complexity": "medium",
+    "selectors": ["ngx_.*log_module", "(?:.*_log|log_.*)$"]
+  },
+  "stream": {
+    "depends_on": ["configuration", "tls"],
+    "components": ["src/stream/config.rs", "src/stream/tcp.rs", "src/stream/udp.rs"],
+    "missing": "Retained bindings and protocol-specific resilience and phases.",
+    "tests": ["live session preservation", "UDP peer ownership", "TLS reload"],
+    "complexity": "high",
+    "selectors": ["ngx_stream_"]
+  },
+  "mail": {
+    "depends_on": ["configuration", "tls"],
+    "components": ["src/mail/config.rs", "src/mail/mod.rs"],
+    "missing": "Retained bindings, full auth option coverage and endpoint health.",
+    "tests": ["SMTP, IMAP and POP3 sessions", "certificates", "credential redaction"],
+    "complexity": "high",
+    "selectors": ["ngx_mail_"]
+  },
+  "extensions": {
+    "depends_on": ["configuration", "variables"],
+    "components": ["compatibility/nginx-gap-backlog.jsonl"],
+    "missing": "Sandboxed njs runtime and explicit phase interfaces.",
+    "tests": ["capabilities", "work and memory bounds", "secret isolation"],
+    "complexity": "high",
+    "selectors": ["ngx_(?:http|stream)_js_"]
+  },
+  "platform": {
+    "depends_on": [],
+    "components": ["Cargo.toml", "src/capabilities.rs", "scripts/stage-zig-linux.sh"],
+    "missing": "Socket, event, worker and operating-system options requiring direct source review.",
+    "tests": ["platform rejection", "build profiles", "startup and lifecycle"],
+    "complexity": "high",
+    "selectors": ["--", "ngx_(?:event|core|.*_event)_module"]
+  }
+}

@@ -7,10 +7,12 @@ import json
 from pathlib import Path
 import re
 import runpy
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 INVENTORY = runpy.run_path(str(ROOT / "scripts/nginx-inventory.py"))
 OUTPUT = ROOT / "compatibility/nginx-gap-backlog.jsonl"
+MANIFEST = OUTPUT.with_name("verification-manifests.json")
 
 # These are bounded preview translations. Scope and argument restrictions
 # continue to be enforced by nginx-migration-report.py before emitting YAML.
@@ -59,6 +61,12 @@ FILES = {
 }
 
 REVIEWED = {
+    ("ngx_http_core_module", "internal"): {
+        "arguments": ["no arguments"],
+        "default": "External requests are allowed unless the enclosing location inherited internal.",
+        "inheritance": "An unset location inherits the nearest declared flag.",
+        "source_functions": ["ngx_http_core_internal", "ngx_http_core_merge_loc_conf", "ngx_http_core_find_config_phase"],
+    },
     ("ngx_http_core_module", "satisfy"): {
         "arguments": ["all or any"], "default": "all",
         "inheritance": "Inherits the enclosing context's mode when unset.",
@@ -189,8 +197,6 @@ PLATFORM_FLAGS = {
     "--without-poll_module": "platform-specific poll implementation",
     "--without-quic_bpf_module": "Linux eBPF",
 }
-VERIFICATION_CRITERIA = {"arguments", "contexts", "defaults", "inheritance", "observable_behavior",
-                         "negative_and_boundary_cases", "interactions", "documented_limits"}
 SUBSTITUTE = {
     "--with-openssl": "rustls with ring",
     "--with-openssl-opt": "rustls compile and runtime TLS policy",
@@ -258,26 +264,67 @@ def configure(option, modules, mappings):
     }
 
 
-def verify_claim(module, directive, mapping):
+def verify_claim(module, directive, mapping, task_id=None, contexts=()):
+    def require(condition, message):
+        if not condition:
+            raise ValueError(f"{task_id or module + '.' + str(directive)} {message}")
+
     proof = mapping.get("verification", {})
-    target = f"{module}.{directive}" if directive else module
-    assert set(proof.get("criteria", ())) == VERIFICATION_CRITERIA, (target, "incomplete equivalence review")
+    manifest = json.loads(MANIFEST.read_text())["registrations"].get(task_id)
+    require(manifest and manifest["module"] == module and manifest["context"] == list(contexts),
+            "requires a registration manifest with matching contexts")
     path = (ROOT / proof["differential_report"]).resolve()
-    assert ROOT in path.parents, (target, "evidence must be within the repository")
+    require(ROOT in path.parents, "evidence must be within the repository")
     report = json.loads(path.read_text())
+    require(report.get("registration") == task_id and report.get("fixture") == manifest["fixture"],
+            "report registration and fixture mismatch")
+    manifest_hash = sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    require(report.get("manifest_sha256") == manifest_hash
+            and report.get("reference_source_sha256") == INVENTORY["SHA256"]
+            and re.search(r"^nginx version: nginx/1\.30\.8$", report.get("nginx_version", ""), re.MULTILINE),
+            "manifest or pinned reference source identity mismatch")
+    for key in ("nginx_sha256", "cauce_sha256", "fixture_sha256", "harness_sha256"):
+        require(re.fullmatch("[0-9a-f]{64}", report.get(key, "")), f"invalid {key}")
+    for key in ("cauce_revision", "harness_revision"):
+        revision = report.get(key, "")
+        require(re.fullmatch("[0-9a-f]{40}", revision) and subprocess.run(
+            ["git", "cat-file", "-e", revision + "^{commit}"], cwd=ROOT, capture_output=True).returncode == 0,
+            f"unknown {key}")
+    for file, key in (("tests/compatibility/fixtures.py", "fixture_sha256"),
+                      ("scripts/nginx-compatibility.py", "harness_sha256")):
+        recorded = subprocess.check_output(["git", "show", report["harness_revision"] + ":" + file], cwd=ROOT)
+        require(sha256(recorded).hexdigest() == report[key], f"uncommitted fixture or harness for {file}")
     sections = [item for item in report.get("modules", []) if item["module"] == module]
-    assert report.get("passed") is True and len(sections) == 1, (target, "missing passing module evidence")
+    require(report.get("passed") is True and len(sections) == 1, "missing passing module evidence")
     section = sections[0]
-    compared = {case["case"] for case in section["cases"]
-                if case.get("passed") is True and "nginx" in case and "cauce" in case}
-    compared.update(case["case"] for case in section["configuration_rejections"]
-                    if case.get("passed") is True and {"nginx", "cauce"} <= case["observations"].keys())
-    cases = proof.get("cases", [])
-    assert cases and set(cases) <= compared, (target, "missing named cases comparing both engines")
+    lifecycle = section["lifecycle"]
+    require(lifecycle.keys() == {"nginx", "cauce"} and all(
+            side["started"] and side["exit_status"] == 0 and not side["forced_kill"]
+            for side in lifecycle.values()),
+            "missing clean process lifecycle")
+    compared = {case["case"] for case in section["cases"] if case.get("passed") is True and case.get("input")
+                and set(case.get("raw", ())) == {"nginx", "cauce"} and case["nginx"] == case["cauce"]}
+    rejected = {case["case"] for case in section["configuration_rejections"] if case.get("passed") is True
+                and case.get("input") and set(case.get("observations", ())) == {"nginx", "cauce"}
+                and all(side["exit_status"] != 0 and side["expected_diagnostic"]
+                        for side in case["observations"].values())}
+    required = manifest["required"]
+    obligations = {"valid_arguments", "invalid_arguments", "defaults", "contexts", "inheritance",
+                   "boundary", "interactions", "observable"}
+    require(obligations <= required.keys() and manifest["excluded_comparisons"],
+            "incomplete semantic obligations")
+    for category, names in required.items():
+        eligible = rejected if category == "invalid_arguments" else compared | rejected if category == "contexts" else compared
+        require(names and set(names) <= eligible, f"missing passing cases for {category}")
+    if "reload" in required:
+        require(section["configurations"].get("reload") and any(
+            case["case"] in required["reload"] and case["input"].get("after_reload")
+            for case in section["cases"]), "missing observed reload")
+    cases = sorted({name for names in required.values() for name in names})
     return {"scope": "equivalence review", "path": str(path.relative_to(ROOT)), "cases": cases}
 
 
-def coverage(module, directive, mapping, reference):
+def coverage(module, directive, mapping, reference, task_id=None, contexts=()):
     notes = mapping.get("notes")
     status = mapping.get("status", "unmapped")
     migrations = ("bounded preview" if reference == "oss" and directive in TRANSLATIONS.get(module, ())
@@ -295,7 +342,7 @@ def coverage(module, directive, mapping, reference):
     if status in {"verified", "implemented"}:
         status = "partial"
     if status == "verified_equivalent":
-        sources.append(verify_claim(module, directive, mapping))
+        sources.append(verify_claim(module, directive, mapping, task_id, contexts))
     assessment = {"unsupported": "unmapped", "partial": "partially_implemented"}.get(status, status)
     assert assessment in {"unmapped", "mapped_unimplemented", "partially_implemented",
                           "implemented_unverified", "verified_equivalent", "platform_or_build_scope"}
@@ -346,11 +393,12 @@ def semantic_rows(modules, mappings, reference, provenance, build_options):
                              "source_functions": [registration["setter"]]}
                     if registration["within"]:
                         contexts.append(registration["within"])
+                task_id = f"{reference}/{source}/{module}/{directive}/{order}"
                 yield {
                     "kind": "directive", "reference": reference, "module": module,
                     "directive": directive, "definition_ordinal": order,
                     "source": source, "module_type": module_type,
-                    "task_id": f"{reference}/{source}/{module}/{directive}/{order}",
+                    "task_id": task_id,
                     "registration": registration,
                     "accepted_arity": accepted_arity(flags),
                     "arguments": known.get("arguments"),
@@ -361,7 +409,7 @@ def semantic_rows(modules, mappings, reference, provenance, build_options):
                     "build_options": build_options.get(module, []),
                     "context": contexts,
                     "parser_flags": flags,
-                    **coverage(module, directive, mappings.get(f"{module}.{directive}", {}), reference),
+                    **coverage(module, directive, mappings.get(f"{module}.{directive}", {}), reference, task_id, contexts),
                 }
 
 

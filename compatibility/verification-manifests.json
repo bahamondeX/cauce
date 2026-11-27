@@ -1,0 +1,26 @@
+{
+  "reference": "NGINX OSS 1.30.8",
+  "registrations": {
+    "oss/src/http/ngx_http_core_module.c/ngx_http_core_module/internal/29": {
+      "module": "ngx_http_core_module",
+      "fixture": "http-core-internal",
+      "context": ["NGX_HTTP_LOC_CONF"],
+      "arguments": "No arguments. A second declaration in the same location is invalid.",
+      "default": "External requests may enter a location without the inherited flag.",
+      "inheritance": "The nearest declared location flag applies to nested locations.",
+      "implementation": ["src/config.rs:merge_location", "src/proxy.rs:handle"],
+      "required": {
+        "valid_arguments": ["external-private", "rewrite-into-inherited-private"],
+        "invalid_arguments": ["reject-argument", "reject-duplicate"],
+        "defaults": ["public-default-and-sibling"],
+        "contexts": ["external-private", "reject-server-context"],
+        "inheritance": ["inherited-private", "rewrite-into-inherited-private", "public-default-and-sibling"],
+        "boundary": ["guard-before-location-rewrite"],
+        "interactions": ["guard-before-location-rewrite", "rewrite-into-inherited-private"],
+        "observable": ["external-private", "rewrite-into-inherited-private"],
+        "reload": ["generation-before", "generation-after"]
+      },
+      "excluded_comparisons": "Default 404 bodies and runtime-generated headers differ outside the access decision. Successful response bodies in this fixture must match."
+    }
+  }
+}
